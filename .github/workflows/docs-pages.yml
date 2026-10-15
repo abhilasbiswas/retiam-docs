@@ -48,10 +48,13 @@ jobs:
           npm test
       - name: Build documentation
         run: npm run build
-      - name: Install browser for deployment checks
-        run: npx --no-install puppeteer browsers install chrome
       - name: Verify static hosting
-        run: npm run check:deployment
+        timeout-minutes: 5
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: |
+          "$PUPPETEER_EXECUTABLE_PATH" --version
+          npm run check:deployment
       - name: Verify engine CDN
         if: github.event_name != 'pull_request'
         env:
