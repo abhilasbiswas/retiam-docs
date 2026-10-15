@@ -47,7 +47,7 @@ Once the version exists on npm, replace the bootstrap dependency:
 npm install --save-dev retiam@1.0.0
 ```
 
-Then remove the unused archive from `vendor/` and commit `package.json` and `package-lock.json`. Update `content/config.json` to the matching public CDN module URL before publishing the site.
+Then remove the unused archive from `vendor/` and commit `package.json` and `package-lock.json`. When switching from local testing to the published engine, update `content/config.json` to the matching public CDN module URL and redeploy.
 
 API metadata is checked in so routine builds need no engine source. After an engine release, a maintainer with source access can refresh it explicitly:
 
@@ -61,7 +61,7 @@ This optional command reads the private checkout to update reference data; it co
 
 Publish this project as the public `retiam-docs` repository. Set **Settings → Pages → Source → GitHub Actions** and push to `main`. The included workflow installs, tests, builds, checks, and deploys this repository without accessing the engine repository.
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for local deployment checks and optional services.
+You can test the Pages site with the local CDN running on your machine. Allow local network access if your browser prompts for it. GitHub Actions skips probing loopback URLs; other visitors need their own local CDN for live demos until the configuration points to a public release. See [DEPLOYMENT.md](DEPLOYMENT.md) for checks and optional services.
 
 ## License
 

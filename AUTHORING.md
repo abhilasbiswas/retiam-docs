@@ -50,9 +50,7 @@ also resolves sublibraries such as `retiam/charts` under the engine URL's direct
 The documentation treats this module as an external dependency and does not compare
 source hashes or require the CDN to come from the same repository checkout.
 
-With the default local URL, run the engine's CDN separately on port 3000 before starting `npm run dev` in this project. For deployment, use a pinned npm
-version instead of a moving `latest` URL and enable CORS for the documentation
-origin. Rebuild the docs after changing the URL; the development server watches
+With the default local URL, run the engine's CDN separately on port 3000 before starting `npm run dev` in this project. You can also test the deployed Pages site against this CDN on your machine; allow local network access in the browser if prompted. Enable CORS for the documentation origin. When switching to the public CDN, use a pinned npm version instead of a moving `latest` URL. Rebuild the docs after changing the URL; the development server watches
 this setting automatically.
 
 ### Navigation
