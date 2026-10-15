@@ -1,0 +1,956 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-path-modifier-architecture-and-extensibility",
+  "title": "Path Modifier Architecture, Mathematical Transformations & Extensibility",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/PATH_MODIFIER_ARCHITECTURE_AND_EXTENSIBILITY.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/PATH_MODIFIER_ARCHITECTURE_AND_EXTENSIBILITY.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/PATH_MODIFIER_ARCHITECTURE_AND_EXTENSIBILITY.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Path](/api-entities-primitives-2d#path), [PathContours](/api-modifiers#ipathmodifier), [PathModifier](/api-modifiers#pathmodifier), [IPathModifier](/api-modifiers#ipathmodifier), [Pipeline](/api-render-pipelines#pipeline), [SVG](/api-entities-composites-svg#svg), [Shapes](/api-render-pipelines#pipeline), [GlobalAnalyticalAllocator](/api-render-allocator#globalanalyticalallocator), [Pass](/api-render-frame-graph#pass), [Topology](/api-entities-primitives-3d#model), [Model](/api-entities-primitives-3d#model), [PathContour](/api-modifiers#ipathmodifier), [PathModifierPipeline](/api-modifiers#pathmodifierpipeline), [PathOptions](/api-entities-primitives-2d#path), [TrimModifier](/api-modifiers-path#trimmodifier), [Arc](/api-entities-primitives-2d#arc), [ResampleModifier](/api-modifiers-path#resamplemodifier), [WiggleModifier](/api-modifiers-path#wigglemodifier), [RoundCornersModifier](/api-modifiers-path#roundcornersmodifier), [OffsetModifier](/api-modifiers-path#offsetmodifier), [ZigZagModifier](/api-modifiers-path#zigzagmodifier), [DashModifier](/api-modifiers-path#dashmodifier), [ReverseModifier](/api-modifiers-path#reversemodifier), [PuckerBloatModifier](/api-modifiers-path#puckerbloatmodifier)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a comprehensive technical breakdown of the **Path Modifier Subsystem** in the Retiam WebGPU Engine. It details the non-destructive geometric processing pipeline, contour data structures, reactive GPU cache invalidation, mathematical foundations of all built-in modifiers, and developer guides for authoring high-performance custom modifiers."
+        }
+      ]
+    },
+    {
+      "id": "1-executive-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Executive Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "In high-performance vector graphics and mathematical animation engines, vector paths are traditionally static geometries. Retiam's **Path Modifier Architecture** introduces a procedural, non-destructive, stackable modifier pipeline directly coupled to the WebGPU rendering pipeline."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Core Principles"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Non-Destructive Geometry Processing**: The canonical base geometry (`_originalContours`) of a [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) is never permanently overwritten. Transformations are computed through a sequential pipeline producing `_processedContours`.",
+            "**Deterministic Evaluation**: Each modifier takes a `PathContours` topology and returns a newly transformed `PathContours` topology without side effects on upstream state.",
+            "**Reactive GPU Invalidation**: Property mutations on modifiers automatically flag the owning path entity as dirty (`invalidate()`), rebuilding the CPU staging buffers and scheduling immediate WebGPU vertex/storage buffer uploads without requiring manual scene synchronization.",
+            "**Dual Extensibility Paradigms**: Developers can extend the engine using lightweight zero-boilerplate lambdas via [`path.modify()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) or production-grade, stateful classes inheriting from [`PathModifier`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-high-level-architectural-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. High-Level Architectural Pipeline"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph \"Base Path Definition\"\n        A[\"Path Source (SVG, Polygons, Parametric Curves, Shapes)\"] --> B[\"Base Contours: _originalContours\"]\n    end\n\n    subgraph \"Non-Destructive Modifier Pipeline (Path.ts)\"\n        B --> C{\"Modifiers Stack Empty?\"}\n        C -- \"Yes\" --> D[\"_processedContours = _originalContours\"]\n        C -- \"No\" --> E[\"Modifier 0: apply(contours)\"]\n        E --> F[\"Modifier 1: apply(contours)\"]\n        F --> G[\"... Modifier N: apply(contours)\"]\n        G --> H[\"Final Output: _processedContours\"]\n    end\n\n    subgraph \"GPU Synchronization & Rendering\"\n        D --> I[\"Path.updateGeometryBuffers()\"]\n        H --> I\n        I --> J[\"GlobalAnalyticalAllocator / Subdivide Buffer\"]\n        J --> K[\"WebGPU Render Pass (Analytical SDF / Stencil Cover)\"]\n    end\n\n    subgraph \"Reactive Invalidation Loop\"\n        L[\"Modifier Property Mutation (e.g. modifier.radius = 0.5)\"] --> M[\"modifier.invalidate()\"]\n        M --> N[\"targetPath.invalidateModifiers()\"]\n        N --> O[\"Mark entity dirty & queue geometry rebuild\"]\n        O -.-> I\n    end"
+        }
+      ]
+    },
+    {
+      "id": "3-data-structures-pipeline-core",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Data Structures & Pipeline Core"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. The Contour Topology Model"
+        },
+        {
+          "type": "paragraph",
+          "text": "All modifiers operate on continuous parametric 2D contours represented by `PathContours` and `PathContour`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Standard contour representation in Retiam:\n// Quadratic Bézier coordinate stream [startX, startY, cp1X, cp1Y, ep1X, ep1Y, ...]\nexport type PathContour = number[];\n\n// Multiple contours forming a complete vector path shape\nexport type PathContours = PathContour[];"
+        },
+        {
+          "type": "paragraph",
+          "text": "A complex vector entity (e.g., compound SVG paths, typography glyphs, nested shapes) is represented as a collection of disjoint or nested `PathContour` coordinate streams."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. The Modifier Contract (IPathModifier & PathModifier)"
+        },
+        {
+          "type": "paragraph",
+          "text": "All path modifiers implement [`IPathModifier`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface IPathModifier {\n    readonly id: string;\n    enabled: boolean;\n    isDirty: boolean;\n    attach(path: Path): void;\n    detach(): void;\n    invalidate(): void;\n    apply(contours: PathContours): PathContours;\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "The abstract base class [`PathModifier`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts) provides standard lifecycle tracking:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`targetPath`: Back-reference to the parent `Path` entity.",
+            "`enabled`: Toggles modifier execution on/off without removing it from the pipeline.",
+            "`isDirty`: Dirty flag tracking changes.",
+            "`invalidate()`: Propagates dirty state upstream by invoking `targetPath.invalidateModifiers()`."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Standalone PathModifierPipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides [`PathModifierPipeline`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts) which can be used completely independently of any entity:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`add(modifier: PathModifier): this`: Appends a modifier to the pipeline.",
+            "`insert(index: number, modifier: PathModifier): this`: Inserts a modifier at an exact position.",
+            "`remove(modifierOrId: PathModifier | string): boolean`: Removes a modifier.",
+            "`clear(): void`: Clears the pipeline.",
+            "`get<T>(constructor: new (...args: any[]) => T): T | undefined`: Retrieves a typed modifier from the pipeline.",
+            "`evaluate(sourceContours: PathContours): PathContours`: Sequentially evaluates all active modifiers, using memoized geometry caching when neither source contours nor modifiers are dirty."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Pipeline Integration in Path.ts and PathOptions"
+        },
+        {
+          "type": "paragraph",
+          "text": "In `PathOptions`, modifiers are attached cleanly without redundancy:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "modifiers?: PathModifier | PathModifier[];"
+        },
+        {
+          "type": "paragraph",
+          "text": "And on any `Path` instance:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`addModifier(modifier: PathModifier): this`",
+            "`removeModifier(modifier: PathModifier | (new (...args: any[]) => PathModifier)): boolean`",
+            "`clearModifier(): this` (alias: `clearModifiers()`)",
+            "`setModifier(modifier: PathModifier): this`",
+            "`getModifier<T>(constructor: new (...args: any[]) => T): T | undefined`",
+            "`modifiers`: Read-only array of attached modifiers."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-built-in-modifiers-catalog",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Built-in Modifiers Catalog"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam includes 11 production-grade mathematical path modifiers residing in [`src/engine/modifiers/path/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Modifier",
+            "Description",
+            "Primary Use Case"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**TrimModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Arc-length interval extraction with wrap-around"
+                },
+                {
+                  "text": "Progressive stroke draw-in/draw-out animations"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**ResampleModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Equidistant or count-based contour point redistribution"
+                },
+                {
+                  "text": "Preparing geometry for smooth deformation"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**WiggleModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Multi-octave Perlin/Simplex vector noise displacement"
+                },
+                {
+                  "text": "Hand-drawn wobble, fluid waves, electric vibrations"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**RoundCornersModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Adaptive polyline corner filleting with circular arcs"
+                },
+                {
+                  "text": "Softening sharp angular shapes"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**OffsetModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Parallel polygon insetting/outsetting with miter joins"
+                },
+                {
+                  "text": "Outline borders, concentric rings, expansion effects"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**ZigZagModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Periodic triangular, sinusoidal, or square displacement"
+                },
+                {
+                  "text": "Ribbons, gears, jagged lightning bolts"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**DashModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Arbitrary pattern stroke chopping (`[dash, gap, ...]`)"
+                },
+                {
+                  "text": "Engineering diagrams, dashed outlines, radar sweeps"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**ReverseModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Contour vertex and winding order inversion"
+                },
+                {
+                  "text": "Controlling stroke reveal direction"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**PuckerBloatModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Centroid-relative radial tension deformation"
+                },
+                {
+                  "text": "Pinched stars, blooming flowers, organic morphs"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**TwistModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Vortex angular distortion with cubic radial falloff"
+                },
+                {
+                  "text": "Whirlpools, spiral galaxies, localized spinning"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**SmoothModifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "Ramer-Douglas-Peucker decimation & Chaikin subdivision"
+                },
+                {
+                  "text": "Converting noisy raw input into smooth curves"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Detailed Mathematical Formulations"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "1. TrimModifier (TrimModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Extracts a continuous sub-segment $[s_{start}, s_{end}] \\subset [0, 1]$ of the total path arc-length $L_{total}$."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "When $s_{end} < s_{start}$, the modifier treats the interval as a **wrapped window** $[s_{start}, 1.0] \\cup [0.0, s_{end}]$, generating two distinct contours for closed paths.",
+            "Arc-length parameterization is calculated via [`PathModifierUtils.computeArcLengths()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts). Points falling on intermediate cuts are precisely linearly interpolated."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const trim = new TrimModifier({ start: 0.2, end: 0.8, offset: 0.1 });\npath.addModifier(trim);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "2. ResampleModifier (ResampleModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Redistributes vertices along path contours to achieve uniform spacing:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`byCount`**: Divides the total contour arc length $L$ into $N$ equal intervals of length $\\Delta s = L / N$.",
+            "**`byLength`**: Places sample points at constant arc-length increments $\\Delta s$, preserving geometry density regardless of shape scale.",
+            "Guaranteed preservation of closed loop topology."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "path.resample({ by: \"byCount\", count: 120 });"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "3. WiggleModifier (WiggleModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Applies smooth 2D gradient noise along contour normals and tangents. For vertex $p_i$ with contour tangent $T_i$ and normal $N_i = (-T_{i,y}, T_{i,x})$:"
+        },
+        {
+          "type": "math",
+          "tex": "p'_i = p_i + N_i \\cdot \\text{Noise}(s_i \\cdot \\text{frequency} + \\text{phase}) \\cdot \\text{amplitude}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Multi-octave fractional Brownian motion (fBm) option for organic turbulence.",
+            "Smooth periodic boundary wrap for closed contours."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const wiggle = new WiggleModifier({\n    amplitude: 0.15,\n    frequency: 3.5,\n    octaves: 3,\n    phase: 0.0\n});\npath.addModifier(wiggle);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "4. RoundCornersModifier (RoundCornersModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Replaces sharp corner vertices $(p_{i-1}, p_i, p_{i+1})$ with circular arc fillets:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Calculates tangent vectors $v_1 = \\frac{p_{i-1} - p_i}{\\|p_{i-1} - p_i\\|}$ and $v_2 = \\frac{p_{i+1} - p_i}{\\|p_{i+1} - p_i\\|}$.",
+            "Evaluates the interior corner angle $\\theta = \\arccos(v_1 \\cdot v_2)$.",
+            "Computes tangent cut distance $d = r \\cdot \\tan(\\theta / 2)$, clamped to $d \\le \\min(\\frac{\\|e_1\\|}{2}, \\frac{\\|e_2\\|}{2})$ to prevent adjacent corner overlap.",
+            "Generates a circular arc spline spanning from $p_i + d \\cdot v_1$ to $p_i + d \\cdot v_2$."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const round = new RoundCornersModifier({ radius: 0.25, segments: 6 });\npath.addModifier(round);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "5. OffsetModifier (OffsetModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Constructs parallel inset or outset curves at distance $d$:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Computes outward/inward segment normal vectors $N_k$.",
+            "Computes vertex miter direction $M_i = \\frac{N_k + N_{k+1}}{\\|N_k + N_{k+1}\\|}$ and miter length $L_m = \\frac{d}{\\cos(\\phi / 2)}$.",
+            "Protects against sharp corner spikes using `miterLimit`: if $L_m > \\text{miterLimit} \\cdot d$, the corner gracefully transitions to a bevel join."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const offset = new OffsetModifier({ distance: 0.15, join: \"miter\", miterLimit: 3.0 });\npath.addModifier(offset);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "6. ZigZagModifier (ZigZagModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Generates high-frequency periodic waveforms anchored along path segments:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Supported waveforms: `triangle` (sharp teeth), `sine` (smooth ripple), `square` (crenelation).",
+            "Frequency specifies wave cycles per unit length or per segment.",
+            "Points at original corner vertices are firmly pinned to maintain structural fidelity."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const zigzag = new ZigZagModifier({ amplitude: 0.08, frequency: 12, waveType: \"triangle\" });\npath.addModifier(zigzag);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "7. DashModifier (DashModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Decomposes continuous contours into disjoint dash segments following an array pattern (e.g., `[0.2, 0.1, 0.05, 0.1]`):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Traverses arc lengths, alternating between drawing and gap intervals.",
+            "Handles offset shifting for running marching-ants animations."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const dash = new DashModifier({ pattern: [0.15, 0.08], offset: 0.0 });\npath.addModifier(dash);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "8. ReverseModifier (ReverseModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Inverts the topological vertex order of every contour in the path:"
+        },
+        {
+          "type": "math",
+          "tex": "\\{p_0, p_1, \\dots, p_{n-1}\\} \\longrightarrow \\{p_{n-1}, \\dots, p_1, p_0\\}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Reverses stroke draw direction in trim and dash animations.",
+            "Preserves contour closure flags."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "path.addModifier(new ReverseModifier());"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "9. PuckerBloatModifier (PuckerBloatModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Radial geometric morph relative to the contour centroid $C = \\frac{1}{N} \\sum_{i=0}^{N-1} p_i$:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "For any point $p$, radial vector $v = p - C$ and distance $r = \\|v\\|$.",
+            "Intermediate edge samples are displaced radially:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "p' = C + v \\cdot (1 + \\text{amount} \\cdot \\sin(\\pi \\cdot t))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "$\\text{amount} < 0$ produces a **Pucker** (concave star-burst).",
+            "$\\text{amount} > 0$ produces a **Bloat** (convex puffy balloon)."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const morph = new PuckerBloatModifier({ amount: 0.6 });\npath.addModifier(morph);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "10. TwistModifier (TwistModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Applies angular vortex distortion around a center point $C$ with smooth cubic radial falloff:"
+        },
+        {
+          "type": "math",
+          "tex": "\\theta(r) = \\begin{cases}\n\\text{angle} \\cdot \\left(1 - \\left(\\frac{r}{R}\\right)^2\\right)^3 & r < R \\\\\n0 & r \\ge R \n\\end{cases}"
+        },
+        {
+          "type": "math",
+          "tex": "p' = C + R_{\\theta(r)} \\cdot (p - C)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Smooth $C^2$ continuity prevents geometric tearing at boundary $r = R$."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const twist = new TwistModifier({ angle: Math.PI * 1.5, radius: 2.0, center: new Vec2(0, 0) });\npath.addModifier(twist);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "11. SmoothModifier (SmoothModifier.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Dual-stage curve refinement:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Ramer-Douglas-Peucker (RDP)**: Recursively removes redundant, collinear, or jittery vertices within distance tolerance $\\epsilon$.",
+            "**Chaikin Subdivision**: Recursively clips corners at $\\frac{1}{4}$ and $\\frac{3}{4}$ along each segment to produce $C^1$-smooth quadratic curves."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const smooth = new SmoothModifier({ iterations: 2, tolerance: 0.01 });\npath.addModifier(smooth);"
+        }
+      ]
+    },
+    {
+      "id": "5-custom-modifier-extensibility-guide",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Custom Modifier Extensibility Guide"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides two clean patterns for creating custom modifiers:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pattern 1: Inline Functional Modifiers (Zero-Boilerplate)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Best for rapid experimentation, mathematical formulas, or one-off scene animations. Use [`path.modify()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) backed by [`CustomModifier`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/CustomModifier.ts):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Circle, PathContours, Vec2 } from \"retiam\";\n\nconst circle = new Circle({ radius: 1.5, strokeWidth: 0.05, strokeColor: \"#00E5FF\" });\n\nlet phase = 0;\n\n// Attach inline transformation lambda\ncircle.modify((contours: PathContours) => {\n    return contours.map((contour) => {\n        const deformedPts = contour.points.map((pt) => {\n            const angle = Math.atan2(pt.y, pt.x);\n            const dist = Math.hypot(pt.x, pt.y);\n            const displacement = Math.sin(angle * 6 + phase) * 0.15;\n            return new Vec2(pt.x * (1 + displacement / dist), pt.y * (1 + displacement / dist));\n        });\n        return { points: deformedPts, closed: contour.closed };\n    });\n}, \"PolarWaveWarp\");\n\n// In animation frame:\nphase += 0.05;\ncircle.invalidateModifiers(); // Recalculates pipeline and updates WebGPU buffers"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pattern 2: Class-Based Modifiers (Reusable & Reactive)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Best for production components, libraries, and reusable motion graphic tools. Inherit from [`PathModifier`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { PathModifier, PathContours, Vec2 } from \"retiam\";\n\nexport interface AttractorOptions {\n    point?: Vec2;\n    strength?: number;\n    radius?: number;\n}\n\nexport class AttractorModifier extends PathModifier {\n    private _point: Vec2 = new Vec2(0, 0);\n    private _strength: number = 0.8;\n    private _radius: number = 2.0;\n\n    constructor(options?: AttractorOptions) {\n        super(\"Attractor\");\n        if (options?.point) this._point.set(options.point);\n        if (options?.strength !== undefined) this._strength = options.strength;\n        if (options?.radius !== undefined) this._radius = options.radius;\n    }\n\n    // Reactive properties automatically trigger WebGPU buffer rebuilds\n    public get point(): Vec2 { return this._point; }\n    public set point(val: Vec2) {\n        this._point.set(val);\n        this.invalidate();\n    }\n\n    public get strength(): number { return this._strength; }\n    public set strength(val: number) {\n        if (this._strength !== val) {\n            this._strength = val;\n            this.invalidate();\n        }\n    }\n\n    public apply(contours: PathContours): PathContours {\n        return contours.map((contour) => {\n            const deformed = contour.points.map((pt) => {\n                const dx = this._point.x - pt.x;\n                const dy = this._point.y - pt.y;\n                const dist = Math.hypot(dx, dy);\n\n                if (dist >= this._radius || dist < 0.0001) return pt.clone();\n\n                // Smooth cubic falloff: f(u) = 1 - 3u^2 + 2u^3\n                const u = dist / this._radius;\n                const factor = (1 - u * u * (3 - 2 * u)) * this._strength;\n\n                return new Vec2(pt.x + dx * factor, pt.y + dy * factor);\n            });\n            return { points: deformed, closed: contour.closed };\n        });\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "6-performance-memory-guidelines",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Performance & Memory Guidelines"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Pre-Resampling"
+        },
+        {
+          "type": "paragraph",
+          "text": "Most spatial deformation modifiers (such as `Twist`, `Wiggle`, `Attractor`, `PuckerBloat`) displace existing vertices. If a shape has only 4 corner vertices (like a `Rect`), smooth curved deformation requires adding a `ResampleModifier` ahead of the deformation modifier in the pipeline:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "rect\n    .resample({ by: \"byCount\", count: 180 }) // 1. Subdivide straight edges\n    .addModifier(new TwistModifier({ angle: Math.PI, radius: 1.5 })); // 2. Deform"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Pipeline Ordering Rules"
+        },
+        {
+          "type": "paragraph",
+          "text": "The pipeline executes modifiers in strict index order. Common optimal chains:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Geometric Topology**: `ResampleModifier` (Subdivide edges)",
+            "**Spatial Deformations**: `WiggleModifier` / `TwistModifier` / `CustomModifier`",
+            "**Corner Treatment**: `RoundCornersModifier`",
+            "**Outlines & Stroke Effects**: `OffsetModifier`",
+            "**Animation Chopping**: `TrimModifier` / `DashModifier`"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Garbage Collection & Memory Footprint"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Modifiers create new `Vec2` instances for modified vertices. For high-frequency animations running at 60 FPS, avoid unnecessary vertex proliferation by keeping resampling count tuned to the screen resolution.",
+            "Calling `this.invalidate()` inside property setters schedules a lightweight dirty check; redundant updates are coalesced per frame tick."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7-interactive-demos-studio-viewer",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Interactive Demos & Studio Viewer"
+        },
+        {
+          "type": "paragraph",
+          "text": "All path modifiers have interactive showcase demos registered in [`examples/demos.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos.ts):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Demo Name",
+            "Studio Viewer URL"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Path Modifiers Showcase (Full Overview)**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/path_modifiers_showcase`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Trim Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/trim_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Resample Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/resample_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Wiggle Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/wiggle_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Round Corners Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/round_corners_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Offset Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/offset_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**ZigZag Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/zigzag_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Dash Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/dash_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Reverse Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/reverse_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Pucker & Bloat Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/pucker_bloat_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Twist Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/twist_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Smooth Modifier**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/smooth_demo`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Custom Modifiers (Functional & OOP)**",
+                  "type": "text"
+                },
+                {
+                  "text": "`viewer.html?demo=modifiers/custom_modifier_demo`"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-unit-testing-continuous-verification",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Unit Testing & Continuous Verification"
+        },
+        {
+          "type": "paragraph",
+          "text": "The path modifier subsystem is verified with an automated 14-suite test harness in [`test/path_modifier_test.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/test/path_modifier_test.ts)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Run tests locally:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "node --import ./test/register-loader.js test/path_modifier_test.ts"
+        },
+        {
+          "type": "paragraph",
+          "text": "Validation includes:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Closed/open contour arc-length sampling accuracy",
+            "Linear and acute corner miter join bounds checking",
+            "Wrap-around trim logic with multi-contour segment splitting",
+            "Dynamic property mutation reactivity and pipeline clearing",
+            "Custom modifier evaluation and fluent chaining"
+          ]
+        }
+      ]
+    }
+  ]
+}

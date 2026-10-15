@@ -1,0 +1,166 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "physics",
+  "title": "2D and 3D physics",
+  "group": "Libraries",
+  "summary": "Connect entities to 2D or 3D bodies and keep simulation stepping, interaction and cleanup consistent.",
+  "sections": [
+    {
+      "id": "construct-the-world-with-a-scene",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Construct the world with a scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Physics2D and Physics3D are scene-aware controllers, not IPlugin objects. Construct them with a Scene and an options object; register entities with add/addMany. Use `motion: \"static\" | \"dynamic\" | \"kinematic\"`. The term fixed appears in some external physics APIs, but the Retiam options use static."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Rect, Circle, hex } from \"retiam\";\nimport { Physics2D } from \"retiam/physics\";\n\nexport default class BouncingBall extends Scene {\n  async run() {\n    this.composer!.ALWAYS_UPDATE = true;\n    const physics = new Physics2D(this, { backend: \"planck\", gravity: [0, -9.8] });\n    const ground = new Rect(10, 0.4).move([0, -3, 0]);\n    const ball = new Circle(0.5, { fill: hex(\"#38BDF8\") }).move([0, 3, 0]);\n    this.add(ground, ball);\n    physics.add(ground, { motion: \"static\" });\n    physics.add(ball, { motion: \"dynamic\", restitution: 0.75 });\n    this.camera.frame([ground, ball], { padding: 0.25 });\n    await this.wait(6000);\n    physics.destroy();\n  }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Physics2D](/api-libs-physics-2d#physics2d), [Physics3D](/api-libs-physics-3d#physics3d), [Physics2DOptions](/api-libs-physics-2d#physics2dtypes), [Physics3DOptions](/api-libs-physics-3d#physics3dtypes), [Rigid2DOptions](/api-libs-physics-2d#physics2dtypes), [RigidOptions](/api-libs-physics-3d#physics3dtypes)."
+        }
+      ]
+    },
+    {
+      "id": "backend-choices-and-readiness",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Backend choices and readiness"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "World",
+            "Current routed backends",
+            "Behavior"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "2D",
+                "planck (default), rapier",
+                "Pure JS Box2D-style world or Rapier WASM"
+              ]
+            },
+            {
+              "cells": [
+                "3D",
+                "rapier (default), box3d",
+                "Rapier or Box3D WASM"
+              ]
+            },
+            {
+              "cells": [
+                "Jolt3DBackend module",
+                "Present in source, absent from current public barrel/controller selection",
+                "Not a working Physics3D backend option through the normal entry"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Physics3D.ready waits for backend initialization when supported. The 2D wrapper has no corresponding ready method; Rapier initialization lives in its backend. Do not call methods on a WASM world before the specific backend has completed readiness."
+        },
+        {
+          "type": "paragraph",
+          "text": "The current Box3D backend explicitly uses box3d-wasm/standard: a single-threaded WebAssembly build with SIMD. It does not create worker threads or require cross-origin isolation, so it is suitable for static hosts such as GitHub Pages."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Physics3D.addSoftBody throws when the selected backend has no soft-body method. Its error suggests Jolt, but the current controller does not select Jolt. Treat 3D soft bodies through that controller as unavailable until backend routing and exports are implemented."
+        }
+      ]
+    },
+    {
+      "id": "time-stepping-and-reproducibility",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Time stepping and reproducibility"
+        },
+        {
+          "type": "paragraph",
+          "text": "Physics step parameters are seconds. Physics2D auto-step calls a fixed timeStep times scene.timeScale on each update; it is not a wall-clock accumulator in the wrapper. Physics3D auto-step currently multiplies the already scene-scaled dt by scene.timeScale again. These details matter when changing frame rate or timeScale."
+        },
+        {
+          "type": "paragraph",
+          "text": "For a controlled simulation, set autoStep false and implement a fixed-step accumulator using dt/1000 with one intentional timeScale policy. Bound the number of catch-up steps. Keep the composer updating and use the same fixed step for preview and offline output when comparing trajectories."
+        }
+      ]
+    },
+    {
+      "id": "colliders-events-and-components",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Colliders, events and components"
+        },
+        {
+          "type": "paragraph",
+          "text": "The backends infer common colliders from primitives and expose additional mesh/convex choices through options. RigidBody components synchronize physical transforms to the scene graph. Move a kinematic body through the supported component/backend API instead of fighting a dynamic body’s per-frame position sync."
+        },
+        {
+          "type": "paragraph",
+          "text": "CollisionStart/End listeners receive entities and body components. Sensors/triggers detect overlap without normal collision response. Friction, restitution, damping, CCD, mass and density affect different parts of the solver. Collider decomposition and triangle meshes are backend-sensitive; inspect the relevant adapter for supported dynamic shapes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [RigidBody2DComponent](/api-libs-physics-2d-components#rigidbody2dcomponent), [RigidBodyComponent](/api-libs-physics-3d-components#rigidbodycomponent), [Collision2DEvent](/api-libs-physics-2d#physics2dtypes), [Collision3DEvent](/api-libs-physics-3d#physics3dtypes), [Rapier2DBackend](/api-libs-physics-2d-backends#rapier2dbackend), [Planck2DBackend](/api-libs-physics-2d-backends#planck2dbackend), [Rapier3DBackend](/api-libs-physics-3d-backends#rapier3dbackend), [Box3DBackend](/api-libs-physics-3d-backends#box3dbackend)."
+        }
+      ]
+    },
+    {
+      "id": "2d-constraints-and-soft-bodies",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2D constraints and soft bodies"
+        },
+        {
+          "type": "paragraph",
+          "text": "2D joints include revolute, distance/spring, fixed, prismatic and rope. Add physical bodies before connecting a joint. FrequencyHz and dampingRatio are converted to backend-specific spring coefficients; addSpring returns both the joint and a visual Spring that follows the bodies. Mouse dragging uses backend point lookup and a spring-like mouse constraint."
+        },
+        {
+          "type": "paragraph",
+          "text": "SoftBody2DComponent constructs radial or grid particle/spring lattices and updates vector geometry from their positions. Lattice resolution, particle mass and spring parameters change both visual deformation and solver cost."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Joint2D](/api-libs-physics-2d#joint2d), [Joint2DOptions](/api-libs-physics-2d#physics2dtypes), [SoftBody2DComponent](/api-libs-physics-2d-components#softbody2dcomponent), [SoftBody2DOptions](/api-libs-physics-2d#physics2dtypes), [Spring](/api-entities-primitives-2d#spring)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One dynamic ball falls onto one fixed floor."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-physics2d"
+        }
+      ]
+    }
+  ]
+}

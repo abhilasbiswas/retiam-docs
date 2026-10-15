@@ -1,0 +1,136 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "path-tracing",
+  "title": "Path tracing, BVH and denoising",
+  "group": "GPU implementation",
+  "summary": "Explore acceleration structures, progressive raytracing and denoising as an alternative image pipeline.",
+  "sections": [
+    {
+      "id": "enable-the-supported-path",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Enable the supported path"
+        },
+        {
+          "type": "paragraph",
+          "text": "RenderConfig.raytraceEnabled selects the compute-based path tracing pipeline. Entity RT_ENABLE determines participation in the relevant geometry path. RaytraceManager gathers compatible meshes, builds or updates acceleration structures, allocates geometry/material arenas and manages accumulation."
+        },
+        {
+          "type": "paragraph",
+          "text": "This is GPU compute path tracing through WebGPU. It does not expose a WebGPU hardware ray-tracing API or guarantee the use of vendor RT cores. “Hardware accelerated” in older notes means execution on the GPU."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [RaytraceManager](/api-render-raytrace#raytracemanager), [GPUArena](/api-render-raytrace#gpuarena), [RaytracePass](/api-render-passes#raytracepasses), [RenderConfig](/api-render#renderconfig)."
+        }
+      ]
+    },
+    {
+      "id": "acceleration-and-accumulation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Acceleration and accumulation"
+        },
+        {
+          "type": "paragraph",
+          "text": "BLAS stores local mesh acceleration data; TLAS references transformed instances. BVH construction supports spatial and SAH strategies. Geometry/topology updates and transform-only updates have different rebuild costs. Changing camera, lights, materials or geometry should invalidate accumulated samples when the represented image changes."
+        },
+        {
+          "type": "paragraph",
+          "text": "rtSamples sets per-frame sampling and rtMaxAccumulation controls accumulation limits. bounce_count, gamma and environment lighting affect the final image. A high sample count reduces stochastic noise at additional cost; check thin geometry and glass at the final resolution rather than only a static preview."
+        }
+      ]
+    },
+    {
+      "id": "denoiser-modes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Denoiser modes"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Mode",
+            "Workflow"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "none",
+                "Raw accumulated output"
+              ]
+            },
+            {
+              "cells": [
+                "spatial",
+                "Shader spatial filtering"
+              ]
+            },
+            {
+              "cells": [
+                "oidn",
+                "Browser OIDN integration with model assets and auxiliary channels"
+              ]
+            },
+            {
+              "cells": [
+                "native",
+                "CLI raw HDR capture plus external oidnDenoise and tone mapping"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "OIDN expects compatible HDR/color, albedo and normal channels and a supported model name. Native mode additionally requires external executables. Denoising can blur small detail when inputs or sample quality are poor; compare a reference crop before using it for technical lines and labels."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [DenoiserType](/api-render#renderconfig), [OIDNDenoisePass](/api-render-passes-denoisers#oidndenoisepass), [SpatialDenoisePass](/api-render-passes-denoisers#spatialdenoisepass), [OfflineRenderManager](/api-core#offlinerendermanager)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore the implementation in a scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Hold camera, lighting and material fixed and let the image accumulate. Then move one object to see why a changed scene must invalidate accumulated samples."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-path-tracing"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[3D geometry and materials](/three-d)",
+    "[Rendering pipeline from scene to pixels](/rendering-architecture)"
+  ]
+}

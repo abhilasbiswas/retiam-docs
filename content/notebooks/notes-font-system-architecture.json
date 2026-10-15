@@ -1,0 +1,1194 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-font-system-architecture",
+  "title": "In-Browser WebAssembly MSDF & Vector Font System Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/FONT_SYSTEM_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/FONT_SYSTEM_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/FONT_SYSTEM_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Font](/api-font#font), [VectorFont](/api-font#types), [Text](/api-entities-composites-text#text), [Code](/api-entities-composites-text#code), [PathEffect](/api-material#patheffect), [Write](/api-animation#write), [Field](/api-math-fields#standardfields), [SDFText](/api-entities-composites-text#sdftext), [Input](/api-camera#camera), [FontResolver](/api-font#fontresolver), [FontLoader](/api-font#fontloader), [Pipeline](/api-render-pipelines#pipeline), [Path](/api-entities-primitives-2d#path), [MSDFGenerator](/api-font#msdfgenerator), [TextFragment](/api-components-fragment#textfragment), [FontSource](/api-font#types), [MSDFOptions](/api-font#types), [BuiltinFont](/api-font#types), [FontStyle](/api-font#types), [FontCache](/api-font#fontcache), [BMFontData](/api-font#types), [Box](/api-entities-primitives-3d#box), [Texture](/api-render-pipelines#resourcelayouts), [Color](/api-math#color)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-system-rationale",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & System Rationale"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam is a high-performance WebGPU animation engine engineered for mathematical visualizations, cinematic educational motion graphics (in the style of 3Blue1Brown/Manim), and scientific simulations. Typography in Retiam serves two foundational rendering pipelines, each designed for distinct aesthetic and technical use cases:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Vector Curve Fonts (`VectorFont` / `OpentypeFont`)**:",
+              "children": [
+                "Used by [`Text`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts), [`Code`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts), and analytical path-effect materials (`PathEffect`, `Chalk`, `Outline`).",
+                "Outlines are extracted as mathematical Bézier polynomial curves directly from TrueType/OpenType tables via `opentype.js`.",
+                "Renders with zero rasterization artifacts at infinite magnification and enables stroke-drawing animations (e.g., drawing chalk outlines glyph-by-glyph via [`Write`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Write.ts))."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Multi-Channel Signed Distance Field (MSDF) Fonts (`Font` / `SDFText`)**:",
+              "children": [
+                "Used by [`SDFText`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts) and closed-caption subtitles for high-throughput GPU-accelerated raster text at arbitrary scale, rotation, and 3D camera perspectives.",
+                "Unlike standard monochrome SDFs which round off sharp corners, MSDF packs three independent distance fields into RGB color channels, preserving crisp geometric corners and sub-pixel anti-aliasing."
+              ]
+            }
+          ],
+          "start": 2
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Architectural Evolution"
+        },
+        {
+          "type": "paragraph",
+          "text": "Previously, MSDF atlas generation relied on an external Node.js WebSocket daemon (`server/msdf-server.ts` on `ws://localhost:5002`) running `msdf-bmfont-xml`. This introduced severe drawbacks:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**External Dependency**: Required developers to launch and maintain a secondary background terminal process (`npm run msdf-server`).",
+            "**Production Portability**: Failed completely in client-side web embeddings, documentation sites, and browser sandboxes where local Node.js processes cannot execute.",
+            "**Latency & Sockets**: WebSocket serialization overhead and socket reconnect flakiness introduced non-deterministic startup delays."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The modern Retiam font architecture is **100% autonomous, client-side, and in-browser**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Generates MSDF distance fields inside a **dedicated Web Worker running WebAssembly (`msdfgen_wasm.wasm`)**.",
+            "Resolves **Google Fonts, custom remote URLs, and local files** entirely client-side.",
+            "Automatically handles **browser WOFF2 Brotli decompression** in WebAssembly.",
+            "Employs a **two-tier caching architecture** (Memory + persistent IndexedDB disk cache) with sub-2ms reloads.",
+            "Incorporates a mathematical **glyph inversion sanitizer** to correct backward contour windings in decorative, sketch, and grunge fonts.",
+            "Guarantees **bit-exact WebGPU texture ingestion** by preventing gamma warping and premultiplied alpha distortion."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  I[\"Typographic input<br/>Font name, font URL or ArrayBuffer\"] --> R[\"FontResolver<br/>Google Fonts CSS, binary fetch and WOFF2 decompression\"]\n  R -->|SFNT: TTF / OTF| V[\"FontLoader.vector<br/>opentype.js\"]\n  R -->|SFNT: TTF / OTF| M[\"FontLoader.msdf<br/>Memory and IndexedDB caches\"]\n  V --> VP[\"Vector pipeline<br/>Text, chalk / outline and code syntax\"]\n  M -->|Cache hit| T[\"SDFText GPU<br/>WebGPU TextFragment, antialiasing and strokes\"]\n  M -->|Cache miss| G[\"MSDFGenerator<br/>Web worker + WASM\"]\n  G -->|Raw atlas| S[\"Glyph inversion sanitizer\"] --> T"
+        }
+      ]
+    },
+    {
+      "id": "2-directory-structure-module-responsibilities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Directory Structure & Module Responsibilities"
+        },
+        {
+          "type": "paragraph",
+          "text": "All font infrastructure is consolidated in [`src/engine/font/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font):"
+        },
+        {
+          "type": "tree",
+          "variant": "folder",
+          "nodes": [
+            {
+              "label": "src/engine/font/",
+              "children": [
+                {
+                  "label": "types.ts",
+                  "description": "Interfaces, BMFont schema, FontSource, MSDFOptions, BuiltinFont, FontStyle"
+                },
+                {
+                  "label": "FontResolver.ts",
+                  "description": "URL & Google Font resolution, WOFF2 Brotli decompression, built-in aliases"
+                },
+                {
+                  "label": "FontCache.ts",
+                  "description": "Two-tier cache: Memory Map & IndexedDB persistent storage"
+                },
+                {
+                  "label": "MSDFGenerator.ts",
+                  "description": "Web Worker manager, msdfgen WASM, inversion sanitizer"
+                },
+                {
+                  "label": "Font.ts",
+                  "description": "MSDF Font runtime, geometry builder, WebGPU bindgroup"
+                },
+                {
+                  "label": "FontLoader.ts",
+                  "description": "Static facade API, progress pulse timer, telemetry"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Module Matrix"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Module",
+            "Primary Responsibility",
+            "Key Functions / Classes",
+            "Dependencies"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "[`types.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "Typographic type definitions, BMFont schema, `BuiltinFont` & `FontStyle` unions"
+                },
+                {
+                  "text": "`FontSource`, `BuiltinFont`, `FontStyle`, `MSDFOptions`, `BMFontData`, `VectorFont`"
+                },
+                {
+                  "text": "None"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`FontResolver.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "Source URL resolution, CSS parsing, WOFF2 decompression, **built-in alias resolution**"
+                },
+                {
+                  "text": "`FontResolver.resolve()`, `FontResolver.ensureSfnt()`"
+                },
+                {
+                  "text": "`woff2-encoder/decompress` (WASM)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`FontCache.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "Memory and IndexedDB persistent storage"
+                },
+                {
+                  "text": "`FontCache.getMSDF()`, `FontCache.setMSDF()`, `FontCache.getVector()`"
+                },
+                {
+                  "text": "IndexedDB API (`idb`)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`MSDFGenerator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "Web Worker coordination, WASM distance field compilation, inversion sanitization"
+                },
+                {
+                  "text": "`MSDFGenerator.generate()`, `sanitizeInvertedGlyphs()`"
+                },
+                {
+                  "text": "`@zappar/msdf-generator`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Font.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "MSDF GPU atlas management, glyph quad layout, uniform binding"
+                },
+                {
+                  "text": "`Font`, `Font.fromData()`, `Font.geometry`"
+                },
+                {
+                  "text": "WebGPU API"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`FontLoader.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "Unified public facade API & console telemetry"
+                },
+                {
+                  "text": "`FontLoader.msdf()`, `FontLoader.vector()`, `FontLoader.preload()`"
+                },
+                {
+                  "text": "All font submodules"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-font-resolution-woff2-decompression-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Font Resolution & WOFF2 Decompression Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implemented in [`src/engine/font/FontResolver.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.1 Input Versatility"
+        },
+        {
+          "type": "paragraph",
+          "text": "The resolver accepts any [`FontSource`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Built-in alias strings** (`BuiltinFont`): `\"roboto\"`, `\"excalifont\"`, `\"virgil\"`, `\"fredericka\"` / `\"Fredericka the Great\"` — resolved from local bundled assets first, then CDN fallback.",
+            "**Google Font family names**: `\"Pliant\"`, `\"Fira Code\"`, `\"Cinzel Decorative\"` — resolved via `fonts.googleapis.com` CSS API.",
+            "**Direct Remote URLs**: `https://cdn.jsdelivr.net/.../font.ttf`, `https://fonts.gstatic.com/...`",
+            "**Google Fonts CSS URLs**: `https://fonts.googleapis.com/css2?family=...`",
+            "**Local Asset Paths**: `\"/fonts/FiraCode-Regular.ttf\"`, `\"./assets/font.otf\"`",
+            "**Binary In-Memory Buffers**: `Uint8Array`, `ArrayBuffer`, `Blob`"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Resolution Order for Built-in Aliases"
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "BuiltinFont string",
+              "children": [
+                {
+                  "label": "1. Node.js fs",
+                  "description": "src/assets/fonts/ — local dev server"
+                },
+                {
+                  "label": "2. Browser fetch",
+                  "description": "src/assets/fonts/ — Vite dev server"
+                },
+                {
+                  "label": "3. CDN fallback",
+                  "description": "DigitalOcean / excalidraw.com"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Alias",
+            "Canonical Name",
+            "Local Asset",
+            "CDN Fallback"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`'roboto'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Roboto Regular"
+                },
+                {
+                  "text": "`src/assets/fonts/roboto-regular.ttf`"
+                },
+                {
+                  "text": "Google Fonts"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'excalifont'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Excalifont Regular"
+                },
+                {
+                  "text": "`src/assets/fonts/Excalifont-Regular.woff2`"
+                },
+                {
+                  "text": "`excalidraw.nyc3.cdn.digitaloceanspaces.com`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'virgil'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Virgil"
+                },
+                {
+                  "text": "`src/assets/fonts/Virgil.woff2`"
+                },
+                {
+                  "text": "`excalidraw.com/Virgil.woff2`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'fredericka'` / `'Fredericka the Great'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Fredericka the Great"
+                },
+                {
+                  "text": "`src/assets/fonts/FrederickatheGreat-Regular.ttf`"
+                },
+                {
+                  "text": "Google Fonts"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "All built-in aliases resolve through `FontResolver.ensureSfnt()` for transparent WOFF2/WOFF decompression, so bundled WOFF2 assets are always correctly decoded to TTF SFNT before being passed to `opentype.js` or `msdfgen`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.2 Google Fonts Subset Targeting"
+        },
+        {
+          "type": "paragraph",
+          "text": "When querying `https://fonts.googleapis.com/css2?family=...`, Google Fonts partitions font glyphs into unicode subsets (`cyrillic-ext`, `greek`, `vietnamese`, `latin`, etc.) using individual `@font-face` blocks."
+        },
+        {
+          "type": "paragraph",
+          "text": "If an engine naively selects the first `@font-face` block in the CSS response, it may load a subset containing Cyrillic or Greek glyphs while omitting standard Latin ASCII characters."
+        },
+        {
+          "type": "paragraph",
+          "text": "`FontResolver` inspects the CSS response and isolates the `/* latin */` section before extracting the binary font URL:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "let targetCss = cssText;\nconst latinIdx = cssText.indexOf('/* latin */');\nif (latinIdx !== -1) {\n    targetCss = cssText.slice(latinIdx);\n}\nconst match = targetCss.match(/src:\\s*url\\(['\"]?(https:\\/\\/[^'\")]+)['\"]?\\)/);\nif (!match) throw new Error(`Could not parse font binary URL from Google Fonts CSS.`);\nconst binaryUrl = match[1];"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.3 The Browser WOFF2 & WOFF 1.0 Challenge & WASM Solution"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a browser makes an HTTP request to Google Fonts, Google evaluates the browser's `User-Agent`:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Chrome** receives WOFF2 (`.woff2`, compressed with Brotli, `wOF2` magic signature `0x774f4632`).",
+            "**Microsoft Edge, Safari, and Firefox** receive WOFF 1.0 (`.woff`, compressed with Deflate, `wOFF` magic signature `0x774f4646`).",
+            "Both native FreeType (used in `msdfgen_wasm.wasm`) and other low-level engines strictly expect uncompressed SFNT tables (TrueType `0x00010000` or OpenType `0x4f54544f`) and reject raw WOFF / WOFF2 with:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Error: Failed to load font from memory"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Overriding the `User-Agent` header in browser `fetch()` is prohibited by the W3C Fetch specification."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "**The Solution:** `FontResolver.ensureSfnt(buf)` inspects the first 4 bytes of any downloaded font stream:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "If `wOF2` is detected, it dynamically loads `woff2-encoder/decompress` (WebAssembly Brotli decoder) to decompress to SFNT.",
+            "If `wOFF` is detected, it dynamically loads `opentype.js` to inflate the WOFF tables and serialize back into an SFNT buffer."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "public static async ensureSfnt(buf: Uint8Array): Promise<Uint8Array> {\n    if (buf.length >= 4) {\n        if (buf[0] === 0x77 && buf[1] === 0x4f && buf[2] === 0x46 && buf[3] === 0x32) {\n            const decompress = (await import('woff2-encoder/decompress')).default;\n            return await decompress(buf);\n        }\n        if (buf[0] === 0x77 && buf[1] === 0x4f && buf[2] === 0x46 && buf[3] === 0x46) {\n            const opentype = (await import('opentype.js')).default;\n            const arrayBuf = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;\n            const fontObj = opentype.parse(arrayBuf);\n            return new Uint8Array(fontObj.toArrayBuffer());\n        }\n    }\n    return buf;\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-in-browser-msdf-generation-engine",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. In-Browser MSDF Generation Engine"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implemented in [`src/engine/font/MSDFGenerator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.1 Web Worker Execution"
+        },
+        {
+          "type": "paragraph",
+          "text": "MSDF generation is computationally intensive. To keep 60 FPS animation playback fluid and prevent UI freezing, generation is offloaded to a dedicated Web Worker managed by `@zappar/msdf-generator` using Comlink RPC."
+        },
+        {
+          "type": "paragraph",
+          "text": "Vite URL imports are used to bundle the worker script and WASM binary:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import workerUrl from '@zappar/msdf-generator/worker.js?worker&url';\nimport wasmUrl from '@zappar/msdf-generator/msdfgen_wasm.wasm?url';"
+        }
+      ]
+    },
+    {
+      "id": "5-mathematical-root-causes-the-inversion-sanitizer",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Mathematical Root Causes & The Inversion Sanitizer"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.1 The Glyph Inversion Problem in Decorative & Sketch Fonts"
+        },
+        {
+          "type": "paragraph",
+          "text": "When testing complex fonts such as *Fredericka the Great*, *Rubik Dirt*, or grunge fonts, certain characters (e.g. `'S'`, `'p'`, `'a'`, `'R'`) rendered as solid colored bounding boxes with the letter carved out of the middle, while simple fonts rendered normally."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "The Mathematical Root Cause:"
+        },
+        {
+          "type": "paragraph",
+          "text": "`msdfgen` computes signed distance by raymarching glyph outline curves using FreeType. To determine whether a sample point $\\mathbf{p} = (x, y)$ is **inside** or **outside** the glyph shape, `msdfgen` calculates the **winding number** $W(\\mathbf{p})$ with respect to the closed boundary curves $\\partial \\Omega$:"
+        },
+        {
+          "type": "math",
+          "tex": "W(\\mathbf{p}) = \\frac{1}{2\\pi} \\oint_{\\partial \\Omega} \\frac{(x - \\mathbf{p}_x) dy - (y - \\mathbf{p}_y) dx}{(x - \\mathbf{p}_x)^2 + (y - \\mathbf{p}_y)^2}"
+        },
+        {
+          "type": "paragraph",
+          "text": "According to TrueType specifications:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Outer boundaries** must have a clockwise (or counter-clockwise depending on the coordinate system) winding direction.",
+            "**Inner holes** (like the counter of an `'O'`) must have the opposite winding direction."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "In sketch and decorative fonts, glyphs are constructed with thousands of overlapping pencil hatch lines. In several glyphs, the outermost perimeter stroke has a **reversed contour winding direction**."
+        },
+        {
+          "type": "paragraph",
+          "text": "Consequently, when `msdfgen` evaluates sample points in the empty padding around the letter:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Winding Number Outside} \\neq 0 \\implies \\text{Evaluated as INSIDE!}"
+        },
+        {
+          "type": "paragraph",
+          "text": "The distance field assigns positive distance ($d = 255$) to the empty exterior, while assigning negative distance to the interior strokes. When the WebGPU shader evaluates `smoothstep(-edgeWidth, edgeWidth, sigDist)`, it treats the empty background as solid ink."
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Normal Glyph Distance Field            Inverted Contour Distance Field\n┌─────────────────────────┐            ┌─────────────────────────┐\n│ 0   0   0   0   0   0 0 │ (d=0)      │ 255 255 255 255 255 255 │ (d=255)\n│ 0   0  128 128 128  0 0 │            │ 255 255 128 128 128 255 │\n│ 0  128 255 255 128  0 0 │ (d=255)    │ 255 128  0   0  128 255 │ (d=0)\n│ 0   0  128 128 128  0 0 │            │ 255 255 128 128 128 255 │\n│ 0   0   0   0   0   0 0 │            │ 255 255 255 255 255 255 │\n└─────────────────────────┘            └─────────────────────────┘\n  Clean Letterform on Empty Space        Solid Box with Carved Out Glyph"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.2 The Mathematical Sanitizer (sanitizeInvertedGlyphs)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every glyph in an MSDF atlas is rendered with safety padding (default: 2 to 4 pixels) around its bounding box to ensure distance field gradients do not clip at quad boundaries."
+        },
+        {
+          "type": "paragraph",
+          "text": "Therefore, **by geometric definition, the four corner pixels of any glyph quad must always reside in empty exterior space ($\\text{median} \\le 127$)**."
+        },
+        {
+          "type": "paragraph",
+          "text": "`MSDFGenerator.sanitizeInvertedGlyphs` inspects the four corners of every glyph quad in the atlas:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Corner pixels:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{c}_1 = (g_x, g_y), \\quad \\mathbf{c}_2 = (g_x + g_w - 1, g_y)"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{c}_3 = (g_x, g_y + g_h - 1), \\quad \\mathbf{c}_4 = (g_x + g_w - 1, g_y + g_h - 1)"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Evaluates the median distance value for each corner:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "math",
+          "tex": "M(R, G, B) = \\max(\\min(R, G), \\min(\\max(R, G), B))"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "If $\\ge 3$ corners evaluate as inside ($M > 127$), the distance field for that glyph is inverted:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "math",
+          "tex": "R' = 255 - R, \\quad G' = 255 - G, \\quad B' = 255 - B"
+        },
+        {
+          "type": "paragraph",
+          "text": "**Why $255 - d$ preserves the boundary:** In an 8-bit MSDF atlas, the exact glyph boundary is defined at $0.5$ (value 128). Because:"
+        },
+        {
+          "type": "math",
+          "tex": "255 - 128 = 127 \\approx 128"
+        },
+        {
+          "type": "paragraph",
+          "text": "Inverting across 255 preserves the anti-aliased edge position within $< 0.4\\%$ error while restoring the background to pure $0$ (transparent exterior)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Execution time for the entire 2048×2048 atlas is **$< 1\\text{ms}$**."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "private static sanitizeInvertedGlyphs(atlas: MSDFAtlas): void {\n    const data = atlas.texture.data;\n    const texWidth = atlas.textureSize[0];\n    const median = (r: number, g: number, b: number) => Math.max(Math.min(r, g), Math.min(Math.max(r, g), b));\n\n    for (const g of atlas.glyphs) {\n        const [gx, gy] = g.atlasPosition;\n        const [gw, gh] = g.atlasSize;\n        if (gw < 3 || gh < 3) continue;\n\n        const corners = [\n            [gx, gy], [gx + gw - 1, gy],\n            [gx, gy + gh - 1], [gx + gw - 1, gy + gh - 1]\n        ];\n\n        let cornerInsideCount = 0;\n        for (const [cx, cy] of corners) {\n            const idx = (cy * texWidth + cx) * 4;\n            if (median(data[idx], data[idx + 1], data[idx + 2]) > 127) cornerInsideCount++;\n        }\n\n        // If >= 3 corners are positive, the glyph distance field is inverted\n        if (cornerInsideCount >= 3) {\n            for (let py = 0; py < gh; py++) {\n                for (let px = 0; px < gw; px++) {\n                    const idx = ((gy + py) * texWidth + (gx + px)) * 4;\n                    data[idx + 0] = 255 - data[idx + 0];\n                    data[idx + 1] = 255 - data[idx + 1];\n                    data[idx + 2] = 255 - data[idx + 2];\n                }\n            }\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "6-resolution-nyquist-sampling-bit-exact-texture-ingestion",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Resolution, Nyquist Sampling & Bit-Exact Texture Ingestion"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.1 The Nyquist Sampling Limit for Sketch Fonts"
+        },
+        {
+          "type": "paragraph",
+          "text": "When testing *Fredericka the Great*, initial renders appeared \"melted\" or low-resolution:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "At default `fontSize: 48`, the glyph height is 48 texels.",
+            "Sketch fonts contain multiple overlapping pencil strokes whose width is $< 0.5\\%$ of the font height ($< 0.24\\text{px}$).",
+            "By the **Nyquist-Shannon sampling theorem**, resolving an edge transition requires at least 2 sample points across the feature width. When stroke spacing falls below 1 pixel in the atlas, distance gradients merge, turning fine pencil lines into rounded blobs."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "**The Solution:** Retiam configures high-fidelity defaults for the MSDF pipeline:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`fontSize: 120` (up from 48 or 72)",
+            "`distanceRange: 10`",
+            "`textureSize: [2048, 2048]`"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "This provides **6.25× more sample area per glyph**, cleanly resolving ultra-fine sketch hatchings."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.2 Bit-Exact WebGPU Texture Ingestion"
+        },
+        {
+          "type": "paragraph",
+          "text": "In Chromium browsers, `createImageBitmap()` defaults to applying color-space conversions and alpha premultiplication based on the host display profile:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Color} \\mapsto \\gamma(\\text{Color})"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because MSDF textures encode **pure mathematical Euclidean distances** in the RGB channels rather than visual sRGB color information, any gamma transformation warps the linear distance slope, causing edge dilation, rounded corners, and anti-aliasing banding."
+        },
+        {
+          "type": "paragraph",
+          "text": "`MSDFGenerator` and `Font` enforce strict bit-exact decoding:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const imageBitmap = await createImageBitmap(atlas.texture, {\n    premultiplyAlpha: 'none',\n    colorSpaceConversion: 'none',\n});"
+        }
+      ]
+    },
+    {
+      "id": "7-two-tier-caching-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Two-Tier Caching Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implemented in [`src/engine/font/FontCache.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts)."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  R[\"Font request\"] --> M{\"In-memory cache hit?\"}\n  M -->|Yes| F[\"Return font\"]\n  M -->|No| I{\"Matching fetch in flight?\"}\n  I -->|Yes| P[\"Return in-flight promise\"]\n  I -->|No| D{\"IndexedDB cache hit?\"}\n  D -->|Yes| INIT[\"Initialize font and return\"]\n  D -->|No| W[\"WASM generation worker\"] --> STORE[\"Store in memory and IndexedDB\"]"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Tier 1 (In-Memory `Map`)**:",
+              "children": [
+                "`FontCache.getMSDF(key)` / `FontCache.getVector(id)`",
+                "Instant $0\\text{ms}$ lookup during active animation playback and scene rendering."
+              ]
+            },
+            {
+              "text": "**In-Flight Deduplication**:",
+              "children": [
+                "Tracks ongoing generation promises (`FontCache.getInFlight(key)`).",
+                "If multiple entities request the same font concurrently, only **one** Web Worker compilation runs; all callers await the same promise."
+              ]
+            },
+            {
+              "text": "**Tier 2 (IndexedDB Disk Cache)**:",
+              "children": [
+                "Database: `retiam_font_cache`, Object Store: `atlases`.",
+                "Persists the BMFont JSON schema and the PNG texture `Blob` across browser reloads, page refreshes, and local development restarts.",
+                "On reload, IndexedDB retrieves the font in $<2\\text{ms}$, completely bypassing Web Worker compilation."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-webgpu-distance-field-shader-integration",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. WebGPU Distance-Field Shader Integration"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implemented in [`src/engine/components/fragment/TextFragment.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/fragment/TextFragment.ts)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "8.1 Distance Field Sampling & Anti-Aliasing"
+        },
+        {
+          "type": "paragraph",
+          "text": "The shader evaluates the signed distance via the median operator:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn median(r: f32, g: f32, b: f32) -> f32 {\n    return max(min(r, g), min(max(r, g), b));\n}\n\nlet pxRange = prop.pxRange;\nlet sz = vec2f(textureDimensions(font_texture, 0));\n\n// Hardware derivatives for Screen-Space anti-aliasing\nlet uv = input.texCoord * sz;\nlet dx = dpdxFine(uv);\nlet dy = dpdyFine(uv);\nlet toPixels = pxRange * inverseSqrt(dot(dx, dx) + dot(dy, dy));\n\nlet msdf = textureSample(font_texture, font_sampler, input.texCoord);\nlet sigDist = median(msdf.r, msdf.g, msdf.b) - 0.5;\n\nlet edgeWidth = AA / toPixels;\nvar alpha = smoothstep(-edgeWidth, edgeWidth, sigDist);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "8.2 Invariant World-Scale Strokes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam allows applying strokes to MSDF text via `paint.stroke` and `paint.stroke_width`. To guarantee that text stroke widths match vector primitives ([`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts), [`Rect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Rect.ts)) regardless of camera zoom or parent scale transforms:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let m = state.matrix;\nlet scale_x = length(vec3f(m[0][0], m[0][1], m[0][2]));\nlet scale_y = length(vec3f(m[1][0], m[1][1], m[1][2]));\nlet world_scale = max(scale_x, scale_y);\n\nlet stroke_sigDist = (paint.stroke_width * 0.5) / (input.s * pxRange * world_scale);\nlet has_stroke = paint.stroke_width > 0.0 && paint.stroke.a > 0.0;\n\nvar op1 = 1.0 - smoothstep(-edgeWidth, edgeWidth, sigDist - stroke_sigDist); // Inner bound\nvar op2 = smoothstep(-edgeWidth, edgeWidth, sigDist + stroke_sigDist);       // Outer bound\nvar alpha2 = select(0.0, op1 * op2, has_stroke);"
+        }
+      ]
+    },
+    {
+      "id": "9-developer-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "9. Developer API Reference"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9.1 Declarative Built-in Font Shortcuts (FontStyle)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `FontStyle` type provides a zero-boilerplate way to use bundled fonts directly in any text entity via a plain string — no `FontLoader` call required. The engine resolves, decompresses, and caches the font automatically on first use."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Text, SDFText, Color } from \"retiam\";\n\n// ─── Text (Vector Bézier) ────────────────────────────────────────────────\nnew Text(\"Hello World\",          { font: \"roboto\",         fontSize: 1.2 });\nnew Text(\"Hand-drawn vibes\",     { font: \"excalifont\",     fontSize: 1.2 });\nnew Text(\"Whiteboard scribble\",  { font: \"virgil\",         fontSize: 1.2 });\nnew Text(\"Engraved style\",       { font: \"Fredericka the Great\", fontSize: 1.2 });\n\n// ─── SDFText (GPU MSDF) ───────────────────────────────────────────────────\nnew SDFText(\"Sharp at any zoom\", { font: \"roboto\",     fontSize: 1.2 });\nnew SDFText(\"Sketchy MSDF\",      { font: \"excalifont\", fontSize: 1.2 });\nnew SDFText(\"Virgil MSDF\",       { font: \"virgil\",     fontSize: 1.2 });\nnew SDFText(\"Decorative MSDF\",   { font: \"fredericka\", fontSize: 1.2 });"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "BuiltinFont type (all accepted aliases)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// src/engine/font/types.ts\nexport type BuiltinFont =\n    | 'roboto'\n    | 'excalifont'\n    | 'virgil'\n    | 'Fredericka the Great'\n    | 'fredericka the great'\n    | 'fredericka';\n\n/** Accepts any BuiltinFont alias OR any arbitrary string (Google Font name, URL, path). */\nexport type FontStyle = BuiltinFont | (string & {});"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "`FontStyle` is accepted **only** by [`Text`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts) and [`SDFText`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts) via their `font` option. **`Tex`** uses a separate `fontStyle?: TexStyle` option — see §9.2."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9.2 LaTeX Formula Font Styles (Tex)"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Tex` does **not** use `FontStyle`. Instead it accepts `fontStyle?: TexStyle` which selects a pre-patched MathJax SVG font variant:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Tex, Color } from \"retiam\";\n\n// Standard Computer Modern (default)\nnew Tex(\"x = \\\\frac{-b \\\\pm \\\\sqrt{b^2-4ac}}{2a}\", { fontStyle: \"default\" });\n\n// Excalifont — handwritten Excalidraw glyphs injected into MathJax\nnew Tex(\"e^{i\\\\pi} + 1 = 0\", { fontStyle: \"excalifont\" });\n\n// Virgil — whiteboard handwritten glyphs injected into MathJax\nnew Tex(\"\\\\sum_{k=0}^{\\\\infty} \\\\frac{x^k}{k!}\", { fontStyle: \"virgil\" });"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "TexStyle union"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// src/engine/entities/composites/text/Tex.ts\nexport type TexStyle = 'default' | 'excalifont' | 'virgil';"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Tex font patching works by injecting vector glyph dictionaries (defined in `TexFontPatcher.ts`) directly into MathJax's internal SVG font variant tables at document-creation time. Each style has its own isolated MathJax document cache to avoid prototype pollution between simultaneously active `Tex` entities."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9.3 Loading MSDF Fonts Manually (FontLoader.msdf)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { FontLoader, SDFText, Scene, Color, CENTER } from \"retiam\";\n\nexport class MyScene extends Scene {\n    public async run() {\n        // Enable persistent disk caching across reloads (recommended for development)\n        FontLoader.defaultPersist = true;\n\n        // Load a Google Font dynamically via in-browser WASM\n        const pliant = await FontLoader.msdf(\"Pliant\");\n\n        // Load a local pre-baked font (0ms load time)\n        const roboto = await FontLoader.msdf(\"/fonts/Roboto.json\");\n\n        const text = new SDFText(\"Hello WebGPU!\", {\n            font: pliant,          // Font instance, or use the built-in alias: font: \"roboto\"\n            fontSize: 1.2,\n            anchor: CENTER,\n            fill: new Color(0.2, 0.8, 1.0, 1.0)\n        });\n        this.add(text);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9.4 Customizing MSDF Options"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const font = await FontLoader.msdf(\"Fredericka the Great\", {\n    fontSize: 120,          // Atlas resolution (default: 120)\n    distanceRange: 10,      // Gradient width in pixels (default: 10)\n    textureSize: [2048, 2048],\n    charset: \"Hello World\", // Subset: Only compiles needed characters (blazing fast)\n    persist: true           // Forces storage to IndexedDB\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9.5 Loading Vector Fonts Manually (FontLoader.vector)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { FontLoader, Text, Scene } from \"retiam\";\n\nexport class MyScene extends Scene {\n    public async run() {\n        // Loads TTF/OTF tables directly into opentype.js\n        const font = await FontLoader.vector(\"Fira Code\");\n\n        const text = new Text(\"Vector Outline Béziers\", {\n            font: font,    // Font instance, or use the built-in alias: font: \"excalifont\"\n            fontSize: 1.0\n        });\n        this.add(text);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9.6 Parallel Preloading"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "await FontLoader.preload([\n    { source: \"Pliant\", type: \"msdf\" },\n    { source: \"Fira Code\", type: \"msdf\" },\n    { source: \"Cinzel\", type: \"vector\" }\n]);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9.7 Cache Management"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Clear all in-memory and persistent IndexedDB cached fonts\nawait FontLoader.clearCache();"
+        }
+      ]
+    },
+    {
+      "id": "10-subsystem-integrations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "10. Subsystem Integrations"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "10.1 Code Composite Integration (Code.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The syntax-highlighted [`Code`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts) component supports loading custom monospace fonts:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Code, Scene } from \"retiam\";\n\nexport class CodeScene extends Scene {\n    public async run() {\n        // Load Fira Code or JetBrains Mono via FontLoader\n        await Code.loadFont(\"Fira Code\");\n\n        const codeBlock = new Code({\n            code: `const x: number = 42;\\nconsole.log(x);`,\n            language: \"typescript\",\n            fontSize: 18,\n            title: \"demo.ts\"\n        });\n        this.add(codeBlock);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "10.2 Subtitles Component Integration (Subtitles.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The closed-captioning `Subtitles` system seamlessly consumes MSDF fonts generated by `FontLoader.msdf()`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const captionFont = await FontLoader.msdf(\"Inter\");\nconst subs = new Subtitles({\n    font: captionFont,\n    fontSize: 16,\n    // ...\n});"
+        }
+      ]
+    },
+    {
+      "id": "11-performance-guidelines-benchmarks",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "11. Performance Guidelines & Benchmarks"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Font Category",
+            "Pipeline",
+            "First Load (WASM Worker)",
+            "IndexedDB Reload",
+            "Memory / Atlas Size"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Standard Clean Fonts** (*Roboto*, *Inter*, *Fira Code*, *Pliant*)",
+                  "type": "text"
+                },
+                {
+                  "text": "`FontLoader.msdf(\"FontName\")`"
+                },
+                {
+                  "text": "**~150ms – 250ms**"
+                },
+                {
+                  "text": "**< 2ms**"
+                },
+                {
+                  "text": "120px / 2048×2048"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Textured / Sketch Fonts** (*Fredericka the Great*, *Rubik Dirt*)",
+                  "type": "text"
+                },
+                {
+                  "text": "`FontLoader.vector()` OR `FontLoader.msdf(name, { charset: \"...\" })`"
+                },
+                {
+                  "text": "**~5ms** (vector) **~1.5s** (subset MSDF)"
+                },
+                {
+                  "text": "**< 2ms**"
+                },
+                {
+                  "text": "Full vector paths or targeted atlas"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Production Brand Fonts**",
+                  "type": "text"
+                },
+                {
+                  "text": "Pre-baked offline via CLI (`/fonts/Font.json`)"
+                },
+                {
+                  "text": "**0ms** (Static fetch)"
+                },
+                {
+                  "text": "**0ms**"
+                },
+                {
+                  "text": "Pre-computed static assets"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Offline Pre-Baking for Production"
+        },
+        {
+          "type": "paragraph",
+          "text": "For core brand fonts, pre-baking at build time eliminates any runtime WASM generation:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx tsx tools/msdf_generator/main.ts -f public/fonts/Roboto-Regular.ttf -o public/fonts/Roboto -s 120 -r 10"
+        },
+        {
+          "type": "paragraph",
+          "text": "This produces `public/fonts/Roboto.json` and `public/fonts/Roboto.png`. In runtime code:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const font = await FontLoader.msdf(\"/fonts/Roboto.json\"); // Loads in 0ms!"
+        }
+      ]
+    },
+    {
+      "id": "12-troubleshooting-failure-modes-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "12. Troubleshooting & Failure Modes Reference"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Symptom",
+            "Root Cause",
+            "Solution Implemented in Engine"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Solid colored box with carved-out letter**",
+                  "type": "text"
+                },
+                {
+                  "text": "Outer contour of sketch font has reversed winding; exterior evaluated as \"inside\" by `msdfgen`."
+                },
+                {
+                  "text": "`MSDFGenerator.sanitizeInvertedGlyphs` detects positive corner distances and flips $d \\mapsto 255 - d$."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**\"Failed to load font from memory\"**",
+                  "type": "text"
+                },
+                {
+                  "text": "Google Fonts response is WOFF2 (Chrome) or WOFF 1.0 (Edge/Safari/Firefox); FreeType expects raw SFNT (TTF/OTF)."
+                },
+                {
+                  "text": "`FontResolver.ensureSfnt` detects `wOF2` and `wOFF` magic bytes and decompresses to standard SFNT (via `woff2-encoder` / `opentype.js`)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Blurred/melted fine lines on sketch fonts**",
+                  "type": "text"
+                },
+                {
+                  "text": "Atlas resolution (48px) falls below the Nyquist sampling limit for $<0.24\\text{px}$ pencil hatchings."
+                },
+                {
+                  "text": "Default `fontSize` increased to `120`, providing 6.25× more sample area per glyph."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Rounded corners or banded anti-aliasing**",
+                  "type": "text"
+                },
+                {
+                  "text": "Chrome `createImageBitmap()` applying sRGB gamma conversion to raw distance metrics."
+                },
+                {
+                  "text": "Enforced `{ premultiplyAlpha: 'none', colorSpaceConversion: 'none' }` on all image bitmaps."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Slow initial generation on complex fonts**",
+                  "type": "text"
+                },
+                {
+                  "text": "Evaluating 50,000+ Bézier segments per character across full ASCII set in FreeType."
+                },
+                {
+                  "text": "Live 1-second pulse telemetry timer logs progress; optional `charset` option limits compilation to needed glyphs."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Duplicate generation for concurrent entities**",
+                  "type": "text"
+                },
+                {
+                  "text": "Multiple entities requesting the same font in parallel before worker completes."
+                },
+                {
+                  "text": "`FontCache.inFlight` promise deduplication ensures single worker task."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

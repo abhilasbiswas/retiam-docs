@@ -1,0 +1,211 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "extension-workshop",
+  "title": "Build a component, modifier, shader and render pass",
+  "group": "GPU implementation",
+  "summary": "Build a component, a path modifier, a uniform shader and an image pass in four editable scenes.",
+  "prerequisites": [
+    "[Entity components](/entities)",
+    "[Rendering architecture](/rendering-architecture)",
+    "[Frame graph](/frame-graph)"
+  ],
+  "outcome": "Four small extensions with explicit updates, resource bindings and cleanup.",
+  "sections": [
+    {
+      "id": "choose-extension",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Extend the layer that owns the change"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use a `Component` for per-entity behavior, a path modifier for contour deformation, `Shader` for a procedural surface, and a `Pass` or plugin for a frame-wide operation. Begin with built-in geometry and rendering components so your first extension has one job. A custom mesh renderer is a larger contract: geometry attributes, instance data, varyings, resource bindings and fragment passes must all agree."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Change",
+            "Extension point",
+            "What you own"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Rotate a tile or update a simulation body",
+                "Component",
+                "Behavior state and any subscriptions/resources it creates."
+              ]
+            },
+            {
+              "cells": [
+                "Bend, trim or deform a vector outline",
+                "CustomModifier / PathModifierBase",
+                "Contour transformation and its invalidation."
+              ]
+            },
+            {
+              "cells": [
+                "Render a GPU procedural texture on a quad",
+                "Shader + named resources",
+                "WGSL, byte layout, supplied buffers/textures."
+              ]
+            },
+            {
+              "cells": [
+                "Process the completed image",
+                "PostProcessPass",
+                "Fragment effect; the graph manages output allocation."
+              ]
+            },
+            {
+              "cells": [
+                "Add optional renderer stages",
+                "IPlugin.registerPasses",
+                "Connections between passes and plugin disposal."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "component",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "A component that can pause"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-component-update"
+        },
+        {
+          "type": "paragraph",
+          "text": "The turntable’s constructor receives radians per second, and `update` multiplies by `dt / 1000`. It attaches after the tile exists, so `entity` is assigned before `onInit`. Clicking toggles `enabled`; it does not lose elapsed scene time or create another tile. The composer remains in continuous mode so an enabled component keeps receiving frames. Components with event listeners should subscribe in onInit and release their stored listeners in onDestroy."
+        },
+        {
+          "type": "paragraph",
+          "text": "A reusable component should not assume the entity is already in a scene during onInit: attachment can happen before Scene.add. Resolve scene-dependent resources when they are available, or supply them explicitly. Removing one component instance through removeComponent updates the entity’s optimized update list."
+        }
+      ]
+    },
+    {
+      "id": "modifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "A non-destructive path modifier"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-modifierscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "An analytical contour is `[startX, startY, controlX, controlY, endX, endY, ...]`: one starting point followed by quadratic segments. The wave copies each contour, then changes the Y coordinate of every point/control pair. The muted curve is the original and cyan is the modified result. Because the output is copied, applying another modifier does not permanently deform the source."
+        },
+        {
+          "type": "paragraph",
+          "text": "Changing a captured variable does not automatically dirty the modifier. After advancing phase, call `invalidate()` so the path reevaluates the chain. Updating values every frame while leaving isDirty false can show a frozen shape. `CustomModifier` is enough for a local function; subclass `PathModifierBase` when the modifier needs named parameters, attachment or a reusable chained API. Its execute path applies enabled modifiers in order."
+        }
+      ]
+    },
+    {
+      "id": "shader",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "A shader with correctly aligned data"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-shader-uniform"
+        },
+        {
+          "type": "paragraph",
+          "text": "Build the quad and fragment logic first. The fragment assigns `finalColor`; the existing MeshRenderer supplies geometry, transforms and paint. Build one `UniformSchema`, allocate its byteSize with UNIFORM | COPY_DST, and fill a `UniformBufferData`. Its offsets are bytes; typed-array indices are four-byte words. Register the buffer under the name used by WGSL."
+        },
+        {
+          "type": "paragraph",
+          "text": "The schema’s `generateWGSL(..., false)` emits only the struct for userFunctions. setUniformBuffer creates the actual resource binding through the fragment schema; inserting a second explicit binding would conflict. Update the buffer with queue.writeBuffer and request a frame. Changing a uniform value does not require shader recompilation; changing the shader declaration or its resource layout does."
+        },
+        {
+          "type": "paragraph",
+          "text": "The BufferOwner component queues the allocation for destruction. Shader.setUniformBuffer binds a supplied resource and is not its allocator. UniformBufferData.set stores floating-point words; do not use it as an integer reinterpretation writer for u32/i32 fields. For integer data or packed matrices, write the exact typed view and padding the WGSL layout requires."
+        }
+      ]
+    },
+    {
+      "id": "post-process",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "A complete image pass"
+        },
+        {
+          "type": "example",
+          "example": "labs/workshop-post-process"
+        },
+        {
+          "type": "paragraph",
+          "text": "The lab takes renderer.finalOutputHandle, creates PostProcessPass, and registers it with Scene.addPass. Its helper supplies a fullscreen triangle, sampler, input texture and view bindings. Your fragment receives sampled color and UV and returns a vec4. The right half uses luminance while the left keeps color, so the effect can be compared on the same frame."
+        },
+        {
+          "type": "paragraph",
+          "text": "PostProcessPass declares input with @read and output with @create; setup creates a canvas-relative sampled render target and marks the pass unculled. execute obtains current views, binds the sampler/input and view group, draws three vertices and ends the pass. The output handle is also presentationOutput, allowing the composer to route it into presentation. Keep the original alpha when changing RGB."
+        },
+        {
+          "type": "paragraph",
+          "text": "A custom Pass uses setup(GraphBuilder) to declare resources and execute(RenderContext) to encode commands. FrameGraph.addPass accepts the pass instance and returns void. GraphBuilder has createTexture/createBuffer and markUnculled; it does not offer the historical callback-style readTexture/writeTexture API. Declare dependencies with the decorators or the pass handle arrays. A producer that is neither needed by an active sink nor explicitly unculled can be removed from the compiled graph."
+        }
+      ]
+    },
+    {
+      "id": "plugin",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Package a pass as a plugin"
+        },
+        {
+          "type": "paragraph",
+          "text": "For a reusable optional effect, implement the current IPlugin contract. Its registerPasses callback receives the graph, renderer and pipeline IO. Read `io.resolvedColor`, add your pass to the graph, and replace `io.resolvedColor` with its presentation output so later stages consume it. Adding a pass without connecting its output does not insert it into the image chain. Follow [plugins](/plugins) and [frame graph](/frame-graph) for initialization and lifecycle."
+        },
+        {
+          "type": "paragraph",
+          "text": "Test resize, disabled mode, multiple frames and disposal. Relative outputs are resized by graph rebuilding; externally supplied textures need their owner to update the import. Keep storage resources alive through their last GPU submission. A valid TypeScript extension can still have a WGSL binding or lifetime error, so run it in the browser before treating it as complete."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Path tracing, BVH and denoising](/path-tracing)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "difficulty": "intermediate",
+  "estimatedMinutes": 40
+}

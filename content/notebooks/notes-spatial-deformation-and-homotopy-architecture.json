@@ -1,0 +1,597 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-spatial-deformation-and-homotopy-architecture",
+  "title": "Spatial Deformation, Vector Fields & Homotopy Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SPATIAL_DEFORMATION_AND_HOMOTOPY_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SPATIAL_DEFORMATION_AND_HOMOTOPY_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SPATIAL_DEFORMATION_AND_HOMOTOPY_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Field](/api-math-fields#standardfields), [Texture](/api-render-pipelines#resourcelayouts), [Animation](/api-animation#animation), [ISpatialField](/api-math-fields#spatialfield), [SubdivisionEngine](/api-utils#subdivisionengine), [SubdivisionOptions](/api-utils#subdivisionengine), [Bezier](/api-entities-primitives-2d#bezier), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Entity](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity), [GeometrySnapshot](/api-utils#geometrysnapshot), [VGroup](/api-entities-layout#vgroup), [SVG](/api-entities-composites-svg#svg), [HomotopyAnimation](/api-animation-transform#homotopyanimation), [SpaceTransform](/api-animation-transform#spacetransform), [Plane](/api-entities-primitives-3d#plane), [NumberPlane](/api-entities-composites-coordinates#numberplane), [MeshSprite](/api-entities-composites-geometry#meshsprite), [PixelGrid](/api-entities-composites-geometry#pixelgrid), [Path](/api-entities-primitives-2d#path), [Poly](/api-entities-primitives-2d#poly), [Line3D](/api-entities-primitives-3d#line3d), [SpatialMappingFunction](/api-math-fields#spatialfield)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an exhaustive, mathematically rigorous, and structural technical manual for the **Spatial Deformation, Composable Vector Field, Generic Custom Functions, Continuous Texture Projection, and Homotopy Animation Subsystem** in the Retiam WebGPU Engine."
+        }
+      ]
+    },
+    {
+      "id": "1-mathematical-foundations-design-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Mathematical Foundations & Design Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In computer graphics and mathematical animation (such as 3Blue1Brown's Manim), spatial transformations fall into two categories:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Affine Transforms (Linear)**: Represented by $4 \\times 4$ matrices ($\\mathbf{M} \\mathbf{p}$), supporting only translation, rotation, scale, and shear. Straight lines strictly remain straight lines.",
+            "**Non-Linear Spatial Deformations (Non-Affine / Non-Euclidean)**: Represented by continuous vector fields $\\mathbf{F}: \\mathbb{R}^3 \\to \\mathbb{R}^3$ or complex analytic mappings $f(z): \\mathbb{C} \\to \\mathbb{C}$. In these transformations, straight lines, coordinate grids, and textures curve, twist, ripple, or compress."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Mathematical Homotopy"
+        },
+        {
+          "type": "paragraph",
+          "text": "A **Homotopy** between two continuous mappings $f_0, f_1: X \\to Y$ is a continuous deformation $\\mathbf{H}: X \\times [0, 1] \\to Y$ such that:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{H}(\\mathbf{p}, 0) = f_0(\\mathbf{p}) \\quad \\text{and} \\quad \\mathbf{H}(\\mathbf{p}, 1) = f_1(\\mathbf{p})"
+        },
+        {
+          "type": "paragraph",
+          "text": "In Retiam, any spatial deformation is modeled as a continuous homotopy $\\mathbf{H}(\\mathbf{p}, t)$ parameterized by progress $t \\in [0, 1]$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}'(t) = \\mathbf{H}(\\mathbf{p}, \\text{rate\\_func}(t))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Conformal Mappings"
+        },
+        {
+          "type": "paragraph",
+          "text": "A complex function $f(z) = u(x, y) + i v(x, y)$ is **conformal** if it is holomorphic ($\\frac{\\partial f}{\\partial \\bar{z}} = 0$) and satisfies the **Cauchy-Riemann equations**:"
+        },
+        {
+          "type": "math",
+          "tex": "\\frac{\\partial u}{\\partial x} = \\frac{\\partial v}{\\partial y}, \\quad \\frac{\\partial u}{\\partial y} = -\\frac{\\partial v}{\\partial x}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Conformal transformations preserve local angles and infinitesimal shapes, making them foundational for fluid dynamics, electromagnetism, and complex analysis visualizations."
+        }
+      ]
+    },
+    {
+      "id": "2-layered-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Layered Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "The spatial deformation architecture in Retiam is organized into 5 decoupled, composable layers:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "graph TD\n    subgraph Layer1 [\"Layer 1: Mathematical Field System (src/engine/math/fields/)\"]\n        ISF[\"ISpatialField Interface\"]\n        Combinators[\"Field Combinators: pipe(), blend(), identity()\"]\n        Generators[\"Field Generators: wave(), swirl(), vortex(), conformal(), custom(), homotopy()\"]\n        ISF --- Combinators\n        ISF --- Generators\n    end\n\n    subgraph Layer2 [\"Layer 2: Universal Subdivision Engine (src/engine/utils/)\"]\n        Subdiv[\"SubdivisionEngine & SubdivisionOptions\"]\n        Metric[\"Length-Adaptive & Tolerance Sampling\"]\n        Linear[\"Linear Polyline & Polygon Sampling\"]\n        GPU3D[\"Packed 3D Float32Array GPU Subdivision\"]\n        Bezier[\"de Casteljau Quadratic & Cubic Bézier Splitting\"]\n        Subdiv --- Metric\n        Subdiv --- Linear\n        Subdiv --- GPU3D\n        Subdiv --- Bezier\n    end\n\n    subgraph Layer3 [\"Layer 3: Scene Graph & Vector Entity (src/engine/_core/)\"]\n        VE[\"VectorEntity Base Class\"]\n        Snap[\"GeometrySnapshot Cache\"]\n        Cascade[\"Recursive Scene Graph Traversal (VGroup, SVG, Composites)\"]\n        VE --- Snap\n        VE --- Cascade\n    end\n\n    subgraph Layer4 [\"Layer 4: Animation Runtime (src/engine/animation/transform/)\"]\n        HA[\"HomotopyAnimation: H(p, t) + Easing Curves\"]\n        ST[\"SpaceTransform: Backward-Compatible Alias\"]\n        HA --- ST\n    end\n\n    subgraph Layer5 [\"Layer 5: Concrete Entities (src/engine/entities/)\"]\n        Plane[\"NumberPlane (Coordinate System with Accuracy/Tolerance)\"]\n        MeshImg[\"MeshSprite (Textured Mesh: Images, Videos, Canvases, Sprites)\"]\n        Tile[\"PixelGrid (Pixel Art / Tiles)\"]\n        PathEnt[\"Path (SVG Bézier Vector Curves)\"]\n        PolyEnt[\"Poly (2D Polygons & Polylines)\"]\n        LineEnt[\"Line3D (3D Lines & Ribbons)\"]\n        SVGEnt[\"SVG (Multi-Path Vector Graphics)\"]\n    end\n\n    Layer1 --> Layer3\n    Layer2 --> Layer3\n    Layer4 --> Layer3\n    Layer3 --> Layer5"
+        }
+      ]
+    },
+    {
+      "id": "3-layer-1-mathematical-field-system-src-engine-math-fields",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Layer 1: Mathematical Field System (src/engine/math/fields/)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Core Interfaces ([SpatialField.ts](../src/engine/math/fields/SpatialField.ts))"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export type SpatialMappingFunction = (p: Vec3, t?: number) => Vec3;\nexport type HomotopyFunction = (p: Vec3, t: number) => Vec3;\nexport type ComplexMappingFunction = (z: { re: number; im: number }, t?: number) => { re: number; im: number };\n\nexport interface ISpatialField {\n    evaluate(p: Vec3, t?: number): Vec3;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Standard Field Generators ([StandardFields.ts](../src/engine/math/fields/StandardFields.ts))"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Field Generator",
+            "Mathematical Definition",
+            "Visual Effect"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`Field.wave(options)`**",
+                  "type": "text"
+                },
+                {
+                  "text": "$x' = x + t \\cdot A_x \\sin(\\omega_x y + \\phi_x)$ $y' = y + t \\cdot A_y \\sin(\\omega_y x + \\phi_y)$"
+                },
+                {
+                  "text": "Sinusoidal wavy coordinate rippling"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Field.swirl(options)`**",
+                  "type": "text"
+                },
+                {
+                  "text": "$\\theta = t \\cdot S \\cdot e^{-r / R}$ $x' = x\\cos\\theta - y\\sin\\theta$ $y' = x\\sin\\theta + y\\cos\\theta$"
+                },
+                {
+                  "text": "Exponential spiral twisting around a center `[x, y]` or `Vec3`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Field.vortex(options)`**",
+                  "type": "text"
+                },
+                {
+                  "text": "$\\omega = (S \\cdot t) / r$ Rigid rotation decaying with radius"
+                },
+                {
+                  "text": "Rotational fluid vortex dynamics around `[x, y]` or `Vec3`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Field.conformal(fn)`**",
+                  "type": "text"
+                },
+                {
+                  "text": "$w = f(z, t) = u(x, y) + i v(x, y)$"
+                },
+                {
+                  "text": "Angle-preserving complex analytic mappings"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Field.custom(fn)`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Wraps any arbitrary `(p: Vec3, t?: number) => Vec3`"
+                },
+                {
+                  "text": "Any custom user-defined mathematical vector field"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Field.pipe(...fields)`**",
+                  "type": "text"
+                },
+                {
+                  "text": "$\\mathbf{F}_n(\\dots(\\mathbf{F}_2(\\mathbf{F}_1(\\mathbf{p}))))$"
+                },
+                {
+                  "text": "Sequential composition / chaining of vector fields and callbacks"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Field.blend(fA, fB, α)`**",
+                  "type": "text"
+                },
+                {
+                  "text": "$(1 - \\alpha)\\mathbf{F}_A(\\mathbf{p}) + \\alpha \\mathbf{F}_B(\\mathbf{p})$"
+                },
+                {
+                  "text": "Convex interpolation between two coordinate fields"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Field.homotopy(H)`**",
+                  "type": "text"
+                },
+                {
+                  "text": "$\\mathbf{H}(\\mathbf{p}, t)$"
+                },
+                {
+                  "text": "Arbitrary user-defined time-dependent homotopy"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Field.identity()`**",
+                  "type": "text"
+                },
+                {
+                  "text": "$\\mathbf{F}(\\mathbf{p}) = \\mathbf{p}$"
+                },
+                {
+                  "text": "Pass-through identity map"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Generic & Custom User-Defined Fields"
+        },
+        {
+          "type": "paragraph",
+          "text": "You are never restricted to built-in presets. Any mathematical function can be used as a vector field:"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "1. Plain Anonymous Callbacks"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Pure mathematical mapping (p: Vec3, t?: number) => Vec3\nconst customRipple = (p: Vec3, t: number = 1.0) => {\n    const r = Math.sqrt(p.x * p.x + p.y * p.y);\n    const wave = Math.sin(r * 4.0 - t * Math.PI) * 0.3 * t;\n    return new Vec3(p.x + (p.x / (r || 1)) * wave, p.y + (p.y / (r || 1)) * wave, p.z);\n};\n\n// Directly pass to HomotopyAnimation or applyField\nawait scene.play(new HomotopyAnimation(myEntities, customRipple));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "2. Custom Complex Analytic Maps (Field.conformal)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Möbius Transformation: f(z) = (a*z + b) / (c*z + d)\nconst mobiusField = Field.conformal((z) => {\n    const denom = (z.re + 1) * (z.re + 1) + z.im * z.im || 1e-5;\n    return {\n        re: (z.re * z.re + z.im * z.im - 1) / denom,\n        im: (2 * z.im) / denom\n    };\n});"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "3. Stateful / Physics-Driven Classes implementing ISpatialField"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { ISpatialField, Vec3 } from \"retiam\";\n\nexport class GravitationalDipoleField implements ISpatialField {\n    constructor(public poleDistance: number = 2.0, public strength: number = 0.5) {}\n\n    public evaluate(p: Vec3, t: number = 1.0): Vec3 {\n        const d1 = Math.hypot(p.x - this.poleDistance, p.y) + 0.1;\n        const d2 = Math.hypot(p.x + this.poleDistance, p.y) + 0.1;\n        const pullX = (this.strength * t) * (1 / (d1 * d1) - 1 / (d2 * d2));\n        return new Vec3(p.x - pullX, p.y, p.z);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-layer-2-universal-subdivision-engine-src-engine-utils-subdivisionengine-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Layer 2: Universal Subdivision Engine (src/engine/utils/SubdivisionEngine.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because GPU vector lines and polygon boundaries are defined by discrete vertices, applying a non-linear function to a straight line with only 2 vertices ($P_0, P_1$) would only move the endpoints without bending the middle."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Metric-Driven & Tolerance Options (SubdivisionOptions)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface SubdivisionOptions {\n    /** Fixed subdivisions per segment (e.g. 30) */\n    subdivisions?: number;\n    /** Maximum Euclidean length of any sub-segment in coordinate units (e.g. 0.05 for ultra-smooth lines) */\n    maxSegmentLength?: number;\n    /** Flatness or error tolerance threshold */\n    tolerance?: number;\n    /** Normalized accuracy multiplier [0.1..10.0] (default 1.0) */\n    accuracy?: number;\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `maxSegmentLength` or `accuracy` is specified, `SubdivisionEngine` computes dynamic steps per segment based on spatial distance:"
+        },
+        {
+          "type": "math",
+          "tex": "N_{\\text{steps}} = \\max\\left(1, \\left\\lceil \\frac{\\text{length} \\cdot \\text{accuracy}}{\\text{maxSegmentLength}} \\right\\rceil\\right)"
+        },
+        {
+          "type": "paragraph",
+          "text": "This ensures long lines receive ample vertices to curve smoothly, while short segments avoid wasteful vertex allocations."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Linear Polyline & Polygon Subdivision"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Subdivides straight segments into dense intermediate vertices using count or SubdivisionOptions\nSubdivisionEngine.subdividePolyline(points: Vec3[], options?: number | SubdivisionOptions): Vec3[];\nSubdivisionEngine.subdivideClosedPolygon2D(points: Vec2[], options?: number | SubdivisionOptions): Vec2[];"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Packed 3D Float32Array Zero-Allocation Subdivision"
+        },
+        {
+          "type": "paragraph",
+          "text": "Subdivides tightly packed `[x, y, z, 0]` vertex buffers directly for GPU pipeline consumption:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "SubdivisionEngine.subdividePackedVertices3D(data: Float32Array, vertexCount: number, options?: number | SubdivisionOptions): Float32Array;"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Analytical de Casteljau Bézier Curve Subdivision"
+        },
+        {
+          "type": "paragraph",
+          "text": "For quadratic ($P_0, P_1, P_2$) and cubic ($P_0, P_1, P_2, P_3$) Bézier curves, linear subdivision introduces chord error. `SubdivisionEngine` implements exact **de Casteljau recursive curve splitting**:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "SubdivisionEngine.splitCubicBezier(p0, p1, p2, p3, t): [[Vec2, Vec2, Vec2, Vec2], [Vec2, Vec2, Vec2, Vec2]];\nSubdivisionEngine.subdivideCubicBezier(p0, p1, p2, p3, depth): [Vec2, Vec2, Vec2, Vec2][];"
+        }
+      ]
+    },
+    {
+      "id": "5-layer-3-vectorentity-integration-scene-graph-cascading",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Layer 3: VectorEntity Integration & Scene Graph Cascading"
+        },
+        {
+          "type": "paragraph",
+          "text": "The base class [`VectorEntity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts) provides universal entry points for all 2D/3D vector primitives, composites, and scene graphs:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export abstract class VectorEntity extends Entity {\n    /** Subdivides geometry so straight edges bend into curves (supports count or SubdivisionOptions) */\n    public prepareForNonlinearTransform(options?: number | SubdivisionOptions): this;\n\n    /** Warps entity and all children using an ISpatialField or mapping callback */\n    public applyField(field: ISpatialField | SpatialMappingFunction, t: number = 1.0): this;\n\n    /** Warps entity using a continuous homotopy H(p, t) */\n    public applyHomotopy(homotopy: HomotopyFunction, t: number): this;\n\n    /** Warps entity using a complex analytic function f(z) */\n    public applyComplexFunction(fn: (z: { re: number; im: number }) => { re: number; im: number }, alpha: number = 1.0): this;\n\n    /** Restores base undeformed geometry */\n    public resetDeformation(): this;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recursive Cascading Rule:"
+        },
+        {
+          "type": "paragraph",
+          "text": "When calling `sceneSpace.applyField(field)` on a `VGroup` or composite entity (`SVG`, `NumberPlane`, `Axes`), the method automatically traverses the entire child hierarchy:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "graph TD\n    VGroup[\"VGroup / Composite\"] --> Child1[\"NumberPlane (Grid Lines)\"]\n    VGroup --> Child2[\"MeshSprite (Continuous Textured Mesh)\"]\n    VGroup --> Child3[\"SVG (Child Paths)\"]\n    VGroup --> Child4[\"Tex (Glyph Paths)\"]"
+        }
+      ]
+    },
+    {
+      "id": "6-layer-4-animation-runtime-homotopyanimation-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Layer 4: Animation Runtime (HomotopyAnimation.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`HomotopyAnimation`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts) class drives deformations across time with configurable rate easing curves:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface HomotopyAnimationOptions extends AnimOptions {\n    fromProgress?: number; // Starting progress factor (default 0.0)\n    toProgress?: number;   // Target progress factor (default 1.0)\n    isComplex?: boolean;    // Treats mapping function as f(z): C -> C\n}"
+        }
+      ]
+    },
+    {
+      "id": "7-concrete-entity-implementations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Concrete Entity Implementations"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. NumberPlane ([NumberPlane.ts](../src/engine/entities/composites/coordinates/NumberPlane.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Deformable coordinate system with horizontal/vertical grid lines, metric accuracy controls, and coordinate conversion helpers:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`maxSegmentLength` & `accuracy`**: Configures segment density for grid lines.",
+            "**`c2p(x, y)`**: Converts mathematical coordinate units to world space units $\\mathbb{R}^2 \\to \\mathbb{R}^3$.",
+            "**`p2c(p)`**: Converts world space position back to coordinate space."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. MeshSprite ([MeshSprite.ts](../src/engine/entities/composites/geometry/MeshSprite.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Continuous textured triangle mesh grid ($M \\times N$ vertices, $2(M-1)(N-1)$ triangles) with **fixed or custom Vec3 UV coordinates** $(u, v) \\in [0, 1]^2$."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**1:1 Coordinate Pinning**: Every pixel is mathematically locked to coordinate position $(x, y)$. When the field $\\mathbf{F}(x, y)$ bends space, the image features stretch and warp in exact synchronization with the `NumberPlane` iso-curves.",
+            "**Zero GC Allocation**: Mutates vertex positions in-place on the WebGPU buffer at full **120 FPS**.",
+            {
+              "text": "**Universal Media Compatibility**:",
+              "children": [
+                "Static Images (PNG, JPG, WebP, SVG)",
+                "Existing `Sprite` instances: `new MeshSprite({ source: mySprite, ... })`",
+                "Live HTML5 Videos (`.mp4`, `.webm`, `HTMLVideoElement`) streaming via `GPUExternalTexture`",
+                "2D Canvas elements (`HTMLCanvasElement`, `OffscreenCanvas`) with `.refresh()`",
+                "Raw WebGPU textures (`GPUTexture`) and `SubTexture` atlas regions."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. PixelGrid ([PixelGrid.ts](../src/engine/entities/composites/geometry/PixelGrid.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Deformable matrix of 2D polygon tiles for pixel art, heatmaps, and discrete lattice simulations."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Path, SVG, Line3D, Poly"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Packed WebGPU vertex buffers updated directly via `Float32Array`.",
+            "In-place vertex warping avoiding CPU Earcut re-triangulation."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-complete-usage-recipes-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Complete Usage Recipes & Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 1: Projecting an Image onto a Deformable NumberPlane"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, NumberPlane, MeshSprite, HomotopyAnimation, Field, Rate, BLACK } from \"retiam\";\n\nexport class DeformedImageScene extends Scene {\n    public async run() {\n        this.ALWAYS_UPDATE = true;\n        this.setBackgroundColor(BLACK);\n\n        const xRange: [number, number] = [-4.8, 4.8];\n        const yRange: [number, number] = [-2.7, 2.7];\n\n        // 1. Create Deformable MeshSprite (Green leaves with dewdrops)\n        const image = new MeshSprite({\n            source: \"/res/media/image.jpg\",\n            xRange: xRange,\n            yRange: yRange,\n            gridResolution: [48, 27],\n            opacity: 0.95\n        });\n\n        // 2. Create Coordinate Grid\n        const plane = new NumberPlane({\n            xRange: [xRange[0], xRange[1], 0.6],\n            yRange: [yRange[0], yRange[1], 0.6],\n            maxSegmentLength: 0.05,\n            accuracy: 8\n        });\n\n        image.z_index = -0.01;\n        plane.z_index = 0.01;\n        this.add(image);\n        this.add(plane);\n\n        const targets = [plane, image];\n\n        // 3. Continuous Wave and Conformal Morphing Loop\n        while (true) {\n            await this.play(new HomotopyAnimation(targets, Field.wave({ amplitude: 0.35, frequency: 2.2 }), {\n                duration: 3000,\n                rate_func: Rate.easeInOut(3)\n            }));\n            await this.wait(1000);\n\n            await this.play(new HomotopyAnimation(targets, Field.swirl({ strength: 0.9, radius: 3.0 }), {\n                duration: 3000,\n                rate_func: Rate.smooth()\n            }));\n            await this.wait(1000);\n        }\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 2: Projecting Live Video (Sprite + nature.mp4 + NumberPlane)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, NumberPlane, MeshSprite, Sprite, HomotopyAnimation, Field, Rate, BLACK } from \"retiam\";\n\nexport class DeformedVideoScene extends Scene {\n    public async run() {\n        this.ALWAYS_UPDATE = true;\n        this.setBackgroundColor(BLACK);\n\n        // 1. Create Sprite with Live Playing Video\n        const videoSprite = new Sprite(\"/res/media/nature.mp4\");\n\n        // 2. Project Video onto Deformable Mesh Grid\n        const videoMesh = new MeshSprite({\n            source: videoSprite,\n            xRange: [-4.8, 4.8],\n            yRange: [-2.7, 2.7],\n            gridResolution: [48, 27],\n            opacity: 0.95\n        });\n\n        const plane = new NumberPlane({\n            xRange: [-4.8, 4.8, 0.6],\n            yRange: [-2.7, 2.7, 0.6],\n            accuracy: 8\n        });\n\n        this.add(videoMesh);\n        this.add(plane);\n        videoMesh.play(); // Starts real-time 60 FPS video stream\n\n        const targets = [plane, videoMesh];\n\n        // 3. Animate continuous coordinate warping while video plays\n        await this.play(new HomotopyAnimation(targets, Field.wave({ amplitude: 0.38, frequency: 2.2 }), {\n            duration: 3200,\n            rate_func: Rate.easeInOut(3)\n        }));\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 3: Deformed Earth Map Projection (earth.jpg + Sinusoidal Equal-Area)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, NumberPlane, MeshSprite, Sprite, HomotopyAnimation, Field, Rate, Vec3, BLACK } from \"retiam\";\n\nexport class DeformedTextureScene extends Scene {\n    public async run() {\n        this.ALWAYS_UPDATE = true;\n        this.setBackgroundColor(BLACK);\n\n        const widthSpan = 9.6;\n        const heightSpan = 4.8;\n\n        const earthSprite = new Sprite(\"/res/media/earth.jpg\");\n        const earthMesh = new MeshSprite({\n            source: earthSprite,\n            xRange: [-widthSpan / 2, widthSpan / 2],\n            yRange: [-heightSpan / 2, heightSpan / 2],\n            gridResolution: [48, 24],\n            opacity: 0.95\n        });\n\n        const plane = new NumberPlane({\n            xRange: [-widthSpan / 2, widthSpan / 2, 0.6],\n            yRange: [-heightSpan / 2, heightSpan / 2, 0.6],\n            accuracy: 8\n        });\n\n        this.add(earthMesh);\n        this.add(plane);\n\n        const targets = [plane, earthMesh];\n\n        // Sinusoidal equal-area cartographic projection: x' = x * cos(y)\n        const sinusoidalMap = (p: Vec3, t: number = 1.0): Vec3 => {\n            const latFactor = Math.cos((p.y / (heightSpan / 2)) * (Math.PI / 2.2));\n            const targetX = p.x * latFactor;\n            return new Vec3(p.x + (targetX - p.x) * t, p.y, p.z);\n        };\n\n        await this.play(new HomotopyAnimation(targets, sinusoidalMap, { duration: 3200 }));\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 4: Conformal Complex Analytic Mapping ($f(z) = z + 0.28\\sin(1.4z)$)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { NumberPlane, Field, HomotopyAnimation, Rate } from \"retiam\";\n\nconst plane = new NumberPlane({\n    xRange: [-4, 4, 0.4],\n    yRange: [-4, 4, 0.4],\n    maxSegmentLength: 0.04\n});\nscene.add(plane);\n\n// Conformal map: sin(x + iy) = sin(x)cosh(y) + i cos(x)sinh(y)\nconst conformalField = Field.conformal((z) => {\n    const scale = 1.4;\n    const x = z.re * scale;\n    const y = z.im * scale;\n    const sinX = Math.sin(x);\n    const cosX = Math.cos(x);\n    const coshY = Math.cosh(Math.max(-2, Math.min(2, y)));\n    const sinhY = Math.sinh(Math.max(-2, Math.min(2, y)));\n\n    return {\n        re: z.re + 0.28 * sinX * coshY,\n        im: z.im + 0.28 * cosX * sinhY\n    };\n});\n\nawait scene.play(new HomotopyAnimation(plane, conformalField, {\n    duration: 3500,\n    rate_func: Rate.easeInOut(2.5)\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 5: Chaining Multiple Fields with Field.pipe(...)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Field, HomotopyAnimation, Vec3 } from \"retiam\";\n\n// Chain Wave distortion + Swirl vortex + Translation in one single composable field\nconst compoundField = Field.pipe(\n    Field.wave({ amplitude: 0.25, frequency: 3.0 }),\n    Field.swirl({ center: [0, 0], strength: 0.6, radius: 2.0 }),\n    (p) => new Vec3(p.x, p.y + 0.5, p.z)\n);\n\nawait scene.play(new HomotopyAnimation(sceneGroup, compoundField, {\n    duration: 3000\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 6: Deforming Entire SVGs and LaTeX Math Formulas Simultaneously"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { VGroup, SVG, Tex, NumberPlane, Field, HomotopyAnimation } from \"retiam\";\n\nconst grid = new NumberPlane({ xRange: [-6, 6, 0.5], yRange: [-6, 6, 0.5], maxSegmentLength: 0.05 });\nconst logo = new SVG(logoSvgString, { method: \"fast\" });\nconst equation = new Tex(\"\\\\oint_C \\\\mathbf{F} \\\\cdot d\\\\mathbf{r} = \\\\iint_S (\\\\nabla \\\\times \\\\mathbf{F}) \\\\cdot d\\\\mathbf{S}\");\n\n// Combine everything into one unified coordinate group\nconst space = new VGroup(grid, logo, equation);\nscene.add(space);\n\n// Subdivide all paths and lines with high accuracy\nspace.prepareForNonlinearTransform({ maxSegmentLength: 0.05, accuracy: 1.5 });\n\n// Warp the entire universe!\nconst vortexField = Field.vortex({ center: [0, 0], strength: 1.2 });\nawait scene.play(new HomotopyAnimation(space, vortexField, { duration: 4000 }));"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "curves-subdivision",
+  "title": "Curves, sampling and subdivision",
+  "group": "Geometry and styling",
+  "summary": "Sample and subdivide curves with the right tradeoff between exact geometry and uniform point spacing.",
+  "sections": [
+    {
+      "id": "interpolation-methods",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Interpolation methods"
+        },
+        {
+          "type": "paragraph",
+          "text": "Spline uses a CurveEvaluator to turn control points and parameters into an evaluated curve. The source includes Catmull–Rom, B-spline/de Boor, natural cubic spline, Hermite and Bézier evaluators. Their control-point semantics differ: interpolating splines pass through data points, while an approximating B-spline generally follows a control polygon without visiting every control point."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Use",
+            "Watch for"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Catmull–Rom",
+                "Smooth paths through samples",
+                "Endpoint behavior and parameterization"
+              ]
+            },
+            {
+              "cells": [
+                "B-spline",
+                "Smooth controlled approximation",
+                "Degree, knots and sufficient control points"
+              ]
+            },
+            {
+              "cells": [
+                "Natural spline",
+                "Cubic interpolation with boundary conditions",
+                "Global influence when samples change"
+              ]
+            },
+            {
+              "cells": [
+                "Hermite",
+                "Position and tangent constraints",
+                "Tangent magnitude and continuity"
+              ]
+            },
+            {
+              "cells": [
+                "Bézier",
+                "Explicit control handles",
+                "Subdivision tolerance and segment structure"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Spline](/api-entities-primitives-2d#spline), [CurveEvaluator](/api-entities-primitives-2d-curves#curveevaluator), [CatmullRomEvaluator](/api-entities-primitives-2d-curves#catmullromevaluator), [BSplineEvaluator](/api-entities-primitives-2d-curves#bsplineevaluator), [NaturalSplineEvaluator](/api-entities-primitives-2d-curves#naturalsplineevaluator), [HermiteEvaluator](/api-entities-primitives-2d-curves#hermiteevaluator), [BezierEvaluator](/api-entities-primitives-2d-curves#bezierevaluator)."
+        }
+      ]
+    },
+    {
+      "id": "sampling-versus-parameter-time",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Sampling versus parameter time"
+        },
+        {
+          "type": "paragraph",
+          "text": "Uniform parameter samples are not necessarily equally spaced along the curve. Length sampling is useful for roughly constant drawing speed or evenly placed markers. Adaptive flattening uses geometric error to insert more samples near curvature, while uniform subdivision is simpler and predictable."
+        },
+        {
+          "type": "paragraph",
+          "text": "SubdivisionEngine adds enough local geometry for a nonlinear map to bend a shape. If only the corners of a rectangle are transformed, a curved mapping still yields straight segments between those corners. Subdivide before the deformation and choose a density based on curvature and visible resolution."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [SubdivisionEngine](/api-utils#subdivisionengine), [ICurveSamplable](/api-core#interfaces), [CurveFrame](/api-core#interfaces)."
+        }
+      ]
+    },
+    {
+      "id": "topology-and-redraw-cost",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Topology and redraw cost"
+        },
+        {
+          "type": "paragraph",
+          "text": "Maintain point counts and typed-array capacities when updating a curve continuously. Replacing a string, changing sample count or changing topology can trigger parsing, memory growth or triangulation. Use in-place setters where available and rebuild only when the underlying geometry needs to change."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scenes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Inspect generated polyline samples separately from draggable Bezier control points."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-subdivision"
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-bezier"
+        }
+      ]
+    }
+  ]
+}

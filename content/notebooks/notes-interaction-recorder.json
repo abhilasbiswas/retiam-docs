@@ -1,0 +1,318 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-interaction-recorder",
+  "title": "Retiam Input Virtualization (Recording & Replay) System",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/interaction_recorder.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/interaction_recorder.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/interaction_recorder.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Input](/api-camera#camera), [State](/api-core#state), [CameraController](/api-camera#cameracontroller), [InteractionManager](/api-control#interactionmanager), [InputRecorder](/api-control#inputrecorder), [Scene](/api-core-scene#scene), [Usage](/api-utils#gpu-utils), [Mode](/api-render-frame-graph#resource)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a comprehensive guide to the **Input Virtualization System** implemented for **Retiam**, a WebGPU-powered animation engine. It outlines the architectural design decisions, implementation details, integration steps, and a step-by-step usage guide."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-design-engineering-decisions",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Design & Engineering Decisions"
+        },
+        {
+          "type": "paragraph",
+          "text": "When creating a system to record live human interactions and replay them headlessly to render videos, developers often face a choice between two main patterns:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**High-Level State Serialization**: Saving the positions, rotations, and scales of every moving camera or object per frame.",
+            "**Low-Level Event Virtualization**: Capturing and replaying the actual hardware events (clicks, key presses, mouse moves, scrolls) at the DOM level."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam implements **Low-Level Event Virtualization** for several key reasons:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Agnostic Extensibility"
+        },
+        {
+          "type": "paragraph",
+          "text": "If you or third-party developers implement new interactive elements, custom cameras, or UI controls, a high-level state serialization system would require you to write custom tracking and serialization code for every single new component. By virtualizing raw inputs, **any newly implemented feature automatically supports recording and replay**, because it naturally reacts to the simulated browser events as if a real mouse and keyboard were attached."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Resolution Independence (Normalized Coordinate Space)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Mouse movement coordinates (`clientX`, `clientY`) are absolute pixel values defined by the size of the browser window during recording. If you record an interaction on a small screen (e.g., `800x600`) and try to replay those absolute coordinates on a 4K headless canvas (`3840x2160`), the mouse movements will be completely off-target."
+        },
+        {
+          "type": "paragraph",
+          "text": "To solve this, Retiam normalizes all spatial coordinates to a `[0.0, 1.0]` range relative to the canvas bounds during recording:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Normalized } X = \\frac{\\text{clientX} - \\text{rect.left}}{\\text{rect.width}}"
+        },
+        {
+          "type": "paragraph",
+          "text": "During offline replay, these relative values are dynamically mapped back into absolute screen pixels based on the rendering resolution:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Replay clientX} = \\text{rect.left} + (\\text{Normalized } X \\times \\text{rect.width})"
+        },
+        {
+          "type": "paragraph",
+          "text": "This lets you record a camera orbit at a low resolution and replay it with sub-pixel accuracy at 4K."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Relativized Timestamps (Offset Correction)"
+        },
+        {
+          "type": "paragraph",
+          "text": "In live mode, a user might load the page and wait several seconds before triggering the recording. This introduces a large time offset (e.g., the first recorded event has a timestamp of `4500ms`). During offline rendering, the simulation clock always starts at `0ms`. To align these timelines, the recorder captures the exact start time offset (`recordingStartTime`) and subtracts it from all event frames. Replay events are guaranteed to begin precisely at `time = 0` when rendering."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Dual-Dispatching and Native DOM Bubbling"
+        },
+        {
+          "type": "paragraph",
+          "text": "Different modules in Retiam listen to different browser APIs:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "  `CameraController.ts` listens to legacy `MouseEvent`s on the `document` / `window`.",
+            "  `InteractionManager.ts` listens to modern `PointerEvent`s on the `canvas`."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "A synthesized `MouseEvent` does not trigger a `PointerEvent` listener. To bridge this, the replayer performs a **dual-dispatch**—reconstructing and firing both types simultaneously."
+        },
+        {
+          "type": "paragraph",
+          "text": "Additionally, instead of dispatching to separate elements, **all events are dispatched directly to the `canvas` with `bubbles: true`**. The browser’s native DOM bubbling mechanism handles distributing these events:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "They trigger local canvas-level listeners (`InteractionManager`).",
+            "They bubble up to `body`, `document`, and `window` to trigger global-level listeners (`CameraController`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Delta Synthesis (movementX and movementY)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Many WebGL/WebGPU camera controllers read `e.movementX` and `e.movementY` to track fast rotational deltas. Because standard browser event constructors do not calculate these movements on synthetic events, Retiam caches the coordinates of the previous replayed frame, calculates the manual pixel deltas, and injects them directly into the constructed events."
+        }
+      ]
+    },
+    {
+      "id": "2-integration-sockets-setup",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Integration & Sockets Setup"
+        },
+        {
+          "type": "paragraph",
+          "text": "To make this system run, the `InputRecorder` module must be integrated into your scene runtime."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Browser Engine Integration"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The class is stored in `src/engine/control/InputRecorder.ts` and registered in `index.ts`.",
+            "Inside `Scene.ts` (the core orchestrator), the recorder is instantiated as soon as the WebGPU canvas is configured:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "this.recorder = new InputRecorder(this);"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Right before launching the offline loop, the scene checks if Puppeteer has injected the replay payload onto the window:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "if (typeof (window as any).__INTERACTION_DATA__ !== \"undefined\") {\n       this.recorder.loadReplayData((window as any).__INTERACTION_DATA__);\n   }"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "During the frame-update tick, inputs are processed at the very beginning of `Scene.update()` so they can be consumed by camera controllers before the frame is rendered:"
+          ],
+          "start": 4
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "if (this.recorder) {\n       this.recorder.update(t, dt);\n   }"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Headless CLI Integration (render.js)"
+        },
+        {
+          "type": "paragraph",
+          "text": "When you supply the `--replay` flag to the node renderer, the CLI reads the interaction JSON file from your disk and uses Puppeteer's secure injection API to place the data onto the page's global scope **before any script execution begins**:"
+        },
+        {
+          "type": "code",
+          "language": "javascript",
+          "code": "if (replayFile && fs.existsSync(replayFile)) {\n    const rawJsonData = fs.readFileSync(replayFile, 'utf8');\n    await page.evaluateOnNewDocument((data) => {\n        window.__INTERACTION_DATA__ = JSON.parse(data);\n    }, rawJsonData);\n}"
+        }
+      ]
+    },
+    {
+      "id": "3-step-by-step-usage-guide",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Step-by-Step Usage Guide"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Part A: Recording Your Interaction (Live Mode)"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Boot up your local development workspace in interactive mode:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm run dev"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Open your web browser and navigate to the dev server (e.g., `http://localhost:5173`).",
+            "Click inside your canvas once to make sure the window has focus.",
+            {
+              "text": "Press the global recording shortcut to start:",
+              "children": [
+                "**On macOS**: `Command` + `Option` + `R` (or `⌘` + `⌥` + `R`)",
+                "**On Windows / Linux**: `Control` + `Alt` + `R`"
+              ]
+            },
+            "You will see a log in the browser console: `🔴 [InputRecorder] Recording started...`",
+            "Perform your interactions: orbit the camera, drag 3D meshes, scroll the wheel, or press keys to trigger camera changes.",
+            "Once finished, press the shortcut (`Command + Option + R` or `Control + Alt + R`) again.",
+            "The console will log: `⏹️ [InputRecorder] Stopped. Captured X input events.`",
+            "Your browser will automatically compile the data and trigger a file download named **`interactions.json`**. Save this file into your root project directory."
+          ],
+          "start": 2
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Part B: Replaying and Rendering Your Video (Headless Mode)"
+        },
+        {
+          "type": "paragraph",
+          "text": "To render a high-quality video using your recorded camera paths and dragging interactions, run the programmatic CLI and supply the `--replay` argument:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiem src/MyScene.ts --replay interactions.json"
+        },
+        {
+          "type": "paragraph",
+          "text": "If you want to temporarily override the output video resolution to 1080p, you can stack parameters:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiem src/MyScene.ts --replay interactions.json -w 1920 -h 1080"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "What happens next:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The CLI validates the existence of `interactions.json` (printing `Replay File: interactions.json (Ready)`).",
+            "It boots up Vite on a free port and launches Chrome headlessly.",
+            "Chrome loads the page, receives the virtualized events payload, and steps through them frame-by-frame.",
+            "FFmpeg captures the simulated outputs and saves the high-resolution, perfectly stabilized recording to your `outputs/` folder."
+          ]
+        }
+      ]
+    }
+  ]
+}

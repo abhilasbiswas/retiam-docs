@@ -1,0 +1,209 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-retiam-studio-architecture",
+  "title": "Retiam Studio Application Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/RETIAM_STUDIO_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/RETIAM_STUDIO_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/RETIAM_STUDIO_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Environment](/api-entities-primitives-3d#environment), [Code](/api-entities-composites-text#code), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Rate](/api-animation#rate), [Color](/api-math#color), [Spring](/api-entities-primitives-2d#spring), [Poly](/api-entities-primitives-2d#poly), [Rect](/api-entities-primitives-2d#rect), [Circle](/api-entities-primitives-2d#circle)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "**Retiam Studio** (`studio/`) is an interactive, browser-native Integrated Development Environment (IDE) engineered specifically for authoring, fine-tuning, debugging, and exporting Retiam animations."
+        },
+        {
+          "type": "paragraph",
+          "text": "The Studio bridges rapid code iteration with immediate visual feedback:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Embedded Monaco Code Editor**: Full TypeScript language server, syntax highlighting, autocompletion, and live error diagnostics.",
+            "**AST-Aware Parameter Inspector**: Automatic cursor-driven parameter detection (colors, rate curves, spring physics, geometry dimensions, transforms) enabling instant visual tuning directly in the editor.",
+            "**Live WebGPU Scene Host**: Low-latency hot reloading of animations on code changes with state preservation.",
+            "**Production Export Panel**: In-browser interface for rendering 4K MP4/WebM videos, WebP animations, and high-resolution snapshots without opening terminal CLI tools."
+          ]
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "Retiam Studio IDE",
+              "children": [
+                {
+                  "label": "Scene sidebar",
+                  "description": "Example demos, scene graph tree and file switcher"
+                },
+                {
+                  "label": "Monaco code editor",
+                  "description": "TypeScript language server, inline parameter inspector and bidirectional code sync"
+                },
+                {
+                  "label": "WebGPU preview",
+                  "description": "Live scene host, transport scrubber and telemetry monitor"
+                },
+                {
+                  "label": "Production export modal",
+                  "description": "MP4, WebM, GIF, 4K video rendering and snapshots"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-subsystem-components-data-flow",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Subsystem Components & Data Flow"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Monaco Editor & Bi-Directional Code Sync ([studio/editor/](../studio/editor/))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**TypeScript Transpilation**: The editor compiles ESNext/TypeScript scene code in real time using the Monaco TypeScript worker and WebAssembly SWC/esbuild.",
+            "**Bi-Directional AST Updates**: When a slider or curve handle in the Inspector HUD is adjusted, the editor locates the exact AST source range and updates the text in-place without triggering full reloads."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Inline Parameter Inspector ([studio/inspector/](../studio/inspector/))"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "For the complete widget catalogue and trigger specifications, see [`STUDIO_INSPECTOR.md`](/notes-studio-inspector)."
+        },
+        {
+          "type": "paragraph",
+          "text": "As the cursor navigates across scene code, the Inspector scans tokens:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Easing functions (`Rate.bezier`, `Rate.easeOutCubic`) $\\to$ Interactive cubic-bezier curve editor.",
+            "Color definitions (`Color.fromHex`, gradients) $\\to$ Color picker and palette chips.",
+            "Spring parameters (`Rate.spring`) $\\to$ Live dynamic settling graph with mass/damping sliders.",
+            "Geometric parameters (`Poly`, `Rect`, `Circle`) $\\to$ Radius, corner smoothing, and sides sliders."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Live WebGPU Preview & Telemetry ([studio/viewer.html](../studio/viewer.html))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The preview canvas executes the compiled scene inside an isolated sandbox:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Hot Scene Swap**: Clears the previous scene graph, invalidates GPU pipeline caches, and mounts the new scene while preserving current camera angles and playback timestamps.",
+            {
+              "text": "**Performance Telemetry**:",
+              "children": [
+                "Render loop frame rate ($\\text{FPS}$).",
+                "GPU frame duration ($\\text{ms}$).",
+                "Active entity count and draw call count.",
+                "Estimated VRAM consumption across state, geometry, and texture allocators."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Export Modal & Video Packaging ([studio/ui/](../studio/ui/))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Provides a visual interface to Retiam's export engine:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Resolution Presets**: 720p (1280x720), 1080p (1920x1080), 1440p (2560x1440), and 4K UHD (3840x2160).",
+            "**Frame Rate**: 30 FPS, 60 FPS, or custom cinematic rates (24, 120 FPS).",
+            "**Format Options**: MP4 (H.264/AAC), WebM (VP9/Opus), animated GIF, or ZIP archives containing raw PNG image sequences."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-development-workflow",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Development Workflow"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Launch Studio**:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm run studio"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Select Demo / Template**: Choose from 40+ pre-built mathematical and cinematic demos in the sidebar.",
+            "**Live Authoring**: Modify entities, easing curves, and camera choreography. The preview canvas hot-reloads instantly.",
+            "**Visual Parameter Tweaking**: Click any color or number in the editor to fine-tune values via the floating HUD.",
+            "**One-Click Export**: Click **Render Video**, select resolution and format, and download the finished production video."
+          ],
+          "start": 2
+        }
+      ]
+    }
+  ]
+}

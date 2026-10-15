@@ -1,0 +1,803 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-libs-graphs-automata",
+  "title": "graphs / automata API",
+  "group": "Library API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automaton",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Automaton"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/graphs/automata/Automaton.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/graphs/automata/Automaton.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/graphs`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "StateOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransitionStep",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SimulationResult",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Automaton",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface StateOptions extends Partial<GraphNodeOptions> {\n    isStart?: boolean;\n    isAccepting?: boolean;\n}\nexport interface TransitionStep {\n    fromState: string;\n    symbol: string;\n    toState: string;\n    edge: GraphEdge;\n}\nexport interface SimulationResult {\n    steps: TransitionStep[];\n    finalState?: string;\n    accepted: boolean;\n    states: string[];\n}\nexport declare class Automaton extends Graph {\n    startStateId?: string;\n    acceptingStateIds: Set<string>;\n    constructor(options?: GraphOptions);\n    addState(id: string, options?: StateOptions): GraphNode;\n    addTransition(fromId: string, toId: string, symbols: string | string[], options?: Partial<GraphEdgeOptions>): GraphEdge;\n    getTransition(fromId: string, symbol: string): string | undefined;\n    trace(inputString: string): SimulationResult;\n    accepts(inputString: string): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `StateOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "isStart?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isAccepting?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L11)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TransitionStep` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fromState: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "symbol: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "toState: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "edge: GraphEdge;",
+                    "—",
+                    "Required record/option field with declared type `GraphEdge`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SimulationResult` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "steps: TransitionStep[];",
+                    "—",
+                    "Required record/option field with declared type `TransitionStep[]`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "finalState?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "accepted: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "states: string[];",
+                    "—",
+                    "Required record/option field with declared type `string[]`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L25)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Automaton` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public startStateId?: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public acceptingStateIds: Set<string>",
+                    "new Set()",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options: GraphOptions = {})",
+                    "—",
+                    "Implementation: `super({ isDirected: true, ...options });`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addState(id: string, options: StateOptions = {}): GraphNode",
+                    "—",
+                    "Adds an automaton state. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addTransition(\n        fromId: string,\n        toId: string,\n        symbols: string | string[],\n        options: Partial<GraphEdgeOptions> = {}\n    ): GraphEdge",
+                    "—",
+                    "Adds an automaton transition $\\delta(\\text{from}, \\text{symbol}) = \\text{to}$. If multiple transitions exist between the same pair of states, merges their label cleanly. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getTransition(fromId: string, symbol: string): string | undefined",
+                    "—",
+                    "Look up transition in deterministic automaton. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L122)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public trace(inputString: string): SimulationResult",
+                    "—",
+                    "Simulates the automaton on an input string. [Source line 132](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L132)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public accepts(inputString: string): boolean",
+                    "—",
+                    "Determines whether the automaton accepts or rejects the input word. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L184)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.isStart ?? false",
+                    "[Line 43](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L43)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.isAccepting ?? false",
+                    "[Line 44](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Automaton.ts#L44)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"Cannot trace automaton without a start state.\")",
+                "new Error(`Edge missing between ${currentState} and ${nextState}`)"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Graph](/api-libs-graphs-graph#graph)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatonrunner",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "AutomatonRunner"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/graphs/automata/AutomatonRunner.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/graphs/automata/AutomatonRunner.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/graphs`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RunnerOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AutomatonRunner",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface RunnerOptions {\n    stepDuration?: number;\n    showVerdictBadge?: boolean;\n    verdictPosition?: Vec3Type;\n}\nexport declare class AutomatonRunner extends VGroup {\n    automaton: Automaton;\n    tape: Tape;\n    acceptBadge: VGroup;\n    rejectBadge: VGroup;\n    activeBadge?: VGroup;\n    verdictPosition?: Vec3;\n    constructor(automaton: Automaton, tape: Tape, options?: RunnerOptions);\n    run(scene: Scene, inputString: string, stepDuration?: number): Promise<boolean>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RunnerOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "stepDuration?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "showVerdictBadge?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "verdictPosition?: Vec3Type;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L23)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AutomatonRunner` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public automaton: Automaton",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public tape: Tape",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public acceptBadge: VGroup",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rejectBadge: VGroup",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public activeBadge?: VGroup",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public verdictPosition?: Vec3",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(automaton: Automaton, tape: Tape, options: RunnerOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.automaton`, `this.tape`, `this.verdictPosition`, `this.acceptBadge`, `this.acceptBadge.z_index`, `this.acceptBadge.VISIBILITY`, `this.rejectBadge`, `this.rejectBadge.z_index` and other instance fields; construction of `VGroup`, `Rect`, `SDFText`; calls to `Vec3.cast`, `hex`, `acceptText.center`, `this.acceptBadge.add`, `this.acceptBadge.setScale`, `this.add`, `rejectText.center`, `this.rejectBadge.add` and additional helpers. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async run(scene: Scene, inputString: string, stepDuration: number = 0.65): Promise<boolean>",
+                    "—",
+                    "Executes the automaton on inputString step-by-step inside an active scene. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/AutomatonRunner.ts#L86)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VGroup](/api-entities-layout#vgroup)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tape",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Tape"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/graphs/automata/Tape.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/graphs/automata/Tape.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/graphs`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TapeCell",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TapeOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Tape",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TapeCell {\n    index: number;\n    symbol: string;\n    rect: Rect;\n    text: SDFText;\n    group: VGroup;\n}\nexport interface TapeOptions {\n    theme?: GraphTheme | string;\n    cellSize?: number;\n    cellGap?: number;\n    symbols?: string | string[];\n}\nexport declare class Tape extends VGroup {\n    theme: GraphTheme;\n    readonly cellSize: number;\n    readonly cellGap: number;\n    cells: TapeCell[];\n    headIndex: number;\n    headIndicator: VGroup;\n    constructor(options?: TapeOptions);\n    setSymbols(symbols: string | string[]): this;\n    getCellX(index: number): number;\n    setCellStatus(index: number, status: 'default' | 'active' | 'success' | 'fail'): void;\n    writeSymbol(index: number, newSymbol: string): this;\n    moveHead(targetIndex: number, duration?: number): CustomAnimation;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TapeCell` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "index: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "symbol: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rect: Rect;",
+                    "—",
+                    "Required record/option field with declared type `Rect`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "text: SDFText;",
+                    "—",
+                    "Required record/option field with declared type `SDFText`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "group: VGroup;",
+                    "—",
+                    "Required record/option field with declared type `VGroup`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L26)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TapeOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "theme?: GraphTheme | string;",
+                    "—",
+                    "Optional record/option field with declared type `GraphTheme | string`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cellSize?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cellGap?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "symbols?: string | string[];",
+                    "—",
+                    "Optional record/option field with declared type `string | string[]`. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L33)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Tape` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public theme: GraphTheme",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly cellSize: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly cellGap: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cells: TapeCell[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public headIndex: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public headIndicator: VGroup",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options: TapeOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.theme`, `this.cellSize`, `this.cellGap`, `this.headIndicator`, `this.headArrow`, `this.headLabel`, `this.headIndicator.z_index`; construction of `VGroup`, `Arrow`, `SDFText`; calls to `resolveGraphTheme`, `this.headIndicator.add`, `this.headLabel.center`, `this.headLabel.nextTo`, `this.add`, `this.setSymbols`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSymbols(symbols: string | string[]): this",
+                    "—",
+                    "Initializes or reconfigures the tape with an array or string of symbols. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCellX(index: number): number",
+                    "—",
+                    "Implementation: `if (index >= 0 && index < this.cells.length) { return this.cells[index].group.transform.position.x; } return 0;`. [Source line 146](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L146)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setCellStatus(index: number, status: 'default' | 'active' | 'success' | 'fail')",
+                    "—",
+                    "Highlights the tape cell with a semantic status color. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public writeSymbol(index: number, newSymbol: string): this",
+                    "—",
+                    "Updates the symbol in a specific cell (essential for Turing machines). [Source line 192](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L192)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public moveHead(targetIndex: number, duration: number = 0.4): CustomAnimation",
+                    "—",
+                    "Creates an animation smoothly translating the tape head to the cell at targetIndex. [Source line 205](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L205)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.cellSize ?? 1.2",
+                    "[Line 53](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L53)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.cellGap ?? 0.14",
+                    "[Line 54](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L54)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Tape.updateHeadPositionImmediate: private updateHeadPositionImmediate(index: number)",
+                    "Body operations (including nested callbacks): assignments to `this._headLocalX`, `this.headIndicator.transform.position`; calls to `this.getCellX`.",
+                    "[Line 153](https://github.com/abhilasbiswas/Retiam/blob/main/libs/graphs/automata/Tape.ts#L153)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VGroup](/api-entities-layout#vgroup)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,353 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-shader-system-and-wgsl-pipeline-architecture",
+  "title": "Dynamic Shader System, Chunk Registry & WGSL Pipeline Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SHADER_SYSTEM_AND_WGSL_PIPELINE_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SHADER_SYSTEM_AND_WGSL_PIPELINE_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SHADER_SYSTEM_AND_WGSL_PIPELINE_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Shader](/api-entities-primitives-2d#shader), [Pipeline](/api-render-pipelines#pipeline), [ChunkRegistry](/api-render-shader-system#chunkregistry), [VertexSchema](/api-render-shader-system-schemas#vertexschema), [ShaderBuilder](/api-render-shader-system#shaderbuilder), [UniformSchema](/api-render-shader-system-schemas#uniformschema), [WGSLReflector](/api-render-pipelines#wgslreflector), [Sampler](/api-render-pipelines#resourcelayouts), [PipelineCache](/api-render-shader-system#pipelinecache), [Code](/api-entities-composites-text#code), [Path](/api-entities-primitives-2d#path), [Quaternion](/api-math-vector#quaternion), [Arc](/api-entities-primitives-2d#arc), [DataType](/api-render-shader-system-schemas#shadertypes), [VaryingSchema](/api-render-shader-system-schemas#varyingschema), [Storage](/api-render-pipelines#resourcelayouts)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam avoids monolithic, hard-coded WGSL shader strings. Instead, it features a **modular, composable shader system** with compile-time preprocessor macros, slot-based injections, schema-driven memory layouts, and automated WebGPU pipeline reflection."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  C[\"ChunkRegistry<br/>PBR, cel, SDF and shadows\"] --> B[\"ShaderBuilder<br/>Slots, macros and AST\"]\n  V[\"VertexSchema<br/>GPU attributes / VBO\"] --> B\n  U[\"UniformSchema<br/>Std140 / Std430 alignment\"] --> B\n  B -->|compile to WGSL| R[\"WGSLReflector<br/>Bind groups and samplers\"]\n  R --> P[\"PipelineCache<br/>Cached render pipelines\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-procedural-shader-generation-shaderbuilder-ts-src-engine-render-shadersystem-shaderbuilder-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Procedural Shader Generation ([ShaderBuilder.ts](../src/engine/render/shadersystem/ShaderBuilder.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `ShaderBuilder` class allows components to assemble shader pipelines dynamically while maintaining strict types."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Slot Injection Mechanism"
+        },
+        {
+          "type": "paragraph",
+          "text": "Instead of modifying shader files directly, components register code into predefined hook slots:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`header`: Global structs, helper functions, and WGSL includes.",
+            "`vertex_init`: Code executed at the beginning of the vertex shader.",
+            "`vertex_post`: Code executed after world transform evaluation.",
+            "`fragment_init`: Code executed before lighting calculation.",
+            "`fragment_lighting`: Custom lighting or BRDF evaluation logic."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const builder = new ShaderBuilder();\nbuilder.includes.add(\"lighting/pbr\");\nbuilder.defines[\"ENABLE_SHADOWS\"] = true;\nbuilder.defines[\"MAX_LIGHTS\"] = 4;\n\nbuilder.inject(\"fragment_lighting\", `\n    let directLight = evaluatePBR(in.worldPos, in.normal, viewDir);\n    outColor = vec4<f32>(directLight, 1.0);\n`);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Preprocessor Directives (#if, #elif, #else, #endif)"
+        },
+        {
+          "type": "paragraph",
+          "text": "`ShaderBuilder` processes conditional compilation directives on the CPU before handing code to the WebGPU shader compiler:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "#if ENABLE_SHADOWS\n    let shadow = computeShadowFactor(in.worldPos);\n#else\n    let shadow = 1.0;\n#endif"
+        },
+        {
+          "type": "paragraph",
+          "text": "Variable interpolation `${variable}` allows dynamic values (like blur radiuses, loop counts, and array sizes) to be embedded directly into WGSL code."
+        }
+      ]
+    },
+    {
+      "id": "3-the-shader-chunk-library-chunkregistry-ts-src-engine-render-shadersystem-chunkregistry-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. The Shader Chunk Library ([ChunkRegistry.ts](../src/engine/render/shadersystem/ChunkRegistry.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam maintains a modular library of reusable shader snippets:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Chunk Category",
+            "Path",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**PBR**",
+                  "type": "text"
+                },
+                {
+                  "text": "`lighting/pbr.wgsl`"
+                },
+                {
+                  "text": "Cook-Torrance microfacet BRDF with GGX normal distribution, Smith shadowing, and Schlick Fresnel."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Gooch**",
+                  "type": "text"
+                },
+                {
+                  "text": "`lighting/gooch.wgsl`"
+                },
+                {
+                  "text": "Technical illustration shading using warm ($c_{\\text{warm}}$) and cool ($c_{\\text{cool}}$) tone transitions."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Cel / Toon**",
+                  "type": "text"
+                },
+                {
+                  "text": "`lighting/cel.wgsl`"
+                },
+                {
+                  "text": "Multi-band stepped threshold lighting for stylized non-photorealistic rendering."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Clay**",
+                  "type": "text"
+                },
+                {
+                  "text": "`lighting/clay.wgsl`"
+                },
+                {
+                  "text": "Soft studio clay shader with ambient occlusion and directional hemisphere lighting."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Shadows**",
+                  "type": "text"
+                },
+                {
+                  "text": "`lighting/shadows.wgsl`"
+                },
+                {
+                  "text": "Percentage-Closer Filtering (PCF) cascaded shadow map sampling."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**SDF 3D**",
+                  "type": "text"
+                },
+                {
+                  "text": "`includes/sdf.wgsl`"
+                },
+                {
+                  "text": "Exact distance functions (sphere, box, cylinder, torus) and operators (smooth union, subtraction)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Math 3D**",
+                  "type": "text"
+                },
+                {
+                  "text": "`includes/math3d.wgsl`"
+                },
+                {
+                  "text": "Quaternion transformations, Rodrigues rotation formula, and Euler rotations."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Path Utils**",
+                  "type": "text"
+                },
+                {
+                  "text": "`includes/path_utils.wgsl`"
+                },
+                {
+                  "text": "Arc-length lookup, Chaikin subdivision smoothing, and dashing patterns."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-schemas-layout-generation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Schemas & Layout Generation"
+        },
+        {
+          "type": "paragraph",
+          "text": "To eliminate manual calculations of vertex strides and uniform byte offsets, Retiam uses declarative schemas:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. [VertexSchema.ts](../src/engine/render/shadersystem/schemas/VertexSchema.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Defines vertex and instance attribute configurations:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const vertexSchema = new VertexSchema({\n    position: DataType.vec3,\n    normal: DataType.vec3,\n    uv: DataType.vec2\n}, 'vertex');\n\n// Generates WebGPU GPUVertexBufferLayout automatically:\nconst bufferLayout = vertexSchema.getBufferLayout();\n// Stride: 32 bytes (12B + 12B + 8B)\n// Locations: @location(0) vec3<f32>, @location(1) vec3<f32>, @location(2) vec2<f32>"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. [VaryingSchema.ts](../src/engine/render/shadersystem/schemas/VaryingSchema.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Generates the bridge struct between vertex and fragment stages:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Automatically formats `@location(n)` annotations.",
+            "Adds interpolation qualifiers (`@interpolate(flat)`, `@interpolate(perspective, centroid)`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. [UniformSchema.ts](../src/engine/render/shadersystem/schemas/UniformSchema.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Calculates exact 16-byte alignment according to the WGSL specification, ensuring WebGPU memory safety without manual padding calculation errors."
+        }
+      ]
+    },
+    {
+      "id": "5-automated-pipeline-reflection-wgslreflector-ts-src-engine-render-pipelines-wgslreflector-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Automated Pipeline Reflection ([WGSLReflector.ts](../src/engine/render/pipelines/WGSLReflector.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Using `wgsl_reflect`, Retiam inspects the WGSL abstract syntax tree at runtime to automatically synthesize `GPUBindGroupLayoutEntry` arrays:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Storage Buffers**: Detects read-only vs. read-write access modes (`type: 'read-only-storage'` vs `'storage'`).",
+            "**Textures**: Resolves sample types (`float`, `uint`, `depth`) and dimensions (`2d`, `2d-array`, `cube`, `3d`).",
+            "**External Textures**: Automatically detects `texture_external` bindings for HTML5 `<video>` textures and configures WebGPU external texture layouts.",
+            "**Samplers**: Automatically determines filtering vs. comparison samplers."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-pipeline-caching-pipelinecache-ts-src-engine-render-shadersystem-pipelinecache-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Pipeline Caching ([PipelineCache.ts](../src/engine/render/shadersystem/PipelineCache.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Compiling `GPURenderPipeline` instances in WebGPU is asynchronous and computationally expensive. `PipelineCache` implements thread-safe memoization:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Cache Key Formulation**: Hashes the generated WGSL string along with blend modes, depth-stencil formats, cull modes, and sample count:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Key} = \\text{MD5}(\\text{WGSL}) + \\text{\"\\_\"} + \\text{BlendMode} + \\text{\"\\_\"} + \\text{DepthFormat} + \\text{\"\\_\"} + \\text{MSAA}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Subsequent requests for matching pipeline configurations return cached instances in $O(1)$ time, eliminating frame drops during animated scene transitions."
+          ]
+        }
+      ]
+    }
+  ]
+}

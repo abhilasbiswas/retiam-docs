@@ -1,0 +1,263 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "rendering-architecture",
+  "title": "Rendering pipeline from scene to pixels",
+  "group": "GPU implementation",
+  "summary": "Follow a scene entity through traversal, state upload, draw preparation and the render graph to its final pixels.",
+  "sections": [
+    {
+      "id": "one-frame-end-to-end",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "One frame end to end"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "SceneComposer determines whether a frame needs work from invalidation, animation activity, continuous-update mode, textures, video and renderer state.",
+            "Scene updates advance animation queues and phased tasks, then update entities/components.",
+            "Traversal composes transforms/material/paint, applies layer/culling decisions and produces reusable render/compute commands.",
+            "StateDataManager and global allocators upload changed blocks and retain geometry ranges.",
+            "Renderer builds or uses a compiled FrameGraph with compute, raster/raytrace, transparency and post-process passes.",
+            "Passes encode commands, resolve intermediate textures and present or read back the final frame."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [SceneComposer](/api-core-scenecomposer#scenecomposer), [Renderer](/api-render#renderer), [StateDataManager](/api-core#statedatamanager), [RenderCommand](/api-core#sceneinterface), [FrameGraph](/api-render-frame-graph#framegraph)."
+        }
+      ]
+    },
+    {
+      "id": "trace-a-circle",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Trace a Circle from its constructor to the frame"
+        },
+        {
+          "type": "paragraph",
+          "text": "Begin with `new Circle(1, { fill: hex(\"#38bdf8\") })`. Circle extends Arc, and Arc extends Path. Arc builds SVG arc segments, splitting a full turn into half turns because one SVG arc cannot represent coincident start/end points. Path turns that source into contours and selects compatible geometry, fragment and renderer components. A circle’s concise authoring API does not bypass the vector pipeline."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  Circle --> Arc --> Path\n  Path --> G[PathGeometry or TriangulatedPathGeometry]\n  Path --> F[PathFragment or TriangulatedPathFragment]\n  Path --> R[PathRenderer or TriangulatedPathRenderer]\n  State --> Traverse[SceneComposer.traverse]\n  G --> Prepare[RendererComponent.prepare]\n  F --> Prepare\n  R --> Prepare\n  Traverse --> Prepare\n  Prepare --> Draw[FrameGraph passes and draw encoding]\n  Draw --> Present[PresentPass and canvas]"
+        },
+        {
+          "type": "paragraph",
+          "text": "The default analytical method retains quadratic contour data for stencil/fill/stroke passes. The fast method tessellates fills and extrudes strokes into mesh-like buffers. Auto selects according to the path’s supported conditions. These are representation choices: the source geometry is still a circle, but GPU work and supported effects can differ. See [path pipelines](/path-pipelines) for the method and LOD details."
+        },
+        {
+          "type": "example",
+          "example": "labs/compare-geometry-paint"
+        }
+      ]
+    },
+    {
+      "id": "state-and-traversal",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Follow state through animation and traversal"
+        },
+        {
+          "type": "paragraph",
+          "text": "An entity’s local State contains Transform, Paint and Material. `circle.animate.move(...)` creates a StateAnimation with start and target state; Scene.update steps animations between pre and update tasks, then updates entity components and post tasks. Moving a circle changes transform data, while changing its radius rebuilds its underlying arc/path geometry."
+        },
+        {
+          "type": "paragraph",
+          "text": "SceneComposer.buildRenderQueues traverses each registered scene root with a base state. traverse rejects invisible/zero-opacity branches, finds the entity’s render components, and combines local state with parent state. A renderable entity obtains a global state slot and a reusable RenderCommand; a pure container uses pooled state for its children. The command carries the slot index used to fetch transform/paint/material during drawing."
+        },
+        {
+          "type": "paragraph",
+          "text": "Do not interpret a pooled world State or RenderCommand as an independent persistent snapshot. The next frame can overwrite it. Store copies for application history, and use the actual snapshot/replay facilities for supported engine state. Scissor clipping, explicit z_index and nested scenes are also resolved during this traversal, before passes consume the queue."
+        }
+      ]
+    },
+    {
+      "id": "geometry-and-shader-preparation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Prepare geometry and compatible shaders"
+        },
+        {
+          "type": "paragraph",
+          "text": "PathGeometry.prepare tracks contour counts and allocator ranges. Dirty contour data writes analytical points and indices into shared allocation ranges, with the state identifying its contour base. RendererComponent.prepare checks geometry/fragment versions, resolves active passes and schemas, and refreshes cached bindings or compiled pipelines when their contracts change."
+        },
+        {
+          "type": "paragraph",
+          "text": "ShaderBuilder combines geometry vertex/instance declarations, fragment requirements, varyings, resources and the pass entry bodies into WGSL. A fragment requiring a varying that the geometry does not produce is a compatibility failure. Supplying new uniform values is a data update; changing the schema or shader body can require compilation. The [uniform workshop](/extension-workshop#shader) demonstrates the distinction."
+        },
+        {
+          "type": "paragraph",
+          "text": "PathRenderer separates fill, stroke and stencil work. Positive fill alpha selects fill work; positive stroke alpha and strokeWidth select stroke work. State and local instance indices are packed into firstInstance so the shader can address the right retained data. This is why a paint-only change can alter the issued work without recreating the authoring Path."
+        }
+      ]
+    },
+    {
+      "id": "graph-and-presentation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Connect the prepared frame to presentation"
+        },
+        {
+          "type": "paragraph",
+          "text": "SceneComposer.prepare updates views/textures, builds the queues and flushes geometry allocators, then stores prepared SceneData. submit supplies the current canvas texture and invokes Renderer.render. The renderer’s FrameGraph connects producers and consumers across compute, raster/transparency, optional ray tracing, post-processing and presentation."
+        },
+        {
+          "type": "paragraph",
+          "text": "compile executes setup declarations, versions in-place resources, follows active sinks back to their producers and topologically orders the retained passes. Unused branches can be culled; cycles are rejected. execute resolves physical resources for the current canvas size and gives each pass a RenderContext for command encoding. The final output is either presented to the canvas or consumed by the selected capture path."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-post-process"
+        },
+        {
+          "type": "paragraph",
+          "text": "Read the half-luminance lab as an extra image consumer inserted before presentation. The scene geometry and its materials stay intact; the new pass reads the completed color texture. Declaring a handle without connecting that output to the image chain is insufficient."
+        }
+      ]
+    },
+    {
+      "id": "other-representations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "How text, instancing and 3D change the middle"
+        },
+        {
+          "type": "paragraph",
+          "text": "Vector Text turns glyph outlines into vector paths, so its shape operations share the path route. SDFText uses atlas-backed TextGeometry: glyph layout creates instances/UVs and the fragment samples a distance-field texture. Replacing a string can rebuild glyph children and bounds; moving its parent changes transform state. Read [font pipeline](/font-pipeline) for atlas creation, cache and glyph lookup."
+        },
+        {
+          "type": "paragraph",
+          "text": "A Model starts from indexed mesh vertices, indices and normals. Its geometry/mesh renderer submits those resources, while Material and the selected shading style determine lighting. Paint fill is not its albedo control. Procedural SDF volumes instead evaluate distance fields in the shader and raymarch their surface; they do not become triangle meshes merely by being visible."
+        },
+        {
+          "type": "paragraph",
+          "text": "Instancing shares geometry and stores per-instance state, with optional compute commands generating/updating it before draws. The logical dependency is producer-before-consumer even when both use the same buffer. SubScene and render targets route a scene into another image consumer; they add a resource/rendering boundary rather than copying pixels into ordinary entity state."
+        },
+        {
+          "type": "paragraph",
+          "text": "Use [extensions](/extension-workshop) to modify one stage at a time, [GPU memory](/gpu-memory) for allocation/upload ownership, and [performance](/performance) to measure the changed stage. Historical notebooks preserve design context, but the versioned API reference records the documented release’s contract."
+        }
+      ]
+    },
+    {
+      "id": "components-and-pipeline-compatibility",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Components and pipeline compatibility"
+        },
+        {
+          "type": "paragraph",
+          "text": "Geometry and fragment components cooperate through ShaderBuilder, schemas and resource declarations. RendererComponent caches compatible pipelines and bind groups. A path, indexed model and external video texture have different vertex/resource contracts; a fragment swap must remain compatible with the geometry domain."
+        },
+        {
+          "type": "paragraph",
+          "text": "Compute commands are collected into a queue and dispatched before dependent draw stages. A producer/consumer relationship must be reflected in the render graph/resource declarations when custom passes are involved."
+        }
+      ]
+    },
+    {
+      "id": "depth-transparency-and-illumination",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Depth, transparency and illumination"
+        },
+        {
+          "type": "paragraph",
+          "text": "Raster pipelines use a reversed-Z convention in supported paths: near maps toward one, far toward zero, depth clears to zero and comparisons are greater/greater-equal. Transparent depth writing is pipeline state, not simply a fragment alpha choice. Intersecting translucent geometry can require order-independent transparency."
+        },
+        {
+          "type": "paragraph",
+          "text": "Directional shadows render a light-space depth map with PCF/PCSS filtering. PBR, Gooch, Cel and Clay shaders provide different illumination treatments. Post-processing resolves antialiasing and optional effects. Exact render settings and defaults are listed in RenderConfig."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [ShadowPass](/api-render-passes#shadowpass), [ShadingStyle](/api-render#renderconfig), [ShadowMethod](/api-render#renderconfig), [RenderConfig](/api-render#renderconfig)."
+        }
+      ]
+    },
+    {
+      "id": "invalidation-and-performance",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Invalidation and performance"
+        },
+        {
+          "type": "paragraph",
+          "text": "Dirty versions avoid repeatedly rebuilding unchanged geometry, state or pipelines. Mutation through public setters participates in that mechanism; direct array writes may bypass it. Retained pools reduce allocations but cannot eliminate the allocation cost of arbitrary application factories, transient resources or expanding geometry. Profile CPU submission, GPU time and memory separately."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [State](/api-core#state), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [GlobalGeometryAllocator](/api-render-allocator#globalgeometryallocator), [GlobalAnalyticalAllocator](/api-render-allocator#globalanalyticalallocator)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scenes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Separate geometry from paint, then apply one full-frame post-process."
+        },
+        {
+          "type": "example",
+          "example": "labs/compare-geometry-paint"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-post-process"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [How vector paths reach the GPU](/path-pipelines)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Entities, components and ownership](/entities)",
+    "[Scenes, composer and subscenes](/scene-composition)"
+  ]
+}

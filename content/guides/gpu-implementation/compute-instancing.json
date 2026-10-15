@@ -1,0 +1,137 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "compute-instancing",
+  "title": "Compute kernels and instancing",
+  "group": "GPU implementation",
+  "summary": "Use compute kernels and instanced geometry to update and draw repeated objects on the GPU.",
+  "sections": [
+    {
+      "id": "computekernel-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ComputeKernel contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "ComputeKernel receives a named ShaderResource map, WGSL source and optional workgroup size. dispatch returns a ComputeCommand; it does not automatically submit work to the device. Queue that command with Scene.addCompute so the frame pipeline can execute it."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const kernel = new ComputeKernel(resources, wgsl, [64, 1, 1]);\nthis.always(() => {\n  this.addCompute(kernel.dispatch(this.device, Math.ceil(count / 64)));\n});"
+        },
+        {
+          "type": "paragraph",
+          "text": "The dispatch size counts workgroups, not particles. Guard out-of-range global invocation IDs in WGSL. Allocate buffer usages for every consumer: a storage buffer read by a shader and updated by the CPU also needs the relevant COPY_DST usage."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [ComputeKernel](/api-compute#computekernel), [ComputeCommand](/api-compute#compute), [Compute](/api-compute#compute), [Res](/api-render-shader-system-schemas#shadertypes)."
+        }
+      ]
+    },
+    {
+      "id": "instanced-data-layouts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Instanced data layouts"
+        },
+        {
+          "type": "paragraph",
+          "text": "Instanced repeats one template’s compatible geometry using a per-instance storage buffer. Standard layout uses 12 floats per instance; extended layout uses 16 and permits non-uniform scale. Position, rotation, scale, color, visible count and offset are exposed through public setters and options. instanceData is CPU-side storage; updateInstances/dirty state controls upload."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-instancedscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Instanced](/api-entities#instanced), [InstancedOptions](/api-entities#instanced), [InstancedComputeOptions](/api-entities#instanced)."
+        }
+      ]
+    },
+    {
+      "id": "gpu-updates-and-ownership",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GPU updates and ownership"
+        },
+        {
+          "type": "paragraph",
+          "text": "Instanced.compute accepts source or a kernel and can automatically dispatch each frame. EnsureGPUBuffer/getInstanceGPUBuffer bridges the storage buffer to compute. Avoid uploading stale CPU instanceData after a compute shader writes the authoritative positions, or the upload can overwrite the simulation. Explicit readback is asynchronous and can stall if used in a per-frame CPU loop."
+        },
+        {
+          "type": "paragraph",
+          "text": "animateStaggered uses seconds in its own options, unlike AnimOptions.duration. Large instance counts also change the firstInstance packing mode and reduce the representable state-index range; see the memory guide."
+        }
+      ]
+    },
+    {
+      "id": "arrange-as-a-higher-level-bridge",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Arrange as a higher-level bridge"
+        },
+        {
+          "type": "paragraph",
+          "text": "Arrange builds common repeated layouts and provides CPU InstanceItem wrappers or GPU instancing. GPU mode shares one template and instance state; CPU mode can give each clone a different hierarchy or material. Pick based on the required behavior, then profile the intended count."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Arrange](/api-entities-layout#arrange), [InstanceItem](/api-entities-layout#arrange)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "A small compute grid isolates resource binding and dispatch from the separate instancing example above."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-add-compute"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [FrameGraph and custom render passes](/frame-graph).",
+            "Build it step by step: [Use ComputeKernel to generate an image](/tutorial-compute-kernel)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Shader builders, schemas and resources](/shader-system)"
+  ]
+}

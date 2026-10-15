@@ -1,0 +1,185 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "testing-scenes",
+  "title": "Test scenes, key frames and input replay",
+  "group": "Production quality",
+  "summary": "Check scene behavior with repeatable inputs, key frames, lifecycle assertions and reproducible renders.",
+  "sections": [
+    {
+      "id": "layers",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Test a scene at several layers"
+        },
+        {
+          "type": "paragraph",
+          "text": "A scene can type-check and still draw nothing. Combine the checks that answer different questions: source lint for authoring mistakes, TypeScript for contracts, a browser run for GPU/assets, visual key frames for composition, and behavioral checks for interaction. A screenshot test alone cannot prove that a click changes the correct object or that the movie’s audio is synchronized."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Check",
+            "Good assertion",
+            "Practical limit"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "TypeScript / scene lint",
+                "Imports, options, durations, unsupported properties.",
+                "Cannot validate WGSL or browser resource availability."
+              ]
+            },
+            {
+              "cells": [
+                "Scene state",
+                "Named object ends at a known position with known opacity.",
+                "Engine state may exclude application variables or media."
+              ]
+            },
+            {
+              "cells": [
+                "Visual key frame",
+                "At a meaningful beat, title/curve/selection are visible and unclipped.",
+                "GPU, font and antialiasing differences can require tolerances."
+              ]
+            },
+            {
+              "cells": [
+                "Input sequence",
+                "The same drag/click sequence yields the same selection or score.",
+                "Keep input coordinate conventions and camera fixed."
+              ]
+            },
+            {
+              "cells": [
+                "Lifecycle",
+                "Mount/unmount/replay releases listeners and old GPU work.",
+                "Test failed startup and late asynchronous completion too."
+              ]
+            },
+            {
+              "cells": [
+                "Offline output",
+                "Expected dimensions, duration/frame count and audio track.",
+                "A successful preview is not proof of an encoded movie."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "repeatable",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Build a repeatable fixture"
+        },
+        {
+          "type": "paragraph",
+          "text": "Select local assets and a fixed camera. Reset application counters and simulation state in run. Use a local seeded random generator and recorded input rather than live pointer events. Define checkpoints around authored beats—before reveal, after reveal, after transition—rather than arbitrary sleep durations. For dt-integrated physics, use a known fixed step and replay the same commands."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// A deterministic local random source. Recreate it in run() on replay.\nfunction makeRandom(seed: number) {\n  let state = seed >>> 0;\n  return () => {\n    state = (1664525 * state + 1013904223) >>> 0;\n    return state / 4294967296;\n  };\n}\nconst random = makeRandom(42);\nconst x = -2 + 4 * random();"
+        },
+        {
+          "type": "paragraph",
+          "text": "Give important entities stable labels for debugging and explicit host-visible inspection methods when testing a product. Compare values with a numerical tolerance and copy mutable vectors before storing an expected snapshot; a borrowed vector view can change under the test. Do not infer deterministic behavior from a backwards seek unless the scene’s custom state has also been reconstructed."
+        }
+      ]
+    },
+    {
+      "id": "commands",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Run the available checks"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam lint scenes/MyScene.ts\nnpx retiam snapshot scenes/MyScene.ts --times 1,2.5\nnpx retiam render scenes/MyScene.ts -w 1280 -h 720 -f 30 -d 4000 -o outputs/video"
+        },
+        {
+          "type": "paragraph",
+          "text": "The current snapshot command waits wall-clock seconds and captures the browser viewport. It is useful for layout inspection, but it does not seek to exact offline frames. For exact movie comparisons, render at an explicit fps and extract frames at known indices from the result. At 30 fps, authored times must be interpreted against the renderer’s actual stepping and output frame count; do not assume a wall-clock screenshot is frame 30."
+        },
+        {
+          "type": "paragraph",
+          "text": "Inspect snapshots visually: complete labels, safe edges, intended hierarchy and final-state visibility. For visual diffs, compare like dimensions and allow bounded edge/color differences while keeping large missing regions or wrong positions as failures. Save the reference engine build and asset set with the images."
+        }
+      ]
+    },
+    {
+      "id": "interaction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Replay actions and observe their consequence"
+        },
+        {
+          "type": "example",
+          "example": "labs/workshop-animation-control"
+        },
+        {
+          "type": "paragraph",
+          "text": "A useful behavioral test pauses midway, verifies the position stays stable across later frames, resumes and verifies progress, then stops and verifies the awaited continuation runs without moving to the target. Restart should restore the initial pose through a fresh run. Clicking stop twice should not add another animation or trigger a stale continuation."
+        },
+        {
+          "type": "paragraph",
+          "text": "For a diagram, assert that a dragged node moves and its connected edges follow. For Carrom, record the strike parameters and assert rule transitions separately from the physical trajectories. For a TTS scene, use frozen audio/timing and assert subtitle cue changes. These checks explain a failure far better than a single “page loaded” assertion."
+        }
+      ]
+    },
+    {
+      "id": "docs-tests",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Keep documentation examples executable"
+        },
+        {
+          "type": "paragraph",
+          "text": "In retiam-docs, `npm run verify:content` validates pages, routes, versioned reference destinations, API notes and TypeScript labs against the installed library declarations. `npm run test:scenes` lints the authored scenes with the installed Retiam CLI. `npm run test:content` exercises content, navigation and search. The build prepares runtime modules from documentation-owned examples. Verify new GPU examples in a browser as well."
+        },
+        {
+          "type": "paragraph",
+          "text": "When changing a source contract, update its authored notes and relevant walkthrough, then run the example that demonstrates it against the configured Retiam CDN version. See [documentation authoring](/docs-authoring) for the modular files and verification workflow."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Current behavior and compatibility notes](/limitations)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Animation and asynchronous choreography](/animation)"
+  ]
+}

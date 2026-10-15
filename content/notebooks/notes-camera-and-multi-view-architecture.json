@@ -1,0 +1,239 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-camera-and-multi-view-architecture",
+  "title": "Camera Systems & Multi-View Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/CAMERA_AND_MULTI_VIEW_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/CAMERA_AND_MULTI_VIEW_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/CAMERA_AND_MULTI_VIEW_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Camera](/api-camera#camera), [Scene](/api-core-scene#scene), [Camera2DController](/api-camera#camera2dcontroller), [OrbitCameraController](/api-camera#orbitcameracontroller), [UIManager](/api-core#uimanager), [RenderView](/api-camera#renderview), [Entity](/api-core-entity#entity), [CameraModel](/api-camera#camera), [Field](/api-math-fields#standardfields), [Box](/api-entities-primitives-3d#box), [AABB](/api-math#aabb), [Frustum](/api-math#frustum), [RenderTarget](/api-render#rendertarget), [Pass](/api-render-frame-graph#pass)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam features a flexible camera and viewing system designed for both mathematical 2D coordinate demonstrations and complex 3D cinematic camera choreographies."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  S[\"Scene composition loop\"] --> W[\"Primary world view<br/>Perspective / orthographic\"]\n  S --> UI[\"UI overlay view<br/>Orthographic overlay\"]\n  W --> C[\"Camera2DController<br/>Pan, zoom and 2D bounds\"]\n  W --> O[\"OrbitCameraController<br/>3D arcball and damping\"]\n  UI --> U[\"UIManager<br/>LayerMask: 0x80\"]\n  C --> R[\"RenderView layering and execution<br/>Depth clears, viewports and render targets\"]\n  O --> R\n  U --> R"
+        }
+      ]
+    },
+    {
+      "id": "2-core-camera-architecture-camera-ts-src-engine-camera-camera-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Camera Architecture ([Camera.ts](../src/engine/camera/Camera.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Camera` entity extends [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) and maintains both perspective and orthographic projection models."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Projection Models (CameraModel)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`PERSPECTIVE`**: Models a pinhole camera with configurable Field of View (`fov` in degrees), near clipping plane (`near`), and far clipping plane (`far`).",
+            "**`ORTHOGRAPHIC`**: Models parallel projection with `orthoScale`, preserving parallel lines without perspective foreshortening (crucial for technical diagrams and UI overlays)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Automated Entity Framing (frame())"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam eliminates manual camera positioning guesswork by providing mathematical bounding-box framing:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Smoothly frame an entity or group with 15% margin padding:\nawait camera.frameAnimated(myDiagram, 1000, {\n    padding: 0.15,\n    direction: [0, 0, 1], // View from front (+Z)\n    updateFocusDist: true // Place DoF focal plane at diagram center\n});"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Framing Calculations"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Bounding Volume Evaluation**: Computes the world-space Axis-Aligned Bounding Box (AABB) of the target.",
+            "**Frustum Fitting Distance**: Calculates the minimum distance required along the viewing vector so that the bounding sphere fits completely inside the camera's horizontal and vertical viewing angles:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "d_{\\text{vert}} = \\frac{h_{\\text{target}}}{2 \\cdot \\tan(\\text{FOV}_{\\text{vert}} / 2)}"
+        },
+        {
+          "type": "math",
+          "tex": "d_{\\text{horiz}} = \\frac{w_{\\text{target}}}{2 \\cdot \\tan(\\text{FOV}_{\\text{horiz}} / 2)}"
+        },
+        {
+          "type": "math",
+          "tex": "d_{\\text{final}} = \\max(d_{\\text{vert}}, d_{\\text{horiz}}) \\cdot (1 + \\text{padding})"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Physical Depth of Field Alignment**: Updates `camera.focusDist = distance` to place the sharpest focus plane exactly on the subject during raytracing."
+          ],
+          "start": 3
+        }
+      ]
+    },
+    {
+      "id": "3-interactive-camera-controllers",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Interactive Camera Controllers"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides specialized controllers for interactive exploration:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. 2D Camera Controller ([Camera2DController.ts](../src/engine/camera/Camera2DController.ts))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Domain**: 2D coordinate spaces, vector diagrams, and board-style navigation.",
+            {
+              "text": "**Controls**:",
+              "children": [
+                "Right-click drag or middle-click drag to pan.",
+                "Scroll wheel to zoom centered on mouse cursor position.",
+                "`fitToBounds(aabb, duration)` for animated resets."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. 3D Orbit Camera Controller ([OrbitCameraController.ts](../src/engine/camera/OrbitCameraController.ts))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Domain**: 3D geometric primitives, mathematical manifolds, and architectural scenes.",
+            {
+              "text": "**Spherical Coordinates**:",
+              "children": [
+                "Azimuth angle ($\\theta$), elevation angle ($\\phi$), and distance ($r$) relative to a focal target point."
+              ]
+            },
+            "**Inertial Damping**: Smooth exponential decay ($e^{-\\lambda \\Delta t}$) on mouse release, preventing jarring motion stops.",
+            "**Constraint Limits**: Min/max polar angle clamping to prevent gimbal inversion."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-multi-view-architecture-renderview-ts-src-engine-camera-renderview-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Multi-View Architecture ([RenderView.ts](../src/engine/camera/RenderView.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam separates the concept of a **Camera** from a **RenderView**. A scene can declare multiple simultaneous views:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class RenderView {\n    public camera: Camera;\n    public viewport: [number, number, number, number]; // [x, y, w, h] normalized\n    public clearColor: boolean;\n    public clearDepth: boolean;\n    public renderTarget: RenderTarget | null;\n    public layerMask: number;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Dedicated UI Layering Pass"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam uses multi-view passes to cleanly separate world-space entities from UI widgets:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Pass 0 (Scene World View)**:",
+              "children": [
+                "Renders 3D/2D scene entities matching layer mask `0x7FFFFFFF`.",
+                "Perspective or orthographic camera.",
+                "Clears color and depth buffers."
+              ]
+            },
+            {
+              "text": "**Pass 1 (UI Overlay View)**:",
+              "children": [
+                "Managed automatically by [`UIManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts) via `composer.setupUICamera()`.",
+                "Uses an orthographic camera matching window pixel coordinates or normalized viewport.",
+                "**`clearColor = false`** (preserves rendered scene background).",
+                "**`clearDepth = true`** (clears depth buffer so UI elements never clip into 3D scene geometry).",
+                "Only processes entities with `isUI = true` (layer mask `0x80000000`)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Picture-in-Picture & Split Screen"
+        },
+        {
+          "type": "paragraph",
+          "text": "By configuring two `RenderView` instances with different viewports (e.g. `[0, 0, 0.5, 1.0]` and `[0.5, 0, 0.5, 1.0]`), Retiam renders multiple synchronized camera viewpoints into a single frame buffer without performance penalty."
+        }
+      ]
+    }
+  ]
+}

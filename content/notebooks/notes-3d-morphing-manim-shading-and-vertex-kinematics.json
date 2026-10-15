@@ -1,0 +1,609 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-3d-morphing-manim-shading-and-vertex-kinematics",
+  "title": "3D Morphing, Manim Shading & Procedural Vertex Kinematics",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/3D_MORPHING_MANIM_SHADING_AND_VERTEX_KINEMATICS.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/3D_MORPHING_MANIM_SHADING_AND_VERTEX_KINEMATICS.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/3D_MORPHING_MANIM_SHADING_AND_VERTEX_KINEMATICS.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Animation](/api-animation#animation), [Morph](/api-animation-transform#morph), [Sphere](/api-entities-primitives-3d#sphere), [Torus](/api-entities-primitives-3d#torus), [ModelFragment](/api-components-fragment#modelfragment), [ManimSurfaceFragment](/api-components-fragment#manimsurfacefragment), [Model](/api-entities-primitives-3d#model), [Fill](/api-core#fill), [Mode](/api-render-frame-graph#resource), [Color](/api-math#color), [Light](/api-entities-primitives-3d#light), [Camera](/api-camera#camera), [Box](/api-entities-primitives-3d#box), [Cylinder](/api-entities-primitives-3d#cylinder), [State](/api-core#state), [Tetrahedron](/api-libs-shapes-3d#platonicsolids), [Octahedron](/api-libs-shapes-3d#platonicsolids), [ParametricModel](/api-entities-primitives-3d#parametricmodel), [Rate](/api-animation#rate), [Vec3](/api-math-vector#vec3), [Arc](/api-entities-primitives-2d#arc)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a comprehensive technical reference for the 3D surface morphing architecture, Manim-style studio illumination, polyhedra edge treatment, and real-time programmatic vertex deformation systems in Retiam."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam supports two complementary paradigms for animating 3D geometry in WebGPU:"
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "3D Animation Paradigms",
+              "children": [
+                {
+                  "label": "Auto-Morph Engine",
+                  "description": "Morph(from, to)",
+                  "children": [
+                    {
+                      "label": "Two distinct entities"
+                    },
+                    {
+                      "label": "Vertex-to-vertex linear interpolation"
+                    },
+                    {
+                      "label": "Topological metamorphoses",
+                      "description": "Sphere → Torus → Polyhedra"
+                    }
+                  ]
+                },
+                {
+                  "label": "Procedural Kinematics",
+                  "description": "updateSurface / always",
+                  "children": [
+                    {
+                      "label": "Single entity in VRAM"
+                    },
+                    {
+                      "label": "Non-linear kinematics",
+                      "description": "Arc-length conservation"
+                    },
+                    {
+                      "label": "Physical folding, rolling and physics",
+                      "description": "Yoga mat roll, origami and waves"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-manim-style-3d-surface-shading-vs-pbr-rendering",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Manim-Style 3D Surface Shading vs. PBR Rendering"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides two rendering modes for 3D surfaces and models:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.1 The Two Shading Pipelines Compared"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Feature",
+            "Standard PBR (`ModelFragment`)",
+            "Manim 3D Studio Shading (`ManimSurfaceFragment`)"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Lighting Model**",
+                  "type": "text"
+                },
+                {
+                  "text": "Microfacet Cook-Torrance BRDF (GGX distribution, Smith geometry, Fresnel-Schlick)"
+                },
+                {
+                  "text": "Three-point studio illumination (Key light, Fill light, High ambient floor)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Complexity**",
+                  "type": "text"
+                },
+                {
+                  "text": "~120+ shader ALU instructions, multi-texture lookups, environment BRDF LUTs"
+                },
+                {
+                  "text": "~15 lightweight ALU arithmetic instructions, zero texture fetches"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Cull Mode & Normals**",
+                  "type": "text"
+                },
+                {
+                  "text": "Front-face / back-face culling, single-sided normals"
+                },
+                {
+                  "text": "Double-sided (`cullMode: 'none'`) with dynamic view-oriented normals"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Surface Pattern**",
+                  "type": "text"
+                },
+                {
+                  "text": "PBR albedo map / uniform metallic-roughness"
+                },
+                {
+                  "text": "Signature dual-tone alternating checkerboard quads (or solid)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Use Case**",
+                  "type": "text"
+                },
+                {
+                  "text": "Realistic photorealistic physical rendering"
+                },
+                {
+                  "text": "Clean mathematical diagrams, expository animations, ribbon/sheet morphs"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.2 The Manim Lighting Equation"
+        },
+        {
+          "type": "paragraph",
+          "text": "The mathematical lighting formulation implemented in `ManimSurfaceFragment` is:"
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{N}' = \\begin{cases} \\vec{N}, & \\text{if } \\vec{N} \\cdot \\vec{V} \\ge 0 \\\\ -\\vec{N}, & \\text{if } \\vec{N} \\cdot \\vec{V} < 0 \\end{cases}"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Illumination} = \\text{ambient} + k_{\\text{key}} \\cdot \\max(\\vec{N}' \\cdot \\vec{L}_{\\text{key}}, 0) + k_{\\text{fill}} \\cdot \\max(\\vec{N}' \\cdot \\vec{V}, 0)"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Final Color} = \\vec{C}_{\\text{surface}} \\cdot \\text{Illumination} + \\max(\\vec{N}' \\cdot \\vec{H}, 0)^{32} \\cdot k_{\\text{spec}}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Key Light ($\\vec{L}_{\\text{key}}$)**: Elevated upper-left front illumination: `normalize(vec3(-0.4, 0.9, 0.7))`",
+            "**Fill Light ($\\vec{V}$)**: Camera-aligned light ensuring curvature visibility from all orbit angles.",
+            "**Ambient Floor**: Constant $0.38$, ensuring shadows remain rich, saturated, and never black.",
+            "**View-Oriented Normals**: Flipping $\\vec{N}$ if $\\vec{N} \\cdot \\vec{V} < 0$ enables correct illumination on both sides of thin sheets, Möbius strips, and folding mats."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.3 Integration with the Model Primitive"
+        },
+        {
+          "type": "paragraph",
+          "text": "Any `Model` (Box, Sphere, Cylinder, Torus, custom OBJ mesh) can opt into Manim shading either at construction or dynamically at runtime:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// At creation:\nconst box = new Box(3.0, 3.0, 3.0, {\n    shading: \"manim\",\n    color: Color.fromHex(\"#29ABCA\"),\n    uSegments: 6,\n    vSegments: 6\n});\n\n// Or dynamically toggle at runtime:\nmodel.useManimShading({\n    checkerboard: true,\n    checkerboardColors: [Color.fromHex(\"#29ABCA\"), Color.fromHex(\"#1F6F5E\")]\n});\n\n// Restore original PBR material settings cleanly:\nmodel.usePBRShading();"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Non-Destructive State Backup (pbrMaterialBackup)"
+        },
+        {
+          "type": "paragraph",
+          "text": "When switching from PBR to Manim shading, `Model` caches the user's customized `roughness`, `metallic`, and `specular` properties in `_pbrMaterialBackup`. Calling `usePBRShading()` restores these exact user values rather than resetting to arbitrary defaults. If no custom values were previously set, it falls back to standard physically based non-metallic dielectric constants (`roughness: 1.0`, `metallic: 0.0`, `specular: 0.5`)."
+        }
+      ]
+    },
+    {
+      "id": "3-polyhedra-edge-treatment-gouraud-smoothing-vs-hard-crease-normals",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Polyhedra Edge Treatment: Gouraud Smoothing vs. Hard Crease Normals"
+        },
+        {
+          "type": "paragraph",
+          "text": "When rendering polygonal models such as cubes, tetrahedra, or prisms:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Gouraud / Smooth Averaging**: Averages normals across shared vertices. If adjacent faces meet at a steep dihedral angle ($> 60^\\circ$), smooth averaging causes lighting to bend around the corner, creating rounded, smeared, or \"pillow\" artifacts on sharp geometric edges.",
+            "**Hard / Split Normals**: Vertices along creases are duplicated with independent normal vectors pointing perpendicularly to each respective face."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Smooth Gouraud Normal                       Hard Face Normals\n          (Edge Artifact)                        (Crisp Polyhedra Edge)\n\n              \\  N  /                                N1 |       / N2\n               \\ | /                                    |      /\n                \\|/                                     |     /\n      ───────────*───────────                 ──────────*    *───────────\n          Face 1    Face 2                       Face 1        Face 2"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Supported Polyhedra Primitives with Hard Normals"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`Box(width, height, depth)`",
+            "`Tetrahedron(radius)`",
+            "`Prism(baseSides, radius, height)` (Triangular, Pentagonal, Hexagonal)",
+            "`Octahedron(radius)`"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-automatic-3d-morphing-morph-from-to",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Automatic 3D Morphing (Morph(from, to))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Morph` animation engine handles transitions between two 3D models with 1:1 vertex correspondence:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const catenoid = new ParametricModel(catenoidFunc, { uSegments: 64, vSegments: 64 });\nconst helicoid = new ParametricModel(helicoidFunc, { uSegments: 64, vSegments: 64 });\n\nthis.play(Morph(catenoid, helicoid, {\n    duration: 3000,\n    rate_func: Rate.easeInOutCubic()\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Canonical Mathematical Morph Families Demonstrated in Retiam"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Isometric Catenoid-Helicoid Homotopy (Bonnet Associate Family)**:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "x = \\cos(\\theta) \\sinh(v) \\sin(u) + \\sin(\\theta) \\cosh(v) \\cos(u)"
+        },
+        {
+          "type": "math",
+          "tex": "y = -\\cos(\\theta) \\sinh(v) \\cos(u) + \\sin(\\theta) \\cosh(v) \\sin(u)"
+        },
+        {
+          "type": "math",
+          "tex": "z = u \\cos(\\theta) + v \\sin(\\theta)"
+        },
+        {
+          "type": "paragraph",
+          "text": "*(Strictly preserves the first fundamental form $ds^2 = \\cosh^2(v)(du^2 + dv^2)$; every patch deforms without any stretching or shrinking).*"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Torus Aperture Homotopy**:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "Continuous transition through topological singularities:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Ring Torus } (R > r) \\longrightarrow \\text{Horn Torus } (R = r) \\longrightarrow \\text{Spindle Torus } (R < r) \\longrightarrow \\text{Degenerate Sphere } (R = 0)"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Ribbon & Möbius Strip Homotopy**:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Continuous rotation of the cross-sectional ribbon normal by $\\frac{\\alpha u}{2}$, transitioning from an untwisted cylindrical band ($\\alpha = 0$) to a non-orientable Möbius strip ($\\alpha = 2\\pi$)."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Multi-State Sheet Folding Morph** (`morph_mat_folding.ts`):"
+          ],
+          "start": 4
+        },
+        {
+          "type": "paragraph",
+          "text": "Sequencing morphs across 5 states: Flat Mat $\\to$ Accordion Pleats $\\to$ 180° Book Fold $\\to$ Spiral Scroll $\\to$ Double Roll."
+        }
+      ]
+    },
+    {
+      "id": "5-manual-programmatic-vertex-animation-no-auto-morph",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Manual Programmatic Vertex Animation (No Auto-Morph)"
+        },
+        {
+          "type": "paragraph",
+          "text": "While `Morph(from, to)` is ideal for metamorphoses between different geometries, linear vertex interpolation causes severe issues when folding a continuous sheet:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "At $t = 0.5$, straight-line vertex paths force the folding flap to **shrink and collapse through itself** before re-expanding.",
+            "It requires maintaining **two separate entities** in memory."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.1 The Solution: Direct In-Place VRAM Updates"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides direct programmatic vertex manipulation on a **single entity**, executing in-place WebGPU buffer uploads via hardware `writeBuffer`:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n  F[\"User function f(u,v,t)<br/>Kinematic evaluation\"] --> A[\"Typed arrays in place<br/>positions and normals\"]\n  A --> G[\"WebGPU writeBuffer<br/>Hardware VRAM upload\"]\n  A -.-> N[\"Reported zero heap allocations\"]\n  G -.-> P[\"Reported 60–120 FPS\"]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.2 Core API Methods Added"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Model.updateVertices(positions, normals?)"
+        },
+        {
+          "type": "paragraph",
+          "text": "*Defined in [Model.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Model.ts#L223)*"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "public updateVertices(\n    positions: Float32Array | number[], \n    normals?: Float32Array | number[]\n): this"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Copies new coordinates directly into `this.geo.mesh.vertices` without re-creating arrays.",
+            "Preserves the index buffer and GPU pipeline layout in VRAM.",
+            "Flags `this.geo.isDirty = true` to queue a fast WebGPU DMA transfer."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "ParametricModel.updateSurface(func, normalFunc?)"
+        },
+        {
+          "type": "paragraph",
+          "text": "*Defined in [ParametricModel.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/ParametricModel.ts#L55)*"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "public updateSurface(\n    func: (u: number, v: number) => Vec3,\n    normalFunc?: (u: number, v: number) => Vec3\n): this"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Re-evaluates $(x, y, z)$ over the existing $(u_i, v_j)$ grid resolution without heap allocation.",
+            "Computes surface normals dynamically via central finite-difference tangent cross products:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{t}_u = \\frac{p(u+\\epsilon, v) - p(u-\\epsilon, v)}{2\\epsilon}, \\quad \\vec{t}_v = \\frac{p(u, v+\\epsilon) - p(u, v-\\epsilon)}{2\\epsilon}, \\quad \\vec{n} = \\frac{\\vec{t}_v \\times \\vec{t}_u}{\\|\\vec{t}_v \\times \\vec{t}_u\\|}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Ensures specular highlights, diffuse lighting, and checkerboard shading react realistically as the surface curves."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-kinematic-folding-formulations-arc-length-preserving",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Kinematic Folding Formulations (Arc-Length Preserving)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.1 Archimedean Spiral Yoga Mat Roll"
+        },
+        {
+          "type": "paragraph",
+          "text": "Conserves the physical perimeter of the sheet ($s = R\\theta$) as the rolling cylinder accumulates layers across the floor:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "function evalYogaRoll(u: number, v: number, t: number, L = 14, W = 7): Vec3 {\n    const z = (v - 0.5) * W;\n    if (t <= 0.0001) return new Vec3((u - 0.5) * L, 0.0, z);\n\n    const rollFraction = t * 0.88;\n    const rollStartU = 1.0 - rollFraction;\n\n    if (u <= rollStartU) {\n        // Flat sheet on the floor\n        return new Vec3((u - 0.5) * L, 0.0, z);\n    } else {\n        // Spiral roll tangent to the floor\n        const s = (u - rollStartU) * L;\n        const R_base = 0.55;\n        const layerThickness = 0.045;\n        const turns = s / (2.0 * Math.PI * R_base);\n        const R = R_base + turns * layerThickness;\n\n        const theta = s / R;\n        const rollPivotX = (rollStartU - 0.5) * L;\n\n        const x = rollPivotX + R * Math.sin(theta);\n        const y = R * (1.0 - Math.cos(theta));\n        return new Vec3(x, y, z);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.2 180° Book / Flap Fold with Cylindrical Spine"
+        },
+        {
+          "type": "paragraph",
+          "text": "Prevents fold-line crushing by modeling a circular curved hinge spine of radius $R$:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "function evalBookFold(u: number, v: number, t: number, L = 14, W = 7): Vec3 {\n    const z = (v - 0.5) * W;\n    const hingeU = 0.5;\n    const bendAngle = t * Math.PI; // 0 to 180 degrees\n    const R = 0.55;\n\n    if (u <= hingeU) {\n        return new Vec3((u - hingeU) * L, 0.0, z);\n    } else {\n        const distFromHinge = (u - hingeU) * L;\n        const arcLength = bendAngle * R;\n\n        if (distFromHinge <= arcLength) {\n            // Circular curved spine\n            const phi = distFromHinge / R;\n            return new Vec3(R * Math.sin(phi), R * (1.0 - Math.cos(phi)), z);\n        } else {\n            // Tangential straight flap\n            const straight = distFromHinge - arcLength;\n            const x = R * Math.sin(bendAngle) + straight * Math.cos(bendAngle);\n            const y = R * (1.0 - Math.cos(bendAngle)) + straight * Math.sin(bendAngle);\n            return new Vec3(x, y, z);\n        }\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.3 Accordion Wavelength Compression"
+        },
+        {
+          "type": "paragraph",
+          "text": "Sharpened sinusoidal waves with length-conservation horizontal compression:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "function evalAccordion(u: number, v: number, t: number, L = 14, W = 7): Vec3 {\n    const z = (v - 0.5) * W;\n    const pleats = 4.0;\n    const compress = 1.0 - t * 0.65;\n    const x = (u - 0.5) * L * compress;\n\n    const wave = Math.sin(u * pleats * Math.PI * 2);\n    const sharpWave = Math.sign(wave) * Math.pow(Math.abs(wave), 0.75);\n    const y = sharpWave * (t * 2.6);\n\n    return new Vec3(x, y, z);\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.4 Diagonal Origami Corner Fold"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rotates points beyond a 45° crease line around the spatial crease axis:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "function evalOrigami(u: number, v: number, t: number, L = 14, W = 7): Vec3 {\n    const rawX = (u - 0.5) * L;\n    const rawZ = (v - 0.5) * W;\n\n    const diagScale = 1.0 / Math.SQRT2;\n    const ax = diagScale, az = diagScale;   // Crease axis vector\n    const nx = -diagScale, nz = diagScale; // In-plane normal vector\n\n    const p0x = 0.05 * L, p0z = -0.15 * W;\n    const dx = rawX - p0x, dz = rawZ - p0z;\n\n    const distN = dx * nx + dz * nz;\n    const distA = dx * ax + dz * az;\n\n    if (distN <= 0.0 || t <= 0.001) {\n        return new Vec3(rawX, 0.0, rawZ);\n    } else {\n        const theta = t * Math.PI;\n        const r = distN;\n\n        const foldedX = p0x + distA * ax + r * Math.cos(theta) * nx;\n        const foldedY = r * Math.sin(theta);\n        const foldedZ = p0z + distA * az + r * Math.cos(theta) * nz;\n\n        return new Vec3(foldedX, foldedY, foldedZ);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "7-interactive-demos-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Interactive Demos Reference"
+        },
+        {
+          "type": "paragraph",
+          "text": "The following demo scenes in `examples/demos/` demonstrate these systems:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "[`features/model_manim_shading_showcase.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/model_manim_shading_showcase.ts):"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Box, Sphere, Cylinder, and Torus rendered with `ManimSurfaceFragment`, dual-tone checkerboards, and runtime PBR switching."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "[`features/polyhedra_prisms_showcase.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/polyhedra_prisms_showcase.ts):"
+          ],
+          "start": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "Crisp-edge Platonic solids and polygonal prisms with split hard normals."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "[`morph_3d/morph_mat_folding.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/morph_3d/morph_mat_folding.ts):"
+          ],
+          "start": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Multi-stage mat folding and rolling animated via the `Morph(from, to)` engine."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "[`features/mat_folding_procedural.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/mat_folding_procedural.ts):"
+          ],
+          "start": 4
+        },
+        {
+          "type": "paragraph",
+          "text": "Real-time in-place programmatic vertex deformation on a single entity with interactive mode buttons and a 0–100% manual scrub slider."
+        }
+      ]
+    }
+  ]
+}

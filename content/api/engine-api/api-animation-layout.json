@@ -1,0 +1,622 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-animation-layout",
+  "title": "animation / layout API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrangereveal",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ArrangeReveal"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/layout/ArrangeReveal.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/layout/ArrangeReveal.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ArrangeReveal: Spatially coordinated introducer animation for an [[Arrange]] container. Reveals elements according to geometric 2D/3D patterns (diagonal wave, radial expansion from center, serpentine snake, etc.) rather than simple linear indices."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ArrangeRevealPattern",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ArrangeRevealStyle",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ArrangeRevealOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ArrangeReveal",
+                    "Class",
+                    "Spatially coordinated introducer animation for an [[Arrange]] container. Reveals elements according to geometric 2D/3D patterns (diagonal wave, radial expansion from center, serpentine snake, etc.) rather than simple linear indices."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type ArrangeRevealPattern = 'diagonal' | 'radial-out' | 'radial-in' | 'columns' | 'rows' | 'snake' | 'index' | 'random';\nexport type ArrangeRevealStyle = 'pop' | 'grow' | 'fade' | 'drop' | 'spin';\nexport interface ArrangeRevealOptions extends AnimOptions {\n    pattern?: ArrangeRevealPattern;\n    animation?: ArrangeRevealStyle;\n    cols?: number;\n    rows?: number;\n    spreadMs?: number;\n    lagRatio?: number;\n    dropDistance?: number;\n    randomSeed?: number;\n}\nexport declare class ArrangeReveal<T extends Entity = Entity> extends Concurrent {\n    readonly arrangeContainer: Arrange<T>;\n    constructor(arrange: Arrange<T>, options?: ArrangeRevealOptions);\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ArrangeRevealOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "pattern?: ArrangeRevealPattern;",
+                    "—",
+                    "Spatial ordering pattern for staggering child entrances (default: 'diagonal'). [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "animation?: ArrangeRevealStyle;",
+                    "—",
+                    "Entrance animation style for each child (default: 'pop'). [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cols?: number;",
+                    "—",
+                    "Number of grid columns if known (auto-calculated from item count if omitted). [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rows?: number;",
+                    "—",
+                    "Number of grid rows if known. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "spreadMs?: number;",
+                    "—",
+                    "Total spread time across all items in milliseconds. If omitted, derived from lagRatio * duration. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lagRatio?: number;",
+                    "—",
+                    "Stagger ratio between items [0.0 - 1.0] (default: 0.08). [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dropDistance?: number;",
+                    "—",
+                    "Fall distance in world units when animation style is 'drop' (default: 4.0). [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "randomSeed?: number;",
+                    "—",
+                    "Seed for pseudo-random number generation when pattern is 'random' (default: 42). [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L46)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ArrangeReveal` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly arrangeContainer: Arrange<T>",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(arrange: Arrange<T>, options: ArrangeRevealOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.arrangeContainer`, `this.LABEL`, `this.isIntroducer`; construction of `FadeIn`, `GrowFromCenter`, `SlideIn`, `SpinIn`, `PopIn`; calls to `items.map`, `ranks.push`, `items[i].transform.position.sub(center).length`, `items[i].transform.position.sub`, `rand`, `subAnims.forEach`; return paths including `new FadeIn(item, options)`, `new GrowFromCenter(item, options)`, `new SlideIn(item, { ...options, direction: 'down', distance: dropDist })`; 1 explicit loop. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L75)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.pattern ?? 'diagonal'",
+                    "[Line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L76)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.animation ?? 'pop'",
+                    "[Line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L77)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.dropDistance ?? 4.0",
+                    "[Line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L78)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.randomSeed ?? 42",
+                    "[Line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L79)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.lagRatio ?? 0.08",
+                    "[Line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L80)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.delay || 0",
+                    "[Line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeReveal.ts#L180)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Entity](/api-core-entity#entity), [Concurrent](/api-animation#concurrent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrangeripple",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ArrangeRipple"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/layout/ArrangeRipple.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/layout/ArrangeRipple.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ArrangeRipple: Propagates a spatial circular wave (shockwave / ripple) outward across an [[Arrange]] container. As the wavefront expands, elements scale up, jump in elevation, or flash in color, before smoothly settling back into their rest configuration."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ArrangeRippleOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ArrangeRipple",
+                    "Class",
+                    "Propagates a spatial circular wave (shockwave / ripple) outward across an [[Arrange]] container. As the wavefront expands, elements scale up, jump in elevation, or flash in color, before smoothly settling back into their rest configuration."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ArrangeRippleOptions extends AnimOptions {\n    origin?: Vec3Type;\n    waveWidth?: number;\n    scalePeak?: number;\n    jumpHeight?: number;\n    jumpAxis?: 'y' | 'z';\n    colorPeak?: Color;\n    damping?: number;\n}\nexport declare class ArrangeRipple<T extends Entity = Entity> extends Animation {\n    readonly arrangeContainer: Arrange<T>;\n    readonly options: ArrangeRippleOptions;\n    constructor(arrange: Arrange<T>, options?: ArrangeRippleOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ArrangeRippleOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "origin?: Vec3Type;",
+                    "—",
+                    "Origin center point from which the ripple wave expands (default: [0, 0, 0]). [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "waveWidth?: number;",
+                    "—",
+                    "Spatial thickness/width of the expanding wave crest in world units (default: 2.5). [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scalePeak?: number;",
+                    "—",
+                    "Peak scale multiplier when the wave crest hits an item (default: 1.5). [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "jumpHeight?: number;",
+                    "—",
+                    "Peak elevation jump when the wave crest hits an item (default: 0.0). [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "jumpAxis?: 'y' | 'z';",
+                    "—",
+                    "Coordinate axis along which jump occurs ('y' for 2D screen, 'z' for 3D elevation; default: 'y'). [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "colorPeak?: Color;",
+                    "—",
+                    "Optional peak color flash when the wave crest hits an item. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "damping?: number;",
+                    "—",
+                    "Attenuation factor [0.0 - 1.0] dampening wave intensity as it travels outward (default: 0.0). [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L28)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ArrangeRipple` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly arrangeContainer: Arrange<T>",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly options: ArrangeRippleOptions",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(arrange: Arrange<T>, options: ArrangeRippleOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.arrangeContainer`, `this.options`, `this.originVec`, `this.LABEL`; calls to `Rate.easeInOutQuad`, `Vec3.cast`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override prepare(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.origPositions`, `this.origScales`, `this.origColors`, `this.distances`, `this.maxDistance`; construction of `Color`; calls to `this.origPositions.push`, `item.transform.position.clone`, `this.origScales.push`, `item.transform.scaling.clone`, `this.origColors.push`, `item.paint.fill.copy`, `item.transform.position.sub(this.originVec).length`, `item.transform.position.sub` and additional helpers; 1 explicit loop. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`; calls to `this.rate_func`, `this.origScales[i].scale`, `this.origPositions[i].clone`, `Color.lerp`, `this.origScales[i].clone`, `this.origColors[i]!.copy`, `this.complete`; return paths including `false`, `true`; 1 explicit loop. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L99)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.duration || 1200",
+                    "[Line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L60)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.rate_func || Rate.easeInOutQuad()",
+                    "[Line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L61)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.origin || ORIGIN",
+                    "[Line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/ArrangeRipple.ts#L67)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Entity](/api-core-entity#entity), [Animation](/api-animation#animation)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "morpharrange",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MorphArrange"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/layout/MorphArrange.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/layout/MorphArrange.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/MorphArrange.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "MorphArrange: Smoothly morphs and rearranges elements of an [[Arrange]] container from their current layout configuration to a new target layout configuration. Works across any layout types: Line -> Grid -> Radial -> Curve -> Custom."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MorphArrangeOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MorphArrange",
+                    "Class",
+                    "Smoothly morphs and rearranges elements of an [[Arrange]] container from their current layout configuration to a new target layout configuration. Works across any layout types: Line -> Grid -> Radial -> Curve -> Custom."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface MorphArrangeOptions extends AnimOptions {\n    lagRatio?: number;\n}\nexport declare class MorphArrange<T extends Entity = Entity> extends Concurrent {\n    readonly arrangeContainer: Arrange<T>;\n    constructor(arrange: Arrange<T>, layoutMutator: (target: Arrange<T>) => void, options?: MorphArrangeOptions);\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MorphArrangeOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "lagRatio?: number;",
+                    "—",
+                    "Stagger delay ratio [0.0 - 1.0] between consecutive elements during rearrangement. `0` moves all elements simultaneously; `0.05` creates a staggered domino transition. Defaults to `0.0`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/MorphArrange.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MorphArrange` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly arrangeContainer: Arrange<T>",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/MorphArrange.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        arrange: Arrange<T>,\n        layoutMutator: (target: Arrange<T>) => void,\n        options: MorphArrangeOptions = {}\n    )",
+                    "—",
+                    "Creates a new MorphArrange animation. Param: arrange The active Arrange container to morph. Param: layoutMutator Function that applies layout methods (e.g. `arrangeGrid`, `arrangeRadial`) to a cloned container. Param: options Animation duration, easing curve, and stagger options. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/MorphArrange.ts#L46)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.rate_func || Rate.easeInOutCubic()",
+                    "[Line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/MorphArrange.ts#L67)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.duration || 1000",
+                    "[Line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/layout/MorphArrange.ts#L77)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Entity](/api-core-entity#entity), [Concurrent](/api-animation#concurrent)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

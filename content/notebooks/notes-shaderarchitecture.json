@@ -1,0 +1,109 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-shaderarchitecture",
+  "title": "ShaderArchitecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/ShaderArchitecture.txt`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/ShaderArchitecture.txt](https://github.com/abhilasbiswas/Retiam/blob/main/docs/ShaderArchitecture.txt). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Shader](/api-entities-primitives-2d#shader), [Builder](/api-utils#builder), [GeometryPassConfig](/api-components#geometrycomponent), [Material](/api-core-material#material)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "There are shader builders, shader compilers",
+            "inputs: vertex schema, instance schema, varying schema, vertex main logic, fragment main logic, resource binding, injection, Preprocessor flags",
+            "Shader Builder : Builds the shader code",
+            "Preprocessor : ",
+            "Injection",
+            "resource binding",
+            "user customization"
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "After compilation provides the following things:",
+            "Vertex layout",
+            "Bind group layout entries for group 3",
+            "wgsl code",
+            "entry points",
+            "Geometry",
+            "has passes for each pipe line - {String, GeometryPassConfig} map",
+            "Geometry subclass can define the passes",
+            "geometry can perform operations on shader builder - injections, Preprocessor etc",
+            "it also can have resources"
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Fragment",
+            "has passes for each pipe line - {String, MaterialPassConfig} map",
+            "Material can perform operations on shader builder - injections, Preprocessor etc",
+            "It also define its own bind group layout for group 3",
+            "defines pipeline state - blend, cullMode, depthStencil, writeMask, atoc"
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "For entity geometry and matrial are extracted, "
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "then for each passes"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "perform geometry.process(builder), material.process(builder),",
+            "bindgroup layout is made",
+            "build pipeline",
+            "then cache the pipeline"
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "rest are same as old architecture"
+          ]
+        }
+      ]
+    }
+  ]
+}

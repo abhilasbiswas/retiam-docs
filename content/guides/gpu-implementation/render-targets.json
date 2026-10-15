@@ -1,0 +1,162 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "render-targets",
+  "title": "Offscreen targets, feedback and persistence",
+  "group": "GPU implementation",
+  "summary": "Render into textures, reuse previous frames and manage persistent resources across graph rebuilds.",
+  "sections": [
+    {
+      "id": "high-level-rendertarget",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "High-level RenderTarget"
+        },
+        {
+          "type": "paragraph",
+          "text": "RenderTarget takes a Scene and options or a name/options overload. It allocates a layer for isolation, maintains scene update participation, creates an appropriate view/camera and can expose a Sprite of the result. add/capture attach entities to the target’s layer without making them disappear from the scene’s update system."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const target = new RenderTarget(this, {\n  name: \"detail\", type: \"offscreen\", width: 512, height: 512, camera: \"ortho\"\n});\ntarget.add(detailEntity);\nconst preview = target.toSprite(4, 4);\nthis.add(preview);\n// At the end of its lifecycle:\n// target.destroy();"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [RenderTarget](/api-render#rendertarget), [RenderTargetOptions](/api-render#rendertarget)."
+        }
+      ]
+    },
+    {
+      "id": "target-modes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Target modes"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Mode",
+            "Purpose",
+            "Lifetime consideration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "offscreen",
+                "Render selected entities to a texture",
+                "Redrawn according to its view"
+              ]
+            },
+            {
+              "cells": [
+                "persistent",
+                "Retain pixels across draws",
+                "Explicit clear and region invalidation"
+              ]
+            },
+            {
+              "cells": [
+                "feedback",
+                "Read previous captured output",
+                "Prior-frame dependency and initialization"
+              ]
+            },
+            {
+              "cells": [
+                "storage",
+                "Compute-writable texture",
+                "Storage format/usage restrictions"
+              ]
+            },
+            {
+              "cells": [
+                "pingpong",
+                "Alternate separate read/write textures",
+                "Swap after producer work is complete"
+              ]
+            },
+            {
+              "cells": [
+                "gbuffer",
+                "Multiple geometry channels",
+                "Attachments and formats must match consumer shaders"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PingPongRenderTarget](/api-render-targets#pingpongrendertarget), [ComputeStorageTexture](/api-render-targets#computestoragetexture), [GBufferRenderTarget](/api-render-targets#gbufferrendertarget)."
+        }
+      ]
+    },
+    {
+      "id": "blur-and-feedback-effects",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Blur and feedback effects"
+        },
+        {
+          "type": "paragraph",
+          "text": "RenderTarget.blur and blurIterations control target blur passes. FeedbackPass keeps a reusable image of the previous frame for trails or recursive sampling. Persistent region drawing avoids clearing selected output but changes the meaning of “redraw”; clear old pixels explicitly when an object moves and should not leave a trace."
+        },
+        {
+          "type": "paragraph",
+          "text": "Do not sample a texture while writing the same subresource in an incompatible pass. Use ping-pong textures and explicit graph edges. Keep resolution and format consistent with the shaders sampling the target. Texture getters can be null before the GPU resource has been materialized."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [BlurPass](/api-render-passes#blurpass), [FeedbackPass](/api-render-passes#feedbackpass), [FrameFeedbackFeature](/api-render-passes#feedbackpass), [UIManager](/api-core#uimanager)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One captured circle appears only through one offscreen texture."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-render-target"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Transparency, antialiasing and post-processing](/transparency-post)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[FrameGraph and custom render passes](/frame-graph)"
+  ]
+}

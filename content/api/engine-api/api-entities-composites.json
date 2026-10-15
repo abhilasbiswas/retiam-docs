@@ -1,0 +1,275 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-entities-composites",
+  "title": "entities / composites API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plotprimitivefactory",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PlotPrimitiveFactory"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/PlotPrimitiveFactory.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/PlotPrimitiveFactory.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveFactory.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CurvePrimitiveOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlotPrimitiveFactory",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface CurvePrimitiveOptions extends EntityOptions, ShaderConfigOptions {\n    primitive?: PlotPrimitive;\n}\nexport declare class PlotPrimitiveFactory {\n    static createCurve(points?: Vec3[], options?: CurvePrimitiveOptions): VectorEntity;\n    static updateCurveVertices(entity: VectorEntity, points: Vec3[] | Float32Array, primitive?: PlotPrimitive): void;\n    static createCompoundGrid(segments: [\n        Vec3,\n        Vec3\n    ][], options?: CurvePrimitiveOptions): VectorEntity | Line3D[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CurvePrimitiveOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "primitive?: PlotPrimitive;",
+                    "—",
+                    "Optional record/option field with declared type `PlotPrimitive`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveFactory.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PlotPrimitiveFactory` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static createCurve(\n        points: Vec3[] = [],\n        options: CurvePrimitiveOptions = {}\n    ): VectorEntity",
+                    "—",
+                    "Instantiates a single curve entity backed by either Line3D or analytical Path. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveFactory.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static updateCurveVertices(\n        entity: VectorEntity,\n        points: Vec3[] | Float32Array,\n        primitive: PlotPrimitive = 'line3d'\n    ): void",
+                    "—",
+                    "Updates vertex positions on a curve entity, adapting data formatting to the primitive type. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveFactory.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static createCompoundGrid(\n        segments: [Vec3, Vec3][],\n        options: CurvePrimitiveOptions = {}\n    ): VectorEntity | Line3D[]",
+                    "—",
+                    "Creates a compound grid path (single entity for 'path' mode) or an array of lines for 'line3d' mode. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveFactory.ts#L103)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.primitive || 'line3d'",
+                    "[Line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveFactory.ts#L27)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fill ?? Color.NONE",
+                    "[Line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveFactory.ts#L43)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plotprimitivetype",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PlotPrimitiveType"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/PlotPrimitiveType.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/PlotPrimitiveType.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveType.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PlotPrimitive: Primitive rendering engine type: - 'line3d': 3D clip-space billboarded line with GPU compute arc-length prefix sums (default). - 'path': 2D analytical GPU SDF curve with resolution-independent vector rendering.",
+                "ShaderConfigOptions: Common shader configuration options for composite plots, coordinates, and equations."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PlotPrimitive",
+                    "TypeAlias",
+                    "Primitive rendering engine type: - 'line3d': 3D clip-space billboarded line with GPU compute arc-length prefix sums (default). - 'path': 2D analytical GPU SDF curve with resolution-independent vector rendering."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ShaderConfigOptions",
+                    "Interface",
+                    "Common shader configuration options for composite plots, coordinates, and equations."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type PlotPrimitive = 'line3d' | 'path';\nexport interface ShaderConfigOptions {\n    strokeShader?: PathEffect | string;\n    fillShader?: FillEffect | string;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ShaderConfigOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "strokeShader?: PathEffect | string;",
+                    "—",
+                    "Optional record/option field with declared type `PathEffect | string`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveType.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillShader?: FillEffect | string;",
+                    "—",
+                    "Optional record/option field with declared type `FillEffect | string`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/PlotPrimitiveType.ts#L20)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

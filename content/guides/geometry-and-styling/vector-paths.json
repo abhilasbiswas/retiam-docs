@@ -1,0 +1,171 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "vector-paths",
+  "title": "2D primitives and vector paths",
+  "group": "Geometry and styling",
+  "summary": "Construct 2D primitives and vector outlines, then choose the path representation your scene needs.",
+  "sections": [
+    {
+      "id": "choose-the-right-geometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose the right geometry"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Primitive",
+            "Input and use",
+            "Tradeoff"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Circle / Ellipse / Arc / Rect",
+                "Parameterized shapes with mutable dimensions",
+                "Convenient geometric bounds and specialization"
+              ]
+            },
+            {
+              "cells": [
+                "Line / Poly",
+                "Linear points, polygons and streaming vertices",
+                "Useful for changing point data and compute extrusion"
+              ]
+            },
+            {
+              "cells": [
+                "Path",
+                "SVG d, point arrays, contours, source paths or GPU buffers",
+                "Rich curves, modifiers and analytical/fast rendering"
+              ]
+            },
+            {
+              "cells": [
+                "Bezier / Spline",
+                "Control points plus evaluation options",
+                "Curve sampling and interpolation"
+              ]
+            },
+            {
+              "cells": [
+                "SDF2D / SDFCircle / Shader",
+                "Implicit or custom GPU shading",
+                "Specialized shader contracts"
+              ]
+            },
+            {
+              "cells": [
+                "Sprite / Mesh2D",
+                "Texture or explicit indexed geometry",
+                "Different geometry/resource lifecycle"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Circle](/api-entities-primitives-2d#circle), [Ellipse](/api-entities-primitives-2d#ellipse), [Arc](/api-entities-primitives-2d#arc), [Rect](/api-entities-primitives-2d#rect), [Line](/api-entities-primitives-2d#line), [Poly](/api-entities-primitives-2d#poly), [Path](/api-entities-primitives-2d#path), [Bezier](/api-entities-primitives-2d#bezier), [Spline](/api-entities-primitives-2d#spline), [Shader](/api-entities-primitives-2d#shader)."
+        },
+        {
+          "type": "paragraph",
+          "text": "For parsing, allocation, compute, stencil filling and triangulation, read [how paths reach the GPU](/path-pipelines)."
+        }
+      ]
+    },
+    {
+      "id": "interactive-bezier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Drag the points of a curve"
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-bezier"
+        }
+      ]
+    },
+    {
+      "id": "create-and-edit-a-path",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Create and edit a path"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-pathscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use setVertices or the dimension setter rather than mutating a cached vertex list without notifying geometry. Path.getPointAtT, tangent, normal, frame and length helpers let you place labels or guide motion along the same geometry. Some length/readback operations require attachment to a scene and a GPU device."
+        }
+      ]
+    },
+    {
+      "id": "analytical-fast-and-auto",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Analytical, fast and auto"
+        },
+        {
+          "type": "paragraph",
+          "text": "Analytical is the Path default: curves are decoded into quadratic contours and rendered using specialized stencil and distance-field stages. Fast mode flattens and triangulates geometry for pooled vertex/index buffers. Auto chooses based on effects and overlap requirements. Switching method rebuilds compatible geometry/fragment/renderer components; it is not a cost-free per-frame toggle."
+        },
+        {
+          "type": "paragraph",
+          "text": "Analytical paths are resolution independent within the curve approximation and shader tolerances. Fast paths use viewport-aware level of detail, so zoom and tolerance affect tessellation and edge quality. Profile representative content rather than assuming one mode is always faster."
+        }
+      ]
+    },
+    {
+      "id": "fills-contours-and-closure",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Fills, contours and closure"
+        },
+        {
+          "type": "paragraph",
+          "text": "Closed contours can contain holes and multiple rings. Fill rules, contour orientation and overlap treatment influence the interior. A line-like path should explicitly use Color.NONE for fill and set the intended closure. Fast-mode fill triangulator and stroke extruder are extension points; custom implementations must match the geometry contract."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PathGeometry](/api-components-geometry#pathgeometry), [TriangulatedPathGeometry](/api-components-geometry#triangulatedpathgeometry), [PolyGeometry](/api-components-geometry#polygeometry), [Builder](/api-utils#builder), [PathGeometryUtils](/api-utils#pathgeometryutils)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Paint, fills and stroke effects](/paint-effects)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Entities, components and ownership](/entities)"
+  ]
+}

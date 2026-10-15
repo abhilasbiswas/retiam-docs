@@ -1,0 +1,143 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "plotting",
+  "title": "Coordinate systems, plots and calculus",
+  "group": "Mathematics",
+  "summary": "Map mathematical coordinates into scene geometry and build plots, tangents and calculus demonstrations.",
+  "sections": [
+    {
+      "id": "share-one-mathematical-coordinate-map",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Share one mathematical coordinate map"
+        },
+        {
+          "type": "paragraph",
+          "text": "Axes, NumberPlane, ComplexPlane, PolarAxes and ThreeDAxes define mathematical ranges and physical dimensions. Their c2p/p2c methods map between mathematical and scene coordinates. rangeVersion lets dependent plots respond to range changes. Grid, axis and label style can be chosen separately."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-plotscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Axes](/api-entities-composites-coordinates#axes), [NumberPlane](/api-entities-composites-coordinates#numberplane), [ComplexPlane](/api-entities-composites-coordinates#complexplane), [PolarAxes](/api-entities-composites-coordinates#polaraxes), [ThreeDAxes](/api-entities-composites-coordinates#threedaxes)."
+        }
+      ]
+    },
+    {
+      "id": "plot-types",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Plot types"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Plot",
+            "Mathematical representation"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "FunctionGraph2D",
+                "y = f(x), sampled over a domain"
+              ]
+            },
+            {
+              "cells": [
+                "ParametricCurve2D / 3D",
+                "Coordinates as functions of a parameter"
+              ]
+            },
+            {
+              "cells": [
+                "PolarCurve",
+                "r as a function of angle"
+              ]
+            },
+            {
+              "cells": [
+                "ImplicitCurve2D / GPU",
+                "Level sets of a function in two dimensions"
+              ]
+            },
+            {
+              "cells": [
+                "ImplicitSurface3D",
+                "A sampled implicit surface meshed in 3D"
+              ]
+            },
+            {
+              "cells": [
+                "ParametricSurface3D / SurfaceGraph3D",
+                "Explicit sampled surface meshes"
+              ]
+            },
+            {
+              "cells": [
+                "RaymarchedPlot3D",
+                "WGSL-evaluated surface in the raymarching pipeline"
+              ]
+            },
+            {
+              "cells": [
+                "VectorField2D / 3D and Streamlines2D",
+                "Vectors and trajectories through spatial fields"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "PlotPrimitiveFactory selects path or line3d rendering. The default coordinate-system primitive is line3d, which has different geometry and styling behavior from Path. Set primitive explicitly when a tutorial requires vector path effects."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PlotPrimitive](/api-entities-composites#plotprimitivetype), [ParametricCurve2D](/api-entities-composites-plotting#parametriccurve2d), [ParametricCurve3D](/api-entities-composites-plotting#parametriccurve3d), [ImplicitCurve2D](/api-entities-composites-plotting#implicitcurve2d), [ImplicitCurve2DGPU](/api-entities-composites-plotting#implicitcurve2dgpu), [ImplicitSurface3D](/api-entities-composites-plotting#implicitsurface3d), [ParametricSurface3D](/api-entities-composites-plotting#parametricsurface3d), [SurfaceGraph3D](/api-entities-composites-plotting#surfacegraph3d), [RaymarchedPlot3D](/api-entities-composites-plotting#raymarchplot3d)."
+        }
+      ]
+    },
+    {
+      "id": "calculus-annotations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Calculus annotations"
+        },
+        {
+          "type": "paragraph",
+          "text": "CoordinateSystem exposes area, Riemann rectangles, tangent, secant and guide-line helpers. getTangentLine receives x first, then the graph/function. getRiemannRectangles receives the graph/function, x range, dx and options as separate arguments. Sampling, rule choice and finite-difference epsilon determine numerical accuracy."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const graph = axes.plot((x) => x * x, { primitive: \"path\" });\nconst tangent = axes.getTangentLine(1, graph, { length: 3 });\nconst rectangles = axes.getRiemannRectangles(graph, [0, 2], 0.25, { fill: hex(\"#38BDF8\", 0.3333) });\nthis.add(axes, graph, tangent, rectangles);"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [AreaUnderCurveOptions](/api-entities-composites-plotting#calculus), [RiemannRectanglesOptions](/api-entities-composites-plotting#calculus), [TangentLineOptions](/api-entities-composites-plotting#calculus), [SecantSlopeGroupOptions](/api-entities-composites-plotting#calculus)."
+        }
+      ]
+    },
+    {
+      "id": "discontinuities-and-dynamic-data",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Discontinuities and dynamic data"
+        },
+        {
+          "type": "paragraph",
+          "text": "Reject non-finite values and inspect asymptotes. FunctionGraph2D filters invalid/extreme samples; connecting the remaining finite points can still join across a discontinuity. Split the domain into separate plots where the mathematical function is disconnected. Reuse typed arrays when sample count is stable and avoid dense resampling for every pointer event."
+        }
+      ]
+    }
+  ]
+}

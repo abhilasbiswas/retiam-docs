@@ -1,0 +1,1531 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-font",
+  "title": "font API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "font",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Font"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/font/Font.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/font/Font.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextGeometryData",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Font",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TextGeometryData {\n    data: Float32Array;\n    width: number;\n}\nexport declare class Font {\n    static default: Font;\n    common: FontCommon;\n    info: any;\n    texture: GPUTexture;\n    sampler: GPUSampler;\n    propBuffer: GPUBuffer;\n    constructor(json_url?: string, bitmap_url?: string);\n    init(): Promise<void>;\n    static get(json_url: string, bitmap_url: string): Promise<Font>;\n    static fromData(json: BMFontData | any, bitmapSource: ImageBitmap | Blob | string): Promise<Font>;\n    load(url_font_json: string, url_font_png: string): Promise<void>;\n    createTexture(device: GPUDevice): GPUTexture;\n    getCharInfo(char: string): FontChar | undefined;\n    getKerning(firstId: number, secondId: number): number;\n    getPositions(text: string): Vec2[];\n    getBindgroup(device: GPUDevice): GPUBindGroup;\n    geometry(text: string, fontSize?: number): TextGeometryData;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TextGeometryData` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "data: Float32Array;",
+                    "—",
+                    "Required record/option field with declared type `Float32Array`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "width: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L7)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Font` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static default: Font",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public common!: FontCommon",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public info: any",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public texture!: GPUTexture",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sampler!: GPUSampler",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public propBuffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(json_url?: string, bitmap_url?: string)",
+                    "—",
+                    "Implementation: `this.json_url = json_url; this.bitmap_url = bitmap_url;`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async init(): Promise<void>",
+                    "—",
+                    "Implementation: `if (this.json_url && this.bitmap_url) { await this.load(this.json_url, this.bitmap_url); this.initCharMap(); }`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async get(json_url: string, bitmap_url: string): Promise<Font>",
+                    "—",
+                    "Factory method: Load a pre-baked MSDF font from URLs. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async fromData(\n        json: BMFontData | any,\n        bitmapSource: ImageBitmap | Blob | string\n    ): Promise<Font>",
+                    "—",
+                    "Factory method: Create an MSDF font directly from in-memory BMFont JSON and an ImageBitmap or Blob. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async load(url_font_json: string, url_font_png: string): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.font_json`, `this.font_bitmap`; calls to `fetch`, `res.json`, `imgRes.blob`, `createImageBitmap`. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createTexture(device: GPUDevice): GPUTexture",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.texture`; calls to `device.createTexture`, `device.queue.copyExternalImageToTexture`; return paths including `undefined as any`, `this.texture`. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCharInfo(char: string): FontChar | undefined",
+                    "—",
+                    "Implementation: `return this.char_map.get(char);`. [Source line 137](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L137)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getKerning(firstId: number, secondId: number): number",
+                    "—",
+                    "Implementation: `const firstLevelMap = this.kerning_map.get(firstId); if (firstLevelMap) { return firstLevelMap.get(secondId) || 0; } return 0;`. [Source line 141](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L141)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPositions(text: string): Vec2[]",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec2`; calls to `positions.push`, `this.getCharInfo`, `this.getKerning`; return paths including `positions`; 1 explicit loop. [Source line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L149)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBindgroup(device: GPUDevice): GPUBindGroup",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.texture`, `this.sampler`, `this.propBuffer`, `this._bind_group`; calls to `this.createTexture`, `device.createSampler`, `createBuffer`, `device.createBindGroupLayout`, `device.createBindGroup`, `this.texture.createView`; return paths including `this._bind_group`. [Source line 194](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L194)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public geometry(text: string, fontSize: number = 48): TextGeometryData",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; calls to `this.info.padding.split`, `parseInt`, `this.getCharInfo`, `this.getKerning`, `vertics_data.push`; return paths including `{ data, width }`; 1 explicit loop. [Source line 233](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L233)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Font.initCharMap: private initCharMap(): void",
+                    "Body operations (including nested callbacks): assignments to `this.char_map`, `this.common`, `this.info`, `this.kerning_map`; construction of `Map`; calls to `this.char_map.set`, `this.kerning_map.has`, `this.kerning_map.set`, `this.kerning_map.get(kerning.first)!.set`, `this.kerning_map.get`; 2 explicit loops.",
+                    "[Line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts#L115)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`[Font] Unsupported bitmap source: ${bitmapSource}`)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fontcache",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "FontCache"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/font/FontCache.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/font/FontCache.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "DiskCacheRecord",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FontCache",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface DiskCacheRecord {\n    key: string;\n    json: BMFontData;\n    atlasBlob: Blob;\n    timestamp: number;\n}\nexport declare class FontCache {\n    static getVector(id: string): VectorFont | undefined;\n    static setVector(id: string, font: VectorFont): void;\n    static getMSDF(key: string): Font | undefined;\n    static setMSDF(key: string, font: Font): void;\n    static getInFlight<T>(key: string): Promise<T> | undefined;\n    static setInFlight<T>(key: string, promise: Promise<T>): void;\n    static clearInFlight(key: string): void;\n    static clearMemory(): void;\n    static getFromDisk(key: string): Promise<{\n        json: BMFontData;\n        atlasBlob: Blob;\n    } | null>;\n    static saveToDisk(key: string, json: BMFontData, atlasBlob: Blob): Promise<void>;\n    static clearDisk(): Promise<void>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DiskCacheRecord` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "key: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 5](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L5)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "json: BMFontData;",
+                    "—",
+                    "Required record/option field with declared type `BMFontData`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "atlasBlob: Blob;",
+                    "—",
+                    "Required record/option field with declared type `Blob`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "timestamp: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L8)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FontCache` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static getVector(id: string): VectorFont | undefined",
+                    "—",
+                    "Implementation: `return this.memoryVector.get(id);`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static setVector(id: string, font: VectorFont): void",
+                    "—",
+                    "Implementation: `this.memoryVector.set(id, font);`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getMSDF(key: string): Font | undefined",
+                    "—",
+                    "Implementation: `return this.memoryMSDF.get(key);`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static setMSDF(key: string, font: Font): void",
+                    "—",
+                    "Implementation: `this.memoryMSDF.set(key, font);`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getInFlight<T>(key: string): Promise<T> | undefined",
+                    "—",
+                    "Implementation: `return this.inFlight.get(key) as Promise<T> | undefined;`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static setInFlight<T>(key: string, promise: Promise<T>): void",
+                    "—",
+                    "Implementation: `this.inFlight.set(key, promise);`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static clearInFlight(key: string): void",
+                    "—",
+                    "Implementation: `this.inFlight.delete(key);`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static clearMemory(): void",
+                    "—",
+                    "Implementation: `this.memoryVector.clear(); this.memoryMSDF.clear(); this.inFlight.clear();`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async getFromDisk(key: string): Promise<{ json: BMFontData; atlasBlob: Blob } | null>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Promise`; calls to `this.openDB`, `db.transaction`, `tx.objectStore`, `store.get`, `resolve`; return paths including `null`. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async saveToDisk(key: string, json: BMFontData, atlasBlob: Blob): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.openDB`, `db.transaction`, `tx.objectStore`, `store.put`, `Date.now`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async clearDisk(): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Promise`; calls to `indexedDB.deleteDatabase`, `resolve`, `reject`; long return expressions shown in the linked implementation. [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L106)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FontCache.openDB: private static openDB(): Promise<IDBDatabase>",
+                    "Body operations (including nested callbacks): construction of `Promise`; calls to `indexedDB.open`, `db.objectStoreNames.contains`, `db.createObjectStore`, `resolve`, `reject`; long return expressions shown in the linked implementation.",
+                    "[Line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts#L119)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fontloader",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "FontLoader"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/font/FontLoader.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/font/FontLoader.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FontLoader",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class FontLoader {\n    static defaultPersist: boolean;\n    static msdf(source: FontSource, options?: MSDFOptions): Promise<Font>;\n    static vector(source: FontSource): Promise<VectorFont>;\n    static preload(items: Array<{\n        source: FontSource;\n        type: 'msdf' | 'vector';\n        options?: MSDFOptions;\n    }>): Promise<void>;\n    static clearCache(): Promise<void>;\n    static loadLocalFont(url: string): Promise<VectorFont>;\n    static loadGoogleFont(familyNameOrUrl: string): Promise<VectorFont>;\n    static loadDynamicSDFFont(familyNameOrUrl: string, options?: MSDFOptions): Promise<Font>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FontLoader` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static defaultPersist: boolean",
+                    "false",
+                    "Default persistence setting for MSDF fonts. When true, generated MSDF fonts will be cached to IndexedDB on disk. Default: false (memory-only in active session). [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async msdf(source: FontSource, options?: MSDFOptions): Promise<Font>",
+                    "—",
+                    "Loads or generates an MSDF font for SDFText rendering. - If given a JSON URL (pre-baked font), loads the static JSON and PNG directly. - If given a Google Font name, URL, or local TTF/OTF, generates the MSDF atlas via WASM in background. - If options.persist (or FontLoader.defaultPersist) is true, caches to IndexedDB. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async vector(source: FontSource): Promise<VectorFont>",
+                    "—",
+                    "Loads a font as a vector curve font (OpentypeFont) for Text entities, path effects (Chalk, Outline), and geometric Bézier extraction. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async preload(\n        items: Array<{ source: FontSource; type: 'msdf' | 'vector'; options?: MSDFOptions }>\n    ): Promise<void>",
+                    "—",
+                    "Preloads multiple fonts in parallel. [Source line 143](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L143)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async clearCache(): Promise<void>",
+                    "—",
+                    "Clears the persistent IndexedDB font cache on disk and active memory cache. [Source line 157](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L157)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async loadLocalFont(url: string): Promise<VectorFont>",
+                    "—",
+                    "Implementation: `return await this.vector(url);`. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async loadGoogleFont(familyNameOrUrl: string): Promise<VectorFont>",
+                    "—",
+                    "Implementation: `return await this.vector(familyNameOrUrl);`. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L172)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async loadDynamicSDFFont(familyNameOrUrl: string, options?: MSDFOptions): Promise<Font>",
+                    "—",
+                    "Implementation: `return await this.msdf(familyNameOrUrl, options);`. [Source line 176](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L176)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.fontSize ?? 120",
+                    "[Line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L31)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.distanceRange ?? 10",
+                    "[Line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L32)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.fixOverlaps ?? true",
+                    "[Line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L33)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.persist ?? this.defaultPersist",
+                    "[Line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts#L46)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "err"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fontresolver",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "FontResolver"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/font/FontResolver.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/font/FontResolver.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FontResolver",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class FontResolver {\n    static resolve(source: FontSource): Promise<{\n        buffer: Uint8Array;\n        id: string;\n    }>;\n    static ensureSfnt(buf: Uint8Array): Promise<Uint8Array>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FontResolver` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static async resolve(source: FontSource): Promise<{ buffer: Uint8Array; id: string }>",
+                    "—",
+                    "Resolves any font source into a raw Uint8Array font binary and an invariant cache ID. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async ensureSfnt(buf: Uint8Array): Promise<Uint8Array>",
+                    "—",
+                    "Checks if a font binary is compressed (WOFF2 or WOFF 1.0) and decompresses it to TTF/OTF SFNT. Google Fonts returns WOFF2 to Chrome, but returns WOFF 1.0 to Edge, Safari, and Firefox. [Source line 199](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts#L199)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FontResolver.fetchGoogleFontByName: private static async fetchGoogleFontByName(familyName: string): Promise<{ buffer: Uint8Array; id: string }>",
+                    "Queries Google Fonts CSS API by font family name and extracts the TTF/WOFF binary URL. Body operations (including nested callbacks): calls to `familyName.replace`, `this.fetchGoogleFontFromCss`; return paths including `await this.fetchGoogleFontFromCss(cssUrl, familyName)`.",
+                    "[Line 223](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts#L223)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "FontResolver.fetchGoogleFontFromCss: private static async fetchGoogleFontFromCss(cssUrl: string, familyHint?: string): Promise<{ buffer: Uint8Array; id: string }>",
+                    "Resolves Google Fonts CSS URL, extracts the binary URL, and downloads the font data. Body operations (including nested callbacks): construction of `Error`, `Uint8Array`; calls to `fetch`, `cssRes.text`, `cssText.indexOf`, `cssText.slice`, `targetCss.match`, `fontRes.arrayBuffer`, `this.ensureSfnt`, `familyHint.toLowerCase().replace` and additional helpers; return paths including `{ buffer, id }`; rejection paths a template-literal expression (see source), a template-literal expression (see source).",
+                    "[Line 233](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts#L233)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "FontResolver.computeBufferHash: private static computeBufferHash(buf: Uint8Array): string",
+                    "Fast, lightweight 32-bit hash for binary buffers to generate unique cache IDs. Body operations (including nested callbacks): calls to `(hash >>> 0).toString`; return paths including `(hash >>> 0).toString(16)`; 1 explicit loop.",
+                    "[Line 270](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts#L270)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`[FontResolver] Unsupported font source type: ${typeof source}`)",
+                "new Error(`[FontResolver] Failed to load Excalifont from CDN: ${res.statusText}`)",
+                "new Error(`[FontResolver] Failed to load Virgil from CDN: ${res.statusText}`)",
+                "new Error(`[FontResolver] Failed to fetch remote font from \"${trimmed}\": ${res.statusText}`)",
+                "new Error(`[FontResolver] Failed to load local font from \"${trimmed}\": ${res.statusText}`)",
+                "new Error(`[FontResolver] Google Font \"${familyHint || cssUrl}\" not found (HTTP ${cssRes.status}).`)",
+                "new Error(`[FontResolver] Could not locate font binary inside Google Fonts CSS for \"${familyHint || cssUrl}\".`)",
+                "new Error(`[FontResolver] Failed to download font binary from \"${fontBinaryUrl}\": ${fontRes.statusText}`)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "msdfgenerator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MSDFGenerator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/font/MSDFGenerator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/font/MSDFGenerator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MSDFGenerator",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class MSDFGenerator {\n    static generate(fontBuffer: Uint8Array, options?: MSDFOptions): Promise<{\n        json: BMFontData;\n        atlasBlob: Blob;\n        imageBitmap: ImageBitmap;\n    }>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MSDFGenerator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static async generate(\n        fontBuffer: Uint8Array,\n        options?: MSDFOptions\n    ): Promise<{ json: BMFontData; atlasBlob: Blob; imageBitmap: ImageBitmap }>",
+                    "—",
+                    "Generates an MSDF atlas and BMFont descriptor from a font binary. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L24)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.charset || DEFAULT_CHARSET",
+                    "[Line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L30)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.fontSize || 120",
+                    "[Line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L31)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.distanceRange || 10",
+                    "[Line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L32)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.textureSize || [2048, 2048]",
+                    "[Line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L33)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.fixOverlaps ?? true",
+                    "[Line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L34)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MSDFGenerator.getClient: private static async getClient(): Promise<MSDF>",
+                    "Implementation: `if (!this.msdfInstance) { this.msdfInstance = new MSDF({ workerUrl, wasmUrl }); this.initPromise = this.msdfInstance.initialize(); } await this.initPromise; return this.msdfInstance;`.",
+                    "[Line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L12)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MSDFGenerator.sanitizeInvertedGlyphs: private static sanitizeInvertedGlyphs(atlas: MSDFAtlas): void",
+                    "Inspects every glyph in the atlas. If msdfgen inverted the distance field (evaluated the outer background as 'inside'), this inverts the RGB values back to normal so background pixels remain completely transparent. Body operations (including nested callbacks): calls to `median`; 4 explicit loops.",
+                    "[Line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L69)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MSDFGenerator.formatBMFontJSON: private static formatBMFontJSON(atlas: MSDFAtlas, fontSize: number): BMFontData",
+                    "Constructs the standard BMFont data structure expected by Retiam's Font shaders. Body operations (including nested callbacks): calls to `atlas.glyphs.map`, `(atlas.kerning || []).map`, `k.first.codePointAt`, `k.second.codePointAt`; long return expressions shown in the linked implementation.",
+                    "[Line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L114)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MSDFGenerator.atlasToBlob: private static async atlasToBlob(atlas: MSDFAtlas): Promise<Blob>",
+                    "Encodes raw ImageData to PNG Blob using OffscreenCanvas or standard canvas. Body operations (including nested callbacks): construction of `OffscreenCanvas`, `Promise`, `Error`; calls to `canvas.getContext`, `ctx.putImageData`, `canvas.convertToBlob`, `document.createElement`, `canvas.toBlob`, `resolve`, `reject`; return paths including `await canvas.convertToBlob({ type: 'image/png' })`, `new Promise((resolve, reject) => { canvas.toBlob((b) => b ? resolve(b) : reject(new Error('Failed to create PNG blob')), 'image/png'); })`.",
+                    "[Line 173](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts#L173)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "types",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "types"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/font/types.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/font/types.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VectorFont",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BuiltinFont",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FontStyle",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FontSource",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MSDFOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FontChar",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Kerning",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FontCommon",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FontInfo",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DistanceField",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BMFontData",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type VectorFont = OpentypeFont;\nexport type BuiltinFont = 'roboto' | 'excalifont' | 'virgil' | 'Fredericka the Great' | 'fredericka the great' | 'fredericka' | 'firacode' | 'Fira Code';\nexport type FontStyle = BuiltinFont | (string & {});\nexport type FontSource = string | ArrayBuffer | Uint8Array | Blob;\nexport interface MSDFOptions {\n    fontSize?: number;\n    distanceRange?: number;\n    charset?: string;\n    textureSize?: [\n        number,\n        number\n    ];\n    fixOverlaps?: boolean;\n    persist?: boolean;\n}\nexport interface FontChar {\n    id: number;\n    index: number;\n    char: string;\n    width: number;\n    height: number;\n    xoffset: number;\n    yoffset: number;\n    xadvance: number;\n    chnl: number;\n    x: number;\n    y: number;\n    page: number;\n}\nexport interface Kerning {\n    first: number;\n    second: number;\n    amount: number;\n}\nexport interface FontCommon {\n    lineHeight: number;\n    base: number;\n    scaleW: number;\n    scaleH: number;\n    pages: number;\n    packed: number;\n    alphaChnl: number;\n    redChnl: number;\n    greenChnl: number;\n    blueChnl: number;\n}\nexport interface FontInfo {\n    face: string;\n    size: number;\n    bold: number;\n    italic: number;\n    charset: string[];\n    unicode: number;\n    stretchH: number;\n    smooth: number;\n    aa: number;\n    padding: number[];\n    spacing: number[];\n    outline: number;\n}\nexport interface DistanceField {\n    fieldType: string;\n    distanceRange: number;\n}\nexport interface BMFontData {\n    pages: string[];\n    chars: FontChar[];\n    info: FontInfo;\n    common: FontCommon;\n    distanceField: DistanceField;\n    kernings: Kerning[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MSDFOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fontSize?: number;",
+                    "—",
+                    "Target font size for distance field generation. Default: 120 [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "distanceRange?: number;",
+                    "—",
+                    "Distance range in pixels for edge sharpness. Default: 10 [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "charset?: string;",
+                    "—",
+                    "Character set to pack into the atlas. Default: ASCII 32–126 (95 characters) [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "textureSize?: [number, number];",
+                    "—",
+                    "Atlas texture dimensions. Default: [2048, 2048] [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fixOverlaps?: boolean;",
+                    "—",
+                    "Whether to run overlap-fixing algorithm for self-intersecting contours. Default: true [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "persist?: boolean;",
+                    "—",
+                    "Whether to persist the generated font in IndexedDB across reloads. Default: false [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L39)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FontChar` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "id: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "index: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "char: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "width: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "xoffset: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "yoffset: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "xadvance: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "chnl: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "x: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "y: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "page: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L54)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Kerning` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "first: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "second: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "amount: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L60)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FontCommon` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "lineHeight: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "base: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scaleW: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scaleH: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pages: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "packed: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "alphaChnl: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "redChnl: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "greenChnl: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "blueChnl: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L73)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FontInfo` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "face: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "size: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bold: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "italic: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "charset: string[];",
+                    "—",
+                    "Required record/option field with declared type `string[]`. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "unicode: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stretchH: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "smooth: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "aa: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "padding: number[];",
+                    "—",
+                    "Required record/option field with declared type `number[]`. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "spacing: number[];",
+                    "—",
+                    "Required record/option field with declared type `number[]`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "outline: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L88)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DistanceField` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fieldType: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "distanceRange: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L93)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BMFontData` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "pages: string[];",
+                    "—",
+                    "Required record/option field with declared type `string[]`. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "chars: FontChar[];",
+                    "—",
+                    "Required record/option field with declared type `FontChar[]`. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "info: FontInfo;",
+                    "—",
+                    "Required record/option field with declared type `FontInfo`. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L99)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "common: FontCommon;",
+                    "—",
+                    "Required record/option field with declared type `FontCommon`. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "distanceField: DistanceField;",
+                    "—",
+                    "Required record/option field with declared type `DistanceField`. [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L101)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "kernings: Kerning[];",
+                    "—",
+                    "Required record/option field with declared type `Kerning[]`. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/types.ts#L102)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

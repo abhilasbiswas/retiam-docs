@@ -1,0 +1,279 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-interactive-event-system-and-raycasting-architecture",
+  "title": "Interactive Event System, Raycasting & Hit Testing Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/INTERACTIVE_EVENT_SYSTEM_AND_RAYCASTING_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/INTERACTIVE_EVENT_SYSTEM_AND_RAYCASTING_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/INTERACTIVE_EVENT_SYSTEM_AND_RAYCASTING_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [InteractionManager](/api-control#interactionmanager), [Scene](/api-core-scene#scene), [Raycaster](/api-utils#raycaster), [AABB](/api-math#aabb), [InteractionComponent](/api-components#interactioncomponent), [Entity](/api-core-entity#entity), [State](/api-core#state), [Ray](/api-utils#raycaster), [Triangle](/api-entities-primitives-2d#triangle), [Intersection](/api-entities-composites-geometry#booleanops), [Box](/api-entities-primitives-3d#box), [Model](/api-entities-primitives-3d#model), [Path](/api-entities-primitives-2d#path), [Component](/api-core#component), [RaycastHit](/api-utils#raycaster), [Vec3](/api-math-vector#vec3), [Plane](/api-entities-primitives-3d#plane), [Usage](/api-utils#gpu-utils), [Circle](/api-entities-primitives-2d#circle), [Color](/api-math#color), [CYAN](/api-core#constants), [MAGENTA](/api-core#constants), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam includes a high-performance event dispatching and raycasting subsystem engineered to bridge physical user input (pointer, mouse, touch) to 2D and 3D scene graph entities rendered on WebGPU."
+        },
+        {
+          "type": "paragraph",
+          "text": "The system decouples low-level browser DOM events from scene entities through a three-tier architecture:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`InteractionManager`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts)**: Central controller attached to the active [`Scene`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts) and `<canvas>`. Listens to native browser pointer events, throttles motion sampling, tracks hover/drag state transitions, and coordinates raycasting.",
+            "**[`Raycaster`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/Raycaster.ts)**: Mathematical ray generator and intersection engine implementing Möller–Trumbore triangle intersection, Slab-method AABB tests, and screen-space unprojection with camera matrix inversion.",
+            "**[`InteractionComponent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/InteractionComponent.ts)**: Entity-attached ECS component declaring event callbacks, draggable flags, custom hit testing, cursor styles, and 3D plane projection constraints."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  P[\"DOM pointer events<br/>pointerdown / pointermove / pointerup\"] --> I[\"InteractionManager\"]\n  I --> R[\"Raycaster<br/>Screen coordinates to world ray\"]\n  I --> D[\"Drag state machine<br/>World-space projections\"]\n  R --> B[\"Hierarchical BVH / AABB<br/>Triangle and quad tests\"] --> C[\"InteractionComponent<br/>onClick / onHover / onDrag\"]\n  D --> E[\"Entity dragging<br/>dragPlaneNormal\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-mathematical-raycasting-engine-raycaster-ts-src-engine-utils-raycaster-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Mathematical Raycasting Engine ([Raycaster.ts](../src/engine/utils/Raycaster.ts))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Screen-Space Unprojection"
+        },
+        {
+          "type": "paragraph",
+          "text": "To cast a ray from a normalized screen coordinate $(x_{\\text{ndc}}, y_{\\text{ndc}}) \\in [-1, 1]^2$:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The camera's inverse view-projection matrix is computed:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{M}_{\\text{inv}} = (\\mathbf{P} \\cdot \\mathbf{V})^{-1}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Near and far clip points in homogeneous clip coordinates are unprojected into world coordinates:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}_{\\text{near}} = \\mathbf{M}_{\\text{inv}} \\begin{bmatrix} x_{\\text{ndc}} \\\\ y_{\\text{ndc}} \\\\ -1 \\\\ 1 \\end{bmatrix}, \\quad \\mathbf{p}_{\\text{far}} = \\mathbf{M}_{\\text{inv}} \\begin{bmatrix} x_{\\text{ndc}} \\\\ y_{\\text{ndc}} \\\\ 1 \\\\ 1 \\end{bmatrix}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Perspective division produces world points:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{w}_{\\text{near}} = \\frac{\\mathbf{p}_{\\text{near}.xyz}}{p_{\\text{near}.w}}, \\quad \\mathbf{w}_{\\text{far}} = \\frac{\\mathbf{p}_{\\text{far}.xyz}}{p_{\\text{far}.w}}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The normalized world ray direction is:"
+          ],
+          "start": 4
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{d} = \\frac{\\mathbf{w}_{\\text{far}} - \\mathbf{w}_{\\text{near}}}{\\|\\mathbf{w}_{\\text{far}} - \\mathbf{w}_{\\text{near}}\\|}, \\quad \\text{Ray}(\\mathbf{o}, \\vec{d}) = \\mathbf{w}_{\\text{near}} + t\\vec{d} \\quad (t \\ge 0)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Accelerated AABB Slab Intersection"
+        },
+        {
+          "type": "paragraph",
+          "text": "Before evaluating triangle meshes, candidate entities are culled via Axis-Aligned Bounding Box (AABB) intersection using the Kay-Kajiya slab algorithm:"
+        },
+        {
+          "type": "math",
+          "tex": "t_{\\min, i} = \\frac{\\text{box}.\\min_i - o_i}{d_i}, \\quad t_{\\max, i} = \\frac{\\text{box}.\\max_i - o_i}{d_i} \\quad (i \\in \\{x, y, z\\})"
+        },
+        {
+          "type": "math",
+          "tex": "t_{\\text{enter}} = \\max\\Big(\\min(t_{\\min, x}, t_{\\max, x}), \\min(t_{\\min, y}, t_{\\max, y}), \\min(t_{\\min, z}, t_{\\max, z})\\Big)"
+        },
+        {
+          "type": "math",
+          "tex": "t_{\\text{exit}} = \\min\\Big(\\max(t_{\\min, x}, t_{\\max, x}), \\max(t_{\\min, y}, t_{\\max, y}), \\max(t_{\\min, z}, t_{\\max, z})\\Big)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The ray hits the bounding volume if and only if:"
+        },
+        {
+          "type": "math",
+          "tex": "t_{\\text{enter}} \\le t_{\\text{exit}} \\quad \\text{and} \\quad t_{\\text{exit}} \\ge 0"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Möller–Trumbore Triangle Intersection"
+        },
+        {
+          "type": "paragraph",
+          "text": "For detailed 3D models ([`Model`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Model.ts)) and 2D triangulated paths ([`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts)), the raycaster tests individual triangle faces:"
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{e}_1 = \\mathbf{v}_1 - \\mathbf{v}_0, \\quad \\vec{e}_2 = \\mathbf{v}_2 - \\mathbf{v}_0"
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{p} = \\vec{d} \\times \\vec{e}_2, \\quad a = \\vec{e}_1 \\cdot \\vec{p}"
+        },
+        {
+          "type": "paragraph",
+          "text": "If $|a| < \\varepsilon$, the ray is parallel to the triangle plane. Barycentric coordinates $(u, v)$ and ray parameter $t$ are resolved via Cramer's rule:"
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{t} = \\mathbf{o} - \\mathbf{v}_0, \\quad u = \\frac{\\vec{t} \\cdot \\vec{p}}{a}, \\quad \\vec{q} = \\vec{t} \\times \\vec{e}_1, \\quad v = \\frac{\\vec{d} \\cdot \\vec{q}}{a}, \\quad t = \\frac{\\vec{e}_2 \\cdot \\vec{q}}{a}"
+        },
+        {
+          "type": "paragraph",
+          "text": "A valid intersection occurs when:"
+        },
+        {
+          "type": "math",
+          "tex": "u \\ge 0, \\quad v \\ge 0, \\quad u + v \\le 1, \\quad t > \\varepsilon"
+        }
+      ]
+    },
+    {
+      "id": "3-interaction-component-api-interactioncomponent-ts-src-engine-components-interactioncomponent-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Interaction Component API ([InteractionComponent.ts](../src/engine/components/InteractionComponent.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `InteractionComponent` attaches to any [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) to enroll it in the interaction lifecycle:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface InteractionCallbacks {\n    onPointerDown?: (e: PointerEvent, hit: RaycastHit) => void;\n    onPointerUp?: (e: PointerEvent, hit: RaycastHit) => void;\n    onPointerMove?: (e: PointerEvent, hit: RaycastHit) => void;\n    onPointerEnter?: (e: PointerEvent, hit: RaycastHit) => void;\n    onPointerLeave?: (e: PointerEvent) => void;\n    onClick?: (e: PointerEvent, hit: RaycastHit) => void;\n    onDoubleClick?: (e: PointerEvent, hit: RaycastHit) => void;\n    onDragStart?: (e: PointerEvent, startPos: Vec3) => void;\n    onDrag?: (e: PointerEvent, currentPos: Vec3, delta: Vec3) => void;\n    onDragEnd?: (e: PointerEvent, finalPos: Vec3) => void;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Dragging Mechanics & Plane Projections"
+        },
+        {
+          "type": "paragraph",
+          "text": "When an entity has `draggable: true`, the interaction manager projects 2D screen motion onto a 3D world plane:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`dragPlaneNormal: Vec3`**: Plane normal vector (default `Vec3(0, 0, 1)` for 2D XY scenes).",
+            "**`dragPlanePoint: Vec3`**: Anchor point on the plane (typically the intersection point when the drag began).",
+            "**Intersection Formulation**:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "t_{\\text{plane}} = \\frac{(\\mathbf{p}_0 - \\mathbf{o}) \\cdot \\vec{n}}{\\vec{d} \\cdot \\vec{n}}"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}_{\\text{world}} = \\mathbf{o} + t_{\\text{plane}}\\vec{d}"
+        },
+        {
+          "type": "paragraph",
+          "text": "This guarantees jitter-free 3D dragging across arbitrary viewing angles."
+        }
+      ]
+    },
+    {
+      "id": "4-interaction-lifecycle-state-management",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Interaction Lifecycle & State Management"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "stateDiagram-v2\n    [*] --> Idle\n    Idle --> Hovered: Pointer enters entity AABB/mesh\n    Hovered --> Idle: Pointer leaves entity\n    Hovered --> Dragging: PointerDown + DragThreshold exceeded\n    Hovered --> Clicked: PointerDown + PointerUp without move\n    Dragging --> Hovered: PointerUp\n    Clicked --> Idle: Event dispatched"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Hover Tracking**: The manager maintains `hoveredEntity`. Moving between entities fires `onPointerLeave` on the previous target and `onPointerEnter` on the newly focused target.",
+            "**Click vs. Drag Disambiguation**: To prevent accidental clicks when panning or dragging, a movement threshold ($5\\text{px}$) and timestamp window determine whether an action is dispatched as a click or initiates a drag session.",
+            "**Cursor Styling**: Each entity can declare a custom CSS cursor (`cursor: 'pointer' | 'grab' | 'text'`). The canvas cursor updates automatically on hover and resets on exit."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Color, InteractionComponent, Vec3 } from \"retiam\";\n\nconst scene = new Scene({ canvas });\nconst dot = new Circle(1.5, { fill: Color.CYAN });\n\nconst interaction = new InteractionComponent({\n    draggable: true,\n    cursor: \"grab\",\n    onPointerEnter: () => {\n        dot.paint.fill = Color.MAGENTA;\n    },\n    onPointerLeave: () => {\n        dot.paint.fill = Color.CYAN;\n    },\n    onDragStart: () => {\n        dot.paint.stroke = Color.WHITE;\n        dot.paint.stroke_width = 0.1;\n    },\n    onDrag: (_e, currentPos) => {\n        dot.transform.position = currentPos;\n    },\n    onDragEnd: () => {\n        dot.paint.stroke_width = 0;\n    }\n});\n\ndot.addComponent(interaction);\nscene.add(dot);"
+        }
+      ]
+    }
+  ]
+}

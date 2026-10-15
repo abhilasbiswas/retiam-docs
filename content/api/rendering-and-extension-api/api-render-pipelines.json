@@ -1,0 +1,1147 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-render-pipelines",
+  "title": "render / pipelines API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pipelinedescriptors",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PipeLineDescriptors"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/pipelines/PipeLineDescriptors.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/pipelines/PipeLineDescriptors.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "POINTS_BEZIER_SEGMENT",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ShaderID",
+                    "Enum",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "StencilState",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PipelineDescriptor",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ShaderAttribute",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "descriptors",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const POINTS_BEZIER_SEGMENT = 13;\nexport declare enum ShaderID {\n    SHAPE_STENCIL_TEST = 0,\n    SHAPE_TRIANGLE_FILL = 1,\n    GREDIENT_FILL = 2,\n    SHAPE_TEXTURE_FILL = 3,\n    SHAPE_VIDEO_FILL = 4,\n    SHAPE_MAX = 5\n}\nexport declare class StencilState {\n    static default: GPUDepthStencilState;\n    static always: GPUDepthStencilState;\n    static equal_keep: GPUDepthStencilState;\n    static equal_clear: GPUDepthStencilState;\n    static stencil_clear: GPUDepthStencilState;\n    static not_equal_keep: GPUDepthStencilState;\n    static not_equal_clear: GPUDepthStencilState;\n    static _stencil_set: GPUDepthStencilState;\n    static _stencil_invert: GPUDepthStencilState;\n    static _stencil_nonzero: GPUDepthStencilState;\n    static stencil_fill: GPUDepthStencilState;\n    static stencil_fill_nonzero: GPUDepthStencilState;\n    static _stencil_test: GPUDepthStencilState;\n    static _stencil_poly: GPUDepthStencilState;\n    static stencil_3d: GPUDepthStencilState;\n    static stencil_3d_transparent: GPUDepthStencilState;\n    static shadow_depth: GPUDepthStencilState;\n    static splat_stencil: GPUDepthStencilState;\n    static line3d_no_overlap: GPUDepthStencilState;\n    static line3d_clear: GPUDepthStencilState;\n    static getStencil(state: GPUStencilFaceState, depth_write?: boolean, depthCompare?: GPUCompareFunction, readMask?: number, writeMask?: number): GPUDepthStencilState;\n}\nexport interface PipelineDescriptor {\n    label?: string;\n    shader: string;\n    shader_attribute?: ShaderAttribute[];\n    vert_entry?: string;\n    frag_entry?: string;\n    vertex_buffer_sizes?: number[];\n    vertex_formats?: GPUVertexFormat[];\n    instance_buffer_sizes?: number[];\n    resources?: entryLayoutGenerator[];\n    stencil?: GPUDepthStencilState;\n    topology?: GPUPrimitiveTopology;\n    shape: ShaderID;\n    cullMode?: GPUCullMode;\n    atoc?: boolean;\n    writeMask?: number;\n}\nexport type ShaderAttribute = {\n    [key: string]: any;\n};\nexport declare const descriptors: PipelineDescriptor[];"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ShaderID` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SHAPE_STENCIL_TEST",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SHAPE_TRIANGLE_FILL",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREDIENT_FILL",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SHAPE_TEXTURE_FILL",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SHAPE_VIDEO_FILL",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SHAPE_MAX",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L17)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `StencilState` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static default",
+                    "StencilState.getStencil({\n        compare: 'always',\n        failOp: 'keep',\n        depthFailOp: 'keep',\n        passOp: 'keep'\n    })",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static always",
+                    "StencilState.getStencil({\n        compare: 'always', failOp: 'keep', depthFailOp: 'keep', passOp: 'keep'\n    })",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static equal_keep",
+                    "StencilState.getStencil({\n        compare: 'equal',\n        failOp: 'keep',\n        depthFailOp: 'keep',\n        passOp: 'keep'\n    }\n    )",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static equal_clear",
+                    "StencilState.getStencil({\n        compare: 'equal',\n        failOp: 'keep',\n        depthFailOp: 'keep',\n        passOp: 'zero'\n    }\n    )",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static stencil_clear",
+                    "StencilState.getStencil({\n        compare: 'always', failOp: 'zero', depthFailOp: 'keep', passOp: 'zero'\n    }, false, \"always\", 0xFFFFFFFF, 0xFF)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static not_equal_keep",
+                    "StencilState.getStencil({\n        compare: 'not-equal',\n        failOp: 'keep',\n        depthFailOp: 'keep',\n        passOp: 'keep'\n    }\n    )",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static not_equal_clear",
+                    "StencilState.getStencil({\n        compare: 'not-equal',\n        failOp: 'keep',\n        depthFailOp: 'keep',\n        passOp: 'zero'\n    }\n    )",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _stencil_set",
+                    "StencilState.getStencil({\n        compare: 'always',\n        failOp: 'keep',\n        depthFailOp: 'keep',\n        passOp: 'replace'\n    },\n        false,\n        \"always\"\n    )",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _stencil_invert",
+                    "StencilState.getStencil({\n        compare: 'always', failOp: 'keep', depthFailOp: 'keep', passOp: 'invert'\n    }, false, \"always\", 0x80, 0x80)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _stencil_nonzero: GPUDepthStencilState",
+                    "Structured initializer; see source line 82.",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static stencil_fill",
+                    "StencilState.getStencil({\n        compare: 'equal', failOp: 'zero', depthFailOp: 'keep', passOp: 'zero'\n    }, true, \"greater-equal\", 0x80, 0x80)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static stencil_fill_nonzero",
+                    "StencilState.getStencil({\n        compare: 'not-equal', failOp: 'keep', depthFailOp: 'keep', passOp: 'zero'\n    }, true, \"greater-equal\", 0x3F, 0x3F)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _stencil_test",
+                    "StencilState.getStencil({\n        compare: 'equal', failOp: 'keep', depthFailOp: 'keep', passOp: 'keep'\n    })",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _stencil_poly",
+                    "StencilState.getStencil({\n        compare: 'not-equal', failOp: 'keep', depthFailOp: 'keep', passOp: 'replace'\n    }, true, \"greater-equal\", 0x40, 0x40)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static stencil_3d",
+                    "StencilState.getStencil({\n        compare: 'always', failOp: 'keep', depthFailOp: 'keep', passOp: 'keep'\n    })",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static stencil_3d_transparent",
+                    "StencilState.getStencil({\n        compare: 'always', failOp: 'keep', depthFailOp: 'keep', passOp: 'keep'\n    }, false, 'greater-equal')",
+                    "Depth stencil for transparent 3D models: depth READS but does NOT WRITE, preventing transparent geometry (glass, transmissive materials) from occluding objects behind it. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static shadow_depth: GPUDepthStencilState",
+                    "{\n        format: 'depth32float',\n        depthWriteEnabled: true,\n        depthCompare: 'greater',\n        depthBias: -2,\n        depthBiasSlopeScale: -1.5,\n    }",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L122)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static splat_stencil",
+                    "StencilState.getStencil({\n        compare: 'always', failOp: 'keep', depthFailOp: 'keep', passOp: 'keep'\n    }, false, \"greater-equal\")",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 130](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L130)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static line3d_no_overlap",
+                    "StencilState.getStencil({\n        compare: 'not-equal', failOp: 'keep', depthFailOp: 'keep', passOp: 'replace'\n    })",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L134)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static line3d_clear",
+                    "StencilState.getStencil({\n        compare: 'always', failOp: 'keep', depthFailOp: 'keep', passOp: 'zero'\n    }, false, \"always\")",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 138](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L138)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getStencil(\n        state: GPUStencilFaceState, \n        depth_write: boolean = true, \n        depthCompare: GPUCompareFunction = \"greater-equal\",\n        readMask: number = 0xFFFFFFFF,\n        writeMask: number = 0xFFFFFFFF\n    ): GPUDepthStencilState",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `stencil`. [Source line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L142)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PipelineDescriptor` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "label?: string,",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 167](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L167)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "shader: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "shader_attribute?: ShaderAttribute[];",
+                    "—",
+                    "Optional record/option field with declared type `ShaderAttribute[]`. [Source line 169](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L169)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vert_entry?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L170)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frag_entry?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 171](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L171)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertex_buffer_sizes?: number[];",
+                    "—",
+                    "Optional record/option field with declared type `number[]`. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L172)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertex_formats?: GPUVertexFormat[];",
+                    "—",
+                    "Optional record/option field with declared type `GPUVertexFormat[]`. [Source line 173](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L173)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "instance_buffer_sizes?: number[];",
+                    "—",
+                    "Optional record/option field with declared type `number[]`. [Source line 174](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L174)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "resources?: entryLayoutGenerator[];",
+                    "—",
+                    "Optional record/option field with declared type `entryLayoutGenerator[]`. [Source line 175](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L175)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stencil?: GPUDepthStencilState;",
+                    "—",
+                    "Optional record/option field with declared type `GPUDepthStencilState`. [Source line 176](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L176)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "topology?: GPUPrimitiveTopology;",
+                    "—",
+                    "Optional record/option field with declared type `GPUPrimitiveTopology`. [Source line 177](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L177)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "shape: ShaderID;",
+                    "—",
+                    "Required record/option field with declared type `ShaderID`. [Source line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L178)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cullMode?: GPUCullMode;",
+                    "—",
+                    "Optional record/option field with declared type `GPUCullMode`. [Source line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L179)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "atoc?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L180)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "writeMask?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 181](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L181)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Pipeline"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/pipelines/Pipeline.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/pipelines/Pipeline.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ShapeInfo",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Shapes",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Pipeline",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ShapeInfo {\n    shape: Shaders;\n    vertex_size: number;\n    intance_size: number;\n}\nexport declare let Shapes: ShapeInfo[];\nexport declare class Pipeline {\n    static common_header: string;\n    static pipelines: GPURenderPipeline[];\n    static ppll_layout: GPUBindGroupLayout;\n    static state_layout: GPUBindGroupLayout;\n    static view_layout: GPUBindGroupLayout;\n    static config: RenderConfig;\n    static formats: GPUVertexFormat[];\n    static is_initiated: boolean;\n    static invalidate(): void;\n    static init(device: GPUDevice, config?: RenderConfig, force?: boolean): void;\n    static getDescriptor(shape: Shaders): PipelineDescriptor;\n    static insert(device: GPUDevice, descriptor: PipelineDescriptor): void;\n    static set(shape: Shaders, pipeline: GPURenderPipeline): void;\n    static get(shape: ShaderID): GPURenderPipeline;\n    static custom_pipelines: Map<string, GPURenderPipeline>;\n    static createPipeline(device: GPUDevice, descriptor: PipelineDescriptor, config?: RenderConfig): GPURenderPipeline;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ShapeInfo` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "shape: Shaders,",
+                    "—",
+                    "Required record/option field with declared type `Shaders`. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertex_size: number,",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "intance_size: number",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L73)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Pipeline` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static common_header: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static pipelines: GPURenderPipeline[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static ppll_layout: GPUBindGroupLayout",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static state_layout: GPUBindGroupLayout",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static view_layout: GPUBindGroupLayout",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static config: RenderConfig",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static formats: GPUVertexFormat[]",
+                    "[\"uint32\", \"float32\", \"float32x2\", \"float32x3\", \"float32x4\"]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static is_initiated",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static invalidate()",
+                    "—",
+                    "Implementation: `this.pipelines = []; this.custom_pipelines.clear(); this.is_initiated = false;`. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static init(device: GPUDevice, config: RenderConfig = new RenderConfig(), force: boolean = false)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.is_initiated`; calls to `this.invalidate`, `device.createBindGroupLayout`, `PPLLManagerGlobal.getStaticGeometryLayoutEntry`, `PPLLManagerLocal.getStaticGeometryLayoutEntry`, `this.pipelines.push`; 1 explicit loop. [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L96)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getDescriptor(shape: Shaders): PipelineDescriptor",
+                    "—",
+                    "Implementation: `for (let descriptor of descriptors) { if (descriptor.shape == shape) { return descriptor; } } return null;`. [Source line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L144)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static insert(device: GPUDevice, descriptor: PipelineDescriptor)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `descriptor.shader.includes`, `Pipeline.createPipeline`, `Pipeline.set`. [Source line 154](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L154)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static set(shape: Shaders, pipeline: GPURenderPipeline)",
+                    "—",
+                    "Implementation: `Pipeline.pipelines[shape] = pipeline;`. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static get(shape: ShaderID): GPURenderPipeline",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Error`; calls to `Pipeline.getDescriptor`, `Pipeline.insert`; return paths including `pipeline`; rejection paths a template-literal expression (see source). [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static custom_pipelines: Map<string, GPURenderPipeline>",
+                    "new Map()",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 183](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L183)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static createPipeline(device: GPUDevice, descriptor: PipelineDescriptor, config: RenderConfig = Pipeline.config || new RenderConfig()): GPURenderPipeline",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `ShaderModule`; calls to `attributes.push`, `buffers.push`, `navigator.gpu.getPreferredCanvasFormat`, `entryLayoutGenerator`, `local_entries.push`, `device.createBindGroupLayout`, `WGSLReflector.getBindGroupLayout`, `bindgrouplayouts.push` and additional helpers; return paths including `pipeline`; 3 explicit loops. [Source line 225](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts#L225)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`Pipeline descriptor for shape ${shape} not found.`)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resourcelayouts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ResourceLayouts"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/pipelines/ResourceLayouts.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/pipelines/ResourceLayouts.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextureType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "entryLayoutGenerator",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Uniform",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Storage",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "StorageWrite",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Sampler",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Texture1D",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Texture",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "StorageTexture",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ExtTexture",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare type TextureType = ImageBitmap | GPUTexture | HTMLCanvasElement | OffscreenCanvas;\nexport type entryLayoutGenerator = (index: number) => GPUBindGroupLayoutEntry;\nexport declare class Uniform {\n    static layout(index: number): GPUBindGroupLayoutEntry;\n}\nexport declare class Storage {\n    static layout(index: number): GPUBindGroupLayoutEntry;\n}\nexport declare class StorageWrite {\n    static layout(index: number): GPUBindGroupLayoutEntry;\n}\nexport declare class Sampler {\n    label: string;\n    static layout(index: number): GPUBindGroupLayoutEntry;\n}\nexport declare class Texture1D {\n    label: string;\n    src: TextureType;\n    static layout(index: number): GPUBindGroupLayoutEntry;\n}\nexport declare class Texture {\n    label: string;\n    src: TextureType;\n    static layout(index: number): GPUBindGroupLayoutEntry;\n}\nexport declare class StorageTexture {\n    label: string;\n    src: TextureType;\n    static layout(index: number): GPUBindGroupLayoutEntry;\n}\nexport declare class ExtTexture {\n    label: string;\n    src: TextureType;\n    static layout(index: number): GPUBindGroupLayoutEntry;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Uniform` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static layout(index: number): GPUBindGroupLayoutEntry",
+                    "—",
+                    "Implementation: `let entry: GPUBindGroupLayoutEntry = { binding: index, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: \"uniform\" } }; return entry;`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L7)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Storage` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static layout(index: number): GPUBindGroupLayoutEntry",
+                    "—",
+                    "Implementation: `let entry: GPUBindGroupLayoutEntry = { binding: index, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: \"read-only-storage\" } } return entry;`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `StorageWrite` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static layout(index: number): GPUBindGroupLayoutEntry",
+                    "—",
+                    "Implementation: `let entry: GPUBindGroupLayoutEntry = { binding: index, visibility: GPUShaderStage.FRAGMENT, buffer: { type: \"storage\" } } return entry;`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L34)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Sampler` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "label: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static layout(index: number): GPUBindGroupLayoutEntry",
+                    "—",
+                    "Implementation: `let entry: GPUBindGroupLayoutEntry = { binding: index, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, sampler: {} }; return entry;`. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L51)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Texture1D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "label: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "src: TextureType",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static layout(index: number): GPUBindGroupLayoutEntry",
+                    "—",
+                    "Implementation: `let entry: GPUBindGroupLayoutEntry = { binding: index, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'float', viewDimension: '1d' } }; return entry;`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L66)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Texture` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "label: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "src: TextureType",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static layout(index: number): GPUBindGroupLayoutEntry",
+                    "—",
+                    "Implementation: `let entry = { binding: index, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, texture: {} }; return entry;`. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L85)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `StorageTexture` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "label: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "src: TextureType",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static layout(index: number): GPUBindGroupLayoutEntry",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `entry`. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L100)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ExtTexture` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "label: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "src: TextureType",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static layout(index: number): GPUBindGroupLayoutEntry",
+                    "—",
+                    "Implementation: `let entry = { binding: index, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, externalTexture: {} }; return entry;`. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/ResourceLayouts.ts#L120)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wgslreflector",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "WGSLReflector"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/pipelines/WGSLReflector.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/pipelines/WGSLReflector.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/WGSLReflector.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "WGSLReflector: Note: Ensure you have `@webgpu/types` installed in your project so TypeScript recognizes GPUBindGroupLayoutEntry and GPUVertexBufferLayout."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WGSLReflector",
+                    "Class",
+                    "Note: Ensure you have `@webgpu/types` installed in your project so TypeScript recognizes GPUBindGroupLayoutEntry and GPUVertexBufferLayout."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class WGSLReflector {\n    static getBindGroupLayout(device: GPUDevice, source: string, index?: number): GPUBindGroupLayout;\n    static getVertexLayout(source: string): GPUVertexBufferLayout[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WGSLReflector` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static getBindGroupLayout(device: GPUDevice, source: string, index: number = 3): GPUBindGroupLayout",
+                    "—",
+                    "Parses group(3) and outputs valid WebGPU Bind Group Layout Entries. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/WGSLReflector.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getVertexLayout(source: string): GPUVertexBufferLayout[]",
+                    "—",
+                    "Parses the vertex entry point and returns a complete WebGPU Vertex Buffer Layout Array. Note: This assumes all attributes are interleaved into a single Vertex Buffer. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/WGSLReflector.ts#L103)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WGSLReflector.mapToGPUVertexFormat: private static mapToGPUVertexFormat(wgslType: string): GPUVertexFormat",
+                    "Maps WGSL type strings securely to default GPUVertexFormats. NOTE: Packed formats (unorm8x4, snorm16x2, unorm10-10-10-2, etc.) CANNOT be reflected from WGSL because WGSL only sees the converted f32/i32/u32 result. If you are using packed formats in your JS buffers, you must manually override the format returned by this function. Body operations (including nested callbacks): calls to `wgslType.replace`; return paths including `'float32'`, `'float32x2'`, `'float32x3'`.",
+                    "[Line 158](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/WGSLReflector.ts#L158)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "frame-graph",
+  "title": "FrameGraph and custom render passes",
+  "group": "GPU implementation",
+  "summary": "Declare render resources and pass dependencies, then understand graph compilation and resource lifetimes.",
+  "sections": [
+    {
+      "id": "pass-dependencies-and-resource-lifetimes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Pass dependencies and resource lifetimes"
+        },
+        {
+          "type": "paragraph",
+          "text": "FrameGraph collects Pass objects and virtual texture/buffer handles. Pass.setup uses GraphBuilder to declare resources; Pass.execute receives RenderContext with resolved physical resources and encoder state. Decorators read/write/create register handle fields, while the underlying arrays retain dependency metadata."
+        },
+        {
+          "type": "paragraph",
+          "text": "Compilation builds dependencies, topologically sorts passes and rejects cycles. Passes not contributing to an unculled sink can be culled. ResourcePool can reuse compatible transient resources with non-overlapping lifetimes. Persistent imports keep external resources across frames and must be refreshed when the underlying texture changes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [FrameGraph](/api-render-frame-graph#framegraph), [Pass](/api-render-frame-graph#pass), [GraphBuilder](/api-render-frame-graph#graphbuilder), [RenderContext](/api-render-frame-graph#rendercontext), [ResourcePool](/api-render-frame-graph#resourcepool), [TextureHandle](/api-render-frame-graph#resource), [BufferHandle](/api-render-frame-graph#resource)."
+        }
+      ]
+    },
+    {
+      "id": "use-the-actual-extension-api",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Use the actual extension API"
+        },
+        {
+          "type": "paragraph",
+          "text": "The current FrameGraph.addPass receives a Pass instance. It does not take a name and callback builder. Build a Pass subclass or reuse an existing PostProcessPass, declare its input/output handles and connect its output to the pipeline’s RenderIO. A pass that only writes an unconsumed texture may be culled."
+        },
+        {
+          "type": "paragraph",
+          "text": "Custom compute work can use CustomComputePass or the scene compute queue. Custom raster work can use CustomRenderPass and RenderPass-compatible contracts. Declare dependencies for every texture and buffer actually used; WebGPU cannot infer the intended application dataflow from an arbitrary shader string."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PostProcessPass](/api-render-passes#postprocesspass), [CustomComputePass](/api-render-passes#customcomputepass), [RenderIO](/api-core#iplugin)."
+        }
+      ]
+    },
+    {
+      "id": "rebuild-versus-execute",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Rebuild versus execute"
+        },
+        {
+          "type": "paragraph",
+          "text": "Pass setup and graph compilation describe the frame structure. Execute encodes one frame. Allocate stable pipelines/resources outside execute when possible, update uniforms for frame time inside the intended update path and invalidate the graph when topology or descriptor changes require a rebuild. Do not keep a transient texture view after its graph lifetime."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Two small passes expose one explicit producer-to-consumer resource dependency."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-frame-graph"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Offscreen targets, feedback and persistence](/render-targets).",
+            "Build it step by step: [Chain custom FrameGraph passes](/tutorial-frame-graph)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Rendering pipeline from scene to pixels](/rendering-architecture)"
+  ]
+}

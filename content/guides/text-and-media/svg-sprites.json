@@ -1,0 +1,131 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "svg-sprites",
+  "title": "SVG, sprites and texture atlases",
+  "group": "Text and media",
+  "summary": "Load SVG artwork and reuse textures through atlases, subtextures and animated sprites.",
+  "sections": [
+    {
+      "id": "import-svg-artwork",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Import SVG artwork"
+        },
+        {
+          "type": "paragraph",
+          "text": "SVG parses a complete SVG document into a hierarchy of vector entities, including supported transforms, styles, defs/use references and shapes. SVGPath provides a path-focused extraction route. SVG input is converted into engine geometry; it does not imply complete browser SVG/CSS feature support."
+        },
+        {
+          "type": "paragraph",
+          "text": "Use simple exported vector artwork first, then check nested transforms, inherited paint and holes against a visual reference. CSS filters, unsupported elements or external resources need explicit verification. Geometry equalization makes differently sampled contour sets compatible for morphing, but does not guarantee a visually meaningful correspondence."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [SVG](/api-entities-composites-svg#svg), [SVGPath](/api-entities-composites-svg#svgpath), [PathEqualizer](/api-utils#pathequalizer)."
+        }
+      ]
+    },
+    {
+      "id": "atlas-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Atlas pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "TextureAtlas reads TexturePacker-style manifests in hash or array form. SubTexture stores normalized atlas coordinates with rotation and trimming metadata. Sprite draws a texture region; AnimatedSprite selects frames at a chosen cadence and looping mode. TextureManager owns shared texture aggregation and dirty flags."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Stage",
+            "Responsibility"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Manifest and image",
+                "Fetch local or remote atlas data"
+              ]
+            },
+            {
+              "cells": [
+                "SubTexture",
+                "Represent region, rotation and trimmed bounds"
+              ]
+            },
+            {
+              "cells": [
+                "SpriteFragment",
+                "Sample the region in a compatible shader"
+              ]
+            },
+            {
+              "cells": [
+                "AnimatedSprite",
+                "Update frame selection in scene time"
+              ]
+            },
+            {
+              "cells": [
+                "TextureManager",
+                "Upload/track shared textures and media changes"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [TextureAtlas](/api-loader#textureatlas), [SubTexture](/api-loader#subtexture), [Sprite](/api-entities-primitives-2d#sprite), [AnimatedSprite](/api-entities-primitives-2d#animatedsprite), [TextureManager](/api-core#texturemanager), [SpriteFragment](/api-components-fragment#spritefragment)."
+        }
+      ]
+    },
+    {
+      "id": "avoid-common-asset-problems",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Avoid common asset problems"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Keep atlas frame names and manifest paths consistent.",
+            "Account for trimmed logical size separately from stored pixel rectangles.",
+            "Verify cross-origin fetches and browser image decoding before diagnosing shader problems.",
+            "Preserve the emitting bundler’s asset URLs when serving a built package.",
+            "Set explicit output dimensions when comparing sprite images across different viewports."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scenes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Parse one SVG document, then inspect one named texture-atlas frame in a separate scene."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-svg"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-texture-atlas"
+        }
+      ]
+    }
+  ]
+}

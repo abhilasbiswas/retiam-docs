@@ -1,0 +1,3506 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-core",
+  "title": "Core API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "component",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Component"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Component.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Component.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Component.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Component: Abstract base class for all components in the Retiam engine. Components add modular behavior, rendering capabilities, or geometric properties to an [[Entity]]."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Component",
+                    "Class",
+                    "Abstract base class for all components in the Retiam engine. Components add modular behavior, rendering capabilities, or geometric properties to an [[Entity]]."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare abstract class Component {\n    version: number;\n    shaderVersion: number;\n    entity: Entity;\n    enabled: boolean;\n    onInit(): void;\n    update(t: number, dt: number): void;\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Component` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public version: number",
+                    "0",
+                    "Monotonically increasing version counter for tracking component mutations. Often used to signal when CPU state needs to sync to GPU buffers. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Component.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public shaderVersion: number",
+                    "0",
+                    "Version counter specifically tracking shader-related adjustments or pipeline layouts. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Component.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public entity: Entity",
+                    "—",
+                    "The parent [[Entity]] that this component is attached to. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Component.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enabled: boolean",
+                    "true",
+                    "Flag to enable or disable this component's update loop. When false, `update()` will not be called. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Component.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onInit(): void",
+                    "—",
+                    "Called once when the component is first added to an entity. Override this to perform initialization that depends on `this.entity` being set. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Component.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number): void",
+                    "—",
+                    "Called during the main engine update loop. Override this method to implement frame-by-frame updates or calculations. Param: t The absolute scene running time in milliseconds. Param: dt The delta time elapsed since the last frame in milliseconds. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Component.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Called when the component is removed from an entity or when the entity is destroyed. Use this to clean up WebGPU resources, buffers, listeners, or other memory leaks. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Component.ts#L49)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "constants",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Constants"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Constants.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Constants.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Constants.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "UP: Upward direction vector [0, 1, 0]",
+                "DOWN: Downward direction vector [0, -1, 0]",
+                "LEFT: Leftward direction vector [-1, 0, 0]",
+                "RIGHT: Rightward direction vector [1, 0, 0]",
+                "ORIGIN: Origin coordinate point [0, 0, 0]",
+                "CENTER: Center coordinate point [0, 0, 0]",
+                "OUT: Outward direction vector [0, 0, 1]",
+                "IN: Inward direction vector [0, 0, -1]",
+                "UL: Up-Left diagonal direction vector [-1, 1, 0]",
+                "UR: Up-Right diagonal direction vector [1, 1, 0]",
+                "DL: Down-Left diagonal direction vector [-1, -1, 0]",
+                "DR: Down-Right diagonal direction vector [1, -1, 0]",
+                "TransformOptions: Options for specifying a transform origin point. Use `anchor` for a local bounding-box relative point, or `pivot` for an absolute world coordinate. Only one of the two should be specified; if both are set, `pivot` takes precedence.",
+                "TransformOption: Accepts either a bare Vec3 (shorthand for `{ anchor: vec }`) or explicit `TransformOptions`. - `rotate(angle, DL)` → treated as `{ anchor: DL }` - `rotate(angle, { anchor: [0, 0.5, 0] })` → continuous local anchor - `rotate(angle, { pivot: [20, 20, 0] })` → absolute world coordinate",
+                "isOptions: Type guard to distinguish TransformOptions from Vec3Type vectors/arrays.",
+                "hex: Creates a Color instance from a Hex string (e.g., \"#FF5733\" or \"#F53\")."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "EPSILON",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "UP",
+                    "First",
+                    "Upward direction vector [0, 1, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "DOWN",
+                    "First",
+                    "Downward direction vector [0, -1, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "LEFT",
+                    "First",
+                    "Leftward direction vector [-1, 0, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "RIGHT",
+                    "First",
+                    "Rightward direction vector [1, 0, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ORIGIN",
+                    "First",
+                    "Origin coordinate point [0, 0, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "CENTER",
+                    "First",
+                    "Center coordinate point [0, 0, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OUT",
+                    "First",
+                    "Outward direction vector [0, 0, 1]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "IN",
+                    "First",
+                    "Inward direction vector [0, 0, -1]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "UL",
+                    "First",
+                    "Up-Left diagonal direction vector [-1, 1, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "UR",
+                    "First",
+                    "Up-Right diagonal direction vector [1, 1, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "DL",
+                    "First",
+                    "Down-Left diagonal direction vector [-1, -1, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "DR",
+                    "First",
+                    "Down-Right diagonal direction vector [1, -1, 0]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "EDGE_CONSTANTS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformOptions",
+                    "Interface",
+                    "Options for specifying a transform origin point. Use `anchor` for a local bounding-box relative point, or `pivot` for an absolute world coordinate. Only one of the two should be specified; if both are set, `pivot` takes precedence."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformOption",
+                    "TypeAlias",
+                    "Accepts either a bare Vec3 (shorthand for `{ anchor: vec }`) or explicit `TransformOptions`. - `rotate(angle, DL)` → treated as `{ anchor: DL }` - `rotate(angle, { anchor: [0, 0.5, 0] })` → continuous local anchor - `rotate(angle, { pivot: [20, 20, 0] })` → absolute world coordinate"
+                  ]
+                },
+                {
+                  "cells": [
+                    "isOptions",
+                    "Function",
+                    "Type guard to distinguish TransformOptions from Vec3Type vectors/arrays."
+                  ]
+                },
+                {
+                  "cells": [
+                    "hex",
+                    "Function",
+                    "Creates a Color instance from a Hex string (e.g., \"#FF5733\" or \"#F53\")."
+                  ]
+                },
+                {
+                  "cells": [
+                    "WHITE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BLACK",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RED",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREEN",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BLUE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "YELLOW",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CYAN",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MAGENTA",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREY",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GRAY",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TRANSPARENT",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "NONE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "LIGHT_GREY",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "LIGHT_GRAY",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DARK_GREY",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DARK_GRAY",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CHARCOAL",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SLATE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SILVER",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CRIMSON",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CORAL",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ROSE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "HOT_PINK",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FUCHSIA",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PINK",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MAROON",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ORANGE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DARK_ORANGE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AMBER",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GOLD",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SAND",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "LEMON",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "LIME",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MINT",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EMERALD",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TEAL",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "OLIVE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FOREST_GREEN",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AQUA",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TURQUOISE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SKY_BLUE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DEEP_SKY_BLUE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ROYAL_BLUE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "NAVY",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "INDIGO",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VIOLET",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PURPLE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "LAVENDER",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PLUM",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BROWN",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CHOCOLATE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TAN",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RED_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RED_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RED_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RED_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RED_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BLUE_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BLUE_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BLUE_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BLUE_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BLUE_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREEN_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREEN_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREEN_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREEN_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREEN_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "YELLOW_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "YELLOW_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "YELLOW_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "YELLOW_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "YELLOW_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PURPLE_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PURPLE_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PURPLE_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PURPLE_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PURPLE_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TEAL_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TEAL_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TEAL_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TEAL_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TEAL_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ORANGE_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ORANGE_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ORANGE_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ORANGE_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ORANGE_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PINK_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PINK_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PINK_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PINK_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PINK_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GRAY_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GRAY_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GRAY_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GRAY_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GRAY_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREY_A",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREY_B",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREY_C",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREY_D",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GREY_E",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const EPSILON = 0.0001;\nexport declare const UP: Vec3;\nexport declare const DOWN: Vec3;\nexport declare const LEFT: Vec3;\nexport declare const RIGHT: Vec3;\nexport declare const ORIGIN: Vec3;\nexport declare const CENTER: Vec3;\nexport declare const OUT: Vec3;\nexport declare const IN: Vec3;\nexport declare const UL: Vec3;\nexport declare const UR: Vec3;\nexport declare const DL: Vec3;\nexport declare const DR: Vec3;\nexport declare const EDGE_CONSTANTS: Vec3[];\nexport interface TransformOptions {\n    anchor?: Vec3Type;\n    pivot?: Vec3Type;\n}\nexport type TransformOption = Vec3Type | TransformOptions;\nexport declare function isOptions(val: any): val is TransformOptions;\nexport declare function hex(hexStr: string, alpha?: number): Color;\nexport declare const WHITE: Color;\nexport declare const BLACK: Color;\nexport declare const RED: Color;\nexport declare const GREEN: Color;\nexport declare const BLUE: Color;\nexport declare const YELLOW: Color;\nexport declare const CYAN: Color;\nexport declare const MAGENTA: Color;\nexport declare const GREY: Color;\nexport declare const GRAY: Color;\nexport declare const TRANSPARENT: Color;\nexport declare const NONE: Color;\nexport declare const LIGHT_GREY: Color;\nexport declare const LIGHT_GRAY: Color;\nexport declare const DARK_GREY: Color;\nexport declare const DARK_GRAY: Color;\nexport declare const CHARCOAL: Color;\nexport declare const SLATE: Color;\nexport declare const SILVER: Color;\nexport declare const CRIMSON: Color;\nexport declare const CORAL: Color;\nexport declare const ROSE: Color;\nexport declare const HOT_PINK: Color;\nexport declare const FUCHSIA: Color;\nexport declare const PINK: Color;\nexport declare const MAROON: Color;\nexport declare const ORANGE: Color;\nexport declare const DARK_ORANGE: Color;\nexport declare const AMBER: Color;\nexport declare const GOLD: Color;\nexport declare const SAND: Color;\nexport declare const LEMON: Color;\nexport declare const LIME: Color;\nexport declare const MINT: Color;\nexport declare const EMERALD: Color;\nexport declare const TEAL: Color;\nexport declare const OLIVE: Color;\nexport declare const FOREST_GREEN: Color;\nexport declare const AQUA: Color;\nexport declare const TURQUOISE: Color;\nexport declare const SKY_BLUE: Color;\nexport declare const DEEP_SKY_BLUE: Color;\nexport declare const ROYAL_BLUE: Color;\nexport declare const NAVY: Color;\nexport declare const INDIGO: Color;\nexport declare const VIOLET: Color;\nexport declare const PURPLE: Color;\nexport declare const LAVENDER: Color;\nexport declare const PLUM: Color;\nexport declare const BROWN: Color;\nexport declare const CHOCOLATE: Color;\nexport declare const TAN: Color;\nexport declare const RED_A: Color;\nexport declare const RED_B: Color;\nexport declare const RED_C: Color;\nexport declare const RED_D: Color;\nexport declare const RED_E: Color;\nexport declare const BLUE_A: Color;\nexport declare const BLUE_B: Color;\nexport declare const BLUE_C: Color;\nexport declare const BLUE_D: Color;\nexport declare const BLUE_E: Color;\nexport declare const GREEN_A: Color;\nexport declare const GREEN_B: Color;\nexport declare const GREEN_C: Color;\nexport declare const GREEN_D: Color;\nexport declare const GREEN_E: Color;\nexport declare const YELLOW_A: Color;\nexport declare const YELLOW_B: Color;\nexport declare const YELLOW_C: Color;\nexport declare const YELLOW_D: Color;\nexport declare const YELLOW_E: Color;\nexport declare const PURPLE_A: Color;\nexport declare const PURPLE_B: Color;\nexport declare const PURPLE_C: Color;\nexport declare const PURPLE_D: Color;\nexport declare const PURPLE_E: Color;\nexport declare const TEAL_A: Color;\nexport declare const TEAL_B: Color;\nexport declare const TEAL_C: Color;\nexport declare const TEAL_D: Color;\nexport declare const TEAL_E: Color;\nexport declare const ORANGE_A: Color;\nexport declare const ORANGE_B: Color;\nexport declare const ORANGE_C: Color;\nexport declare const ORANGE_D: Color;\nexport declare const ORANGE_E: Color;\nexport declare const PINK_A: Color;\nexport declare const PINK_B: Color;\nexport declare const PINK_C: Color;\nexport declare const PINK_D: Color;\nexport declare const PINK_E: Color;\nexport declare const GRAY_A: Color;\nexport declare const GRAY_B: Color;\nexport declare const GRAY_C: Color;\nexport declare const GRAY_D: Color;\nexport declare const GRAY_E: Color;\nexport declare const GREY_A: Color;\nexport declare const GREY_B: Color;\nexport declare const GREY_C: Color;\nexport declare const GREY_D: Color;\nexport declare const GREY_E: Color;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "isOptions: Implementation: `return typeof val === 'object' && val !== null && !('x' in val) && !('length' in val);`.",
+                "hex: Body operations (including nested callbacks): construction of `Color`; calls to `hexStr.replace`, `str.split(\"\").map(c => c + c).join`, `str.split(\"\").map`, `str.split`, `parseInt`; return paths including `new Color(r, g, b, alpha)`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TransformOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "anchor?: Vec3Type;",
+                    "—",
+                    "Local bounding-box anchor in continuous [-1, 1] range per axis. Mapped linearly across the entity's AABB via `getBoundaryPoint()`. - `[0, 0, 0]` → bounding-box center - `[0, 1, 0]` (or `UP`) → top edge center - `[-1, -1, 0]` (or `DL`) → bottom-left corner - `[0, 0.5, 0]` → halfway between center and top edge [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Constants.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pivot?: Vec3Type;",
+                    "—",
+                    "Absolute World Space coordinate point. Transforms occur directly around this scene position. - `[0, 0, 0]` → world origin - `[20, 20, 0]` → specific world coordinate [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Constants.ts#L78)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fill",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Fill"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Fill.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Fill.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Fill.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Fill: Abstract class representing the styling filling property of an entity. Fills specify colors, gradients, images, or custom shader textures used to shade paths and meshes."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Fill",
+                    "Class",
+                    "Abstract class representing the styling filling property of an entity. Fills specify colors, gradients, images, or custom shader textures used to shade paths and meshes."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare abstract class Fill {\n    device: GPUDevice;\n    constructor();\n    update(time: number): Promise<void>;\n    abstract init(device: GPUDevice): void;\n    abstract render(encoder: GPURenderPassEncoder): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Fill` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "device: GPUDevice",
+                    "—",
+                    "The active GPUDevice instance. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Fill.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor()",
+                    "—",
+                    "Creates a new Fill instance. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Fill.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async update(time: number): Promise<void>",
+                    "—",
+                    "Called frame-by-frame, enabling dynamic updates (e.g. video frames or moving gradients). Param: time Current running scene time in milliseconds. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Fill.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract init(device: GPUDevice): void;",
+                    "—",
+                    "Initializes any required WebGPU texture/sampler resources. Param: device Active GPUDevice. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Fill.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract render(encoder: GPURenderPassEncoder): void;",
+                    "—",
+                    "Binds sample groups and encoders for the fill shader pass. Param: encoder Active GPURenderPassEncoder. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Fill.ts#L42)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Group"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Group.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Group.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Group: A non-renderable container that groups multiple [[Entity]] objects together. Useful for applying synchronized animations or managing collections of related entities."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Group",
+                    "Class",
+                    "A non-renderable container that groups multiple [[Entity]] objects together. Useful for applying synchronized animations or managing collections of related entities."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class Group {\n    entities: Entity[];\n    constructor(...entities: Entity[]);\n    get animate(): GroupAnimator;\n    add(...entities: Entity[]): this;\n    remove(entity: Entity): this;\n    forEach(fn: (entity: Entity, index: number) => void): this;\n    map<U>(fn: (entity: Entity, index: number) => U): U[];\n    filter(fn: (entity: Entity, index: number) => boolean): Group;\n    find(predicateOrLabel: string | ((entity: Entity) => boolean)): Entity | undefined;\n    get length(): number;\n    shift(offset: Vec3Type): this;\n    setFill(color: Color): this;\n    setOpacity(opacity: number): this;\n    getBoundingBox(): AABB;\n    setStroke(width: number, color?: Color): this;\n    set z_index(index: number);\n    setMaterialColor(color: Color): this;\n    setMaterialOpacity(opacity: number): this;\n    setVisibility(visible: boolean): this;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Group` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public entities: Entity[]",
+                    "—",
+                    "List of child [[Entity]] nodes grouped inside this container. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(...entities: Entity[])",
+                    "—",
+                    "Creates a new Group container. Param: entities Initial list of [[Entity]] elements to include in the group. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get animate(): GroupAnimator",
+                    "—",
+                    "Group animator that allows orchestrating animations across all entities in the group simultaneously. Creates a fresh GroupAnimator on each access so it always reflects the current entity list. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add(...entities: Entity[]): this",
+                    "—",
+                    "Adds one or more entities to the group. Param: entities The entities to add. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(entity: Entity): this",
+                    "—",
+                    "Removes a specific entity from the group. Param: entity The entity to remove. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forEach(fn: (entity: Entity, index: number) => void): this",
+                    "—",
+                    "Iterates over each entity in the group. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public map<U>(fn: (entity: Entity, index: number) => U): U[]",
+                    "—",
+                    "Maps each entity to a new value. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public filter(fn: (entity: Entity, index: number) => boolean): Group",
+                    "—",
+                    "Returns a new Group containing only entities that pass the filter. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public find(predicateOrLabel: string | ((entity: Entity) => boolean)): Entity | undefined",
+                    "—",
+                    "Finds the first entity matching a predicate or label. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get length(): number",
+                    "—",
+                    "Returns the number of entities in the group. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public shift(offset: Vec3Type): this",
+                    "—",
+                    "Shifts all entities by the given offset. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFill(color: Color): this",
+                    "—",
+                    "Sets the fill color on all entities. [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setOpacity(opacity: number): this",
+                    "—",
+                    "Sets the opacity on all entities. [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBoundingBox(): AABB",
+                    "—",
+                    "Computes the combined world-space AABB of all entities. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStroke(width: number, color?: Color): this",
+                    "—",
+                    "Sets stroke width and optional color on all entities. Param: width Stroke thickness. Param: color Optional stroke color. [Source line 133](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L133)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set z_index(index: number)",
+                    "—",
+                    "Sets the z-index sort order on all entities. Param: index Depth sorting index. [Source line 143](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L143)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMaterialColor(color: Color): this",
+                    "—",
+                    "Sets the 3D material color on all entities. Param: color The PBR material base color. [Source line 152](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L152)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMaterialOpacity(opacity: number): this",
+                    "—",
+                    "Sets the material opacity on all entities. Param: opacity Opacity [0.0 - 1.0]. [Source line 162](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L162)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVisibility(visible: boolean): this",
+                    "—",
+                    "Shows or hides all entities in the group. Param: visible Whether all entities should be visible. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts#L172)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "iplugin",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "IPlugin"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/IPlugin.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/IPlugin.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "RenderIO: Shared IO state passed through the rendering pipeline. Plugins can read these handles, intercept them, or chain new passes.",
+                "IPlugin: Extension point for the Retiam engine. Plugins can: - Configure scene/render settings via install() - Inject render passes into the FrameGraph via registerPasses() - Do both Usage:"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RenderIO",
+                    "Interface",
+                    "Shared IO state passed through the rendering pipeline. Plugins can read these handles, intercept them, or chain new passes."
+                  ]
+                },
+                {
+                  "cells": [
+                    "IPlugin",
+                    "Interface",
+                    "Extension point for the Retiam engine. Plugins can: - Configure scene/render settings via install() - Inject render passes into the FrameGraph via registerPasses() - Do both Usage:"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface RenderIO {\n    color: TextureHandle;\n    resolvedColor: TextureHandle;\n    depth: TextureHandle;\n    shadow?: TextureHandle;\n    finalOutput?: TextureHandle;\n    [channel: string]: TextureHandle | undefined;\n}\nexport interface IPlugin {\n    name: string;\n    install?(scene?: Scene, composer?: SceneComposer): void;\n    registerPasses?(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO;\n    dispose?(): void;\n    priority?: number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RenderIO` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "color: TextureHandle;",
+                    "—",
+                    "Required record/option field with declared type `TextureHandle`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "resolvedColor: TextureHandle;",
+                    "—",
+                    "Required record/option field with declared type `TextureHandle`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "depth: TextureHandle;",
+                    "—",
+                    "Required record/option field with declared type `TextureHandle`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "shadow?: TextureHandle;",
+                    "—",
+                    "Optional record/option field with declared type `TextureHandle`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "finalOutput?: TextureHandle;",
+                    "—",
+                    "Optional record/option field with declared type `TextureHandle`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "[channel: string]: TextureHandle | undefined;",
+                    "—",
+                    "Open dictionary for custom passes to share arbitrary channels (e.g. normals, velocity, ao) [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L23)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `IPlugin` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "name: string;",
+                    "—",
+                    "Unique name for deduplication and removal [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "install?(scene?: Scene, composer?: SceneComposer): void;",
+                    "—",
+                    "Called when plugin is installed. Use for config-level setup. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "registerPasses?(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO;",
+                    "—",
+                    "Called during FrameGraph build to inject render passes. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dispose?(): void;",
+                    "—",
+                    "Called when plugin is removed. Clean up resources. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "priority?: number;",
+                    "—",
+                    "Ordering for registerPasses(). Lower = earlier. Default: 100. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts#L54)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interfaces",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Interfaces"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Interfaces.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Interfaces.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "CurveFrame: A snapshot of position, tangent, and normal at a point on a curve.",
+                "ICurveSamplable: Common interface for entities that represent a parametric curve or path. All sampling methods are arc-length parameterized and CPU-based."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CurveFrame",
+                    "Interface",
+                    "A snapshot of position, tangent, and normal at a point on a curve."
+                  ]
+                },
+                {
+                  "cells": [
+                    "IRaycastable",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ICurveSamplable",
+                    "Interface",
+                    "Common interface for entities that represent a parametric curve or path. All sampling methods are arc-length parameterized and CPU-based."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface CurveFrame {\n    point: Vec2;\n    tangent: Vec2;\n    normal: Vec2;\n}\nexport interface IRaycastable {\n    raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): Promise<RaycastHit | null> | RaycastHit | null;\n}\nexport interface ICurveSamplable {\n    startPoint(): Vec2;\n    endPoint(): Vec2;\n    getPointAtT(t: number): Vec2;\n    getTangentAtT(t: number): Vec2;\n    getNormalAtT(t: number): Vec2;\n    getFrameAtT(t: number): CurveFrame;\n    getPointAtLength(length: number): Vec2;\n    samplePoints(count: number): Vec2[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CurveFrame` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "point: Vec2;",
+                    "—",
+                    "Required record/option field with declared type `Vec2`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tangent: Vec2;",
+                    "—",
+                    "Required record/option field with declared type `Vec2`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "normal: Vec2;",
+                    "—",
+                    "Required record/option field with declared type `Vec2`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `IRaycastable` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): Promise<RaycastHit | null> | RaycastHit | null;",
+                    "—",
+                    "Executes an intersection test against the entity's geometry. Param: ray The camera ray in absolute World Space. Param: localOrigin The ray origin transformed into the Entity's Local Space. Param: localDir The ray direction transformed into the Entity's Local Space. Param: worldMatrix The compiled absolute World Matrix of the Entity. Param: hitTolerance The pixel padding margin for interactions. Returns: A RaycastHit if an intersection occurred, or null. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L30)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ICurveSamplable` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "startPoint(): Vec2;",
+                    "—",
+                    "Returns the starting point of the curve (equivalent to getPointAtT(0)). [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endPoint(): Vec2;",
+                    "—",
+                    "Returns the ending point of the curve (equivalent to getPointAtT(1)). [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getPointAtT(t: number): Vec2;",
+                    "—",
+                    "Returns the position at normalized parameter t ∈ [0, 1]. Arc-length parameterized for uniform speed. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getTangentAtT(t: number): Vec2;",
+                    "—",
+                    "Returns the unit tangent vector at normalized parameter t ∈ [0, 1]. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getNormalAtT(t: number): Vec2;",
+                    "—",
+                    "Returns the unit normal vector (perpendicular to tangent) at normalized parameter t ∈ [0, 1]. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getFrameAtT(t: number): CurveFrame;",
+                    "—",
+                    "Returns the full Frenet frame (point, tangent, normal) at t in a single call. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getPointAtLength(length: number): Vec2;",
+                    "—",
+                    "Returns the position at an absolute arc-length distance from the start. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "samplePoints(count: number): Vec2[];",
+                    "—",
+                    "Returns `count` evenly-spaced (by arc length) points along the curve. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Interfaces.ts#L63)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "offlinerendermanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "OfflineRenderManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/OfflineRenderManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/OfflineRenderManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "OfflineRenderManager",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class OfflineRenderManager {\n    isOfflineRender: boolean;\n    offlineMaxDuration: number;\n    offlineFps: number;\n    offlineRecorder: OfflineRecorder | null;\n    getCanvasBlob(canvas: HTMLCanvasElement | OffscreenCanvas): Promise<Blob>;\n    readTextureData(device: GPUDevice, texture: GPUTexture): Promise<ArrayBuffer>;\n    offlineRenderLoop(scene: any): Promise<void>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `OfflineRenderManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public isOfflineRender: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public offlineMaxDuration: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public offlineFps: number",
+                    "60",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public offlineRecorder: OfflineRecorder | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async getCanvasBlob(canvas: HTMLCanvasElement | OffscreenCanvas): Promise<Blob>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Promise`; calls to `canvas.convertToBlob`, `(canvas as HTMLCanvasElement).toBlob`, `resolve`, `reject`; return paths including `await canvas.convertToBlob({ type: 'image/jpeg', quality: 1.0 })`, `new Promise<Blob>((resolve, reject) => { (canvas as HTMLCanvasElement).toBlob( (blob) => (blob ? resolve(blob) : reject(\"Canvas toBlob failed\")), 'im…`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async readTextureData(device: GPUDevice, texture: GPUTexture): Promise<ArrayBuffer>",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `GPUAllocator.safeCreateBuffer`, `device.createCommandEncoder`, `commandEncoder.copyTextureToBuffer`, `device.queue.submit`, `commandEncoder.finish`, `readBuffer.mapAsync`, `readBuffer.getMappedRange().slice`, `readBuffer.getMappedRange` and additional helpers; return paths including `arrayBuffer`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async offlineRenderLoop(scene: any): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Promise`; calls to `scene.update`, `Promise.all`, `requestAnimationFrame`, `setTimeout`, `scene.syncTextureArrays`, `scene.isFinished`, `this.offlineRecorder.requestInputReplay`, `scene.renderer.raytraceManager.resetAccumulation` and additional helpers; return paths including `root.physical_texture || (fg as any).pool.getTexture(root.physical_index)`; 3 explicit loops. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts#L57)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sceneinterface",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SceneInterface"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/SceneInterface.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/SceneInterface.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SceneConfig",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RenderCommand",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SceneData",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface SceneConfig {\n    width: number;\n    height: number;\n    clear_color: {\n        r: number;\n        g: number;\n        b: number;\n        a: number;\n    };\n    autoClear?: boolean;\n    preserveArea?: {\n        x: number;\n        y: number;\n        w: number;\n        h: number;\n    };\n}\nexport interface RenderCommand {\n    entity: Entity;\n    renderer: RendererComponent;\n    geometry: GeometryComponent;\n    fragment: FragmentComponent;\n    state: State;\n    stateIndex?: number;\n    state_bindgroup?: {\n        bindGroup: GPUBindGroup;\n        dynamicOffset: number;\n        offsets?: [\n            number,\n            number,\n            number\n        ];\n    };\n    zIndex: number;\n    scissorBox?: AABB;\n    sortDepth?: number;\n    sortIndex?: number;\n}\nexport interface SceneData {\n    texture: GPUTexture;\n    views: RenderView[];\n    render_queue: RenderCommand[];\n    compute_queue: ComputeCommand[];\n    config: SceneConfig;\n    renderConfig: RenderConfig;\n    isMoving: boolean;\n    accumulatedFrames: number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SceneConfig` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "width: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "clear_color: { r: number; g: number; b: number; a: number; };",
+                    "—",
+                    "Required record/option field with declared type `{ r: number; g: number; b: number; a: number; }`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "autoClear?: boolean;",
+                    "—",
+                    "Set to false to retain the previous frame's pixels. Defaults to true. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "preserveArea?: { x: number; y: number; w: number; h: number; };",
+                    "—",
+                    "Normalized region [0.0 - 1.0] representing the area that will NOT be cleared. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L21)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RenderCommand` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "entity: Entity,",
+                    "—",
+                    "Required record/option field with declared type `Entity`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "renderer: RendererComponent,",
+                    "—",
+                    "Required record/option field with declared type `RendererComponent`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "geometry: GeometryComponent,",
+                    "—",
+                    "Required record/option field with declared type `GeometryComponent`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fragment: FragmentComponent,",
+                    "—",
+                    "Required record/option field with declared type `FragmentComponent`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "state: State,",
+                    "—",
+                    "Required record/option field with declared type `State`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stateIndex?: number,",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "state_bindgroup?: { bindGroup: GPUBindGroup, dynamicOffset: number, offsets?: [number, number, number] },",
+                    "—",
+                    "Optional record/option field with declared type `{ bindGroup: GPUBindGroup, dynamicOffset: number, offsets?: [number, number, number] }`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zIndex: number,",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scissorBox?: AABB,",
+                    "—",
+                    "Optional record/option field with declared type `AABB`. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sortDepth?: number,",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sortIndex?: number",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L35)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SceneData` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "texture: GPUTexture;",
+                    "—",
+                    "Required record/option field with declared type `GPUTexture`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "views: RenderView[];",
+                    "—",
+                    "Required record/option field with declared type `RenderView[]`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "render_queue: RenderCommand[];",
+                    "—",
+                    "Required record/option field with declared type `RenderCommand[]`. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "compute_queue: ComputeCommand[];",
+                    "—",
+                    "Required record/option field with declared type `ComputeCommand[]`. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "config: SceneConfig;",
+                    "—",
+                    "Required record/option field with declared type `SceneConfig`. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "renderConfig: RenderConfig;",
+                    "—",
+                    "Required record/option field with declared type `RenderConfig`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isMoving: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "accumulatedFrames: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneInterface.ts#L46)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "snapshotmanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SnapshotManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/SnapshotManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/SnapshotManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SnapshotManager: Manages deterministic scene state checkpoints and snapshots. Allows instant restoration to user-defined checkpoint milestones during timeline seeking."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "EntitySnapshot",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AnimationSnapshot",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CameraSnapshot",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SceneSnapshot",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SnapshotManager",
+                    "Class",
+                    "Manages deterministic scene state checkpoints and snapshots. Allows instant restoration to user-defined checkpoint milestones during timeline seeking."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface EntitySnapshot {\n    id: number;\n    visibility: boolean;\n    stateData: Float32Array;\n}\nexport interface AnimationSnapshot {\n    type: string;\n    targetEntityId?: number;\n    elapsed: number;\n    duration: number;\n    delay: number;\n}\nexport interface CameraSnapshot {\n    position: [\n        number,\n        number,\n        number\n    ];\n    rotation: [\n        number,\n        number,\n        number,\n        number\n    ];\n    pitch: number;\n    yaw: number;\n    fov: number;\n    orthoScale: number;\n    aperture: number;\n    focusDist: number;\n    targetCenter?: [\n        number,\n        number,\n        number\n    ];\n    targetRadius?: number;\n}\nexport interface SceneSnapshot {\n    time: number;\n    label?: string;\n    camera: CameraSnapshot;\n    entities: EntitySnapshot[];\n    animations: AnimationSnapshot[];\n    isPaused: boolean;\n}\nexport declare class SnapshotManager {\n    capture(scene: Scene, label?: string): SceneSnapshot;\n    getLatestCheckpointBefore(targetTimeMs: number): SceneSnapshot | null;\n    restore(scene: Scene, snapshot: SceneSnapshot): void;\n    clear(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `EntitySnapshot` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "id: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "visibility: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stateData: Float32Array;",
+                    "—",
+                    "Required record/option field with declared type `Float32Array`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L11)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AnimationSnapshot` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "type: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "targetEntityId?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "elapsed: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "duration: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "delay: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CameraSnapshot` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "position: [number, number, number];",
+                    "—",
+                    "Required record/option field with declared type `[number, number, number]`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotation: [number, number, number, number];",
+                    "—",
+                    "Required record/option field with declared type `[number, number, number, number]`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pitch: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "yaw: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fov: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "orthoScale: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "aperture: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "focusDist: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "targetCenter?: [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `[number, number, number]`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "targetRadius?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L32)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SceneSnapshot` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "time: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "label?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "camera: CameraSnapshot;",
+                    "—",
+                    "Required record/option field with declared type `CameraSnapshot`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "entities: EntitySnapshot[];",
+                    "—",
+                    "Required record/option field with declared type `EntitySnapshot[]`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "animations: AnimationSnapshot[];",
+                    "—",
+                    "Required record/option field with declared type `AnimationSnapshot[]`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isPaused: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L41)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SnapshotManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public capture(scene: Scene, label?: string): SceneSnapshot",
+                    "—",
+                    "Captures a complete, byte-accurate snapshot of the current scene state. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getLatestCheckpointBefore(targetTimeMs: number): SceneSnapshot | null",
+                    "—",
+                    "Finds the latest checkpoint captured prior to or at targetTimeMs. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L110)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public restore(scene: Scene, snapshot: SceneSnapshot)",
+                    "—",
+                    "Restores a scene instance to the exact state saved in a SceneSnapshot. [Source line 125](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L125)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear()",
+                    "—",
+                    "Clears all stored checkpoints. [Source line 183](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts#L183)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "state",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "State"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/State.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/State.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "State: Represents the unified styling, transform, and material state layout of an [[Entity]], mapped directly to a single contiguous GPU Float32 memory buffer block. Organizes sub-buffers: [[Paint]] (style/opacity), [[Transform]] (spatial location), and [[Material]] (shading)."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "State",
+                    "Class",
+                    "Represents the unified styling, transform, and material state layout of an [[Entity]], mapped directly to a single contiguous GPU Float32 memory buffer block. Organizes sub-buffers: [[Paint]] (style/opacity), [[Transform]] (spatial location), and [[Material]] (shading)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class State {\n    static BYTELENGTH: number;\n    static F32LENGTH: number;\n    readonly data: Float32Array;\n    readonly paint: Paint;\n    readonly transform: Transform;\n    readonly material: Material;\n    index: number[];\n    constructor(data?: Float32Array, copy?: boolean);\n    get t(): number;\n    set t(val: number);\n    get t1(): number;\n    get t2(): number;\n    set t1(val: number);\n    set t2(val: number);\n    setPaint(paint: Paint): State;\n    setTransform(transform: Transform): State;\n    setMaterial(material: Material): State;\n    static _globalVersion: number;\n    version: number;\n    get localVersion(): number;\n    apply(state: State, state_in: State): void;\n    size(): number;\n    invalidate(): void;\n    updated(): void;\n    copyFrom(state: State): void;\n    copy(): State;\n    set(state: State): void;\n    setData(state: State): State;\n    applyMethods(methods: string[], ...args: any[]): State;\n    applyMethod(method: string, ...args: any[]): State;\n    static interpolate(start: State, target: State, t: number, state?: State): State;\n    static getInterpolationMask(start: State, target: State): [\n        number[],\n        number[],\n        number[]\n    ];\n    static interpolateWithMask(mask: [\n        number[],\n        number[],\n        number[]\n    ], start: State, target: State, t: number, state?: State): State;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `State` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static BYTELENGTH: number",
+                    "align(Paint.size() + Transform.size() + Material.size(), 16)",
+                    "Total byte length of a single state layout aligned to 16 bytes. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static F32LENGTH: number",
+                    "this.BYTELENGTH / 4",
+                    "Total Float32 elements (fields) in the state buffer slice. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly data: Float32Array",
+                    "—",
+                    "Contiguous Float32 memory buffer block holding all state values. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly paint: Paint",
+                    "—",
+                    "Aggregated Paint styling details instance. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly transform: Transform",
+                    "—",
+                    "Aggregated Transform spatial coordinates details instance. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly material: Material",
+                    "—",
+                    "Aggregated Material shading details instance. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public index: number[]",
+                    "—",
+                    "Dynamic offset address mapping in WebGPU Uniform buffers [page number, slot index]. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(data?: Float32Array, copy = false)",
+                    "—",
+                    "Creates a new State instance. Param: data Optional pre-allocated Float32Array slice to map. Param: copy If true, skip writing defaults. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t(): number",
+                    "—",
+                    "General animation parameter / progress [0.0 - 1.0]. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t(val: number)",
+                    "—",
+                    "Implementation: `this.transform.t = val;`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t1(): number",
+                    "—",
+                    "Animation timeline start variable mapping. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t2(): number",
+                    "—",
+                    "Animation timeline completion variable mapping. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t1(val: number)",
+                    "—",
+                    "Implementation: `this.transform.t1 = val;`. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t2(val: number)",
+                    "—",
+                    "Implementation: `this.transform.t2 = val;`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPaint(paint: Paint): State",
+                    "—",
+                    "Sets local paint values. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTransform(transform: Transform): State",
+                    "—",
+                    "Sets local transform values. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMaterial(material: Material): State",
+                    "—",
+                    "Sets local material values. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _globalVersion: number",
+                    "1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public version: number",
+                    "State._globalVersion++",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L99)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get localVersion(): number",
+                    "—",
+                    "Implementation: `return this.paint.version + this.transform.version + this.material.version;`. [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L101)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(state: State, state_in: State)",
+                    "—",
+                    "Appends and evaluates a parent state layout combined with local overrides. Param: state Child state overrides. Param: state_in Parent state layout. [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L111)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public size()",
+                    "—",
+                    "Size computation of the structure alignment in bytes. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public invalidate(): void",
+                    "—",
+                    "Flag all sub-buffers dirty, forcing VRAM updates. [Source line 124](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L124)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updated()",
+                    "—",
+                    "Reset change update flags. [Source line 132](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L132)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public copyFrom(state: State)",
+                    "—",
+                    "Copies raw Float data from another state. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public copy(): State",
+                    "—",
+                    "Clones this State instance. [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set(state: State)",
+                    "—",
+                    "Synchronizes all paint, transform, and material values. [Source line 162](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L162)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setData(state: State): State",
+                    "—",
+                    "Explicit copy of raw floats. [Source line 170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L170)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyMethods(methods: string[], ...args: any[]): State",
+                    "—",
+                    "Applies a sequence of style/transform/material methods incrementally. [Source line 185](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L185)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyMethod(method: string, ...args: any[]): State",
+                    "—",
+                    "Inspects and executes a given paint/transform/material method by name. Param: method Target method name. Param: args Dynamic arguments list. [Source line 201](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L201)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static interpolate(start: State, target: State, t: number, state?: State): State",
+                    "—",
+                    "Linearly interpolates between two state configurations over progress range [0.0 - 1.0]. Param: start Initial state. Param: target Target state. Param: t Progress interpolation factor. Param: state Optional pre-allocated state to write results. [Source line 222](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L222)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getInterpolationMask(start: State, target: State): [number[], number[], number[]]",
+                    "—",
+                    "Analyzes and returns indices of fields that differ between start and target states. Used to optimize interpolations via selective masking. Param: start Initial state. Param: target Target state. [Source line 260](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L260)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static interpolateWithMask(mask: [number[], number[], number[]], start: State, target: State, t: number, state?: State): State",
+                    "—",
+                    "Performs interpolation only on the specified masked fields to optimize CPU overhead. Param: mask Selected list of indices that differ. Param: start Initial state. Param: target Target state. Param: t Progress factor. Param: state Result destination state. [Source line 296](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L296)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "align: function align(n: number, base: number = 16): number",
+                    "Implementation: `return Math.ceil(n / base) * base;`.",
+                    "[Line 5](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts#L5)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "statedatamanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "StateDataManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/StateDataManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/StateDataManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "UniformBuffer: GPU Buffer binding definitions for managing scene states.",
+                "StateDataManager: Unified state data manager backed by [[GlobalStateAllocator]]. Manages continuous global storage buffer allocation for entity transforms, paints, and materials. Internal:"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "UniformBuffer",
+                    "Interface",
+                    "GPU Buffer binding definitions for managing scene states."
+                  ]
+                },
+                {
+                  "cells": [
+                    "StateDataManager",
+                    "Class",
+                    "Unified state data manager backed by [[GlobalStateAllocator]]. Manages continuous global storage buffer allocation for entity transforms, paints, and materials. Internal:"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface UniformBuffer {\n    global: GPUBufferBinding;\n    state: GPUBufferBinding;\n}\nexport declare class StateDataManager {\n    constructor(device: GPUDevice, layout?: GPUBindGroupLayout);\n    resetForNewFrame(): void;\n    allocateDirect(out?: any): State;\n    allocate(state: State, out?: {\n        stateIndex?: number;\n        bindGroup?: GPUBindGroup;\n        dynamicOffset?: number;\n        offsets?: [\n            number,\n            number,\n            number\n        ];\n    }): {\n        stateIndex: number;\n        bindGroup: GPUBindGroup;\n        dynamicOffset: number;\n        offsets: [\n            number,\n            number,\n            number\n        ];\n    };\n    uploadToGPU(): void;\n    get globalBindGroup(): GPUBindGroup;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `UniformBuffer` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "global: GPUBufferBinding;",
+                    "—",
+                    "Layout representing global scene-level properties. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "state: GPUBufferBinding;",
+                    "—",
+                    "Layout representing individual entity states. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts#L11)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `StateDataManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public constructor(device: GPUDevice, layout?: GPUBindGroupLayout)",
+                    "—",
+                    "Creates a new StateDataManager. Param: device Active GPUDevice. Param: layout WebGPU Bind group layout descriptor. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resetForNewFrame()",
+                    "—",
+                    "Resets indices to start refilling from the beginning of the frame. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public allocateDirect(out?: any): State",
+                    "—",
+                    "Directly acquires the next pre-mapped State instance inside the GlobalStateAllocator. Any mutations on this State write directly into the storage buffer memory in-place (Zero-Copy). Param: out Output object populated with stateIndex and globalBindGroup. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public allocate(state: State, out?: { stateIndex?: number, bindGroup?: GPUBindGroup, dynamicOffset?: number, offsets?: [number, number, number] }): { stateIndex: number, bindGroup: GPUBindGroup, dynamicOffset: number, offsets: [number, number, number] }",
+                    "—",
+                    "Allocates a slot for an entity's State, copying data into the global storage buffer. Param: state The entity's state to pack. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public uploadToGPU()",
+                    "—",
+                    "Flushes all coalesced dirty state ranges to the GPU using command queue write operations. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get globalBindGroup(): GPUBindGroup",
+                    "—",
+                    "Accessor for the global state bind group. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts#L115)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "texturemanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TextureManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/TextureManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/TextureManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/TextureManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "TextureManager: Manages texture array synchronization between Scene entities and the Renderer."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextureManager",
+                    "Class",
+                    "Manages texture array synchronization between Scene entities and the Renderer."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class TextureManager {\n    texturesDirty: boolean;\n    videoDirty: boolean;\n    isBuildingTextures: boolean;\n    queuedTextureRebuild: boolean;\n    processPendingRebuild(entities: Entity[], renderer: Renderer, onInvalidate: () => void): void;\n    syncTextureArrays(entities: Entity[], renderer: Renderer, isFullRebuild: boolean): Promise<void>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TextureManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public texturesDirty: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/TextureManager.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public videoDirty: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/TextureManager.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isBuildingTextures: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/TextureManager.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public queuedTextureRebuild: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/TextureManager.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public processPendingRebuild(\n        entities: Entity[],\n        renderer: Renderer,\n        onInvalidate: () => void\n    )",
+                    "—",
+                    "Checks if a texture array rebuild is needed and triggers non-blocking sync. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/TextureManager.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async syncTextureArrays(\n        entities: Entity[],\n        renderer: Renderer,\n        isFullRebuild: boolean\n    ): Promise<void>",
+                    "—",
+                    "Traverses the scene graph to extract texture sources, passes them to the renderer, and maps the resulting GPU array indices back to entity materials. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/TextureManager.ts#L56)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "uimanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "UIManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/UIManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/UIManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "UIManager: Manages UI camera initialization and canvas persistence state."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PersistentRegion",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "UIConfig",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "UIManager",
+                    "Class",
+                    "Manages UI camera initialization and canvas persistence state."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface PersistentRegion {\n    x: number;\n    y: number;\n    w: number;\n    h: number;\n}\nexport interface UIConfig {\n    orthoScale?: number;\n    position?: [\n        number,\n        number,\n        number\n    ];\n    clearDepth?: boolean;\n}\nexport declare class UIManager {\n    isPersistent: boolean;\n    persistentRegion?: PersistentRegion;\n    forceClearNext: boolean;\n    setupUICamera(uiView: RenderView | null, canvasWidth: number, canvasHeight: number, createViewFn: (w: number, h: number) => RenderView, config?: UIConfig): RenderView | null;\n    setPersistence(enable: boolean, onInvalidate: () => void): void;\n    setPersistentRegion(x: number, y: number, w: number, h: number, onInvalidate: () => void): void;\n    clearPersistentRegion(onInvalidate: () => void): void;\n    clearNextFrame(onInvalidate: () => void): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PersistentRegion` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "x: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "y: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "w: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "h: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L13)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `UIConfig` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "orthoScale?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "position?: [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `[number, number, number]`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "clearDepth?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `UIManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public isPersistent: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public persistentRegion?: PersistentRegion",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forceClearNext: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setupUICamera(\n        uiView: RenderView | null,\n        canvasWidth: number,\n        canvasHeight: number,\n        createViewFn: (w: number, h: number) => RenderView,\n        config?: UIConfig\n    ): RenderView | null",
+                    "—",
+                    "Initializes an orthographic camera dedicated to rendering UI layers over 3D scenes. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPersistence(enable: boolean, onInvalidate: () => void)",
+                    "—",
+                    "Implementation: `this.isPersistent = enable; onInvalidate();`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPersistentRegion(x: number, y: number, w: number, h: number, onInvalidate: () => void)",
+                    "—",
+                    "Implementation: `this.persistentRegion = { x, y, w, h }; onInvalidate();`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearPersistentRegion(onInvalidate: () => void)",
+                    "—",
+                    "Implementation: `this.persistentRegion = undefined; onInvalidate();`. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearNextFrame(onInvalidate: () => void)",
+                    "—",
+                    "Implementation: `this.forceClearNext = true; onInvalidate();`. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L69)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "config?.orthoScale ?? 100",
+                    "[Line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L45)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config?.position ?? [0, 0, 100]",
+                    "[Line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L47)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config?.clearDepth ?? true",
+                    "[Line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L49)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "videodata",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "VideoData"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/VideoData.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/VideoData.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "VideoData: Represents HTML5 Video sources wrapped for deterministic timeline seeks, frame syncing, and dynamic WebGPU texture imports for render pipelines."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VideoData",
+                    "Class",
+                    "Represents HTML5 Video sources wrapped for deterministic timeline seeks, frame syncing, and dynamic WebGPU texture imports for render pipelines."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class VideoData {\n    video_element: HTMLVideoElement;\n    duration: number;\n    isVideoLoadedAndPrimed: boolean;\n    constructor();\n    is_playing: boolean;\n    play(): void;\n    pause(): void;\n    loadVideo(videoUrl: string): Promise<void>;\n    old_time: number;\n    seekToTime(time: number): Promise<void>;\n    destroy(): void;\n    setPlaybackRate(rate: number): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VideoData` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public video_element: HTMLVideoElement",
+                    "—",
+                    "The HTMLVideoElement containing the video source. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public duration: number",
+                    "0",
+                    "The total duration of the video source in seconds. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isVideoLoadedAndPrimed: boolean",
+                    "false",
+                    "Status flag indicating if the video has loaded metadata and is primed for playback. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor()",
+                    "—",
+                    "Creates a new VideoData instance, initializing HTMLVideoElement defaults. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "is_playing: boolean",
+                    "false",
+                    "Status flag indicating whether the video is actively playing. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public play()",
+                    "—",
+                    "Starts media playback. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pause()",
+                    "—",
+                    "Pauses media playback. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async loadVideo(videoUrl: string): Promise<void>",
+                    "—",
+                    "Loads a video URL, returning a promise that resolves once the video is primed and seekable. Param: videoUrl URL source pointing to the video asset. [Source line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L134)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "old_time",
+                    "1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 152](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L152)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public seekToTime(time: number): Promise<void>",
+                    "—",
+                    "Seeks the video playback to a target time step, returning a promise that resolves upon seek completion. Param: time Target seek time in seconds. [Source line 159](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L159)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Cleans up listeners, pauses elements, and releases video source URLs. [Source line 192](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L192)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPlaybackRate(rate: number)",
+                    "—",
+                    "Implementation: `if (this.video_element) { this.video_element.playbackRate = Math.max(0.0625, Math.min(rate, 16.0)); // Browser limits }`. [Source line 207](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts#L207)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

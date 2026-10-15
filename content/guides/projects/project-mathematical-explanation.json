@@ -1,0 +1,118 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "project-mathematical-explanation",
+  "title": "Explain a moving tangent",
+  "group": "Projects",
+  "summary": "Explain a moving tangent by connecting a plotted function, a tracker and a derivative.",
+  "prerequisites": [
+    "[Plotting](/plotting)",
+    "[Update loops](/updates-trackers)"
+  ],
+  "outcome": "A moving point and tangent line that remain connected to the same function.",
+  "sections": [
+    {
+      "id": "overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Keep the tangent on the curve"
+        },
+        {
+          "type": "paragraph",
+          "text": "Explore how a tangent changes along a curve. First plot the function, then animate a point with one scalar tracker, and finally let the pointer choose the point whose slope you want to inspect."
+        }
+      ]
+    },
+    {
+      "id": "stage-1",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Give the curve a coordinate system"
+        },
+        {
+          "type": "paragraph",
+          "text": "We will show how the tangent changes along y = x² / 2. `Axes` defines the mathematical range and its physical size; `FunctionGraph2D` creates the curve."
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep the formula named once as `f`. That avoids using slightly different equations for the graph and the later tangent. Change the plotted domain and inspect the curve before animating it."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-tangent-1"
+        }
+      ]
+    },
+    {
+      "id": "stage-2",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Animate a mathematical value"
+        },
+        {
+          "type": "paragraph",
+          "text": "A `ValueTracker` stores x. Its animation moves x from −2 to 2, and a post updater places the dot at `Axes.c2p(x, f(x))`."
+        },
+        {
+          "type": "paragraph",
+          "text": "The tracker carries mathematical data; the dot carries visible geometry. This separation lets the same x drive a label, tangent or projection line without independent animations drifting apart."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-tangent-2"
+        }
+      ]
+    },
+    {
+      "id": "stage-3",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Reveal the changing slope"
+        },
+        {
+          "type": "paragraph",
+          "text": "The final version estimates slope with a centered difference and constructs a short tangent segment in mathematical coordinates. Both endpoints pass through `Axes.c2p`, keeping them aligned with the plotted axes."
+        },
+        {
+          "type": "paragraph",
+          "text": "After the initial sweep, move the pointer across the preview to select x. `Axes.p2c` returns a coordinate pair, and clamping keeps the point within the useful domain. Change h from 0.01 to 0.5 to inspect approximation error."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-tangent-3"
+        }
+      ]
+    },
+    {
+      "id": "make-it-your-own",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Use it in your own application"
+        },
+        {
+          "type": "paragraph",
+          "text": "The centered difference is an approximation. For this quadratic the derivative is x; replace the estimate with x and compare them before trying a less simple function."
+        },
+        {
+          "type": "paragraph",
+          "text": "Handle domain boundaries, discontinuities and nonfinite function values explicitly. A tangent near a singularity may need to be omitted rather than drawn with invalid coordinates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Explore [Plotting](/plotting), [Trackers and updates](/updates-trackers) and [Mathematical fields](/math-noise-fields)."
+        }
+      ]
+    }
+  ],
+  "difficulty": "intermediate",
+  "estimatedMinutes": 30
+}

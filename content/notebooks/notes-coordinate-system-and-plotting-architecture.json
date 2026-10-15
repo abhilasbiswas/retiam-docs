@@ -1,0 +1,678 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-coordinate-system-and-plotting-architecture",
+  "title": "Coordinate System, Plotting & Calculus Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/COORDINATE_SYSTEM_AND_PLOTTING_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/COORDINATE_SYSTEM_AND_PLOTTING_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/COORDINATE_SYSTEM_AND_PLOTTING_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity), [CoordinateSystem](/api-entities-composites-coordinates#coordinatesystem), [Axes](/api-entities-composites-coordinates#axes), [NumberPlane](/api-entities-composites-coordinates#numberplane), [PolarAxes](/api-entities-composites-coordinates#polaraxes), [ThreeDAxes](/api-entities-composites-coordinates#threedaxes), [ComplexPlane](/api-entities-composites-coordinates#complexplane), [Vec3](/api-math-vector#vec3), [Point](/api-math-vector#point), [Color](/api-math#color), [Complex](/api-math#complex), [ComplexLike](/api-math#complex), [Field](/api-math-fields#standardfields), [HomotopyAnimation](/api-animation-transform#homotopyanimation), [MAGENTA](/api-core#constants), [Cone](/api-entities-primitives-3d#cone), [Camera](/api-camera#camera), [CYAN](/api-core#constants), [Line](/api-entities-primitives-2d#line), [FunctionGraph2D](/api-entities-composites-plotting#functiongraph2d), [Poly](/api-entities-primitives-2d#poly), [VGroup](/api-entities-layout#vgroup), [Line3D](/api-entities-primitives-3d#line3d)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a unified, hardware-accelerated mathematical graphing and coordinate visualization engine designed for motion graphics, mathematical explanations (3Blue1Brown/Manim style), and scientific animations."
+        },
+        {
+          "type": "paragraph",
+          "text": "The architecture connects mathematical spaces ($\\mathbb{R}^2$, $\\mathbb{R}^3$, $\\mathbb{C}$, and polar coordinates $(r, \\theta)$) to Retiam's WebGPU rendering pipelines through a universal coordinate mapping contract and a single source of truth parameter system."
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "Entity",
+              "description": "Shared configuration: `EntityOptions`.",
+              "children": [
+                {
+                  "label": "VectorEntity",
+                  "children": [
+                    {
+                      "label": "CoordinateSystem",
+                      "description": "Coordinate mapping with c2p, p2c and fluent helpers.",
+                      "children": [
+                        {
+                          "label": "Axes"
+                        },
+                        {
+                          "label": "NumberPlane",
+                          "children": [
+                            {
+                              "label": "ComplexPlane"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "PolarAxes"
+                        },
+                        {
+                          "label": "ThreeDAxes"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-core-coordinates-contract-coordinatesystem",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Coordinates Contract (CoordinateSystem)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every coordinate system in Retiam extends [`CoordinateSystem`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/coordinates/CoordinateSystem.ts), which implements coordinate mapping and exposes fluent plotting and calculus methods:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Fundamental Coordinate Mapping API"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Signature",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`c2p`",
+                  "type": "text"
+                },
+                {
+                  "text": "`(...coords: number[]) => Vec3`"
+                },
+                {
+                  "text": "**Coordinates to Point**: Converts mathematical coordinates (e.g. $(x, y)$ or $(x, y, z)$ or $(r, \\theta)$) into world-space scene vectors."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`p2c`",
+                  "type": "text"
+                },
+                {
+                  "text": "`(point: Vec3) => number[]`"
+                },
+                {
+                  "text": "**Point to Coordinates**: Inverts world-space scene coordinates back into the underlying mathematical domain."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`getOrigin`",
+                  "type": "text"
+                },
+                {
+                  "text": "`() => Vec3`"
+                },
+                {
+                  "text": "Returns the world-space position of the origin $(0, 0, 0)$."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-coordinate-systems-hierarchy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Coordinate Systems Hierarchy"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. [Axes](../src/engine/entities/composites/coordinates/Axes.ts)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Domain:** 2D Cartesian plane $(\\mathbb{R}^2)$.",
+            {
+              "text": "**Features:**",
+              "children": [
+                "Auto-scaling dynamic multi-scale grid lines (major and minor subdivisions).",
+                "Scale-independent arrowhead sizing that scales with line width.",
+                "Configurable domains `xRange: [min, max, step]`, `yRange: [min, max, step]`.",
+                "Fully reactive to size/range mutations via `rangeVersion`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const axes = new Axes({\n    xRange: [-6, 6, 1],\n    yRange: [-4, 4, 1],\n    width: 14,\n    height: 9,\n    axisColor: new Color(0.7, 0.7, 0.8, 1.0),\n    gridColor: new Color(0.25, 0.25, 0.35, 0.3),\n    showGrid: true\n});\nscene.add(axes);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. [NumberPlane](../src/engine/entities/composites/coordinates/NumberPlane.ts)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Domain:** Dense 2D Cartesian grid $(\\mathbb{R}^2)$ designed for spatial deformations.",
+            {
+              "text": "**Features:**",
+              "children": [
+                "Subdivided line geometry (`subdivisions: 50`) optimized for real-time non-linear deformations via `applyFunction` and `applyHomotopy`.",
+                "Origin coordinate tracking and tick marks."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const plane = new NumberPlane({\n    xRange: [-8, 8, 1],\n    yRange: [-5, 5, 1],\n    width: 18,\n    height: 11,\n    subdivisions: 40\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. [ComplexPlane](../src/engine/entities/composites/coordinates/ComplexPlane.ts)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Domain:** Complex Analysis plane ($\\mathbb{C}$, Argand diagram) with Real axis ($x$) and Imaginary axis ($y$).",
+            {
+              "text": "**Features:**",
+              "children": [
+                "Complex coordinate mapping: `n2p(z: ComplexLike)` (Number to Point) and `p2n(p: Vec3)` (Point to Number).",
+                "Direct complex parametric curve plotting: `plotComplexCurve(t => Complex, tRange, options)`.",
+                "1:1 synchronization with `Field.conformal(fn)` and `HomotopyAnimation`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const cPlane = new ComplexPlane({\n    realRange: [-5, 5, 1],\n    imagRange: [-3, 3, 1],\n    width: 14,\n    height: 8.4\n});\n\n// Plot epicycle: gamma(t) = 1.6 e^{i t} + 0.5 e^{i 3t}\nconst epicycle = cPlane.plotComplexCurve(\n    (t) => Complex.polar(1.6, t).add(Complex.polar(0.5, 3 * t)),\n    [0, 2 * Math.PI],\n    { stroke: Color.MAGENTA, stroke_width: 0.06 }\n);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. [PolarAxes](../src/engine/entities/composites/coordinates/PolarAxes.ts)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Domain:** Polar coordinates $(r, \\theta)$ with radial radius $r \\in [0, r_{\\max}]$ and angle $\\theta \\in [0, 2\\pi)$.",
+            {
+              "text": "**Features:**",
+              "children": [
+                "Concentric major and minor circular rings with faded subdivision strokes.",
+                "Radial angle rays with automatic quadrant-centered degree labels (`0°`, `30°`, `60°`, ...).",
+                "Direct polar curve plotting: `plotPolar(rFn, options)`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const polarAxes = new PolarAxes({\n    radius: 5.5,\n    rMax: 4,\n    rStep: 1,\n    thetaStep: Math.PI / 6,\n    showGrid: true,\n    showLabels: true\n});\n\n// Rose curve: r(theta) = 3.5 cos(4 theta)\nconst rose = polarAxes.plotPolar((theta) => 3.5 * Math.cos(4 * theta), {\n    stroke: Color.fromHex(\"#FF5588\"),\n    stroke_width: 0.06\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. [ThreeDAxes](../src/engine/entities/composites/coordinates/ThreeDAxes.ts)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Domain:** 3D Cartesian volume $(\\mathbb{R}^3)$ with $(x, y, z)$ axes.",
+            {
+              "text": "**Features:**",
+              "children": [
+                "3D grid planes on `xy`, `xz`, and `yz` cross-sections.",
+                "Cone arrowheads on X, Y, and Z axes.",
+                "Camera-facing SDF text labels for tick values and axis names.",
+                "3D parametric plotting via `axes3D.plotParametricCurve3D(fx, fy, fz, options)`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const axes3D = new ThreeDAxes({\n    xRange: [-5, 5, 2],\n    yRange: [-5, 5, 2],\n    zRange: [-3, 3, 1],\n    width: 10,\n    depth: 10,\n    height: 6,\n    showGrid: true,\n    gridPlanes: [\"xy\", \"xz\", \"yz\"]\n});\n\nconst helix = axes3D.plotParametricCurve3D(\n    (t) => 2.5 * Math.cos(t),\n    (t) => 2.5 * Math.sin(t),\n    (t) => 0.25 * t - 2.0,\n    { tRange: [0, 5 * Math.PI], stroke: Color.CYAN }\n);"
+        }
+      ]
+    },
+    {
+      "id": "4-plotting-calculus-visualizers-calculus-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Plotting & Calculus Visualizers (Calculus.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every `CoordinateSystem` instance provides high-level calculus visualizers that output renderable vector entities:"
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "Calculus helpers",
+              "description": "CoordinateSystem methods.",
+              "children": [
+                {
+                  "label": "CoordinateSystem.getArea"
+                },
+                {
+                  "label": "CoordinateSystem.getRiemannRectangles"
+                },
+                {
+                  "label": "CoordinateSystem.getTangentLine"
+                },
+                {
+                  "label": "CoordinateSystem.getLinesToPoint"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Methods Summary"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Fluent Method",
+            "Returns",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`plane.plot(fn, options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "[`FunctionGraph2D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/plotting/FunctionGraph2D.ts)"
+                },
+                {
+                  "text": "Plots an explicit function $y = f(x)$ with zero-allocation GPU buffer streaming."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`plane.getArea(curve, [a, b], options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Poly`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Poly.ts)"
+                },
+                {
+                  "text": "Creates a shaded definite integral polygon $\\int_a^b (f(x) - g(x))\\,dx$."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`plane.getRiemannRectangles(curve, [a, b], dx, options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "[`VGroup`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts)"
+                },
+                {
+                  "text": "Creates approximation bars using `midpoint`, `trapezoid`, `left`, or `right` rules."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`plane.getTangentLine(x0, curve, options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Line3D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Line3D.ts)"
+                },
+                {
+                  "text": "Computes numerical derivative $f'(x_0)$ and returns a tangent line segment."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`plane.getSecantSlopeGroup(x0, dx, curve, options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "[`VGroup`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts)"
+                },
+                {
+                  "text": "Returns a triangle group containing secant line, horizontal $\\Delta x$ bar, and vertical $\\Delta y$ bar."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`plane.getLinesToPoint(point, options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "[`VGroup`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts)"
+                },
+                {
+                  "text": "Drops dashed horizontal and vertical projection lines to the coordinate axes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`plane.getDot(coords, options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Dot`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Dot.ts)"
+                },
+                {
+                  "text": "Places a styled `Dot` at mathematical coordinates."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`plane.getLabeledDot(label, coords, options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "[`LabeledDot`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Dot.ts)"
+                },
+                {
+                  "text": "Places a `LabeledDot` with text centered on the coordinate point."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-strict-zero-alias-parameter-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Strict Zero-Alias Parameter Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "All options across the entire coordinate and plotting subsystems inherit from [`EntityOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L29) or [`ModelOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Model.ts#L17). There are **zero duplicate aliases** or ambiguous parameter keys:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Primary Body Color:** Strictly `fill?: Color`",
+            "**Outline / Line Color:** Strictly `stroke?: Color`",
+            "**Line Width:** Strictly `stroke_width?: number`",
+            "**Spatial Position:** Strictly `position?: Vec3Type`",
+            "**Transparency:** Strictly `opacity?: number`"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-feature-demos-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Feature Demos Reference"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every feature has a dedicated, standalone demo file in `examples/demos/features/` registered under the **Features & Math** category in [`examples/demos.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos.ts):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Demo File",
+            "`demos.ts` ID",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "[`feature_number_plane.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_number_plane.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_number_plane`"
+                },
+                {
+                  "text": "2D Cartesian plane with fine/coarse grid lines, coordinate mapping, and multi-curve plotting."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_complex_plane.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_complex_plane.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_complex_plane`"
+                },
+                {
+                  "text": "Argand plane ($\\mathbb{C}$), complex parametric curves, and conformal deformations via `HomotopyAnimation`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_calculus.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_calculus.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_calculus`"
+                },
+                {
+                  "text": "Definite integral areas, discrete Riemann sum bars, tangent lines, and coordinate projections."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_polar_axes.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_polar_axes.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_polar_axes`"
+                },
+                {
+                  "text": "Polar coordinates with radial circles, angle rays, rose curves, and Archimedean spirals."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_threed_axes.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_threed_axes.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_threed_axes`"
+                },
+                {
+                  "text": "3D Cartesian volume with XY/XZ/YZ planes, 3D parametric helix curves, and 3D surface graphs."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_plot_function.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_plot_function.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_plot_function`"
+                },
+                {
+                  "text": "Explicit function plotting $y = f(x)$ with gradient path effects and area fills."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_plot_parametric.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_plot_parametric.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_plot_parametric`"
+                },
+                {
+                  "text": "2D parametric curves $(x(t), y(t))$."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_plot_implicit.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_plot_implicit.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_plot_implicit`"
+                },
+                {
+                  "text": "Implicit level-set algebraic curves $f(x, y) = 0$ via Marching Squares."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_vector_field.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_vector_field.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_vector_field`"
+                },
+                {
+                  "text": "2D vector direction fields with GPU instanced arrows."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_vector_field_3d.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_vector_field_3d.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_vector_field_3d`"
+                },
+                {
+                  "text": "3D vector fields with 3D instanced arrow geometry."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_surface.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_surface.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_surface`"
+                },
+                {
+                  "text": "3D parametric surface meshes with colormaps and view styles."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`feature_dot.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/feature_dot.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`features/feature_dot`"
+                },
+                {
+                  "text": "Standard Dots, LabeledDots on vertices, AnnotationDots for roots/peaks, and Glowing particle tracers."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

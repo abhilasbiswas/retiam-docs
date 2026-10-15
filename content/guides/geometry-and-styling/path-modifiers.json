@@ -1,0 +1,123 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "path-modifiers",
+  "title": "Path modifiers and non-destructive geometry",
+  "group": "Geometry and styling",
+  "summary": "Transform a path through a reusable modifier chain without permanently changing its source contours.",
+  "sections": [
+    {
+      "id": "modifier-evaluation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Modifier evaluation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Path retains source contours and evaluates an ordered modifier stack into a derived contour set. A modifier has identity, enabled state and dirty tracking. Changing its properties invalidates evaluation; modifying private arrays behind that contract may not. Source and evaluated contours let downstream code choose whether to inspect canonical or rendered geometry."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-modifierscene"
+        }
+      ]
+    },
+    {
+      "id": "choose-and-compose-modifiers",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose and compose modifiers"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Family",
+            "Effect on geometry"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Trim / Reverse / Dash",
+                "Select, reverse or split visible contour ranges"
+              ]
+            },
+            {
+              "cells": [
+                "Resample / Smooth / RoundCorners",
+                "Change sampling density or corner shape"
+              ]
+            },
+            {
+              "cells": [
+                "Offset / PuckerBloat / Twist",
+                "Change boundary position and shape"
+              ]
+            },
+            {
+              "cells": [
+                "Wiggle / Wobble / ZigZag / Excalidraw",
+                "Add patterned or seeded irregularity"
+              ]
+            },
+            {
+              "cells": [
+                "CustomModifier",
+                "Apply an application-defined contour function"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Reordering the same modifiers can change the result: trimming before resampling is different from resampling the whole curve and then trimming it. Closed contours need continuity at the seam; open contours may preserve endpoints."
+        }
+      ]
+    },
+    {
+      "id": "implement-a-custom-modifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Implement a custom modifier"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implement IPathModifier or extend PathModifierBase. Work in PathContours and retain the contour representation expected by the renderer. Return a valid evaluated contour collection, bump version when mutable configuration changes, and avoid changing the retained source in place. CustomModifier is suitable for a focused functional transformation."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [IPathModifier](/api-modifiers#ipathmodifier), [PathModifierBase](/api-modifiers#pathmodifierbase), [PathModifierPipeline](/api-modifiers#pathmodifierpipeline), [CustomModifier](/api-modifiers-path#custommodifier), [PathModifierUtils](/api-modifiers-path#pathmodifierutils)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Excalidraw and rough drawing](/sketch).",
+            "Build it step by step: [Create a custom path modifier](/tutorial-path-modifier)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[2D primitives and vector paths](/vector-paths)"
+  ]
+}

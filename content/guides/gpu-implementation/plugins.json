@@ -1,0 +1,118 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "plugins",
+  "title": "Plugins and engine extensions",
+  "group": "GPU implementation",
+  "summary": "Connect optional engine features to renderer initialization, pass registration and disposal.",
+  "sections": [
+    {
+      "id": "plugin-lifecycle",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Plugin lifecycle"
+        },
+        {
+          "type": "paragraph",
+          "text": "IPlugin requires a unique name and can implement install, registerPasses, dispose and priority. Scene.use installs/replaces by name; removePlugin disposes and unregisters render features. SceneComposer also owns feature registration. Lower numeric priority executes earlier for render pass insertion."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import type { IPlugin, Scene, AlwaysHandle } from \"retiam\";\n\nexport class DriftPlugin implements IPlugin {\n  name = \"DriftPlugin\";\n  private task?: AlwaysHandle;\n  install(scene?: Scene) {\n    if (!scene) return;\n    this.task = scene.always((time, dt) => {\n      // Update application state using dt in milliseconds.\n    }, { phase: \"update\" });\n  }\n  dispose() { this.task?.stop(); }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [IPlugin](/api-core#iplugin), [AlwaysHandle](/api-core-always#always)."
+        }
+      ]
+    },
+    {
+      "id": "add-a-post-process-feature",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Add a post-process feature"
+        },
+        {
+          "type": "paragraph",
+          "text": "OutlinePlugin is a public retiam export. Its registerPasses constructs OutlinePass using io.resolvedColor, adds it to the graph and replaces io.resolvedColor with presentationOutput, connecting the result to subsequent passes. Follow the [custom plugin tutorial](/tutorial-custom-plugin) to build both a behavior plugin and a rendering feature."
+        },
+        {
+          "type": "paragraph",
+          "text": "A plugin can also install scene settings or tasks without adding GPU passes. Read composer availability in install: a detached Scene can install a plugin before a GPU context exists, so initialization must account for attachment timing."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [OutlinePlugin](/api-plugins#outlineplugin), [OutlinePass](/api-plugins#outlineplugin), [RenderIO](/api-core#iplugin)."
+        }
+      ]
+    },
+    {
+      "id": "extend-with-clear-ownership",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Extend with clear ownership"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Own and dispose task handles, DOM listeners, buffers and textures created by the plugin.",
+            "Preserve the render-graph input/output chain and declare every resource dependency.",
+            "Choose stable names for replacement/removal and avoid retaining a disposed instance.",
+            "Document whether configuration changes rebuild shader code, graph structure or only a uniform."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One plugin owns one updater and stops that exact task during disposal."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-plugin"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Build a component, modifier, shader and render pass](/extension-workshop).",
+            "Build it step by step: [Create behavior and rendering plugins](/tutorial-custom-plugin)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Lifecycle, removal and resource ownership](/lifecycle-resources)",
+    "[FrameGraph and custom render passes](/frame-graph)"
+  ]
+}

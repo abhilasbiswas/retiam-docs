@@ -1,0 +1,73 @@
+{
+  "labs/tutorial-custom-entity": {
+    "title": "Two reusable labeled markers",
+    "description": "Click cyan to update its label; amber rotates as one parent entity.",
+    "walkthrough": [
+      "LabeledMarker constructs a dot and caption once and parents them with Entity.add. The scene owns the two parents. Updating the caption uses a public setter rather than reconstructing the scene.",
+      "Only the dot receives the click because it supplies rendered geometry. The amber parent rotates both children, demonstrating shared local transforms."
+    ],
+    "experiments": [
+      "Move the caption locally before rotating the parent.",
+      "Create a third marker with the same constructor and another label."
+    ],
+    "related": [
+      "Entity",
+      "Dot",
+      "SDFText"
+    ]
+  },
+  "labs/tutorial-compute-kernel": {
+    "title": "Compute a small color grid",
+    "description": "A 64 × 64 grid is written by compute and read by the fragment shader. Click to freeze time.",
+    "walkthrough": [
+      "One storage buffer holds 4096 vec4 colors. A 16-byte uniform contains elapsed seconds, side length and cell count. Named Res descriptors generate bindings and the WGSL body guards its invocation index.",
+      "The update writes parameters and queues kernel.dispatch through Scene.addCompute. The raster shader reads the resulting storage buffer without a CPU round trip. BufferOwner releases both owned allocations."
+    ],
+    "experiments": [
+      "Replace the wave with a linear gradient.",
+      "Change workgroup size and dispatch divisor together."
+    ],
+    "related": [
+      "ComputeKernel",
+      "Res",
+      "Shader",
+      "Component"
+    ]
+  },
+  "labs/tutorial-frame-graph": {
+    "title": "Follow a two-pass image chain",
+    "description": "Luminance on the right flows into a vignette across the final image.",
+    "walkthrough": [
+      "The luminance pass reads renderer.finalOutputHandle. The vignette reads its presentationOutput rather than the original image, creating the resource dependency between passes.",
+      "PostProcessPass declares its inputs/outputs, allocates a relative-size texture and supplies the fullscreen shader. Scene.addPass rewires these inputs in registration order and routes the last presentation output into the displayed image."
+    ],
+    "experiments": [
+      "Return color unchanged in the first pass.",
+      "Remove the luminance pass with this.removePass(gray) and compare the vignette alone."
+    ],
+    "related": [
+      "PostProcessPass",
+      "FrameGraph",
+      "Pass",
+      "RenderContext"
+    ]
+  },
+  "labs/tutorial-custom-plugin": {
+    "title": "Install and remove two plugin capabilities",
+    "description": "Click cyan to toggle luminance; click the tile to toggle rotation.",
+    "walkthrough": [
+      "RotationPlugin retains the AlwaysHandle returned by install. dispose stops the exact task, so repeated replacement does not accumulate rotation callbacks.",
+      "HalfLuminancePlugin connects a PreAAPass to io.resolvedColor during graph rebuilding. Its output preserves renderer.config.AA dimensions for the downstream antialiasing stage. PluginOwner removes both plugins during entity cleanup, including an editor restart."
+    ],
+    "experiments": [
+      "Toggle rotation while leaving luminance installed.",
+      "Toggle the effect repeatedly and reset the editor."
+    ],
+    "related": [
+      "IPlugin",
+      "AlwaysHandle",
+      "PostProcessPass",
+      "Scene"
+    ]
+  }
+}

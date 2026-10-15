@@ -1,0 +1,838 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-modifiers",
+  "title": "modifiers API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ipathmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "IPathModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/IPathModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/IPathModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PathContour: Standard contour representation in Retiam: An array of coordinates in quadratic Bézier format: [startX, startY, cp1X, cp1Y, ep1X, ep1Y, cp2X, cp2Y, ep2X, ep2Y, ...]",
+                "PathContours: Multiple contours forming a complete vector path shape.",
+                "IPathModifier: Core interface for non-destructive geometric path modifiers."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PathContour",
+                    "TypeAlias",
+                    "Standard contour representation in Retiam: An array of coordinates in quadratic Bézier format: [startX, startY, cp1X, cp1Y, ep1X, ep1Y, cp2X, cp2Y, ep2X, ep2Y, ...]"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PathContours",
+                    "TypeAlias",
+                    "Multiple contours forming a complete vector path shape."
+                  ]
+                },
+                {
+                  "cells": [
+                    "IPathModifier",
+                    "Interface",
+                    "Core interface for non-destructive geometric path modifiers."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type PathContour = number[];\nexport type PathContours = PathContour[];\nexport interface IPathModifier {\n    readonly id: string;\n    enabled: boolean;\n    isDirty: boolean;\n    attach(path: Path): void;\n    detach(): void;\n    invalidate(): void;\n    apply(contours: PathContours): PathContours;\n    readonly chained?: readonly IPathModifier[];\n    execute?(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `IPathModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "readonly id: string;",
+                    "—",
+                    "Unique identifier for this modifier instance [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "enabled: boolean;",
+                    "—",
+                    "Whether this modifier is currently active in the pipeline [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isDirty: boolean;",
+                    "—",
+                    "Whether parameters have changed and require pipeline re-evaluation [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "attach(path: Path): void;",
+                    "—",
+                    "Attaches this modifier to a parent PathEntity [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "detach(): void;",
+                    "—",
+                    "Detaches this modifier from its parent PathEntity [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "invalidate(): void;",
+                    "—",
+                    "Marks this modifier as dirty and requests parent path re-evaluation [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "apply(contours: PathContours): PathContours;",
+                    "—",
+                    "Transforms incoming path contours into modified outgoing contours. Param: contours The input contours from the previous stage in the pipeline. Returns: The modified contours to pass to the next stage or rendering. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly chained?: readonly IPathModifier[];",
+                    "—",
+                    "Optional chained downstream modifiers executed sequentially after this modifier [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute?(contours: PathContours): PathContours;",
+                    "—",
+                    "Executes this modifier and all downstream chained modifiers. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts#L55)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pathmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PathModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/PathModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/PathModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PathModifier: Fluent facade and chainable builder for geometric Path modifiers. Extends PathModifierBase with static creators and fluent chaining methods for all built-in modifiers.",
+                "PassThroughModifier: A pass-through no-op modifier that preserves input contours unmodified."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PathModifier",
+                    "Class",
+                    "Fluent facade and chainable builder for geometric Path modifiers. Extends PathModifierBase with static creators and fluent chaining methods for all built-in modifiers."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PassThroughModifier",
+                    "Class",
+                    "A pass-through no-op modifier that preserves input contours unmodified."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PathModifier extends PathModifierBase {\n    constructor(idPrefix?: string);\n    apply(contours: PathContours): PathContours;\n    static PassThrough(): PathModifier;\n    PassThrough(): this;\n    static Dash(options?: DashOptions): PathModifier;\n    Dash(options?: DashOptions): this;\n    static Offset(options?: OffsetOptions): PathModifier;\n    Offset(options?: OffsetOptions): this;\n    static PuckerBloat(options?: PuckerBloatOptions): PathModifier;\n    PuckerBloat(options?: PuckerBloatOptions): this;\n    static Resample(options?: ResampleOptions): PathModifier;\n    Resample(options?: ResampleOptions): this;\n    static Reverse(): PathModifier;\n    Reverse(): this;\n    static RoundCorners(options?: RoundCornersOptions): PathModifier;\n    RoundCorners(options?: RoundCornersOptions): this;\n    static Smooth(options?: SmoothOptions): PathModifier;\n    Smooth(options?: SmoothOptions): this;\n    static Trim(options?: TrimOptions): PathModifier;\n    Trim(options?: TrimOptions): this;\n    static Twist(options?: TwistOptions): PathModifier;\n    Twist(options?: TwistOptions): this;\n    static Wiggle(options?: WiggleOptions): PathModifier;\n    Wiggle(options?: WiggleOptions): this;\n    static Wobble(options?: WobbleOptions): PathModifier;\n    Wobble(options?: WobbleOptions): this;\n    static Excalidraw(options?: ExcalidrawModifierOptions): PathModifier;\n    Excalidraw(options?: ExcalidrawModifierOptions): this;\n    static ZigZag(options?: ZigZagOptions): PathModifier;\n    ZigZag(options?: ZigZagOptions): this;\n    static Custom(fn: ModifierFunction, name?: string): PathModifier;\n    Custom(fn: ModifierFunction, name?: string): this;\n}\nexport declare class PassThroughModifier extends PathModifier {\n    constructor();\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PathModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(idPrefix: string = \"Modifier\")",
+                    "—",
+                    "Implementation: `super(idPrefix);`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Pass-through identity implementation for fluent chains. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static PassThrough(): PathModifier",
+                    "—",
+                    "**************************************************** Built-in Path Modifiers Chain ***************************************************** A pass-through no-op modifier (identity). [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public PassThrough(): this",
+                    "—",
+                    "Implementation: `return this.add(new PassThroughModifier());`. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Dash(options?: DashOptions): PathModifier",
+                    "—",
+                    "Subdivides continuous contours into discrete dash sub-paths. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Dash(options?: DashOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new DashModifier(options));`. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Offset(options?: OffsetOptions): PathModifier",
+                    "—",
+                    "Displaces path boundaries parallel to their normal vectors. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Offset(options?: OffsetOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new OffsetModifier(options));`. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static PuckerBloat(options?: PuckerBloatOptions): PathModifier",
+                    "—",
+                    "Deforms segments radially relative to the contour centroid (Pucker / Bloat). [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public PuckerBloat(options?: PuckerBloatOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new PuckerBloatModifier(options));`. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Resample(options?: ResampleOptions): PathModifier",
+                    "—",
+                    "Resamples path contours by arc-length with evenly spaced vertices. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Resample(options?: ResampleOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new ResampleModifier(options));`. [Source line 95](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L95)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Reverse(): PathModifier",
+                    "—",
+                    "Inverts the geometric traversal direction of path contours. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Reverse(): this",
+                    "—",
+                    "Implementation: `return this.add(new ReverseModifier());`. [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static RoundCorners(options?: RoundCornersOptions): PathModifier",
+                    "—",
+                    "Rounds sharp corners along the path into smooth circular/quadratic Bézier fillets. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public RoundCorners(options?: RoundCornersOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new RoundCornersModifier(options));`. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Smooth(options?: SmoothOptions): PathModifier",
+                    "—",
+                    "Simplifies noisy/dense paths using Ramer-Douglas-Peucker reduction and smooths sharp angles into continuous quadratic Béziers. [Source line 124](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L124)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Smooth(options?: SmoothOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new SmoothModifier(options));`. [Source line 128](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L128)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Trim(options?: TrimOptions): PathModifier",
+                    "—",
+                    "Trims path contours based on normalized arc-length percentages. [Source line 135](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L135)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Trim(options?: TrimOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new TrimModifier(options));`. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Twist(options?: TwistOptions): PathModifier",
+                    "—",
+                    "Twists path coordinates around a center point with radial falloff. [Source line 146](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L146)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Twist(options?: TwistOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new TwistModifier(options));`. [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Wiggle(options?: WiggleOptions): PathModifier",
+                    "—",
+                    "Displaces curve vertices along local normals using multi-octave coherent noise. [Source line 157](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L157)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Wiggle(options?: WiggleOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new WiggleModifier(options));`. [Source line 161](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L161)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Wobble(options?: WobbleOptions): PathModifier",
+                    "—",
+                    "Converts rigid vector contours into imperfect, organic hand-drawn sketches. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Wobble(options?: WobbleOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new WobbleModifier(options));`. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L172)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Excalidraw(options?: ExcalidrawModifierOptions): PathModifier",
+                    "—",
+                    "Hand-drawn whiteboard sketch modifier specialized for Excalidraw aesthetic. Dual-pass overlapping strokes, biomechanical wrist bowing, motor tremor, and optional line boil. [Source line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L180)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Excalidraw(options?: ExcalidrawModifierOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new ExcalidrawModifier(options));`. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static ZigZag(options?: ZigZagOptions): PathModifier",
+                    "—",
+                    "Modulates path boundaries with periodic triangular ridges or sinusoidal waves along local normals. [Source line 192](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L192)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public ZigZag(options?: ZigZagOptions): this",
+                    "—",
+                    "Implementation: `return this.add(new ZigZagModifier(options));`. [Source line 196](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L196)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Custom(fn: ModifierFunction, name?: string): PathModifier",
+                    "—",
+                    "Inline custom modifier using a user-provided function. [Source line 203](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L203)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public Custom(fn: ModifierFunction, name?: string): this",
+                    "—",
+                    "Implementation: `return this.add(new CustomModifier(fn, name));`. [Source line 207](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L207)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PassThroughModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor()",
+                    "—",
+                    "Implementation: `super(\"PassThrough\");`. [Source line 216](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L216)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override apply(contours: PathContours): PathContours",
+                    "—",
+                    "Implementation: `return contours;`. [Source line 220](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts#L220)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pathmodifierbase",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PathModifierBase"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/PathModifierBase.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/PathModifierBase.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PathModifierBase: Abstract base class for all geometric Path modifiers. Implements dirty-flag tracking, parent path attachment, and lifecycle management."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PathModifierBase",
+                    "Class",
+                    "Abstract base class for all geometric Path modifiers. Implements dirty-flag tracking, parent path attachment, and lifecycle management."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare abstract class PathModifierBase implements IPathModifier {\n    readonly id: string;\n    readonly chained: PathModifierBase[];\n    protected targetPath: Path | null;\n    constructor(idPrefix?: string);\n    get enabled(): boolean;\n    set enabled(val: boolean);\n    get isDirty(): boolean;\n    set isDirty(val: boolean);\n    attach(path: Path): void;\n    detach(): void;\n    invalidate(): void;\n    add(modifier: PathModifierBase): this;\n    pipe(modifier: PathModifierBase): this;\n    execute(contours: PathContours): PathContours;\n    abstract apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PathModifierBase` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly id: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly chained: PathModifierBase[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected targetPath: Path | null",
+                    "null",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(idPrefix: string = \"Modifier\")",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.id`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get enabled(): boolean",
+                    "—",
+                    "Implementation: `return this._enabled;`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set enabled(val: boolean)",
+                    "—",
+                    "Implementation: `if (this._enabled !== val) { this._enabled = val; this.invalidate(); }`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isDirty(): boolean",
+                    "—",
+                    "Implementation: `if (this._isDirty) return true; for (let i = 0; i < this.chained.length; i++) { if (this.chained[i].isDirty) return true; } return false;`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set isDirty(val: boolean)",
+                    "—",
+                    "Implementation: `this._isDirty = val; if (!val) { for (let i = 0; i < this.chained.length; i++) { this.chained[i].isDirty = false; } }`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public attach(path: Path): void",
+                    "—",
+                    "Implementation: `this.targetPath = path; for (let i = 0; i < this.chained.length; i++) { this.chained[i].attach(path); } this.invalidate();`. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public detach(): void",
+                    "—",
+                    "Implementation: `this.targetPath = null; for (let i = 0; i < this.chained.length; i++) { this.chained[i].detach(); }`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public invalidate(): void",
+                    "—",
+                    "Marks this modifier as dirty and triggers a re-evaluation of the parent Path pipeline. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add(modifier: PathModifierBase): this",
+                    "—",
+                    "Appends another PathModifierBase to this modifier's sequential execution chain. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pipe(modifier: PathModifierBase): this",
+                    "—",
+                    "Fluent alias for add(), piping this modifier into the next modifier. [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L96)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public execute(contours: PathContours): PathContours",
+                    "—",
+                    "Executes this modifier and all downstream chained modifiers sequentially. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract apply(contours: PathContours): PathContours;",
+                    "—",
+                    "Transforms incoming path contours into modified outgoing contours. Must be implemented by concrete subclasses. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierBase.ts#L115)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pathmodifierpipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PathModifierPipeline"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/PathModifierPipeline.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/PathModifierPipeline.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PathModifierPipeline: Manages an ordered sequence of PathModifiers, evaluating them sequentially with dirty-flag checking and memoized caching to ensure high frame rates."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PathModifierPipeline",
+                    "Class",
+                    "Manages an ordered sequence of PathModifiers, evaluating them sequentially with dirty-flag checking and memoized caching to ensure high frame rates."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PathModifierPipeline {\n    get modifiers(): readonly PathModifierBase[];\n    get count(): number;\n    add(modifier: PathModifierBase): this;\n    pipe(modifier: PathModifierBase): this;\n    insert(index: number, modifier: PathModifierBase): this;\n    remove(modifierOrId: PathModifierBase | string): boolean;\n    clear(): void;\n    get<T extends PathModifierBase>(typeOrId: (new (...args: any[]) => T) | string): T | undefined;\n    invalidate(): void;\n    evaluate(sourceContours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PathModifierPipeline` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public get modifiers(): readonly PathModifierBase[]",
+                    "—",
+                    "All registered modifiers in the pipeline. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get count(): number",
+                    "—",
+                    "Number of modifiers registered in this pipeline. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add(modifier: PathModifierBase): this",
+                    "—",
+                    "Appends a modifier to the pipeline. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pipe(modifier: PathModifierBase): this",
+                    "—",
+                    "Fluent alias for add(), piping this modifier into the pipeline. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public insert(index: number, modifier: PathModifierBase): this",
+                    "—",
+                    "Inserts a modifier at a specific index. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(modifierOrId: PathModifierBase | string): boolean",
+                    "—",
+                    "Removes a modifier from the pipeline. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear(): void",
+                    "—",
+                    "Removes all modifiers from the pipeline. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get<T extends PathModifierBase>(typeOrId: (new (...args: any[]) => T) | string): T | undefined",
+                    "—",
+                    "Retrieves the first modifier matching the given constructor or id, including chained modifiers. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public invalidate(): void",
+                    "—",
+                    "Marks the pipeline as dirty, forcing re-evaluation on the next call to evaluate(). [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluate(sourceContours: PathContours): PathContours",
+                    "—",
+                    "Evaluates the pipeline sequentially against the input source contours. If no modifiers or source contours are dirty, returns cached geometry. [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts#L112)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1068 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-style-excalidraw",
+  "title": "style / excalidraw API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excalidraw",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Excalidraw"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/style/excalidraw/Excalidraw.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/style/excalidraw/Excalidraw.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "DEFAULT_EXCALIDRAW_OPTIONS: Defaults that do not depend on a preset. Preset-dependent values (roughness, bowing, passes, overshoot, crossCorners) live in `EXCALIDRAW_PRESETS`.",
+                "seedFromEntityId: Hashes an entity ID deterministically into a positive 32-bit integer seed in [1, 1000000]. Uses MurmurHash3 / SplitMix32 integer finalizer for high-quality avalanche properties, guaranteeing distinct shapes have unique hand-drawn jitter while remaining 100% deterministic across runs.",
+                "Excalidraw: Hand-drawn whiteboard style (outline sketching plus hachure-style fills) for any vector entity. The generated fills are a snapshot of the geometry: after changing a shape's size or points, call `Excalidraw.apply(entity)` again to rebuild them."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ExcalidrawCreateOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DEFAULT_EXCALIDRAW_OPTIONS",
+                    "First",
+                    "Defaults that do not depend on a preset. Preset-dependent values (roughness, bowing, passes, overshoot, crossCorners) live in `EXCALIDRAW_PRESETS`."
+                  ]
+                },
+                {
+                  "cells": [
+                    "seedFromEntityId",
+                    "Function",
+                    "Hashes an entity ID deterministically into a positive 32-bit integer seed in [1, 1000000]. Uses MurmurHash3 / SplitMix32 integer finalizer for high-quality avalanche properties, guaranteeing distinct shapes have unique hand-drawn jitter while remaining 100% deterministic across runs."
+                  ]
+                },
+                {
+                  "cells": [
+                    "definedOnly",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Excalidraw",
+                    "Class",
+                    "Hand-drawn whiteboard style (outline sketching plus hachure-style fills) for any vector entity. The generated fills are a snapshot of the geometry: after changing a shape's size or points, call `Excalidraw.apply(entity)` again to rebuild them."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ExcalidrawCreateOptions extends CreateOptions {\n    boil?: boolean;\n}\nexport declare const DEFAULT_EXCALIDRAW_OPTIONS: {\n    readonly stroke: Color;\n    readonly strokeWidth: 0.06;\n    readonly fillStyle: ExcalidrawFillStyle;\n    readonly fillGap: 0.22;\n    readonly fillAngle: -41;\n    readonly fillLineWidth: 0.04;\n    readonly fillBackground: true;\n    readonly fillAlpha: 0.4;\n    readonly offsetRandomness: 1;\n    readonly seed: number | \"auto\";\n    readonly boilFps: 12;\n    readonly time: 0;\n};\nexport declare function seedFromEntityId(entityId: number, baseSeed?: number): number;\nexport declare function definedOnly<T extends object>(obj?: T): Partial<T>;\nexport declare class Excalidraw {\n    static apply<T extends VectorEntity>(entity: T, options?: ExcalidrawOptions): T;\n    static setTime(entity: VectorEntity, time: number): void;\n    static getTime(entity: VectorEntity): number;\n    static setSeed<T extends VectorEntity>(entity: T, seed: number | 'auto'): T;\n    static boil(entity: VectorEntity | VectorEntity[], options?: BoilOptions): BoilAnimation;\n    static startBoil(target: VectorEntity | VectorEntity[], options?: {\n        fps?: number;\n        speed?: number;\n    }): void;\n    static stopBoil(target: VectorEntity | VectorEntity[]): void;\n    static isBoiling(entity: VectorEntity): boolean;\n    static createAnim(entity: VectorEntity, options?: ExcalidrawCreateOptions): Concurrent;\n}\ndeclare module \"../../_core/VectorEntity\" {\n    interface VectorEntity {\n        toExcalidraw(options?: ExcalidrawOptions): this;\n        startBoil(options?: {\n            fps?: number;\n            speed?: number;\n        }): this;\n        stopBoil(): this;\n        boil(options?: BoilOptions): Animation;\n    }\n}"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "seedFromEntityId: Implementation: `let h = (entityId + Math.imul(baseSeed >>> 0, 0x9e3779b9)) >>> 0; h = Math.imul(h ^ (h >>> 16), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (((h ^ (h >>> 16)) >>> 0) % 1000000) + 1;`.",
+                "definedOnly: Implementation: `const out: Partial<T> = {}; if (obj) { for (const key of Object.keys(obj) as (keyof T)[]) { if (obj[key] !== undefined) out[key] = obj[key]; } } return out;`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ExcalidrawCreateOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "boil?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L32)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Excalidraw` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static apply<T extends VectorEntity>(entity: T, options?: ExcalidrawOptions): T",
+                    "—",
+                    "Applies the hand-drawn style to an entity and, for composites, to every path inside it. Options are remembered per entity, so `apply(entity, { stroke })` keeps earlier fill settings. Returns: The entity, for chaining. [Source line 288](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L288)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static setTime(entity: VectorEntity, time: number): void",
+                    "—",
+                    "Sets the line-boil time on every styled path of the entity (outline, wash and fill lines). [Source line 315](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L315)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getTime(entity: VectorEntity): number",
+                    "—",
+                    "Gets the current line-boil time on an entity (default 0). [Source line 336](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L336)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static setSeed<T extends VectorEntity>(entity: T, seed: number | 'auto'): T",
+                    "—",
+                    "Sets a new seed on an entity, re-generating its sketch jitter and fill patterns while keeping all other existing style options intact. Pass a number for a fixed seed, or `'auto'` to derive it deterministically from the entity ID. [Source line 345](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L345)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static boil(\n        entity: VectorEntity | VectorEntity[],\n        options?: BoilOptions\n    ): BoilAnimation",
+                    "—",
+                    "Creates an Animation that continuously boils (jitters) the hand-drawn sketch lines over time. Can be played standalone or concurrently with other animations: [Source line 356](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L356)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static startBoil(\n        target: VectorEntity | VectorEntity[],\n        options?: { fps?: number; speed?: number }\n    ): void",
+                    "—",
+                    "Starts continuous line-boil updates on the target entity or entities. [Source line 368](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L368)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static stopBoil(target: VectorEntity | VectorEntity[]): void",
+                    "—",
+                    "Stops continuous line-boil updates on the target entity or entities. [Source line 388](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L388)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static isBoiling(entity: VectorEntity): boolean",
+                    "—",
+                    "Checks if the entity is currently boiling continuously. [Source line 399](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L399)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static createAnim(entity: VectorEntity, options?: ExcalidrawCreateOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Concurrent`; calls to `createAnim`, `Excalidraw.isBoiling`, `anims.push`, `Excalidraw.boil`; return paths including `new Concurrent(anims, { ...outerOptions, lagRatio: 0.0 })`. [Source line 619](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L619)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.fps ?? 12",
+                    "[Line 373](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L373)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.speed ?? 1.0",
+                    "[Line 374](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L374)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.stroke !== undefined || options?.strokeColor !== undefined",
+                    "[Line 431](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L431)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.boil ?? true",
+                    "[Line 621](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L621)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "createFillSpec: function createFillSpec( o: ExcalidrawOptions, color: Color, offsetRandomness: number ): FillSpec | null",
+                    "Body operations (including nested callbacks): calls to `Color.from`, `FILL_PROFILES[style].lineWidth`; return paths including `null`.",
+                    "[Line 169](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L169)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "resolveStyle: function resolveStyle(o: ExcalidrawOptions, entity?: VectorEntity): ResolvedStyle",
+                    "Body operations (including nested callbacks): calls to `Color.from`, `entity.paint.fill.clone`, `createFillSpec`, `entity.paint.stroke.clone`, `def.stroke.clone`; long return expressions shown in the linked implementation.",
+                    "[Line 197](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L197)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "isClosedPath: function isClosedPath(path: Path): boolean",
+                    "Implementation: `const contours = path.getSourceContours(); return contours.length > 0 && contours[0].length >= 4 && PathModifierUtils.isContourClosed(contours[0]);`.",
+                    "[Line 266](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L266)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Excalidraw.stylePath: private static stylePath( path: Path, index: number, st: ResolvedStyle, options?: ExcalidrawOptions, rootEntity?: VectorEntity ): void",
+                    "Body operations (including nested callbacks): construction of `ExcalidrawModifier`; calls to `fillPaths.has`, `path.remove`, `isClosedPath`, `seedFromEntityId`, `path.getWorldState`, `Excalidraw.applyPen`, `path.clearPathEffects`, `createFillSpec` and additional helpers; 1 explicit loop.",
+                    "[Line 407](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L407)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Excalidraw.applyPen: private static applyPen( path: Path, st: ResolvedStyle, sketch: { isClosed: boolean; seed: number; rampLength?: number } ): void",
+                    "Default stroke shader: Sketch pen with artistic width variation [0.5, 1.0]. `strokeShader: null` gives a plain uniform line; a PathEffect replaces the default pen. Implementation: `if (st.strokeShader === null) { path.clearPathEffects(); } else if (st.strokeShader) { path.setPathEffect(st.strokeShader.clone()); } else { path.setPathEffect(PathEffect.Sketch(sketch)); }`.",
+                    "[Line 513](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L513)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Excalidraw.addFill: private static addFill(path: Path, st: ResolvedStyle, fill: FillSpec, seed: number): void",
+                    "Body operations (including nested callbacks): construction of `Path`, `ExcalidrawModifier`; calls to `HachureGenerator.polygonsFromContours`, `path.getSourceContours`, `HachureGenerator.area`, `fillPaths.add`, `fill.color.clone`, `wash.transform.position.set`, `wash.setModifier`, `path.add` and additional helpers.",
+                    "[Line 527](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/Excalidraw.ts#L527)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [CreateOptions](/api-animation-creation#create)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excalidrawanimation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ExcalidrawAnimation"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/style/excalidraw/ExcalidrawAnimation.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/style/excalidraw/ExcalidrawAnimation.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawAnimation.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "BoilAnimation: First-class Animation that continuously advances line-boil time on Excalidraw entities. Supports concurrent playback with creation, morphs, or camera movements.",
+                "boilAnim: Creates an Animation that continuously boils (jitters) the hand-drawn sketch lines over time. Can be played standalone or concurrently with other animations:"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BoilOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BoilAnimation",
+                    "Class",
+                    "First-class Animation that continuously advances line-boil time on Excalidraw entities. Supports concurrent playback with creation, morphs, or camera movements."
+                  ]
+                },
+                {
+                  "cells": [
+                    "boilAnim",
+                    "Function",
+                    "Creates an Animation that continuously boils (jitters) the hand-drawn sketch lines over time. Can be played standalone or concurrently with other animations:"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface BoilOptions extends AnimOptions {\n    speed?: number;\n}\nexport declare class BoilAnimation extends Animation {\n    constructor(entity: VectorEntity | VectorEntity[], options?: BoilOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}\nexport declare function boilAnim(entity: VectorEntity | VectorEntity[], options?: BoilOptions): BoilAnimation;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "boilAnim: Implementation: `return new BoilAnimation(entity, options);`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BoilOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "speed?: number;",
+                    "—",
+                    "Speed multiplier for the line-boil (1.0 = normal 12 fps, 2.0 = twice as fast). Default: 1.0. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawAnimation.ts#L13)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BoilAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        entity: VectorEntity | VectorEntity[],\n        options: BoilOptions = {}\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._entities`, `this.entity`, `this._speed`, `this._startTime`, `this.LABEL`; calls to `Rate.linear`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawAnimation.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: `if (this._entities.length > 0) { this._startTime = Excalidraw.getTime(this._entities[0]); }`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawAnimation.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`; calls to `this.rate_func`, `Excalidraw.setTime`, `this.onComplete`, `this.complete`; return paths including `false`, `true`; 2 explicit loops. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawAnimation.ts#L44)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Animation](/api-animation#animation)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excalidrawtypes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ExcalidrawTypes"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/style/excalidraw/ExcalidrawTypes.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/style/excalidraw/ExcalidrawTypes.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ExcalidrawFillStyle: Hand-drawn fill patterns: - 'hachure': parallel diagonal lines (Excalidraw default). - 'cross-hatch': two crossing sets of diagonal lines. - 'grid': orthogonal grid of horizontal and vertical lines. - 'zigzag': one continuous back-and-forth stroke with rounded looping turns. - 'scribble': expressive marker scribble with energetic turns and organic hand wander. - 'dots': stippled dots. - 'sketch': dense two-angle pencil shading. - 'solid': tight zigzag scribble that fully covers the interior. - 'filled': clean solid color wash (no hatch lines) covering the interior. - 'none': no hand-drawn fill.",
+                "ExcalidrawOptions: Options for the Excalidraw hand-drawn style. Options are remembered per entity: calling `apply()` again only changes what you pass."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ExcalidrawFillStyle",
+                    "TypeAlias",
+                    "Hand-drawn fill patterns: - 'hachure': parallel diagonal lines (Excalidraw default). - 'cross-hatch': two crossing sets of diagonal lines. - 'grid': orthogonal grid of horizontal and vertical lines. - 'zigzag': one continuous back-and-forth stroke with rounded looping turns. - 'scribble': expressive marker scribble with energetic turns and organic hand wander. - 'dots': stippled dots. - 'sketch': dense two-angle pencil shading. - 'solid': tight zigzag scribble that fully covers the interior. - 'filled': clean solid color wash (no hatch lines) covering the interior. - 'none': no hand-drawn fill."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ExcalidrawOptions",
+                    "Interface",
+                    "Options for the Excalidraw hand-drawn style. Options are remembered per entity: calling `apply()` again only changes what you pass."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type ExcalidrawFillStyle = 'hachure' | 'cross-hatch' | 'grid' | 'zigzag' | 'scribble' | 'dots' | 'solid' | 'sketch' | 'filled' | 'none';\nexport interface ExcalidrawOptions {\n    preset?: ExcalidrawPreset;\n    stroke?: ColorLike;\n    strokeColor?: ColorLike;\n    strokeWidth?: number;\n    fill?: ColorLike;\n    fillColor?: ColorLike;\n    fillStyle?: ExcalidrawFillStyle;\n    fillGap?: number;\n    fillAngle?: number;\n    fillLineWidth?: number;\n    fillLineColor?: ColorLike;\n    offsetRandomness?: number;\n    fillBackground?: boolean;\n    fillAlpha?: number;\n    roughness?: number;\n    bowing?: number;\n    passes?: number;\n    overshoot?: number;\n    crossCorners?: boolean;\n    seed?: number | 'auto';\n    boil?: boolean;\n    boilFps?: number;\n    time?: number;\n    strokeShader?: PathEffect | null;\n    fillPasses?: number;\n    renderMethod?: 'analytical' | 'fast' | 'auto';\n    anchorEnds?: boolean;\n    isClosed?: boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ExcalidrawOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "preset?: ExcalidrawPreset;",
+                    "—",
+                    "Baseline for roughness, bowing, passes, overshoot and crossCorners. Default: 'normal'. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stroke?: ColorLike;",
+                    "—",
+                    "Outline stroke color. Default: entity's existing stroke, or Color.fromHex(\"#1e1e1e\"). [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeColor?: ColorLike;",
+                    "—",
+                    "Alias for `stroke`. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeWidth?: number;",
+                    "—",
+                    "Outline width in world units. Default: entity's existing strokeWidth, or 0.06. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fill?: ColorLike;",
+                    "—",
+                    "Interior fill color. When set, the entity's own fill is replaced by the hand-drawn fill; use 'transparent' to clear it. When omitted, the entity's existing fill is inherited if present. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillColor?: ColorLike;",
+                    "—",
+                    "Alias for `fill`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillStyle?: ExcalidrawFillStyle;",
+                    "—",
+                    "Hand-drawn fill pattern. Default: 'hachure' (only used when `fill` is set or inherited). [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillGap?: number;",
+                    "—",
+                    "Spacing between fill pattern lines or dots in world units. Default: 0.22. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillAngle?: number;",
+                    "—",
+                    "Fill line angle in degrees. Default: -41. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillLineWidth?: number;",
+                    "—",
+                    "Fill line thickness in world units. Default: 0.04. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillLineColor?: ColorLike;",
+                    "—",
+                    "Fill line color. Default: `fill`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "offsetRandomness?: number;",
+                    "—",
+                    "Positional scatter of stipple dots [0, 1+]. Default: 1.0. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillBackground?: boolean;",
+                    "—",
+                    "Draw a soft translucent wash of `fill` behind the fill lines. Default: true. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillAlpha?: number;",
+                    "—",
+                    "Alpha override for the background wash [0, 1]. Default: 0.40 (or alpha of `fill`). [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "roughness?: number;",
+                    "—",
+                    "Hand tremor amplitude. Default: preset (0.18 for 'normal'). [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bowing?: number;",
+                    "—",
+                    "Arc applied to straight segments, like a wrist pivot. Default: preset (0.35 for 'normal'). [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "passes?: number;",
+                    "—",
+                    "Number of overlapping sketch passes. Default: preset (2 for 'normal'). [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "overshoot?: number;",
+                    "—",
+                    "How far strokes run past corners and endpoints. Default: preset (0.10 for 'normal'; 0 when roughness and bowing are 0). [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "crossCorners?: boolean;",
+                    "—",
+                    "Draw closed polygons as separate strokes that cross at the corners. Default: preset (false except 'architect'). [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "seed?: number | 'auto';",
+                    "—",
+                    "Seed for reproducible jitter, or 'auto' to derive deterministically from the entity's ID (`entity.id`). If a number is set, the seed is fixed. If 'auto' (the default), distinct shapes have unique hand-drawn jitter without manual seed assignment while remaining 100% deterministic across renders. Default: 'auto'. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "boil?: boolean;",
+                    "—",
+                    "Whether this entity should continuously boil (jitter) at `boilFps`. Default: false. [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L111)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "boilFps?: number;",
+                    "—",
+                    "Line-boil frame rate; 0 makes the jitter continuous in `time`. Default: 12. [Source line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L114)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "time?: number;",
+                    "—",
+                    "Time driving the line boil. Prefer {@link Excalidraw.setTime} to animate. Default: 0. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeShader?: PathEffect | null;",
+                    "—",
+                    "Stroke shader for the outline. - `undefined`: the default sketch pen ({@link PathEffect.Sketch}). - a PathEffect: used instead (cloned per path). - `null`: no shader, a plain uniform line. [Source line 125](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L125)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillPasses?: number;",
+                    "—",
+                    "Number of sketch passes on the hatch fill lines. Default: 1 (clean, single-pass hand-drawn hatch). Pass 2 for loose dual-pass hatching. [Source line 131](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L131)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "renderMethod?: 'analytical' | 'fast' | 'auto';",
+                    "—",
+                    "Rendering strategy for the styled path and generated fill paths: - 'auto': uses fast triangulation for simple shapes, analytical for complex shader effects (default). - 'fast': CPU triangulation (Earcut fill + stroke extrusion) with single-bind global GPU buffers. - 'analytical': High-precision SDF & multi-pass stencil chains. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "anchorEnds?: boolean;",
+                    "—",
+                    "Keep the exact start and end points of open paths (e.g. diagram connectors). Default: false. [Source line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L142)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isClosed?: boolean;",
+                    "—",
+                    "Whether paths are closed loops. Default: detected from the geometry. [Source line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/ExcalidrawTypes.ts#L145)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hachuregenerator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "HachureGenerator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/style/excalidraw/HachureGenerator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/style/excalidraw/HachureGenerator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "HatchSegment: A hatch line clipped to the polygon interior. `row` is its scanline index.",
+                "HachureGenerator: Converts polygons into the hand-drawn fill patterns used by the Excalidraw style. Every pattern is built from exact scanline/polygon intersections and returned as SVG path data."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "HachureLineOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "HatchSegment",
+                    "Interface",
+                    "A hatch line clipped to the polygon interior. `row` is its scanline index."
+                  ]
+                },
+                {
+                  "cells": [
+                    "HachureGenerator",
+                    "Class",
+                    "Converts polygons into the hand-drawn fill patterns used by the Excalidraw style. Every pattern is built from exact scanline/polygon intersections and returned as SVG path data."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface HachureLineOptions {\n    gap?: number;\n    angle?: number;\n    seed?: number;\n    offsetRandomness?: number;\n}\nexport interface HatchSegment {\n    a: Vec2;\n    b: Vec2;\n    row: number;\n}\nexport declare class HachureGenerator {\n    static polygonsFromContours(contours: PathContours, curveSubdivisions?: number, chordThreshold?: number): Vec2[][];\n    static area(polygons: Vec2[][]): number;\n    static segments(polygons: Vec2[][], options?: HachureLineOptions): HatchSegment[];\n    static segmentsToContours(segments: HatchSegment[]): PathContours;\n    static patternSegments(style: Exclude<ExcalidrawFillStyle, 'none'>, polygons: Vec2[][], options?: HachureLineOptions): HatchSegment[] | null;\n    static fillContours(style: Exclude<ExcalidrawFillStyle, 'none'>, polygons: Vec2[][], options?: HachureLineOptions): PathContours | null;\n    static fillPathData(style: Exclude<ExcalidrawFillStyle, 'none'>, polygons: Vec2[][], options?: HachureLineOptions): string;\n    static closedPathData(polygons: Vec2[][]): string;\n    static contains(polygons: Vec2[][], x: number, y: number): boolean;\n    static zigzagPathData(polygons: Vec2[][], gap: number, angle: number): string;\n    static scribblePathData(polygons: Vec2[][], gap: number, angle: number): string;\n    static dotSegments(polygons: Vec2[][], gap: number, angle: number, seed?: number, offsetRandomness?: number): HatchSegment[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `HachureLineOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "gap?: number;",
+                    "—",
+                    "Spacing between parallel hatch lines in world units. Default: 0.22 [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "angle?: number;",
+                    "—",
+                    "Angle of hatch lines in degrees. Default: -41 [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "seed?: number;",
+                    "—",
+                    "Deterministic seed for reproducible stipple scatter. Default: 42 [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "offsetRandomness?: number;",
+                    "—",
+                    "Positional scatter of stipple dots [0, 1+]. - 0.0: perfectly regular, rigid mathematical grid. - 1.0: natural, hand-drawn organic stipple scatter. Default: 1.0. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L22)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `HatchSegment` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "a: Vec2;",
+                    "—",
+                    "Required record/option field with declared type `Vec2`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "b: Vec2;",
+                    "—",
+                    "Required record/option field with declared type `Vec2`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "row: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L29)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `HachureGenerator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static polygonsFromContours(\n        contours: PathContours,\n        curveSubdivisions: number = 8,\n        chordThreshold: number = 0.25\n    ): Vec2[][]",
+                    "—",
+                    "Flattens quadratic-Bézier contours (`[x0, y0, cpx, cpy, x, y, ...]`) into polygons. Uses adaptive subdivision based on segment chord length to avoid vertex explosion on detailed paths. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static area(polygons: Vec2[][]): number",
+                    "—",
+                    "Total unsigned area of the polygons. [Source line 124](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L124)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static segments(polygons: Vec2[][], options?: HachureLineOptions): HatchSegment[]",
+                    "—",
+                    "Parallel hatch lines clipped to the polygons (even-odd rule, so holes work). Pre-projects polygon edges into hatch coordinate space with scanline interval culling for 5-10x faster intersection evaluation. [Source line 143](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L143)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static segmentsToContours(segments: HatchSegment[]): PathContours",
+                    "—",
+                    "Converts hatch segments directly into Retiam `PathContours` without SVG string round-trips. [Source line 232](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L232)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static patternSegments(\n        style: Exclude<ExcalidrawFillStyle, 'none'>,\n        polygons: Vec2[][],\n        options?: HachureLineOptions\n    ): HatchSegment[] | null",
+                    "—",
+                    "Extracts linear hatch segments for supported patterns. Returns `null` for styles that use continuous custom SVG paths (e.g. zigzag, scribble, solid). [Source line 249](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L249)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fillContours(\n        style: Exclude<ExcalidrawFillStyle, 'none'>,\n        polygons: Vec2[][],\n        options?: HachureLineOptions\n    ): PathContours | null",
+                    "—",
+                    "Builds raw `PathContours` for supported patterns directly, bypassing intermediate SVG string serialization. Returns `null` for styles that use continuous custom SVG paths (e.g. zigzag, scribble, solid). [Source line 296](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L296)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fillPathData(\n        style: Exclude<ExcalidrawFillStyle, 'none'>,\n        polygons: Vec2[][],\n        options?: HachureLineOptions\n    ): string",
+                    "—",
+                    "Builds the SVG path data for a fill pattern, or `\"\"` if the pattern has no geometry. [Source line 308](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L308)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static closedPathData(polygons: Vec2[][]): string",
+                    "—",
+                    "Closed SVG path data (`M … L … Z`) covering the polygons, for the soft background wash. [Source line 334](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L334)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static contains(polygons: Vec2[][], x: number, y: number): boolean",
+                    "—",
+                    "Tests whether point (x, y) is inside the polygon set using the even-odd rule. [Source line 346](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L346)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static zigzagPathData(polygons: Vec2[][], gap: number, angle: number): string",
+                    "—",
+                    "Builds a continuous zigzag fill path across the polygons. Extracts interior intervals per scanline from `segments()`, chains overlapping intervals into continuous ribbons per branch/lobe, and traverses back-and-forth with bevel turns and subtle hand-drawn S-curves. Correctly handles non-convex polygons (stars, U-shapes) without crossing notches or leaking outside. [Source line 390](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L390)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static scribblePathData(polygons: Vec2[][], gap: number, angle: number): string",
+                    "—",
+                    "Builds a continuous serpentine marker scribble path (back-and-forth shading). Sweeps across each chord, connects to the next chord along the shape boundary, and sweeps back. [Source line 569](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L569)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static dotSegments(\n        polygons: Vec2[][],\n        gap: number,\n        angle: number,\n        seed: number = 42,\n        offsetRandomness: number = 1.0\n    ): HatchSegment[]",
+                    "—",
+                    "Stipple dots placed along the hatch lines with deterministic seeded jitter, spaced so the total never exceeds {@link MAX_DOTS}. [Source line 646](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L646)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.angle ?? DEFAULT_ANGLE",
+                    "[Line 146](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L146)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.gap ?? DEFAULT_GAP",
+                    "[Line 156](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L156)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.gap ?? (style === 'zigzag' ? 0.10 : DEFAULT_GAP)",
+                    "[Line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L254)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.angle ?? (style === 'zigzag' ? 25 : DEFAULT_ANGLE)",
+                    "[Line 255](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L255)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.seed ?? 42",
+                    "[Line 256](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L256)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.offsetRandomness ?? 1.0",
+                    "[Line 257](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L257)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "HachureGenerator.bounds: private static bounds(polygons: Vec2[][]): [number, number, number, number]",
+                    "Body operations (including nested callbacks): return paths including `[minX, minY, maxX, maxY]`; 2 explicit loops.",
+                    "[Line 364](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L364)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "HachureGenerator.linesToPath: private static linesToPath(segments: HatchSegment[]): string",
+                    "Body operations (including nested callbacks): calls to `f`, `d.trim`; return paths including `d.trim()`; 1 explicit loop.",
+                    "[Line 377](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw/HachureGenerator.ts#L377)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,657 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-subtitles-architecture-and-customization",
+  "title": "Retiam Cinematic Subtitles & Closed-Captions Architecture Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SUBTITLES_ARCHITECTURE_AND_CUSTOMIZATION.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SUBTITLES_ARCHITECTURE_AND_CUSTOMIZATION.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SUBTITLES_ARCHITECTURE_AND_CUSTOMIZATION.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Subtitles](/api-libs-tts-components#subtitles), [Builder](/api-utils#builder), [AABB](/api-math#aabb), [TTS](/api-libs-tts-core#ttsclient), [TTSClient](/api-libs-tts-core#ttsclient), [Speak](/api-libs-tts-animations#speak), [Light](/api-entities-primitives-3d#light), [Pipeline](/api-render-pipelines#pipeline), [TTSAudioResult](/api-libs-tts-core#types), [AudioManager](/api-audio#audiomanager), [Scene](/api-core-scene#scene), [Animation](/api-animation#animation), [Component](/api-core#component), [VGroup](/api-entities-layout#vgroup), [Box](/api-entities-primitives-3d#box), [SDFText](/api-entities-composites-text#sdftext), [CENTER](/api-core#constants), [Rect](/api-entities-primitives-2d#rect), [Pass](/api-render-frame-graph#pass), [Graph](/api-libs-graphs-graph#graph), [Camera](/api-camera#camera), [Transform](/api-core-transform#transform), [SVG](/api-entities-composites-svg#svg), [Text](/api-entities-composites-text#text)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In cinematic mathematical and scientific animations, spoken narration serves as the primary cognitive anchor, directing viewer attention across complex derivations, geometric transformations, and algorithmic steps. However, video viewers often watch with muted audio, non-native language comprehension, or accessibility needs. Closed captions and subtitles bridge this gap by transforming audio waveforms into real-time, synchronized visual typography."
+        },
+        {
+          "type": "paragraph",
+          "text": "In traditional video production, subtitles are either hard-burned via external post-processing tools (FFmpeg, Premiere) or rendered through basic HTML overlays that cannot be integrated into WebGPU render passes or headless video exports."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam introduces a first-class, WebGPU-native subtitle component: [`Subtitles`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts), available through `retiam/tts`:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Hardware-Accelerated SDF Typography**: Renders multi-line text using signed distance field (MSDF) fonts for crisp typography at any camera zoom level or resolution (1080p, 4K, 8K).",
+            "**Mathematically Undistorted Corner Fillets**: Replaces squashed affine scaling with direct vector geometry tessellation (`Builder.roundedRect`), ensuring circular corner arcs regardless of aspect ratio.",
+            "**Content-Aware Geometry Reflow**: Automatically calculates text dimensions using local AABB bounding box measurement and adjusts pill padding, line wraps, and corner fillets.",
+            "**Integrated Audio Synchronization**: Connects with Retiam's TTS suite ([`TTSClient`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/core/TTSClient.ts), [`Speak`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/animations/Speak.ts), and [`speak()`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/animations/Speak.ts#L186)) for automatic timing, ducking, and auto-clearing.",
+            "**Curated Presets & Polymorphic Styling**: Supports seven built-in aesthetic themes (Obsidian, Stadium Pill, Minimal, Broadcast, Neon, Glass, Light) and runtime chainable styling methods."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-system-architecture-complete-dataflow",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. System Architecture & Complete Dataflow"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph AudioEngine [\"1. Retiam TTS Audio Pipeline\"]\n        TTS[\"TTS.synthesize(text, options)\"]\n        AudioResult[\"TTSAudioResult (text, durationMs, words)\"]\n        Mixer[\"AudioManager (Voiceover Bus)\"]\n        TTS --> AudioResult\n        AudioResult --> Mixer\n    end\n\n    subgraph Timeline [\"2. Scene Animation & Dispatch\"]\n        SpeakAnim[\"Speak (Animation)\"]\n        SpeakFn[\"speak(scene, text, options)\"]\n        AudioResult --> SpeakAnim\n        AudioResult --> SpeakFn\n    end\n\n    subgraph SubtitlesComponent [\"3. Subtitles Component (VGroup)\"]\n        SyncMethod[\"subtitles.syncWithAudio(result)\"]\n        ShowText[\"subtitles.showText(text, durationMs)\"]\n        WrapEngine[\"Word-Wrap Engine (maxLineChars)\"]\n        AABBMeasurer[\"Local AABB Bounding Box Measurement\"]\n        GeomReflow[\"Backdrop Reflow & Radius Clamping\"]\n        \n        SpeakAnim --> SyncMethod\n        SpeakFn --> SyncMethod\n        SyncMethod --> ShowText\n        ShowText --> WrapEngine\n        WrapEngine --> AABBMeasurer\n        AABBMeasurer --> GeomReflow\n    end\n\n    subgraph Entities [\"4. Retiam Vector Entities\"]\n        SDFTextEnt[\"SDFText (Anchor: CENTER)\"]\n        BackdropRect[\"Rect (Builder.roundedRect)\"]\n        \n        WrapEngine --> SDFTextEnt\n        GeomReflow --> BackdropRect\n    end\n\n    subgraph WebGPU [\"5. WebGPU Render Pass\"]\n        Pipeline[\"Retiam Scene Graph & UI Camera\"]\n        SDFTextEnt --> Pipeline\n        BackdropRect --> Pipeline\n    end"
+        }
+      ]
+    },
+    {
+      "id": "3-geometric-design-eliminating-corner-radius-distortion",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Geometric Design: Eliminating Corner Radius Distortion"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Affine Scale Trap"
+        },
+        {
+          "type": "paragraph",
+          "text": "In 2D vector graphics engines, a common anti-pattern is creating a normalized or unit rectangle (e.g. $2.0 \\times 1.0$) with rounded corners ($r = 0.15$), and then scaling the entity via its transformation matrix to match text width:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{S} = \\begin{bmatrix} \\frac{w}{2} & 0 & 0 \\\\ 0 & \\frac{h}{1} & 0 \\\\ 0 & 0 & 1 \\end{bmatrix}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because subtitle banners are wide and relatively short (e.g. $w = 14.0$, $h = 1.6$), the horizontal scale factor $s_x = 7.0$ vastly exceeds the vertical scale factor $s_y = 1.6$."
+        },
+        {
+          "type": "paragraph",
+          "text": "When this non-uniform transformation matrix multiplies the circular corner arcs, it stretches their axes by $7.0\\times$ horizontally and only $1.6\\times$ vertically. The resulting corners are transformed into **distorted, squashed ellipses** with an aspect ratio of over $4.3 : 1$."
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "❌ Affine Transform Scaling:\n+-------------------------------------------------------------+\n(  Distorted squashed ellipse corner                          )  <- Horizontally elongated\n+-------------------------------------------------------------+\n\n✅ Retiam Direct Geometry Regeneration:\n+-------------------------------------------------------------+\n(  Mathematically true circular arc (radius r)                )  <- Pure circular fillet\n+-------------------------------------------------------------+"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Direct Geometry Mutation Pattern"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam solves this problem by eliminating non-uniform scaling on the entity transform. The transform scale remains strictly locked at $[1.0, 1.0, 1.0]$."
+        },
+        {
+          "type": "paragraph",
+          "text": "When subtitle text changes, [`Subtitles`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts) mutates the geometric properties directly on [`Rect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Rect.ts):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Maintain identity transform scale — zero affine distortion\nthis._backdrop.transform.setScale([1.0, 1.0, 1.0]);\n\n// 2. Mutate geometric dimensions directly\nthis._backdrop.width = boxWidth;\nthis._backdrop.height = boxHeight;\nthis._backdrop.cornerRadius = effectiveRadius;\n\n// 3. Sync SVG path and invalidate GPU buffers\nthis._backdrop.invalidate();"
+        },
+        {
+          "type": "paragraph",
+          "text": "Inside [`Rect.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Rect.ts#L58-L79), property setters trigger `this.sync()`, which calls [`Builder.roundedRect(-w/2, -h/2, w, h, r)`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/Builder.ts#L132). This tessellates SVG circular arc commands (`A rx ry 0 0 1 x y` where $r_x = r_y = r$), producing circular fillets on all four corners."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Mathematical Corner Clamping"
+        },
+        {
+          "type": "paragraph",
+          "text": "To prevent geometric self-intersection when a large corner radius is applied to a compact box, [`Subtitles`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts) calculates a safe radius:"
+        },
+        {
+          "type": "math",
+          "tex": "r_{\\text{max}} = \\frac{\\min(w, h)}{2}"
+        },
+        {
+          "type": "math",
+          "tex": "r_{\\text{effective}} = \\min(r, r_{\\text{max}})"
+        },
+        {
+          "type": "paragraph",
+          "text": "If `pillShape: true` is configured, $r_{\\text{effective}} = r_{\\text{max}} = \\frac{h}{2}$, transforming the box into a stadium capsule with semicircular ends."
+        }
+      ]
+    },
+    {
+      "id": "4-typography-dynamic-text-layout",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Typography & Dynamic Text Layout"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. Word-Wrapping Algorithm"
+        },
+        {
+          "type": "paragraph",
+          "text": "Long narrations exceed camera viewports if rendered on a single line. When text exceeds `maxLineChars` (default `65`), [`Subtitles`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts) executes word-wrapping that preserves word boundaries:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "let wrapped = trimmed;\nif (trimmed.length > this._maxLineChars) {\n    const words = trimmed.split(\" \");\n    const lines: string[] = [];\n    let current = \"\";\n    for (const word of words) {\n        if ((current + \" \" + word).trim().length > this._maxLineChars) {\n            if (current) lines.push(current);\n            current = word;\n        } else {\n            current = current ? current + \" \" + word : word;\n        }\n    }\n    if (current) lines.push(current);\n    wrapped = lines.join(\"\\n\");\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. Dual Bounding-Box Sizing Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "To ensure padding around multi-line text, [`Subtitles`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts) uses a two-tier measurement pipeline:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Hardware Geometry Measurement**: Calls `this._textEntity.getGroupLocalAABB()` to query actual glyph metrics from `TextGeometry`.",
+            "**Heuristic Fallback**: If the geometry is unmeasured or empty (initial frame), it uses font size heuristics:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{width} = \\max(\\text{lineLengths}) \\times (\\text{fontSize} \\times 0.44)"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{height} = \\text{lineCount} \\times (\\text{fontSize} \\times \\text{lineHeight})"
+        },
+        {
+          "type": "paragraph",
+          "text": "Total backdrop dimensions are computed with padding margins:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{boxWidth} = \\min(\\text{maxWidth}, \\max(2.4, \\text{textWidth} + 2 \\times \\text{pad}_x))"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{boxHeight} = \\text{textHeight} + 2 \\times \\text{pad}_y"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. Center Origin Alignment"
+        },
+        {
+          "type": "paragraph",
+          "text": "The text entity is configured with `anchor: CENTER`, shifting its local offset to the geometric center of its bounding box. Because [`Rect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Rect.ts) is centered at $(-w/2, -h/2, w, h)$, both the text and the backdrop share an origin of $(0, 0, 0)$ within the `Subtitles` group."
+        }
+      ]
+    },
+    {
+      "id": "5-curated-design-presets",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Curated Design Presets"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Subtitles` includes seven built-in aesthetic presets selectable via `{ preset: \"...\" }` or `.setPreset(\"...\")`:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Preset",
+            "Description",
+            "Backdrop Color",
+            "Border Stroke",
+            "Corner Radius",
+            "Padding"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`obsidian`** *(Default)*",
+                  "type": "text"
+                },
+                {
+                  "text": "Dark glass obsidian with subtle cyan highlight rim"
+                },
+                {
+                  "text": "`#060913` (85%)"
+                },
+                {
+                  "text": "`#38BDF8` (35%), `0.02`w"
+                },
+                {
+                  "text": "`0.22`"
+                },
+                {
+                  "text": "`[0.55, 0.26]`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`pill`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Semicircular stadium capsule with slate border"
+                },
+                {
+                  "text": "`#080D1A` (88%)"
+                },
+                {
+                  "text": "`#6084C0` (40%), `0.02`w"
+                },
+                {
+                  "text": "Stadium (`h/2`)"
+                },
+                {
+                  "text": "`[0.70, 0.28]`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`minimal`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Clean floating dark background with zero border"
+                },
+                {
+                  "text": "`#090D16` (80%)"
+                },
+                {
+                  "text": "None"
+                },
+                {
+                  "text": "`0.16`"
+                },
+                {
+                  "text": "`[0.48, 0.22]`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`broadcast`**",
+                  "type": "text"
+                },
+                {
+                  "text": "YouTube / broadcast compliance (opaque black)"
+                },
+                {
+                  "text": "`#000000` (92%)"
+                },
+                {
+                  "text": "None"
+                },
+                {
+                  "text": "`0.08`"
+                },
+                {
+                  "text": "`[0.42, 0.20]`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`neon`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Cyberpunk deep midnight with vivid cyan rim glow"
+                },
+                {
+                  "text": "`#030712` (92%)"
+                },
+                {
+                  "text": "`#00F0FF` (100%), `0.025`w"
+                },
+                {
+                  "text": "`0.24`"
+                },
+                {
+                  "text": "`[0.58, 0.26]`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`glass`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Frosted glass with bright white edge highlight"
+                },
+                {
+                  "text": "`#0E1726` (65%)"
+                },
+                {
+                  "text": "`#FFFFFF` (25%), `0.015`w"
+                },
+                {
+                  "text": "`0.25`"
+                },
+                {
+                  "text": "`[0.60, 0.28]`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`light`**",
+                  "type": "text"
+                },
+                {
+                  "text": "High-contrast light mode for dark text on white pill"
+                },
+                {
+                  "text": "`#F8FAFC` (92%)"
+                },
+                {
+                  "text": "`#64748B` (25%), `0.015`w"
+                },
+                {
+                  "text": "`0.20`"
+                },
+                {
+                  "text": "`[0.52, 0.24]`"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-complete-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Complete API Reference"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "SubtitlesOptions Interface"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface SubtitlesOptions {\n    /** Preset design configuration. Overrides unset options with curated theme defaults. */\n    preset?: \"obsidian\" | \"pill\" | \"minimal\" | \"broadcast\" | \"neon\" | \"glass\" | \"light\";\n\n    /** Font size in Retiam world units. Defaults to 0.38. */\n    fontSize?: number;\n\n    /** Text color (Color instance or hex string). Defaults to #F8FAFC. */\n    textColor?: Color | string;\n\n    /** Text opacity [0.0 - 1.0]. Defaults to 1.0. */\n    textOpacity?: number;\n\n    /** Background pill fill color. Defaults to #060913. */\n    backdropColor?: Color | string;\n\n    /** Background pill fill opacity [0.0 - 1.0]. Defaults to 0.85. */\n    backdropOpacity?: number;\n\n    /** Stroke border color around backdrop pill. Defaults to translucent cyan/slate. */\n    strokeColor?: Color | string;\n\n    /** Stroke border width in world units. Defaults to 0.02. */\n    strokeWidth?: number;\n\n    /** Whether to render a stroke border around the backdrop pill. Defaults to true. */\n    showBorder?: boolean;\n\n    /**\n     * Corner radius for the backdrop pill.\n     * Uniform circular radius number, or [topLeft, topRight, bottomRight, bottomLeft].\n     * Defaults to 0.22 world units.\n     */\n    cornerRadius?: number | [number, number, number, number];\n\n    /**\n     * Whether to format the backdrop pill as a full stadium pill (semicircular ends).\n     * When true, cornerRadius is automatically computed as `height / 2`.\n     * Defaults to false.\n     */\n    pillShape?: boolean;\n\n    /** Whether to render a backdrop pill behind text. Defaults to true. */\n    showBackdrop?: boolean;\n\n    /** Inner padding [horizontal, vertical] or uniform number around text. Defaults to [0.55, 0.26]. */\n    padding?: [number, number] | number;\n\n    /** Maximum world-unit width before constraining line wrap. Defaults to 15.0. */\n    maxWidth?: number;\n\n    /** Maximum character count per line before automatic word-wrapping. Defaults to 65. */\n    maxLineChars?: number;\n\n    /** Multiplier for vertical line-height spacing on multi-line text. Defaults to 1.35. */\n    lineHeight?: number;\n\n    /** Bottom margin coordinate offset (Y position in scene). Defaults to -5.0. */\n    bottomOffset?: number;\n\n    /** Z-index depth for rendering on top of scene graphics. Defaults to 999. */\n    zIndex?: number;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Class Methods & Polymorphic Setters"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Lifecycle & Playback"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`showText(text: string, durationMs?: number): this` — Formats, wraps, and displays text. Automatically schedules clearing if `durationMs` is provided.",
+            "`syncWithAudio(result: TTSAudioResult): this` — Synchronizes text with synthesized TTS audio duration.",
+            "`clear(): this` — Immediately hides text and backdrop."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Visual Styling & Presets"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`applyOptions(options: SubtitlesOptions): this` — Merges a configuration object into the component.",
+            "`setPreset(name: SubtitlePreset): this` — Applies one of the 7 built-in design presets.",
+            "`setCornerRadius(radius: number | [number, number, number, number]): this` — Updates corner radii without affine distortion.",
+            "`setPillShape(enabled?: boolean): this` — Toggles stadium capsule mode.",
+            "`setPadding(horizontal: number, vertical?: number): this` — Adjusts internal spacing around text.",
+            "`setBackdropColor(color: Color | string, opacity?: number): this` — Updates pill fill color and opacity.",
+            "`setBackdropStyle(fillColor, strokeColor?, strokeWidth?, cornerRadius?): this` — Multi-property backdrop update."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Border Stroke API (Polymorphic Overrides)"
+        },
+        {
+          "type": "paragraph",
+          "text": "To maintain 100% interoperability with Retiam's standard [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) / `VGroup` APIs, `setStroke` accepts both parameter orderings:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Retiam Entity standard:\nsubtitles.setStroke(0.02, hex(\"#38BDF8\"));\nsubtitles.setStrokeColor(hex(\"#38BDF8\"));\nsubtitles.setStrokeWidth(0.02);\n\n// Direct color-first helper:\nsubtitles.setStroke(hex(\"#38BDF8\"), 0.02);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Typography & Positioning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`setTextColor(color: Color | string, opacity?: number): this` — Updates font color and opacity.",
+            "`setFontSize(size: number): this` — Updates SDF font size in world units.",
+            "`setTextStyle(textColor: Color | string, fontSize?: number): this` — Updates color and size simultaneously.",
+            "`setMaxLineChars(chars: number): this` — Sets character count wrap threshold (minimum 15).",
+            "`setMaxWidth(width: number): this` — Constrains maximum bounding box width.",
+            "`setBottomOffset(y: number): this` — Adjusts vertical placement along the Y axis."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Accessors"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`get textEntity(): SDFText` — Direct reference to child SDF text entity for advanced low-level shaders/transforms.",
+            "`get backdrop(): Rect | null` — Direct reference to child backdrop rectangle."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7-practical-usage-patterns-recipes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Practical Usage Patterns & Recipes"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 1: Basic Declarative Narration with Edge TTS"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, hex } from \"retiam\";\nimport { Subtitles, speak } from \"retiam/tts\";\n\nexport class MathExplainerScene extends Scene {\n    public async construct(): Promise<void> {\n        // 1. Add Subtitles with Obsidian preset at bottom safe area\n        const subtitles = new Subtitles({\n            preset: \"obsidian\",\n            fontSize: 0.38,\n            bottomOffset: -5.0\n        });\n        this.add(subtitles);\n\n        // 2. Speak narration synchronized with subtitles\n        await speak(this, \"The Stars and Bars theorem establishes a bijection between integer compositions and partitions.\", {\n            provider: \"msedge\",\n            voice: \"en-US-AndrewNeural\",\n            speed: 0.96,\n            subtitles\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 2: Stadium Pill with Cyan Outline"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const subtitles = new Subtitles({\n    preset: \"pill\",\n    pillShape: true,\n    padding: [0.75, 0.28],\n    strokeColor: hex(\"#38BDF8\"),\n    strokeWidth: 0.025,\n    backdropColor: hex(\"#060B18\"),\n    backdropOpacity: 0.90,\n    bottomOffset: -4.8\n});\nthis.add(subtitles);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 3: Traditional Broadcast Closed-Captions"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const broadcastCC = new Subtitles({\n    preset: \"broadcast\",\n    fontSize: 0.36,\n    maxLineChars: 50,\n    bottomOffset: -5.2\n});\nthis.add(broadcastCC);\n\n// Standalone manual timing without TTS\nbroadcastCC.showText(\"Closed-captioning provided in real-time.\", 4000);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 4: Dynamic Theme Switching"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Initial dark scene:\nsubtitles.setPreset(\"obsidian\");\n\nawait speak(this, \"In dark mode, obsidian glass provides subtle separation.\", {\n    provider: \"msedge\",\n    subtitles\n});\n\n// Scene transitions to high-key white background:\nsubtitles.setPreset(\"light\");\n\nawait speak(this, \"In bright daylight scenes, high-contrast slate text on a pearl pill ensures legibility.\", {\n    provider: \"msedge\",\n    subtitles\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 5: Per-Corner Asymmetrical Radii"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Rounded top edge, flat bottom edge:\nsubtitles.setCornerRadius([0.30, 0.30, 0.0, 0.0]);"
+        }
+      ]
+    },
+    {
+      "id": "8-best-practices-pitfalls-anti-patterns",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Best Practices, Pitfalls & Anti-Patterns"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. Never Apply Affine Transform Scaling to Rounded Boxes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Do not call `subtitles.backdrop.transform.setScale([sx, sy, sz])`. Non-uniform scaling squashes corner fillets into ellipses. Always modify `subtitles.setCornerRadius(...)` or `subtitles.applyOptions(...)`, which trigger geometric re-tessellation via `Rect.sync()`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. Clamping and Padding Ratios"
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep horizontal padding (`padding[0]`) larger than the corner radius (`cornerRadius`). If horizontal padding is smaller than the corner fillet radius, multi-line text will visually touch the curved corners of the pill."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Recommended: `padding[0] >= cornerRadius * 2.0`."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. Safe Character Sets for SDF Typography"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam's default MSDF atlas (`Font.default`) includes standard ASCII typography (`A-Z`, `a-z`, `0-9`, standard punctuation). Unicode mathematical subscripts (`₁`, `₂`) and operators (`≥`) outside the atlas character map will render as blank spaces."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Use standard ASCII notation for narration subtitles (e.g. `x1 + x2 + x3 = 7 (all x >= 0)`).",
+            "For mathematical formulas, use Retiam's LaTeX component (`Tex`) rather than raw SDF text strings."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4. Z-Index Layering"
+        },
+        {
+          "type": "paragraph",
+          "text": "By default, `Subtitles` assigns `zIndex: 999` to the backdrop and `zIndex: 1000` to the SDF text. This keeps subtitles visible above 3D meshes, particle clouds, and 2D geometry while allowing custom UI overlays (such as scene headers or debug inspectors) to render on top by setting `zIndex: 2000`."
+        }
+      ]
+    },
+    {
+      "id": "9-verification-testing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "9. Verification & Testing"
+        },
+        {
+          "type": "paragraph",
+          "text": "To verify subtitle rendering and check for regression issues without re-rendering videos:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# 1. Run strict static linting on the scene\nnpx retiam lint src/scenes/StarsAndBarsScene.ts --json\n\n# 2. Run TypeScript compilation to check type compatibility\nnpx tsc --noEmit\n\n# 3. Capture an instant single-frame keyframe snapshot at the subtitle timestamp\nnpx retiam snapshot src/scenes/StarsAndBarsScene.ts --times 6.0 --out ./outputs/snapshots"
+        }
+      ]
+    }
+  ]
+}

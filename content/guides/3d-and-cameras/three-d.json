@@ -1,0 +1,115 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "three-d",
+  "title": "3D geometry and materials",
+  "group": "3D and cameras",
+  "summary": "Construct 3D geometry, load models and configure materials and lighting for the desired surface.",
+  "sections": [
+    {
+      "id": "start-with-a-model",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Start with a model"
+        },
+        {
+          "type": "paragraph",
+          "text": "Model wraps triangle geometry with a fragment component and renderer. Box, Sphere, Cylinder, Cone, Torus and Plane supply mesh generators. Model constructors accept a WebGPUMesh, CPU positions/indices/UVs, or GPU vertex and index buffers. Smooth versus flat topology controls normal treatment."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-modelscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Model](/api-entities-primitives-3d#model), [ModelOptions](/api-entities-primitives-3d#model), [Box](/api-entities-primitives-3d#box), [Sphere](/api-entities-primitives-3d#sphere), [Cylinder](/api-entities-primitives-3d#cylinder), [Cone](/api-entities-primitives-3d#cone), [Torus](/api-entities-primitives-3d#torus), [Plane](/api-entities-primitives-3d#plane), [WebGPUMesh](/api-math#math3d)."
+        }
+      ]
+    },
+    {
+      "id": "material-properties",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Material properties"
+        },
+        {
+          "type": "paragraph",
+          "text": "Material contains base color, emissive color/strength, roughness, metallic, transmission, index of refraction and opacity. Paint belongs to vector styling; changing paint.fill does not substitute for material.color in every 3D pipeline. Transmission and glass appearance depend on the renderer, denoiser, lighting and ray-trace enable flags."
+        },
+        {
+          "type": "paragraph",
+          "text": "PBR models use material and scene lighting. ManimSurfaceFragment provides an illustration-oriented surface with view-oriented normals and optional checkerboard treatment. Model.useManimShading and usePBRShading change the fragment path; RenderConfig.shadingStyle controls PBR/Gooch/Cel/Clay choices in supported pipelines."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Material](/api-core-material#material), [ManimSurfaceFragment](/api-components-fragment#manimsurfacefragment), [RenderConfig](/api-render#renderconfig)."
+        }
+      ]
+    },
+    {
+      "id": "import-and-update-geometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Import and update geometry"
+        },
+        {
+          "type": "paragraph",
+          "text": "OBJLoader parses Wavefront OBJ/MTL into meshes and material information. Check material names, texture URLs, winding, UVs and normal behavior on a small model before importing a large asset. Model.setVertices/setMesh replace geometry; updateVertices updates compatible positions and normals. Reusing topology avoids unnecessary buffer and pipeline churn."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [OBJLoader](/api-utils#objloader), [ModelGeometry](/api-components-geometry#modelgeometry), [ModelRenderer](/api-components-renderers#modelrenderer), [Math3D](/api-math#math3d)."
+        }
+      ]
+    },
+    {
+      "id": "terrain-and-parametric-geometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Terrain and parametric geometry"
+        },
+        {
+          "type": "paragraph",
+          "text": "Terrain3D accepts height data and procedural generation options. ParametricModel samples a function over normalized parameter coordinates and accepts Vec3 output; its current constructor takes the function and an options object, not u/v range tuples. ParametricSurface3D exposes a separate coordinate-system-based plotting contract. Choose the class that matches whether the surface is standalone geometry or a mathematical plot."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Terrain3D](/api-entities-primitives-3d#terrain3d), [ParametricModel](/api-entities-primitives-3d#parametricmodel), [ParametricSurface3D](/api-entities-composites-plotting#parametricsurface3d)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Morphing, matching and vertex deformation](/morphing).",
+            "Build it step by step: [Build an interactive 3D view](/project-interactive-3d)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Entities, components and ownership](/entities)",
+    "[Transforms, anchors and pivots](/transforms)"
+  ]
+}

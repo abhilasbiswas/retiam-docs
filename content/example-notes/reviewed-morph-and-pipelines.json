@@ -1,0 +1,222 @@
+{
+  "morph_3d/morph_sdf_raymarching": {
+    "description": "Blend analytic distance fields without extracting a triangle surface.",
+    "walkthrough": [
+      "SDFEntity3D wraps sphere, torus and box distance definitions. The raymarch strategy evaluates the blended field along view rays instead of interpolating matching endpoint vertices.",
+      "Bounding padding must contain the visible field. Material changes affect shading, while distance definitions and morph weight determine the intermediate silhouette."
+    ],
+    "experiments": [
+      "Reduce an endpoint radius and inspect the intermediate field from several angles. Keep raymarch settings fixed."
+    ]
+  },
+  "morph_3d/morph_sdf_volumetric": {
+    "description": "Extract a changing isosurface while morphing spatial primitives.",
+    "walkthrough": [
+      "The volumetric strategy samples endpoint representations and reconstructs a triangle surface with marching cubes. This differs from rendering an analytic field directly with raymarching.",
+      "Resolution affects reconstruction detail and GPU workload. Metallic materials make normal changes conspicuous but do not themselves create the morph."
+    ],
+    "experiments": [
+      "Lower the configured grid resolution and compare the torus hole during transition. Keep roughness unchanged."
+    ]
+  },
+  "morph_3d/morph_superquadric": {
+    "description": "Compare a sphere, rounded cube, cylinder, diamond and pillow through exponent changes.",
+    "walkthrough": [
+      "Signed powers of sine and cosine define the superquadric parameterization. Two exponents control the cross-section in different directions.",
+      "Each stage shares sampling structure, allowing corresponding points to blend. Normal calculations require guards near degenerate values and affect shading independently of position."
+    ],
+    "experiments": [
+      "Change only one exponent in the pillow stage. Compare horizontal and vertical curvature."
+    ]
+  },
+  "morph_3d/morph_swarm_trajectories": {
+    "description": "Compare several particle flight paths between mesh targets.",
+    "walkthrough": [
+      "The swarm strategy uses particles to bridge target shapes. The trajectory configuration selects spiral, fluid, scatter or linear movement rather than changing the target mesh.",
+      "The scene repeats transitions with different configurations and updates its badge. Keep particle count and duration steady when judging trajectory differences."
+    ],
+    "experiments": [
+      "Use the same target pair and duration for linear and spiral modes. Follow one region of particles rather than the whole silhouette."
+    ]
+  },
+  "morph_3d/morph_swarm": {
+    "description": "Form and dissolve mesh silhouettes with a GPU particle swarm.",
+    "walkthrough": [
+      "Torus, sphere and cube provide target geometry. The swarm configuration controls particle sampling, motion and appearance between those targets.",
+      "Curl-like motion adds intermediate turbulence; it is distinct from the final target correspondence. Large particle counts increase workload even though geometry is shared."
+    ],
+    "experiments": [
+      "Reduce particle count before changing turbulence strength. Compare target readability with the amount of intermediate scatter."
+    ]
+  },
+  "morph_3d/morph_torus_family": {
+    "description": "Follow a torus as its hole closes and its parameterization becomes singular.",
+    "walkthrough": [
+      "Major and minor radii select ring, horn and spindle tori. ParametricModel supplies corresponding samples through the stages.",
+      "When major radius reaches minor radius, the hole pinches at a singular point; spindle stages can self-intersect. The near-sphere endpoint is a limiting parameterization, not a nonsingular topology-preserving deformation."
+    ],
+    "experiments": [
+      "Stop at equal major and minor radii and orbit around the pinch. Compare that stage with a slightly larger major radius."
+    ]
+  },
+  "morph_3d/swarm_morph": {
+    "description": "Drive a particle-based MorphModel with an explicit weight animation.",
+    "walkthrough": [
+      "The endpoint sphere and cube supply sample targets. MorphModel owns the swarm representation, and CustomAnimation changes its weight.",
+      "The model rotates while the weight progresses forward and back. Camera movement changes the view independently of both swarm motion and model rotation."
+    ],
+    "experiments": [
+      "Hold weight at 0.5 and disable model rotation. Inspect particle distribution before changing swarm settings."
+    ]
+  },
+  "multi_pass/compute_sim": {
+    "description": "Render values written by an earlier compute pass.",
+    "walkthrough": [
+      "A CustomComputePass writes a storage buffer, and Shader reads that buffer to color a screen quad. The time uniform controls the generated values.",
+      "Pass ordering must make the compute result available before its consumer renders. The torus is ordinary scene geometry sharing the final composition."
+    ],
+    "experiments": [
+      "Replace the compute formula with a constant. Confirm the background freezes while the torus keeps rotating."
+    ]
+  },
+  "multi_pass/multipass": {
+    "description": "Generate a background, render the scene, then apply a CRT filter.",
+    "walkthrough": [
+      "The compute pass creates wave data; the background Shader consumes it. A spatial torus joins that background during scene rendering.",
+      "PostProcessPass reads the renderer’s final output and applies channel offsets, scanlines and a vignette. Its input is the composed image rather than the original storage buffer."
+    ],
+    "experiments": [
+      "Remove the final CRT pass and compare the same scene. Then alter the compute formula to isolate an earlier pipeline stage."
+    ]
+  },
+  "multi_pass/multipass2": {
+    "description": "Apply edge detection and RGB splitting to a compute-driven scene.",
+    "walkthrough": [
+      "A compute pass generates plasma values that the background shader maps to color. A box and wireframe sphere add spatial content.",
+      "The active postprocess is a Sobel-style edge treatment with channel splitting, rather than the Gaussian blur suggested by the old registry description. It processes the rendered image as a whole."
+    ],
+    "experiments": [
+      "Disable RGB offsets while retaining edge detection. Compare edge emphasis with chromatic displacement."
+    ]
+  },
+  "multi_pass/outline_showcase": {
+    "description": "Install an outline pass around moving spatial objects.",
+    "walkthrough": [
+      "OutlinePlugin integrates the pass through scene.use. The floor, cubes and sphere render normally before the outline treatment reads scene information.",
+      "Thickness controls the visible edge treatment; model rotation changes which contours are exposed. Material color remains separate from the outline."
+    ],
+    "experiments": [
+      "Change thickness from 1.5 to 0.5 and inspect the sphere silhouette and cube creases."
+    ]
+  },
+  "multi_pass/vhsc_showcase": {
+    "description": "Add a CRT-style image treatment after rendering a rotating cube.",
+    "walkthrough": [
+      "The cube is ordinary Model geometry. PostProcessPass consumes the final scene texture and samples separate red, green and blue offsets.",
+      "Scanlines and vignette modify the same image after scene rendering. They do not alter mesh topology or lighting inputs."
+    ],
+    "experiments": [
+      "Set all RGB sampling offsets to zero while retaining scanlines. Compare channel separation with the remaining treatment."
+    ]
+  },
+  "new_shader_architecture/3d_line": {
+    "description": "Generate two spatial line strands directly in GPU buffers.",
+    "walkthrough": [
+      "Each point buffer stores four floats per point. A compute dispatch writes strand positions from time and a phase offset; Line3D consumes those buffers.",
+      "refreshLength updates derived line information after computation. Stroke shader and overlap prevention affect rendering independently of the strand geometry."
+    ],
+    "experiments": [
+      "Change the second strand’s phase offset from pi to pi/2. Compare separation while keeping stroke width fixed."
+    ]
+  },
+  "new_shader_architecture/cloth_sim": {
+    "description": "Animate a mesh with analytic waves computed on the GPU.",
+    "walkthrough": [
+      "The CPU creates grid topology, then a compute shader updates vertex heights and analytic normals. Model consumes the same GPU vertex and index buffers.",
+      "Despite the file name, the active kernel does not integrate masses and springs. Its surface motion is prescribed by sine and cosine formulas."
+    ],
+    "experiments": [
+      "Set the secondary-wave amplitude to zero. Compare the radial wave and its normals with the combined surface."
+    ]
+  },
+  "new_shader_architecture/mesh2d": {
+    "description": "Displace a triangulated two-dimensional grid through a compute shader.",
+    "walkthrough": [
+      "CPU arrays define initial vertices and triangle indices. STORAGE and VERTEX buffer usage lets the compute kernel write data that Mesh2D renders.",
+      "Each frame uploads time, dispatches computation and submits commands before rendering. Buffer layout must agree across CPU packing, WGSL and the mesh renderer."
+    ],
+    "experiments": [
+      "Reduce the grid resolution and increase displacement amplitude. Inspect triangle edges and overall deformation separately."
+    ]
+  },
+  "new_shader_architecture/path_compute": {
+    "description": "Write a changing contour into a GPU buffer and render it as a path.",
+    "walkthrough": [
+      "ComputeKernel receives point storage and a parameter uniform. Path consumes the resulting point buffer instead of reparsing an SVG string every frame.",
+      "The kernel dispatch changes geometry; stroke color and glow change appearance. Refreshing derived path data keeps rendering consistent with the new points."
+    ],
+    "experiments": [
+      "Freeze time uploaded to the kernel while retaining stroke-color updates. Compare a static contour with changing paint."
+    ]
+  },
+  "new_shader_architecture/path": {
+    "description": "Render an SVG contour through the vector-path pipeline.",
+    "walkthrough": [
+      "Path parses the supplied SVG data into contours. Its stroke settings determine how those contours appear without introducing a separate animation.",
+      "CameraController allows inspection of the static result. This is a baseline for comparing CPU-authored path data with GPU-buffer-driven paths."
+    ],
+    "experiments": [
+      "Change only strokeWidth, then alter one SVG control point. Compare paint thickness with geometric curvature."
+    ]
+  },
+  "new_shader_architecture/poly_showcase": {
+    "description": "Build a closed star polygon and reveal its custom-shaded outline.",
+    "walkthrough": [
+      "The source alternates radii while generating Vec2 points. Poly closes the contour and uses separate fill and stroke treatments.",
+      "The stroke shader controls color along the contour, while CustomAnimation changes reveal progress. A visible stroke color is still needed to activate the stroke pass."
+    ],
+    "experiments": [
+      "Change the inner radius without changing the shader. Compare the star silhouette with its unchanged stroke pattern."
+    ]
+  },
+  "new_shader_architecture/rotating_triangle": {
+    "description": "Generate triangle vertices with a minimal compute pipeline.",
+    "walkthrough": [
+      "A storage/vertex buffer holds three two-component points. The compute shader rotates their coordinates from a time uniform before Triangle renders them.",
+      "The source submits the compute command directly each update. Uniform allocation and bind-group layout must match WGSL even for this small example."
+    ],
+    "experiments": [
+      "Freeze the uploaded time, then change the triangle fill. Compare stationary GPU geometry with a paint-only edit."
+    ]
+  },
+  "new_shader_architecture/sprite": {
+    "description": "Compare image, video, canvas and GPU-deformed sprite sources.",
+    "walkthrough": [
+      "The four panels share Sprite rendering but receive different sources. An OffscreenCanvas updates its pixels, while the compute panel changes its vertex positions.",
+      "Pixel refresh and geometry deformation are separate operations. Browser media policy may require interaction before the video plays with audio."
+    ],
+    "experiments": [
+      "Stop canvas refresh while leaving its drawing code active. Compare stale pixels with the independently moving compute sprite."
+    ]
+  },
+  "new_shader_architecture/text_showcase": {
+    "description": "Compare vector text, distance-field text and LaTeX geometry.",
+    "walkthrough": [
+      "Text provides glyph paths, SDFText provides atlas-based typography, and Tex converts a mathematical expression. The staged sequence exposes outlines, fills and scale changes.",
+      "Vector reveal progress differs from scaling distance-field glyphs. Font and typesetting resources must load before their respective text can appear."
+    ],
+    "experiments": [
+      "Apply the same scale animation to Text and SDFText. Inspect edge quality and the difference in available contour-reveal behavior."
+    ]
+  },
+  "new_shader_architecture/write_animation": {
+    "description": "Draw vector text and a typeset equation in sequence.",
+    "walkthrough": [
+      "Text constructs ordinary glyph paths; Tex constructs equation paths. Write progressively introduces those existing contours.",
+      "The awaited play calls make the equation follow the sentence. Duration controls drawing time rather than typesetting complexity."
+    ],
+    "experiments": [
+      "Run the two Write animations in one play call. Compare simultaneous drawing with the original ordered introduction."
+    ]
+  }
+}

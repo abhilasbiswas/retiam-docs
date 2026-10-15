@@ -1,0 +1,1970 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-entities-layout",
+  "title": "entities / layout API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrange",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Arrange"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/layout/Arrange.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/layout/Arrange.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ArrangeOptions: Configuration options for [[Arrange]] layout container.",
+                "RadialArrangeOptions: Options configuring radial distribution in {@link Arrange.arrangeRadial}.",
+                "CurveArrangeOptions: Options configuring parametric curve distribution in {@link Arrange.arrangeAlongCurve}.",
+                "InstanceItem: Lightweight entity adapter representing a single instance when [[Arrange]] is in GPU mode. Bridges transform, paint, and material mutations directly to the underlying WebGPU [[Instanced]] storage buffer.",
+                "Arrange: Procedural layout container and instancing engine for Retiam. Supports both CPU scene-graph instancing and high-performance WebGPU GPU instancing (1 draw call). Takes a template [[Entity]] and replicates it `count` times, providing a rich, chainable API for 1D, 2D, 3D, radial, and parametric curve distributions."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ArrangeOptions",
+                    "Interface",
+                    "Configuration options for [[Arrange]] layout container."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RadialArrangeOptions",
+                    "Interface",
+                    "Options configuring radial distribution in {@link Arrange.arrangeRadial}."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CurveArrangeOptions",
+                    "Interface",
+                    "Options configuring parametric curve distribution in {@link Arrange.arrangeAlongCurve}."
+                  ]
+                },
+                {
+                  "cells": [
+                    "InstanceItem",
+                    "Class",
+                    "Lightweight entity adapter representing a single instance when [[Arrange]] is in GPU mode. Bridges transform, paint, and material mutations directly to the underlying WebGPU [[Instanced]] storage buffer."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrange",
+                    "Class",
+                    "Procedural layout container and instancing engine for Retiam. Supports both CPU scene-graph instancing and high-performance WebGPU GPU instancing (1 draw call). Takes a template [[Entity]] and replicates it `count` times, providing a rich, chainable API for 1D, 2D, 3D, radial, and parametric curve distributions."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ArrangeOptions<T extends Entity = Entity> extends EntityOptions {\n    gpu?: boolean;\n}\nexport interface RadialArrangeOptions {\n    plane?: 'xy' | 'xz' | 'yz';\n    startAngle?: number;\n    endAngle?: number;\n    closed?: boolean;\n    orient?: 'normal' | 'tangent' | 'inward' | 'none' | boolean;\n    centerAfter?: boolean;\n}\nexport interface CurveArrangeOptions {\n    orient?: boolean;\n    tangentStep?: number;\n    centerAfter?: boolean;\n}\nexport declare class InstanceItem<T extends Entity = Entity> extends Entity {\n    readonly index: number;\n    readonly instanced: Instanced;\n    readonly templateEntity: T;\n    constructor(index: number, instanced: Instanced, template: T);\n    syncTransformToGPU(): void;\n    syncColorToGPU(): void;\n    setColor(color: Color): this;\n    setOpacity(opacity: number): this;\n    getBoundingBox(): AABB;\n}\nexport declare class Arrange<T extends Entity = Entity> extends Entity implements IRaycastable {\n    readonly template?: T;\n    items: T[];\n    readonly isGPU: boolean;\n    instanced?: Instanced;\n    constructor(template?: T, count?: number, options?: ArrangeOptions<T>);\n    setCount(newCount: number): this;\n    syncGPU(): this;\n    forAll(fn: (index: number, entity: T, count: number) => void): this;\n    forGrid(rows: number, cols: number, fn: (row: number, col: number, index: number, entity: T) => void): this;\n    forVolume(xCount: number, yCount: number, zCount: number, fn: (x: number, y: number, z: number, index: number, entity: T) => void): this;\n    arrangeLinear(direction?: Vec3Type, spacing?: number, mode?: 'gap' | 'step', centerAfter?: boolean, resetRotation?: boolean): this;\n    arrange(direction?: Vec3Type, spacing?: number, mode?: 'gap' | 'step', centerAfter?: boolean, resetRotation?: boolean): this;\n    arrangeGrid(rows?: number, cols?: number, buff?: number | [\n        number,\n        number\n    ], centerAfter?: boolean, resetRotation?: boolean): this;\n    arrangeInGrid(rows?: number, cols?: number, buff?: number | [\n        number,\n        number\n    ], centerAfter?: boolean, resetRotation?: boolean): this;\n    arrangeVolume(dimX: number, dimY: number, dimZ: number, buff?: number | Vec3Type, centerAfter?: boolean, resetRotation?: boolean): this;\n    arrangeRadial(radius: number, options?: RadialArrangeOptions): this;\n    arrangeAlongCurve(curveFn: (t: number) => Vec3Type, options?: CurveArrangeOptions): this;\n    onUpdate(fn: (time: number, dt: number, arrange: this) => void): this;\n    onCompute(wgslLogicOrKernel: string | ComputeKernel, options?: InstancedComputeOptions): this;\n    animateItems(lagRatio?: number): GroupAnimator;\n    stagger(lagRatio?: number): GroupAnimator;\n    getGroupAnimator(lagRatio?: number): GroupAnimator;\n    morph(layoutMutator: (target: Arrange<T>) => void, options?: MorphArrangeOptions): MorphArrange<T>;\n    morphToGrid(rows?: number, cols?: number, buff?: number | [\n        number,\n        number\n    ], options?: MorphArrangeOptions): MorphArrange<T>;\n    morphToRadial(radius: number, radialOptions?: RadialArrangeOptions, animOptions?: MorphArrangeOptions): MorphArrange<T>;\n    morphToLinear(direction?: Vec3Type, spacing?: number, mode?: 'gap' | 'step', options?: MorphArrangeOptions): MorphArrange<T>;\n    morphAlongCurve(curveFn: (t: number) => Vec3Type, curveOptions?: CurveArrangeOptions, animOptions?: MorphArrangeOptions): MorphArrange<T>;\n    ripple(options?: ArrangeRippleOptions): ArrangeRipple<T>;\n    reveal(options?: ArrangeRevealOptions): ArrangeReveal<T>;\n    get(index: number): T | undefined;\n    first(): T | undefined;\n    last(): T | undefined;\n    get length(): number;\n    map<U>(fn: (entity: T, index: number) => U): U[];\n    filter(predicate: (entity: T, index: number) => boolean): T[];\n    find(predicate: (entity: T, index: number) => boolean): T | undefined;\n    getBoundingBox(includeChildren?: boolean): AABB;\n    raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): RaycastHit | null;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ArrangeOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "gpu?: boolean;",
+                    "—",
+                    "Whether to render all instances via high-performance WebGPU GPU instancing (1 single draw call). Ideal for rendering 1,000 to 100,000+ copies of single-geometry primitives (Circle, Rect, Dot, Mesh, etc.). Defaults to `false` (CPU scene-graph instancing). [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L30)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RadialArrangeOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "plane?: 'xy' | 'xz' | 'yz';",
+                    "—",
+                    "Plane of the circle: 'xy' (default, 2D screen), 'xz' (ground), or 'yz' [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startAngle?: number;",
+                    "—",
+                    "Starting angle in radians (default: 0) [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endAngle?: number;",
+                    "—",
+                    "Ending angle in radians. If omitted, distributed across a full 2*PI circle. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "closed?: boolean;",
+                    "—",
+                    "Whether the distribution forms a closed circle (default: true). [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "orient?: 'normal' | 'tangent' | 'inward' | 'none' | boolean;",
+                    "—",
+                    "Item orientation relative to the circular distribution: - 'normal': faces outward along radius vector - 'inward': faces inward toward circle center - 'tangent': faces along the circle circumference - 'none' or false: maintains original orientation (default) [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "centerAfter?: boolean;",
+                    "—",
+                    "Whether to center the entire arrangement at the container origin afterwards (default: true) [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L54)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CurveArrangeOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "orient?: boolean;",
+                    "—",
+                    "If true, aligns the item rotation along the curve tangent direction [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tangentStep?: number;",
+                    "—",
+                    "Step size for finite-differences tangent estimation (default: 0.001) [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "centerAfter?: boolean;",
+                    "—",
+                    "Whether to center the entire arrangement afterwards (default: true) [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L66)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `InstanceItem` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly index: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly instanced: Instanced",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly templateEntity: T",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(index: number, instanced: Instanced, template: T)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.index`, `this.instanced`, `this.templateEntity`, `this.LABEL`, `this.paint`, `this.material`, `this.state.transform.onChange`; construction of `Proxy`; calls to `this.paint.set`, `this.material.set`, `this.transform.set`, `Reflect.set`, `self.syncColorToGPU`, `this.invalidateTransform`, `this.syncTransformToGPU`, `this.syncColorToGPU`; return paths including `res`. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncTransformToGPU(): void",
+                    "—",
+                    "Synchronizes local transform (position, rotation, scale) to GPU buffer [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncColorToGPU(): void",
+                    "—",
+                    "Synchronizes paint/material color and opacity to GPU buffer [Source line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L145)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setColor(color: Color): this",
+                    "—",
+                    "Implementation: `this.paint.fill = color; this.syncColorToGPU(); return this;`. [Source line 170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L170)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setOpacity(opacity: number): this",
+                    "—",
+                    "Implementation: `this.paint.opacity = opacity; this.syncColorToGPU(); return this;`. [Source line 176](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L176)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override getBoundingBox(): AABB",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `AABB`, `Vec3`; calls to `this.templateEntity.getLocalAABB`, `localAABB.isEmpty`, `p.clone`; return paths including `new AABB(p.clone(), p.clone())`. [Source line 182](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L182)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Arrange` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly template?: T",
+                    "—",
+                    "The blueprint entity used to generate instances. [Source line 221](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L221)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public items: T[]",
+                    "[]",
+                    "Strongly typed collection of entity instances. [Source line 226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L226)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly isGPU: boolean",
+                    "false",
+                    "Whether this layout container renders via WebGPU GPU instancing (1 draw call). [Source line 231](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L231)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public instanced?: Instanced",
+                    "—",
+                    "Reference to the internal [[Instanced]] node when operating in GPU mode. [Source line 236](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L236)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        template?: T,\n        count: number = 0,\n        options?: ArrangeOptions<T>\n    )",
+                    "—",
+                    "Creates a new Arrange layout container. Param: template Optional template entity to replicate. Param: count Number of initial cloned instances to produce. Param: options Optional configuration options `{ gpu?: boolean, ...EntityOptions }`. [Source line 245](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L245)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setCount(newCount: number): this",
+                    "—",
+                    "Dynamically resizes the number of active instances. If growing, new clones/proxies are instantiated from {@link template}. If shrinking, trailing instances are removed and destroyed. Param: newCount Target count of instances. [Source line 272](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L272)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncGPU(): this",
+                    "—",
+                    "Synchronizes all instance items to the GPU buffer. Called automatically after layout procedures and procedural iterators in GPU mode. [Source line 333](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L333)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forAll(fn: (index: number, entity: T, count: number) => void): this",
+                    "—",
+                    "Iterates over every instance with its 1D index, allowing procedural styling, positioning, and mathematical parameterization. Param: fn Callback invoked for each instance `(index, entity, totalCount)`. [Source line 355](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L355)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forGrid(\n        rows: number,\n        cols: number,\n        fn: (row: number, col: number, index: number, entity: T) => void\n    ): this",
+                    "—",
+                    "Iterates over instances with calculated 2D grid coordinates (row, column). Automatically computes row and column indices without manual modulo arithmetic. Param: rows Expected row count (or 0 to auto-derive from cols). Param: cols Expected column count (or 0 to auto-derive from rows). Param: fn Callback invoked with `(row, col, index, entity)`. [Source line 372](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L372)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forVolume(\n        xCount: number,\n        yCount: number,\n        zCount: number,\n        fn: (x: number, y: number, z: number, index: number, entity: T) => void\n    ): this",
+                    "—",
+                    "Iterates over instances with calculated 3D volume lattice coordinates (x, y, z). Param: xCount Grid dimension along X. Param: yCount Grid dimension along Y. Param: zCount Grid dimension along Z. Param: fn Callback invoked with `(x, y, z, index, entity)`. [Source line 397](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L397)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrangeLinear(\n        direction: Vec3Type = RIGHT,\n        spacing: number = 0.5,\n        mode: 'gap' | 'step' = 'gap',\n        centerAfter: boolean = true,\n        resetRotation: boolean = true\n    ): this",
+                    "—",
+                    "Spaces out all child instances linearly along a direction vector. Param: direction Placement direction (default: RIGHT). Param: spacing Margin buffer between consecutive items (mode 'gap') or step distance (mode 'step'). Param: mode 'gap' spaces items edge-to-edge; 'step' spaces items by fixed center-to-center distances. Param: centerAfter Whether to center the entire arrangement at the container origin afterwards. Param: resetRotation Whether to reset item rotations to 0 (default: true). [Source line 430](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L430)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrange(\n        direction: Vec3Type = RIGHT,\n        spacing: number = 0.5,\n        mode: 'gap' | 'step' = 'gap',\n        centerAfter: boolean = true,\n        resetRotation: boolean = true\n    ): this",
+                    "—",
+                    "Alias for {@link arrangeLinear} to match the familiar [[VGroup.arrange]] API. [Source line 480](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L480)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrangeGrid(\n        rows?: number,\n        cols?: number,\n        buff: number | [number, number] = 0.5,\n        centerAfter: boolean = true,\n        resetRotation: boolean = true\n    ): this",
+                    "—",
+                    "Arranges child instances into a uniform 2D grid. If rows or cols are omitted, computes a square or balanced rectangular distribution. Automatically resets item rotation to upright alignment and centers items in local coordinates. Param: rows Desired number of rows. Param: cols Desired number of columns. Param: buff Clear spacing margin between cells (number or `[horizontalBuff, verticalBuff]`). Param: centerAfter Whether to center the entire grid at the container origin afterwards. Param: resetRotation Whether to reset item rotations to 0 (default: true). [Source line 501](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L501)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrangeInGrid(\n        rows?: number,\n        cols?: number,\n        buff: number | [number, number] = 0.5,\n        centerAfter: boolean = true,\n        resetRotation: boolean = true\n    ): this",
+                    "—",
+                    "Alias for {@link arrangeGrid} to match [[VGroup.arrangeInGrid]]. [Source line 564](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L564)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrangeVolume(\n        dimX: number,\n        dimY: number,\n        dimZ: number,\n        buff: number | Vec3Type = 0.5,\n        centerAfter: boolean = true,\n        resetRotation: boolean = true\n    ): this",
+                    "—",
+                    "Arranges child instances into a 3D volume lattice / matrix (X, Y, Z). Param: dimX Grid count along X. Param: dimY Grid count along Y. Param: dimZ Grid count along Z. Param: buff Clear margin spacing along axes (scalar or 3D vector). Param: centerAfter Whether to center the entire lattice at the container origin afterwards. Param: resetRotation Whether to reset item rotations to 0 (default: true). [Source line 584](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L584)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrangeRadial(radius: number, options?: RadialArrangeOptions): this",
+                    "—",
+                    "Arranges instances radially around a circular ring or arc. Param: radius Radius of the circle. Param: options Configuration for rotation plane, angles, and item orientation. [Source line 646](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L646)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrangeAlongCurve(\n        curveFn: (t: number) => Vec3Type,\n        options?: CurveArrangeOptions\n    ): this",
+                    "—",
+                    "Distributes instances along an arbitrary parametric curve `(t in [0, 1]) => Vec3`. Param: curveFn Mathematical function returning a position for parameter t in [0, 1]. Param: options Configuration for orientation along tangent and post-centering. [Source line 716](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L716)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onUpdate(fn: (time: number, dt: number, arrange: this) => void): this",
+                    "—",
+                    "Attaches a frame-by-frame procedural updater function to the arrange container. Useful for continuous mathematical waves, physics simulations, or audio visualizers. Automatically syncs changes to GPU buffer when operating in GPU mode. Param: fn Callback invoked every frame with `(time, dt, arrange)`. [Source line 771](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L771)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onCompute(\n        wgslLogicOrKernel: string | ComputeKernel,\n        options?: InstancedComputeOptions\n    ): this",
+                    "—",
+                    "Attaches a high-performance WebGPU compute shader or ComputeKernel to this Arrange container. Executes directly on the GPU VRAM storage buffer before rendering passes (0 CPU overhead). Only active when the Arrange container was initialized with `{ gpu: true }`. [Source line 801](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L801)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public animateItems(lagRatio: number = 0): GroupAnimator",
+                    "—",
+                    "Creates a [[GroupAnimator]] targeting all instances in the arrangement, allowing collective animations across items with an optional stagger delay ratio. Param: lagRatio Stagger delay ratio between instances (default: 0). [Source line 824](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L824)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public stagger(lagRatio: number = 0.05): GroupAnimator",
+                    "—",
+                    "Alias for {@link animateItems} with a default stagger delay ratio. Convenient for staggered reveals: `scene.play(arrange.stagger(0.05).fadeIn())`. Param: lagRatio Stagger delay ratio between instances (default: 0.05). [Source line 834](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L834)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getGroupAnimator(lagRatio: number = 0): GroupAnimator",
+                    "—",
+                    "Matches the composite entity convention (e.g. [[Text.getGroupAnimator]]) to orchestrate staggered item animations. Param: lagRatio Stagger delay ratio between instances (default: 0). [Source line 844](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L844)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public morph(layoutMutator: (target: Arrange<T>) => void, options?: MorphArrangeOptions): MorphArrange<T>",
+                    "—",
+                    "Creates a [[MorphArrange]] animation that smoothly reorganizes instances into a new layout configuration defined by the callback. Param: layoutMutator Callback modifying layout on a temporary container. Param: options Animation options including duration, rate_func, and lagRatio. [Source line 855](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L855)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public morphToGrid(\n        rows?: number,\n        cols?: number,\n        buff: number | [number, number] = 0.5,\n        options?: MorphArrangeOptions\n    ): MorphArrange<T>",
+                    "—",
+                    "Creates a [[MorphArrange]] animation that reorganizes instances into a 2D uniform grid. [Source line 862](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L862)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public morphToRadial(\n        radius: number,\n        radialOptions?: RadialArrangeOptions,\n        animOptions?: MorphArrangeOptions\n    ): MorphArrange<T>",
+                    "—",
+                    "Creates a [[MorphArrange]] animation that reorganizes instances into a circular radial layout. [Source line 874](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L874)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public morphToLinear(\n        direction: Vec3Type = RIGHT,\n        spacing: number = 0.5,\n        mode: 'gap' | 'step' = 'gap',\n        options?: MorphArrangeOptions\n    ): MorphArrange<T>",
+                    "—",
+                    "Creates a [[MorphArrange]] animation that reorganizes instances into a 1D linear sequence. [Source line 885](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L885)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public morphAlongCurve(\n        curveFn: (t: number) => Vec3Type,\n        curveOptions?: CurveArrangeOptions,\n        animOptions?: MorphArrangeOptions\n    ): MorphArrange<T>",
+                    "—",
+                    "Creates a [[MorphArrange]] animation that reorganizes instances along an arbitrary curve. [Source line 897](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L897)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public ripple(options?: ArrangeRippleOptions): ArrangeRipple<T>",
+                    "—",
+                    "Creates an [[ArrangeRipple]] circular wave animation propagating across this arrangement. Param: options Ripple animation options: Param: options.origin Origin center point from which the ripple wave expands. Default: [0, 0, 0] Param: options.waveWidth Spatial thickness/width of the expanding wave crest. Default: 2.5 Param: options.scalePeak Peak scale multiplier when the wave hits an item. Default: 1.5 Param: options.jumpHeight Peak elevation jump when wave hits an item. Default: 0.0 Param: options.jumpAxis Axis along which jump occurs ('y' | 'z'). Default: 'y' Param: options.colorPeak Optional peak color flash when wave hits an item. Param: options.damping Attenuation factor [0.0 - 1.0] dampening wave intensity outward. Default: 0.0 [Source line 917](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L917)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reveal(options?: ArrangeRevealOptions): ArrangeReveal<T>",
+                    "—",
+                    "Creates an [[ArrangeReveal]] introducer animation revealing instances in spatial patterns. Param: options Reveal animation options: Param: options.pattern Spatial ordering pattern ('diagonal' | 'radial-out' | 'radial-in' | 'columns' | 'rows' | 'snake' | 'index' | 'random'). Default: 'diagonal' Param: options.animation Entrance animation style ('pop' | 'grow' | 'fade' | 'drop' | 'spin'). Default: 'pop' Param: options.cols Number of grid columns if known. Param: options.rows Number of grid rows if known. Param: options.spreadMs Total spread delay in ms across all items. [Source line 931](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L931)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get(index: number): T | undefined",
+                    "—",
+                    "Retrieves an instance by index. Supports negative indexing (e.g. `get(-1)` accesses the last item). Param: index Zero-based index or negative index from the end. [Source line 945](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L945)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public first(): T | undefined",
+                    "—",
+                    "Returns the first instance in the arrangement. [Source line 955](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L955)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public last(): T | undefined",
+                    "—",
+                    "Returns the last instance in the arrangement. [Source line 962](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L962)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get length(): number",
+                    "—",
+                    "The total number of active instances. [Source line 969](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L969)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public map<U>(fn: (entity: T, index: number) => U): U[]",
+                    "—",
+                    "Maps each instance to an arbitrary output array. [Source line 976](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L976)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public filter(predicate: (entity: T, index: number) => boolean): T[]",
+                    "—",
+                    "Returns instances that pass a predicate filter. [Source line 983](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L983)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public find(predicate: (entity: T, index: number) => boolean): T | undefined",
+                    "—",
+                    "Finds the first instance matching a predicate. [Source line 990](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L990)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override getBoundingBox(includeChildren: boolean = true): AABB",
+                    "—",
+                    "Computes the bounding box of the arrangement. In GPU mode, aggregates bounding boxes across all instance proxies. [Source line 998](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L998)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public raycast(\n        ray: Ray,\n        localOrigin: Vec3,\n        localDir: Vec3,\n        worldMatrix: Mat4,\n        hitTolerance: number = 0.05\n    ): RaycastHit | null",
+                    "—",
+                    "Raycasting implementation delegating to the internal [[Instanced]] node in GPU mode. [Source line 1012](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L1012)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override destroy(): void",
+                    "—",
+                    "Cleans up all child instances and component references. [Source line 1035](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L1035)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "opts.gpu ?? false",
+                    "[Line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L254)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.plane ?? 'xy'",
+                    "[Line 650](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L650)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.startAngle ?? 0",
+                    "[Line 651](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L651)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.closed ?? true",
+                    "[Line 652](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L652)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.tangentStep ?? 0.001",
+                    "[Line 730](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L730)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.centerAfter ?? true",
+                    "[Line 743](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L743)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"Arrange: Cannot create instances without a template Entity.\")"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity), [EntityOptions](/api-core-entity#entity), [IRaycastable](/api-core#interfaces)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "feedbackzoomview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "FeedbackZoomView"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/layout/FeedbackZoomView.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/layout/FeedbackZoomView.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FeedbackZoomView",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class FeedbackZoomView extends Entity {\n    displayShader: Shader;\n    windowFrame: Path;\n    focusBox: Path;\n    constructor(scene: Scene, options?: ZoomViewOptions);\n    setFocusPosition(pos: Vec3Type): void;\n    getFocusPosition(): Vec3;\n    getZoomFactor(): number;\n    setZoomFactor(factor: number): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FeedbackZoomView` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public displayShader: Shader",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public windowFrame: Path",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public focusBox: Path",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(scene: Scene, options: ZoomViewOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.LABEL`, `this._width`, `this._height`, `this._zoomFactor`, `this._focusPos`, `this._winBorderWidth`, `this._focusBorderWidth`, `this.focusBox` and other instance fields; construction of `Vec3`, `Color`, `Shader`, `Float32Array`; calls to `Vec3.cast`, `this.createRectPath`, `this._focusPos.clone`, `this.add`, `this.always`, `feedbackFeature.getPreviousFrameTexture`, `this.displayShader.setSampler`, `this.displayShader.setTexture` and additional helpers. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFocusPosition(pos: Vec3Type)",
+                    "—",
+                    "Implementation: `this._focusPos = Vec3.cast(pos); this.focusBox.transform.position = this._focusPos.clone(); this.invalidate();`. [Source line 140](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L140)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getFocusPosition(): Vec3",
+                    "—",
+                    "Implementation: `return this._focusPos.clone();`. [Source line 146](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L146)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getZoomFactor(): number",
+                    "—",
+                    "Implementation: `return this._zoomFactor;`. [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setZoomFactor(factor: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._zoomFactor`, `this.focusBox.paint.strokeWidth`; construction of `Builder`; calls to `b.rect`, `this.focusBox.setVertices`, `b.toString`, `this.invalidate`. [Source line 152](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L152)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override destroy(): void",
+                    "—",
+                    "Implementation: `if (this.paramsBuffer) { try { this.paramsBuffer.destroy(); } catch (e) {} this.paramsBuffer = undefined as any; } super.destroy();`. [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L165)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.width ?? 45.0",
+                    "[Line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L30)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.height ?? 28.0",
+                    "[Line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L31)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.zoomFactor ?? 3.0",
+                    "[Line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L32)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.focusBorderWidth ?? (this._width * 0.012)",
+                    "[Line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L36)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.windowBorderColor ?? new Color(1.0, 0.8, 0.2, 1.0)",
+                    "[Line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L38)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.focusBorderColor ?? new Color(1.0, 0.2, 0.3, 1.0)",
+                    "[Line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L39)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.focusFillColor ?? new Color(1.0, 0.2, 0.3, 0.2)",
+                    "[Line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L40)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FeedbackZoomView.createRectPath: private createRectPath(w: number, h: number): Path",
+                    "Implementation: `const b = new Builder(); b.rect(-w / 2, -h / 2, w, h); return new Path(b.toString());`.",
+                    "[Line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts#L134)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hbox",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "HBox"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/layout/HBox.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/layout/HBox.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "HBoxOptions: Configuration options for the [[HBox]] layout container or [[HBox.arrange]] static helper.",
+                "HBox: A horizontal layout container that automatically places its child entities left-to-right with configurable spacing and vertical alignment. Provides both a scene-graph container entity (`new HBox(...)`) and a static positioning helper (`HBox.arrange(...)`) for spatial layout without parent-child attachment."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "HBoxAlignment",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "HBoxOptions",
+                    "Interface",
+                    "Configuration options for the [[HBox]] layout container or [[HBox.arrange]] static helper."
+                  ]
+                },
+                {
+                  "cells": [
+                    "HBox",
+                    "Class",
+                    "A horizontal layout container that automatically places its child entities left-to-right with configurable spacing and vertical alignment. Provides both a scene-graph container entity (`new HBox(...)`) and a static positioning helper (`HBox.arrange(...)`) for spatial layout without parent-child attachment."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type HBoxAlignment = 'top' | 'center' | 'bottom';\nexport interface HBoxOptions {\n    gap?: number;\n    align?: HBoxAlignment;\n    center?: Vec3Type;\n    centerAfter?: boolean;\n}\nexport declare class HBox extends Entity {\n    gap: number;\n    align: HBoxAlignment;\n    centerAfter: boolean;\n    static arrange<T extends Entity = Entity>(options: HBoxOptions, ...entities: (T | T[])[]): T[];\n    static arrange<T extends Entity = Entity>(...entities: (T | T[])[]): T[];\n    constructor(options?: HBoxOptions, ...children: Entity[]);\n    constructor(...children: Entity[]);\n    add(...entities: Entity[]): this;\n    remove(...entities: Entity[]): this;\n    relayout(): this;\n    setGap(gap: number): this;\n    setAlign(align: HBoxAlignment): this;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `HBoxOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "gap?: number;",
+                    "—",
+                    "Gap spacing between consecutive horizontal items in world units. Defaults to 0.5. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "align?: HBoxAlignment;",
+                    "—",
+                    "Vertical cross-axis alignment of children ('top' | 'center' | 'bottom'). Defaults to 'center'. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "center?: Vec3Type;",
+                    "—",
+                    "Center position around which to anchor the horizontal stack. Defaults to the combined bounding box center. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "centerAfter?: boolean;",
+                    "—",
+                    "Whether to center the entire stack around the origin/center after layout. Defaults to true. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L22)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `HBox` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public gap: number",
+                    "0.5",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public align: HBoxAlignment",
+                    "'center'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public centerAfter: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static arrange<T extends Entity = Entity>(options: HBoxOptions, ...entities: (T | T[])[]): T[];",
+                    "—",
+                    "Statically arranges entities in a horizontal left-to-right stack without parenting them to a container or modifying their scene graph hierarchy. Param: options Layout options (gap, align, center, centerAfter). Param: entities Entities to arrange horizontally. Returns: The arranged entities array. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static arrange<T extends Entity = Entity>(...entities: (T | T[])[]): T[];",
+                    "—",
+                    "Statically arranges entities in a horizontal left-to-right stack using default options. Param: entities Entities to arrange horizontally. Returns: The arranged entities array. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static arrange<T extends Entity = Entity>(\n        arg1?: HBoxOptions | T | T[],\n        ...rest: (T | T[])[]\n    ): T[]",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `AABB`, `Vec3`; calls to `aabb.expandByAABB`, `item[j].getBoundingBox`, `item.getBoundingBox`, `item[j].transform.shiftWorld`, `item.transform.shiftWorld`, `getItemAABB`, `sizes.push`, `centers.push` and additional helpers; return paths including `[]`, `aabb`, `item.getBoundingBox(true)`; 6 explicit loops. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options?: HBoxOptions, ...children: Entity[]);",
+                    "—",
+                    "Creates a new HBox container with optional layout configuration and children. Param: options Layout options: Param: options.gap Spacing between consecutive items in world units. Default: 0.5 Param: options.align Cross-axis vertical alignment ('top' | 'center' | 'bottom'). Default: 'center' Param: options.centerAfter Whether to center the container around its origin after layout. Default: true Param: children Child entities to add and arrange horizontally. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(...children: Entity[]);",
+                    "—",
+                    "Creates a new HBox container with child entities. Param: children Child entities to add and arrange horizontally. [Source line 190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L190)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(arg1?: HBoxOptions | Entity, ...rest: Entity[])",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.LABEL`, `this.gap`, `this.align`, `this.centerAfter`; calls to `this.add`. [Source line 191](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L191)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override add(...entities: Entity[]): this",
+                    "—",
+                    "Adds child entities to this HBox and automatically recalculates horizontal layout. [Source line 210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L210)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override remove(...entities: Entity[]): this",
+                    "—",
+                    "Detaches child entities and updates the horizontal layout. [Source line 219](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L219)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public relayout(): this",
+                    "—",
+                    "Re-computes and applies the horizontal positions of all children based on their current bounding boxes. [Source line 228](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L228)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setGap(gap: number): this",
+                    "—",
+                    "Updates the gap spacing and triggers re-layout. [Source line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L248)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setAlign(align: HBoxAlignment): this",
+                    "—",
+                    "Updates the alignment and triggers re-layout. [Source line 256](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L256)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.gap ?? 0.5",
+                    "[Line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L79)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.align ?? 'center'",
+                    "[Line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L80)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.centerAfter ?? true",
+                    "[Line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts#L81)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mask",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Mask"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/layout/Mask.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/layout/Mask.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Mask.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Mask",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class Mask extends Entity {\n    shape: VectorEntity;\n    content: Entity;\n    inverted: boolean;\n    constructor(shape: VectorEntity, content: Entity, inverted?: boolean);\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Mask` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public shape: VectorEntity",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Mask.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public content: Entity",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Mask.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public inverted: boolean",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Mask.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(shape: VectorEntity, content: Entity, inverted: boolean = false)",
+                    "—",
+                    "Param: shape The 2D vector geometry acting as the mask boundary. Param: content The entities to be masked. Param: inverted If true, punches a hole instead of containing the content. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Mask.ts#L23)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Mask.patchShape: private patchShape(ent: Entity)",
+                    "Body operations (including nested callbacks): calls to `ent.getComponent`, `mat.getPasses.bind`, `originalGetPasses`, `VISUAL_PASSES.includes`, `ent.children.forEach`, `this.patchShape`; return paths including `passes`; 1 explicit loop.",
+                    "[Line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Mask.ts#L43)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Mask.patchContent: private patchContent(ent: Entity, inverted: boolean)",
+                    "Body operations (including nested callbacks): calls to `ent.getComponent`, `mat.getPasses.bind`, `originalGetPasses`, `VISUAL_PASSES.includes`, `ent.children.forEach`, `this.patchContent`; return paths including `passes`; 1 explicit loop.",
+                    "[Line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Mask.ts#L101)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vbox",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "VBox"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/layout/VBox.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/layout/VBox.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "VBoxOptions: Configuration options for the [[VBox]] layout container or [[VBox.arrange]] static helper.",
+                "VBox: A vertical layout container that automatically stacks child entities top-to-bottom with configurable spacing and horizontal alignment. Provides both a scene-graph container entity (`new VBox(...)`) and a static positioning helper (`VBox.arrange(...)`) for spatial layout without parent-child attachment."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VBoxAlignment",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VBoxOptions",
+                    "Interface",
+                    "Configuration options for the [[VBox]] layout container or [[VBox.arrange]] static helper."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VBox",
+                    "Class",
+                    "A vertical layout container that automatically stacks child entities top-to-bottom with configurable spacing and horizontal alignment. Provides both a scene-graph container entity (`new VBox(...)`) and a static positioning helper (`VBox.arrange(...)`) for spatial layout without parent-child attachment."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type VBoxAlignment = 'left' | 'center' | 'right';\nexport interface VBoxOptions {\n    gap?: number;\n    align?: VBoxAlignment;\n    center?: Vec3Type;\n    centerAfter?: boolean;\n}\nexport declare class VBox extends Entity {\n    gap: number;\n    align: VBoxAlignment;\n    centerAfter: boolean;\n    static arrange<T extends Entity = Entity>(options: VBoxOptions, ...entities: (T | T[])[]): T[];\n    static arrange<T extends Entity = Entity>(...entities: (T | T[])[]): T[];\n    constructor(options?: VBoxOptions, ...children: Entity[]);\n    constructor(...children: Entity[]);\n    add(...entities: Entity[]): this;\n    remove(...entities: Entity[]): this;\n    relayout(): this;\n    setGap(gap: number): this;\n    setAlign(align: VBoxAlignment): this;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VBoxOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "gap?: number;",
+                    "—",
+                    "Gap spacing between consecutive vertical items in world units. Defaults to 0.5. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "align?: VBoxAlignment;",
+                    "—",
+                    "Horizontal cross-axis alignment of children ('left' | 'center' | 'right'). Defaults to 'center'. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "center?: Vec3Type;",
+                    "—",
+                    "Center position around which to anchor the vertical stack. Defaults to the combined bounding box center. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "centerAfter?: boolean;",
+                    "—",
+                    "Whether to center the entire stack around the origin/center after layout. Defaults to true. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L22)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VBox` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public gap: number",
+                    "0.5",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public align: VBoxAlignment",
+                    "'center'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public centerAfter: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static arrange<T extends Entity = Entity>(options: VBoxOptions, ...entities: (T | T[])[]): T[];",
+                    "—",
+                    "Statically arranges entities in a vertical top-to-bottom stack without parenting them to a container or modifying their scene graph hierarchy. Param: options Layout options (gap, align, center, centerAfter). Param: entities Entities to arrange vertically. Returns: The arranged entities array. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static arrange<T extends Entity = Entity>(...entities: (T | T[])[]): T[];",
+                    "—",
+                    "Statically arranges entities in a vertical top-to-bottom stack using default options. Param: entities Entities to arrange vertically. Returns: The arranged entities array. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static arrange<T extends Entity = Entity>(\n        arg1?: VBoxOptions | T | T[],\n        ...rest: (T | T[])[]\n    ): T[]",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `AABB`, `Vec3`; calls to `aabb.expandByAABB`, `item[j].getBoundingBox`, `item.getBoundingBox`, `item[j].transform.shiftWorld`, `item.transform.shiftWorld`, `getItemAABB`, `sizes.push`, `centers.push` and additional helpers; return paths including `[]`, `aabb`, `item.getBoundingBox(true)`; 6 explicit loops. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options?: VBoxOptions, ...children: Entity[]);",
+                    "—",
+                    "Creates a new VBox container with optional layout configuration and children. Param: options Layout options: Param: options.gap Spacing between consecutive items in world units. Default: 0.5 Param: options.align Cross-axis horizontal alignment ('left' | 'center' | 'right'). Default: 'center' Param: options.centerAfter Whether to center the container around its origin after layout. Default: true Param: children Child entities to add and stack vertically. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(...children: Entity[]);",
+                    "—",
+                    "Creates a new VBox container with child entities. Param: children Child entities to add and stack vertically. [Source line 190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L190)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(arg1?: VBoxOptions | Entity, ...rest: Entity[])",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.LABEL`, `this.gap`, `this.align`, `this.centerAfter`; calls to `this.add`. [Source line 191](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L191)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override add(...entities: Entity[]): this",
+                    "—",
+                    "Adds child entities to this VBox and automatically recalculates vertical layout. [Source line 210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L210)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override remove(...entities: Entity[]): this",
+                    "—",
+                    "Detaches child entities and updates the vertical layout. [Source line 219](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L219)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public relayout(): this",
+                    "—",
+                    "Re-computes and applies the vertical positions of all children based on their current bounding boxes. [Source line 228](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L228)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setGap(gap: number): this",
+                    "—",
+                    "Updates the gap spacing and triggers re-layout. [Source line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L248)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setAlign(align: VBoxAlignment): this",
+                    "—",
+                    "Updates the alignment and triggers re-layout. [Source line 256](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L256)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.gap ?? 0.5",
+                    "[Line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L79)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.align ?? 'center'",
+                    "[Line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L80)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.centerAfter ?? true",
+                    "[Line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts#L81)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vgroup",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "VGroup"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/layout/VGroup.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/layout/VGroup.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VGroup",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class VGroup extends VectorEntity {\n    constructor(...children: (VectorEntity | VectorEntity[])[]);\n    arrange(direction?: Vec3Type, buff?: number): this;\n    arrangeInGrid(rows?: number, cols?: number, buff?: number | [\n        number,\n        number\n    ]): this;\n    getSubEntities(): VectorEntity[];\n    toPaths(): Path[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VGroup` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(...children: (VectorEntity | VectorEntity[])[])",
+                    "—",
+                    "Implementation: `super(); const flat = children.flat(); if (flat.length > 0) this.add(...flat);`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrange(direction: Vec3Type = RIGHT, buff: number = 0.5): this",
+                    "—",
+                    "Spaces out all children along a specific direction vector sequentially. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arrangeInGrid(rows?: number, cols?: number, buff: number | [number, number] = 0.5): this",
+                    "—",
+                    "Arranges children into a 2D grid. If rows/cols are missing, it attempts to form a square. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Implementation: `return this.children;`. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `const paths: Path[] = []; this.forEachPath(p => paths.push(p)); return paths;`. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts#L82)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zoomview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ZoomView"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/layout/ZoomView.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/layout/ZoomView.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ZoomViewOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ZoomView",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ZoomViewOptions extends EntityOptions {\n    focusPos?: Vec3Type;\n    width?: number;\n    height?: number;\n    zoomFactor?: number;\n    windowBorderColor?: Color;\n    windowBorderWidth?: number;\n    focusBorderColor?: Color;\n    focusBorderWidth?: number;\n    focusFillColor?: Color;\n    backgroundColor?: Color;\n    showBackground?: boolean;\n}\nexport declare class ZoomView extends Entity {\n    windowFrame: Path;\n    focusBox: Path;\n    backgroundRect: Rect;\n    contentWrapper: Entity;\n    clonedTarget: Entity;\n    constructor(targetEntity: Entity, options?: ZoomViewOptions);\n    setFocusPosition(pos: Vec3Type): void;\n    getFocusPosition(): Vec3;\n    getZoomFactor(): number;\n    setZoomFactor(factor: number): void;\n    setBackgroundColor(color: Color): this;\n    setBackgroundVisible(visible: boolean): this;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ZoomViewOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "focusPos?: Vec3Type;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "width?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zoomFactor?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "windowBorderColor?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "windowBorderWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "focusBorderColor?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "focusBorderWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "focusFillColor?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "backgroundColor?: Color;",
+                    "—",
+                    "Color behind the zoomed content inside the Zoom Window [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "showBackground?: boolean;",
+                    "—",
+                    "Toggle to show/hide background rectangle. Defaults to true [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L27)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ZoomView` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public windowFrame: Path",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public focusBox: Path",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public backgroundRect: Rect",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public contentWrapper: Entity",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clonedTarget: Entity",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(targetEntity: Entity, options: ZoomViewOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.LABEL`, `this.targetEntity`, `this._width`, `this._height`, `this._zoomFactor`, `this._focusPos`, `this._winBorderWidth`, `this._focusBorderWidth` and other instance fields; construction of `Vec3`, `Color`, `Rect`, `Entity`, `Mask`; calls to `Vec3.cast`, `this.createRectPath`, `this._focusPos.clone`, `targetEntity.clone`, `this._focusPos.scale`, `this.contentWrapper.add`, `this.contentWrapper.transform.setScale`, `this.add` and additional helpers. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFocusPosition(pos: Vec3Type)",
+                    "—",
+                    "Implementation: `this._focusPos = Vec3.cast(pos); this.focusBox.transform.position = this._focusPos.clone(); this.clonedTarget.transform.position = this._focusPos.scale(-1); this.invalidate();`. [Source line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L142)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getFocusPosition(): Vec3",
+                    "—",
+                    "Implementation: `return this._focusPos.clone();`. [Source line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L149)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getZoomFactor(): number",
+                    "—",
+                    "Implementation: `return this._zoomFactor;`. [Source line 153](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L153)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setZoomFactor(factor: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._zoomFactor`, `this.focusBox.paint.strokeWidth`; construction of `Builder`; calls to `this.contentWrapper.transform.setScale`, `b.rect`, `this.focusBox.setVertices`, `b.toString`, `this.invalidate`. [Source line 157](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L157)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBackgroundColor(color: Color): this",
+                    "—",
+                    "Changes the background color inside the Zoom View window dynamically. [Source line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L180)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBackgroundVisible(visible: boolean): this",
+                    "—",
+                    "Enables or disables the background rectangle. [Source line 190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L190)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.width ?? 50.0",
+                    "[Line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L51)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.height ?? 30.0",
+                    "[Line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L52)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.zoomFactor ?? 3.0",
+                    "[Line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L53)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.windowBorderWidth ?? (this._width * 0.016)",
+                    "[Line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L56)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.focusBorderWidth ?? (this._width * 0.012)",
+                    "[Line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L57)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.windowBorderColor ?? new Color(1.0, 0.8, 0.2, 1.0)",
+                    "[Line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L59)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.focusBorderColor ?? new Color(1.0, 0.2, 0.3, 1.0)",
+                    "[Line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L60)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.focusFillColor ?? new Color(1.0, 0.2, 0.3, 0.18)",
+                    "[Line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L61)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.backgroundColor ?? new Color(0.08, 0.08, 0.12, 1.0)",
+                    "[Line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L64)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ZoomView.createRectPath: private createRectPath(w: number, h: number): Path",
+                    "Implementation: `const b = new Builder(); b.rect(-w / 2, -h / 2, w, h); return new Path(b.toString());`.",
+                    "[Line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L123)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ZoomView.syncClonedTree: private syncClonedTree(src: Entity, dst: Entity)",
+                    "Body operations (including nested callbacks): calls to `dst.state.set`, `dst.transform.set`, `dst.paint.set`, `dst.material.set`, `this.syncClonedTree`; 1 explicit loop.",
+                    "[Line 129](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts#L129)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

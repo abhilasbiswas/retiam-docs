@@ -1,0 +1,159 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "transforms",
+  "title": "Transforms, anchors and pivots",
+  "group": "Core authoring",
+  "summary": "Position, rotate and scale entities using local coordinates, world pivots and geometry anchors.",
+  "sections": [
+    {
+      "id": "move-and-transform-an-entity",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Move and transform an entity"
+        },
+        {
+          "type": "paragraph",
+          "text": "`move` sets a position and `shift` adds an offset. Direct entity methods change state immediately; `entity.animate` records target changes into an Animator for Scene.play. Transform also exposes local and world variants for rotations, shifts and scaling. A world-space operation accounts for the parent matrix rather than treating the world point as a local coordinate."
+        },
+        {
+          "type": "paragraph",
+          "text": "Be careful when selecting an anchor: `Entity.move` adjusts the target so the chosen bounds point lands there, while `Entity.setPosition` sets a pivot before assigning translation. They do not have identical anchor behavior in the current implementation. Likewise, `Entity.rotate` and `Entity.scale` accumulate changes; `Entity.setRotation` and `Entity.setScale` assign absolute values, which is usually what a slider needs."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "shape.move([2, 1, 0]);\nshape.shift([-1, 0, 0]);\nshape.rotate(Math.PI / 4);\nshape.scale(1.2);\nawait this.play(shape.animate.move([0, 0, 0]), { duration: 900 });"
+        }
+      ]
+    },
+    {
+      "id": "compare-anchor-pivot",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compare a local edge with a world pivot"
+        },
+        {
+          "type": "paragraph",
+          "text": "Both rectangles rotate around a marked point. The left point is selected from the rectangle’s local edge before rotation; the right point is supplied as a world coordinate. Click a rectangle to reverse direction."
+        },
+        {
+          "type": "example",
+          "example": "labs/compare-anchor-pivot"
+        }
+      ]
+    },
+    {
+      "id": "interactive-transforms",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Experiment with anchors and pivots"
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-transforms"
+        }
+      ]
+    },
+    {
+      "id": "anchor-versus-pivot",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Anchor versus pivot"
+        },
+        {
+          "type": "paragraph",
+          "text": "An anchor selects a persistent position relative to the object’s own bounds, such as LEFT or CENTER. A pivot identifies the point about which rotation or scaling occurs. Setting a world pivot also needs to preserve the object’s current visual placement through offset synchronization. They should not be used interchangeably."
+        },
+        {
+          "type": "paragraph",
+          "text": "Anchoring text to CENTER makes its center the placement reference. Use nextTo and alignTo when positions should follow measured bounds. Intrinsic geometry can change after font loading, a Tex rebuild or a layout update, so measure after those operations are ready."
+        }
+      ]
+    },
+    {
+      "id": "choose-local-or-world-operations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose local or world operations"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Need",
+            "Approach"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Move a child relative to its parent",
+                "Local move/shift"
+              ]
+            },
+            {
+              "cells": [
+                "Place a child at a world point under a rotated parent",
+                "World shift or conversion through the parent transform"
+              ]
+            },
+            {
+              "cells": [
+                "Rotate around the child’s own reference",
+                "Local rotate with the selected anchor/pivot"
+              ]
+            },
+            {
+              "cells": [
+                "Orbit a world-space center",
+                "rotateWorld or a dedicated orbital animation"
+              ]
+            },
+            {
+              "cells": [
+                "Preserve text placement while content changes",
+                "Explicit anchor and re-layout after bounds change"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Transform](/api-core-transform#transform), [Entity](/api-core-entity#entity), [Animator](/api-animation#animator), [TransformOptions](/api-core#constants), [AABB](/api-math#aabb)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Scenes, composer and subscenes](/scene-composition)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Entities, components and ownership](/entities)"
+  ]
+}

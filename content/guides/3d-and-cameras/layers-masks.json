@@ -1,0 +1,81 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "layers-masks",
+  "title": "Layers, UI, masks and zoom views",
+  "group": "3D and cameras",
+  "summary": "Separate world and screen layouts, control visibility with masks, and compose multiple views.",
+  "sections": [
+    {
+      "id": "visibility-through-bitmasks",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Visibility through bitmasks"
+        },
+        {
+          "type": "paragraph",
+          "text": "An entity is visible to a camera when `(entity.layerMask & camera.cullingMask) !== 0`, subject to other visibility/culling conditions. Entities default to layer zero; UI reserves layer 31. Use layer helpers rather than manually shifting bits when readable code matters. Parent/child inheritance and explicit flags still affect traversal."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Entity](/api-core-entity#entity), [Camera](/api-camera#camera), [UIManager](/api-core#uimanager), [UIConfig](/api-core#uimanager)."
+        }
+      ]
+    },
+    {
+      "id": "multiple-views-and-offscreen-cameras",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Multiple views and offscreen cameras"
+        },
+        {
+          "type": "paragraph",
+          "text": "RenderView combines a camera, viewport and target. Scenes share the composer’s view collection. Use independent cameras for split views, offscreen passes and UI, then select content with masks. UIManager creates an orthographic screen-space view when UI entities are detected. isUI and layer membership are different properties that work together."
+        }
+      ]
+    },
+    {
+      "id": "stencil-masks",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Stencil masks"
+        },
+        {
+          "type": "paragraph",
+          "text": "Mask wraps a VectorEntity shape and content, with optional inversion. The stencil pipeline uses depth24plus-stencil8 and specialized mask passes. Mask IDs use the lower seven stencil bits and wrap after 127; bit 7 is also used by analytical path filling. Stencil behavior depends on the content’s renderer. Analytical Path content and fast-path mega batching need explicit verification; the example below uses a text mask with a Sprite. Entity.scissorClipRect is the rectangular clipping property, with different semantics from arbitrary vector masking."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-maskscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Mask](/api-entities-layout#mask)."
+        }
+      ]
+    },
+    {
+      "id": "magnify-content",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Magnify content"
+        },
+        {
+          "type": "paragraph",
+          "text": "ZoomView renders target content through a dedicated view and window, optionally with connectors. FeedbackZoomView samples frame feedback. The feedback alternative is useful for lower-cost insets but represents a prior captured frame and inherits feedback lifetime constraints. Choose by whether the inset needs its own fresh scene rendering or an image of the existing output."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [ZoomView](/api-entities-layout#zoomview), [FeedbackZoomView](/api-entities-layout#feedbackzoomview), [ZoomViewOptions](/api-entities-layout#zoomview)."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "interaction",
+  "title": "Pointer interaction, dragging and raycasting",
+  "group": "Interaction and audio",
+  "summary": "Connect pointer events, dragging and raycasting to the entities that should receive input.",
+  "sections": [
+    {
+      "id": "entity-events",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Entity events"
+        },
+        {
+          "type": "paragraph",
+          "text": "InteractionManager converts canvas pointer coordinates into rays and dispatches events to InteractionComponent targets. Entity.setEvent installs a handler; setDraggable activates drag behavior. The callback signature depends on the event. A hit can include entity, point, distance and instance index, while a drag event passes its declared drag payload."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-interactionscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Try hovering, clicking and dragging the circle. When camera controls also claim pointer input, configure one interaction policy so object drag and camera pan do not compete."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [InteractionManager](/api-control#interactionmanager), [InteractionComponent](/api-components#interactioncomponent), [InteractionEventMap](/api-components#interactioncomponent), [Raycaster](/api-utils#raycaster), [RaycastHit](/api-utils#raycaster)."
+        }
+      ]
+    },
+    {
+      "id": "scene-level-input",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Scene-level input"
+        },
+        {
+          "type": "paragraph",
+          "text": "Scene.setEvent can expose world coordinates for scene pointer events, with contextAware and defaultZ options controlling unprojection. This is suitable for adding control points to empty space or dragging physics bodies. Lifecycle events registered through Scene.on are a separate event channel from pointer events."
+        },
+        {
+          "type": "paragraph",
+          "text": "Raycaster uses camera matrices, bounding boxes and shape-specific raycast implementations. A bounds fallback is less precise than a mesh/curve test. Thin strokes may need hitTolerance. Instanced picking identifies an instance rather than creating thousands of individual entity listeners."
+        }
+      ]
+    },
+    {
+      "id": "input-capture-and-replay",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Input capture and replay"
+        },
+        {
+          "type": "paragraph",
+          "text": "InputRecorder records normalized DOM input with timestamps; the CLI replays it through Puppeteer at the render viewport size. Keep the scene, replay and input semantics together. Deterministic coordinates cannot compensate for external network state, randomness or changed event handlers."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [InputRecorder](/api-control#inputrecorder)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Audio buses, synchronization and analysis](/audio)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Entities, components and ownership](/entities)",
+    "[Lifecycle, removal and resource ownership](/lifecycle-resources)"
+  ]
+}

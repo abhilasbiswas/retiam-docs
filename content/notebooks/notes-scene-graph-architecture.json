@@ -1,0 +1,428 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-scene-graph-architecture",
+  "title": "Scene Graph Architecture, Hierarchy Traversal & State Synchronization",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SCENE_GRAPH_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SCENE_GRAPH_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SCENE_GRAPH_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [State](/api-core#state), [Entity](/api-core-entity#entity), [SceneComposer](/api-core-scenecomposer#scenecomposer), [Component](/api-core#component), [Pipeline](/api-render-pipelines#pipeline), [Group](/api-core#group), [Renderer](/api-render#renderer), [Path](/api-entities-primitives-2d#path), [Fill](/api-core#fill), [Camera](/api-camera#camera), [Light](/api-entities-primitives-3d#light), [Transform](/api-core-transform#transform), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [Box](/api-entities-primitives-3d#box), [AABB](/api-math#aabb), [Intersection](/api-entities-composites-geometry#booleanops), [StateDataManager](/api-core#statedatamanager), [Paint](/api-core-paint#paint), [Material](/api-core-material#material), [GeometryComponent](/api-components#geometrycomponent), [RendererComponent](/api-components#renderercomponent), [FragmentComponent](/api-components#fragmentcomponent)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an exhaustive, bit-by-bit technical breakdown of the **Scene Graph Subsystem** in the Retiam WebGPU Engine. It covers the node hierarchy ([`Entity.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)), the top-level composition coordinator ([`SceneComposer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts)), unified 256-byte aligned GPU state memory blocks ([`State.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts)), hierarchical matrix propagation, version memoization, and zero-allocation render queue generation."
+        }
+      ]
+    },
+    {
+      "id": "1-high-level-architectural-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. High-Level Architectural Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam couples a flexible **Hierarchical Scene Graph** with an **Entity-Component-System (ECS)** and a **Zero-GC Bindless GPU Memory Pipeline**:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph \"1. Scene Graph Hierarchy\"\n        Scene[\"Scene / SceneComposer\"] --> RootEntity[\"Root Entity\"]\n        RootEntity --> Group1[\"Group / Container Node\"]\n        Group1 --> ChildEntityA[\"Mesh Entity (Geometry + Renderer + Fragment)\"]\n        Group1 --> ChildEntityB[\"Vector Path Entity (Fill + Stroke)\"]\n        RootEntity --> ChildEntityC[\"Camera / Light Entity\"]\n    end\n\n    subgraph \"2. SceneComposer Hierarchical Traversal (Zero-GC)\"\n        Traverse[\"SceneComposer.traverse()\"] --> HierarchyMemo[\"Version Memoization Check (Local & Parent Transform Flags)\"]\n        HierarchyMemo --> MatMult[\"World Matrix Evaluation: M_world = M_parent * M_local\"]\n        MatMult --> StateAlloc[\"Direct State Allocation in GlobalStateAllocator\"]\n        StateAlloc --> ScissorCalc[\"Hardware Scissor Box & AABB Intersection\"]\n        ScissorCalc --> RenderQueue[\"Sorted RenderQueue Insertion (ndcZ + zIndex)\"]\n    end\n\n    subgraph \"3. GPU Memory Synchronization\"\n        RenderQueue --> StateManager[\"StateDataManager (Contiguous CPU cpuData Mirror)\"]\n        StateManager --> SingleUpload[\"Single queue.writeBuffer Upload\"]\n        SingleUpload --> GlobalStorage[\"@group(2) @binding(0) Global State Buffer (EntityState[])\"]\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-the-entity-node-component-architecture-entity-ts-src-engine-core-entity-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. The Entity Node & Component Architecture ([Entity.ts](../src/engine/core/Entity.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) class is the foundational building block for all nodes in the scene graph (primitives, composite shapes, 3D models, groups, lights, and cameras)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Core Node Hierarchy Properties"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class Entity {\n    public id: number = Entity.seq_no++;\n    public LABEL: string = \"entity\" + this.id;\n\n    // Hierarchy Connections:\n    public parent: Entity | null = null;\n    public children: Entity[] = [];\n\n    // Spatial & Shading States:\n    public state: State = new State();\n    public transform: Transform = this.state.transform;\n    public paint: Paint = this.state.paint;\n    public material: Material = this.state.material;\n\n    // Direct Component Slots for O(1) Fast-Path Execution:\n    public geometryComponent: GeometryComponent | null = null;\n    public rendererComponent: RendererComponent | null = null;\n    public fragmentComponent: FragmentComponent | null = null;\n    public interactionComponent: InteractionComponent | null = null;\n\n    // Pipeline Flags:\n    public VISIBILITY: boolean = true;\n    public CAST_SHADOW: boolean = false;\n    public RECEIVE_SHADOW: boolean = false;\n    public RT_ENABLE: boolean = false;\n    public isPickable: boolean = false;\n    public layerMask: number = 1;\n    public scissorClipRect: { width: number, height: number, offsetX: number, offsetY: number } | null = null;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Hierarchy Tree Manipulation Methods"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Signature",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`add(...children)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`(...children: Entity[]): this`"
+                },
+                {
+                  "text": "Attaches child entities, setting their `.parent` reference and triggering matrix invalidation."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`remove(...children)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`(...children: Entity[]): this`"
+                },
+                {
+                  "text": "Detaches child entities from this parent."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`traverse(callback)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`(callback: (entity: Entity) => void): void`"
+                },
+                {
+                  "text": "Performs a depth-first traversal over this entity and all descendants."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`ancestors(callback)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`(callback: (ancestor: Entity) => void): void`"
+                },
+                {
+                  "text": "Traverses upward through all parent nodes to the scene root."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`getWorldPosition()`",
+                  "type": "text"
+                },
+                {
+                  "text": "`(): Vec3`"
+                },
+                {
+                  "text": "Returns the absolute world position $(x, y, z)$ after hierarchy matrix propagation."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`getWorldBounds()`",
+                  "type": "text"
+                },
+                {
+                  "text": "`(out?: AABB): AABB`"
+                },
+                {
+                  "text": "Computes the axis-aligned bounding box enclosing this entity and all children in world space."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-the-unified-256-byte-aligned-state-memory-block-state-ts-src-engine-core-state-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. The Unified 256-Byte Aligned State Memory Block ([State.ts](../src/engine/core/State.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "To eliminate per-entity uniform buffer allocation overhead, Retiam packs all transformation, 2D vector styling, and 3D PBR material properties into a **single 256-byte aligned contiguous Float32 memory block**:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each entity state occupies 64 floats (256 bytes). The sub-buffers share one `Float32Array` slice:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Sub-buffer",
+            "Float offsets",
+            "Fields"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Paint",
+                "0–15",
+                "`fill: vec4f`; `stroke: vec4f`; stroke width, opacity, z-index, cap, joint, set mask and padding"
+              ]
+            },
+            {
+              "cells": [
+                "Transform",
+                "16–47",
+                "World `_matrix: mat4x4f`; `_offset: vec4f`; `_t1`, `_t2`; `_bit_mask: u32` and padding"
+              ]
+            },
+            {
+              "cells": [
+                "Material",
+                "48–63",
+                "`color: vec4f`; `emissive: vec4f` (RGB + strength); roughness, metallic, transmission, IOR; albedo / normal textures and padding"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Hierarchical State Propagation (worldState.apply(childState, parentState)):"
+        },
+        {
+          "type": "paragraph",
+          "text": "During scene graph traversal, child states are blended into parent states:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Transform Multiplication**:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{M}_{\\text{world}} = \\mathbf{M}_{\\text{parent}} \\times \\mathbf{M}_{\\text{child}}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Opacity & Color Cascading**:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "math",
+          "tex": "\\text{opacity}_{\\text{world}} = \\text{opacity}_{\\text{parent}} \\times \\text{opacity}_{\\text{child}}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Material Property Overrides**: Child materials inherit non-overridden parent flags (`set_mask`)."
+          ],
+          "start": 3
+        }
+      ]
+    },
+    {
+      "id": "4-scene-graph-traversal-render-queue-building-scenecomposer-ts-src-engine-core-scenecomposer-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Scene Graph Traversal & Render Queue Building ([SceneComposer.ts](../src/engine/core/SceneComposer.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`SceneComposer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts) orchestrates the execution loop and converts the active entity tree into a flat, depth-sorted `render_queue` every frame."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    A[\"SceneComposer.traverse(entity, parentState)\"] --> B{\"entity.VISIBILITY && opacity > 0?\"}\n    B -->|\"No\"| C[\"Cull Entire Subtree\"]\n    B -->|\"Yes\"| D[\"entity.syncState()\"]\n    \n    D --> E{\"entity has RendererComponent?\"}\n    E -->|\"Yes (Renderable Entity)\"| F[\"stateManager.allocateDirect(cmd)<br/>Assigns bindless state_index\"]\n    E -->|\"No (Structural Group)\"| G[\"Acquire pooled State instance (0 GC allocations)\"]\n    \n    F --> H[\"worldState.apply(entity.state, parentState)\"]\n    G --> H\n    \n    H --> I[\"Auto Z-Index Assignment: worldState.paint.z_index = z_index\"]\n    I --> J[\"Compute Scissor Clipping Rect (AABB Intersection)\"]\n    \n    J --> K{\"Has Geometry + Renderer + Fragment?\"}\n    K -->|\"Yes\"| L[\"render_queue.push(RenderCommand)\"]\n    \n    K --> M[\"Recursively traverse(child, worldState) for all children\"]\n    L --> M"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Key Performance Innovations:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Zero Garbage Collection (0.0 KB Minor GC)**:",
+              "children": [
+                "State instances for non-rendering container nodes are recycled from pre-allocated pools (`this.statePool[this.statePoolIndex++]`).",
+                "Render command descriptors are recycled from `this.renderCommandPool`.",
+                "Bounding boxes are recycled from `this.aabbPool`."
+              ]
+            },
+            {
+              "text": "**Dynamic $Z$-Index Generation**:",
+              "children": [
+                "Traversal automatically increments `this.z_index += this.delta`, guaranteeing consistent visual layer ordering without requiring manual $z$-index management."
+              ]
+            },
+            {
+              "text": "**Hardware Scissor Clipping**:",
+              "children": [
+                "When an entity sets `scissorClipRect`, the engine transforms the rectangle into screen-space pixels and clips all nested child nodes automatically."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-global-state-gpu-memory-staging-upload-globalstateallocator-ts-src-engine-render-allocator-globalstateallocator-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Global State GPU Memory Staging & Upload ([GlobalStateAllocator.ts](../src/engine/render/allocator/GlobalStateAllocator.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "All renderable entity states are staged into a single contiguous array and uploaded to the GPU in a **single WebGPU queue write**:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Single Contiguous Staging Buffer:\nthis.cpuData = new Float32Array(MAX_STATES * State.F32LENGTH);\n\n// Direct Slot Write during Traversal:\nconst slotOffset = stateIndex * State.F32LENGTH;\nthis.cpuData.set(worldState.data, slotOffset);\n\n// Single Frame Upload (1 API Call for the entire scene):\nthis.device.queue.writeBuffer(\n    this.gpuStateBuffer,\n    0,\n    this.cpuData.buffer,\n    0,\n    activeStateCount * State.BYTELENGTH\n);"
+        },
+        {
+          "type": "paragraph",
+          "text": "In the vertex and fragment shaders, entities access their state branchlessly via `@group(2) @binding(0)`:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "@group(2) @binding(0) var<storage, read> states: array<EntityState>;\n\nlet state = states[getStateIndex(instance_index)];\nlet worldPos = state.transform.matrix * vec4f(localPos, 1.0);"
+        }
+      ]
+    },
+    {
+      "id": "6-practical-usage-tutorials-code-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Practical Usage Tutorials & Code Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 1: Building a Hierarchical Solar System"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Group, Color, Vec3 } from \"retiam\";\n\nexport class SolarSystemScene extends Scene {\n    public async run() {\n        this.camera.position.set([0, 0, 100]);\n\n        // 1. Sun (Root Node)\n        const sun = new Circle(8, { fill: new Color(1.0, 0.8, 0.1, 1.0) });\n        this.add(sun);\n\n        // 2. Earth Pivot Group (Controls Earth Orbit)\n        const earthOrbitGroup = new Group();\n        sun.add(earthOrbitGroup);\n\n        // 3. Earth Entity (Offset from Sun)\n        const earth = new Circle(3, { fill: new Color(0.2, 0.6, 1.0, 1.0) });\n        earth.transform.position.set(35, 0, 0);\n        earthOrbitGroup.add(earth);\n\n        // 4. Moon Pivot Group (Controls Moon Orbit around Earth)\n        const moonOrbitGroup = new Group();\n        earth.add(moonOrbitGroup);\n\n        // 5. Moon Entity (Offset from Earth)\n        const moon = new Circle(1, { fill: new Color(0.8, 0.8, 0.8, 1.0) });\n        moon.transform.position.set(8, 0, 0);\n        moonOrbitGroup.add(moon);\n\n        // 6. Frame Animation Loop\n        this.always(() => {\n            const time = this.time * 0.001;\n\n            // Rotate Earth orbit around Sun:\n            earthOrbitGroup.transform.rotation.z = time * 0.5;\n\n            // Rotate Moon orbit around Earth:\n            moonOrbitGroup.transform.rotation.z = time * 2.5;\n\n            this.invalidate();\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 2: Hardware Scissor Clipping Container (UI Window / Viewport)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Group, Circle, Color } from \"retiam\";\n\nexport class ScissorClipScene extends Scene {\n    public async run() {\n        // Create a parent container with a 40x40 local scissor clip rectangle\n        const container = new Group();\n        container.scissorClipRect = {\n            width: 40,\n            height: 40,\n            offsetX: -20,\n            offsetY: -20\n        };\n        this.add(container);\n\n        // Nested circles that move outside the 40x40 box are clipped at the hardware level:\n        const circle = new Circle(10, { fill: Color.RED });\n        container.add(circle);\n\n        this.always(() => {\n            circle.transform.position.x = Math.sin(this.time * 0.002) * 35;\n            this.invalidate();\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 3: Adding Dynamic Updaters to Entities"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Entity, Vec3 } from \"retiam\";\n\nconst myEntity = new Entity();\n\n// Add a per-frame updater hook attached directly to the entity:\nmyEntity.addUpdater((time, dt) => {\n    myEntity.transform.position.y += Math.sin(time * 0.005) * 0.1;\n    myEntity.transform.rotation.z += dt * 0.001;\n});"
+        }
+      ]
+    },
+    {
+      "id": "7-performance-best-practices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Performance Best Practices"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Use `Group` for Empty Hierarchy Containers**:",
+              "children": [
+                "Structural nodes that only provide parent transforms should use `new Group()`. They do not allocate render queue entries or GPU draw calls."
+              ]
+            },
+            {
+              "text": "**Hierarchy Depth & Transform Versioning**:",
+              "children": [
+                "Keep hierarchies reasonably balanced. Retiam's transform caching skips matrix re-multiplication if `UPDATE_FLAG` is `false`, ensuring rapid sub-millisecond traversal even for scenes with 50,000+ entities."
+              ]
+            },
+            {
+              "text": "**Visibility Culling (`VISIBILITY = false`)**:",
+              "children": [
+                "Setting `entity.VISIBILITY = false` or `entity.paint.opacity = 0` completely culls the entity and all of its nested children from traversal, render queue building, and state buffer upload."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

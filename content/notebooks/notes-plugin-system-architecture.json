@@ -1,0 +1,739 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-plugin-system-architecture",
+  "title": "Retiam Plugin System Architecture & Extension Manual",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/PLUGIN_SYSTEM_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/PLUGIN_SYSTEM_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/PLUGIN_SYSTEM_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Entity](/api-core-entity#entity), [SceneComposer](/api-core-scenecomposer#scenecomposer), [FrameGraph](/api-render-frame-graph#framegraph), [IPlugin](/api-core#iplugin), [RenderIO](/api-core#iplugin), [TextureHandle](/api-render-frame-graph#resource), [Renderer](/api-render#renderer), [OutlinePlugin](/api-plugins#outlineplugin), [AudioPlugin](/api-audio#audioplugin), [RenderConfig](/api-render#renderconfig), [Material](/api-core-material#material), [ShadingStyle](/api-render#renderconfig), [Shader](/api-entities-primitives-2d#shader), [Compute](/api-compute#compute), [Pass](/api-render-frame-graph#pass), [PostProcessPass](/api-render-passes#postprocesspass), [Color](/api-math#color), [Usage](/api-utils#gpu-utils), [ShaderBuilder](/api-render-shader-system#shaderbuilder), [ModelFragment](/api-components-fragment#modelfragment), [Domains](/api-render-shader-system#domains), [ChunkRegistry](/api-render-shader-system#chunkregistry)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "**Philosophy**: Retiam is built on the **Open-Closed Principle (OCP)**: *open for extension, closed for modification*. Adding a brand-new rendering feature, art style, physics engine, or post-processing filter must **never** require modifying core geometry, domain templates, or engine shaders."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-architectural-manifesto",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Architectural Manifesto"
+        },
+        {
+          "type": "paragraph",
+          "text": "In Retiam, plugins are first-class architectural modules. When a developer writes a plugin, they are granted access to two complementary abstraction layers:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**High-Level Scene Graph (`Scene`)**: Entity management, animation lifecycles (`scene.always`), lighting, cameras, materials, and input events.",
+            "**Low-Level WebGPU Orchestration (`SceneComposer`)**: Direct `GPUDevice` access, GPU buffer allocation, custom compute pipelines, and dynamic [`FrameGraph`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts) pass injection."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-the-core-plugin-contract-iplugin",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. The Core Plugin Contract (IPlugin)"
+        },
+        {
+          "type": "paragraph",
+          "text": "All Retiam extensions — from simple config tweaks to multi-pass GPU render features — implement the single [`IPlugin`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts) interface:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Location: src/engine/_core/IPlugin.ts\n\nexport interface RenderIO {\n    color: TextureHandle;\n    resolvedColor: TextureHandle;\n    depth: TextureHandle;\n    shadow?: TextureHandle;\n    finalOutput?: TextureHandle;\n\n    /** Open dictionary for custom passes to share arbitrary channels (e.g. normals, velocity, ao) */\n    [channel: string]: TextureHandle | undefined;\n}\n\nexport interface IPlugin {\n    /** Unique name for deduplication and removal */\n    name: string;\n\n    /** Called when plugin is installed. Use for config-level setup. */\n    install?(scene?: Scene, composer?: SceneComposer): void;\n\n    /** Called during FrameGraph build to inject render passes. */\n    registerPasses?(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO;\n\n    /** Called when plugin is removed. Clean up resources. */\n    dispose?(): void;\n\n    /** Ordering for registerPasses(). Lower = earlier. Default: 100. */\n    priority?: number;\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Both `install()` and `registerPasses()` are optional. Implement what you need:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Plugin Type",
+            "`install()`",
+            "`registerPasses()`",
+            "Example"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Config-only",
+                "✅",
+                "—",
+                "`BobAndRotatePlugin` (animation)"
+              ]
+            },
+            {
+              "cells": [
+                "FrameGraph-only",
+                "—",
+                "✅",
+                "Core shadow/raster features"
+              ]
+            },
+            {
+              "cells": [
+                "Both",
+                "✅",
+                "✅",
+                "`OutlinePlugin` (config + pass)"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Installation & Dual-Level Mounting API"
+        },
+        {
+          "type": "paragraph",
+          "text": "Plugins can be installed at either the **Scene level** (`scene.use`) or the **Composer level** (`composer.use`):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Scene-level Installation (Most Common):\n// Calls plugin.install(scene, scene.composer) and automatically adds any registerPasses() to composer.addFeature()\nscene.use(new OutlinePlugin({ thickness: 1.5 }))\n     .use(new BobAndRotatePlugin(1.2));\n\n// 2. Composer-level Installation (Composition-wide / Multi-Scene):\n// Calls plugin.install(undefined, composer) and registers passes directly to the composer's renderer\ncomposer.use(new OutlinePlugin({ thickness: 2.0 }));\n\n// 3. Removal & Resource Disposal:\n// Calls plugin.dispose(), removes FrameGraph passes, and unregisters listeners\nscene.removePlugin(\"OutlinePlugin\");\ncomposer.removePlugin(\"OutlinePlugin\");\n\n// 4. Querying Active Plugins:\nif (scene.hasPlugin(\"AudioPlugin\")) {\n    console.log(\"Audio subsystem active\");\n}"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Lifecycle & Invariant Guarantees:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Deduplication**: If a plugin with the same `name` is already installed, the existing instance's `dispose()` method is automatically called before the new instance is installed.",
+            "**Priority-Sorted FrameGraph Passes**: When a plugin provides `registerPasses()`, it is registered as an engine feature sorted by `priority` (lower numbers execute earlier, default is `100`).",
+            "**Chainable Fluent API**: Both `scene.use()` and `composer.use()` return `this` for fluent chaining."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-shading-styles-not-plugins",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Shading Styles (Not Plugins)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Cel shading, Gooch illustration, and other material-level styles are **not plugins** — they're configuration on `RenderConfig` and `Material`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Global scene default style\nscene.renderConfig.setCel({ bands: 5, rimStrength: 0.9 });\nscene.renderConfig.setGooch({ warm: 0.6, cool: 0.4 });\n\n// Per-material override\nmyTorus.material.shadingStyle = ShadingStyle.CEL;\nmyTorus.material.celBands = 5;\n\nmySphere.material.shadingStyle = ShadingStyle.GOOCH;\nmySphere.material.goochWarm = 0.6;"
+        },
+        {
+          "type": "paragraph",
+          "text": "**Rationale**: These are one-liners. Wrapping them in a plugin class adds ceremony without value."
+        }
+      ]
+    },
+    {
+      "id": "4-the-5-plugin-archetypes-what-plugins-can-do",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. The 5 Plugin Archetypes (What Plugins Can Do)"
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "IPlugin",
+              "description": "Optional install, registerPasses and dispose hooks.",
+              "children": [
+                {
+                  "label": "Post-processing passes",
+                  "description": "Sobel, bloom and lookup tables"
+                },
+                {
+                  "label": "FrameGraph features",
+                  "description": "SSAO and SSR"
+                },
+                {
+                  "label": "Shader chunks and injections",
+                  "description": "Custom BRDF"
+                },
+                {
+                  "label": "GPU compute",
+                  "description": "Particles and simulation"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Archetype 1: Post-Process Pass Plugins (PostProcessPass)"
+        },
+        {
+          "type": "paragraph",
+          "text": "These plugins intercept the final rendered presentation texture and apply screen-space fragment effects."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "**Capabilities**:",
+              "children": [
+                "Sobel edge inking / technical contours.",
+                "HDR Bloom / Dual-kawase blur ping-pong.",
+                "Film grain, Vignette, Chromatic Aberration, Color Grading LUTs.",
+                "Screen-space radial blur / motion blur."
+              ]
+            },
+            "**Mechanism**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Plugins implement `registerPasses()` to inject a `PostProcessPass` into the FrameGraph with proper texture chain wiring via `RenderIO`."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Example Implementation**:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class VignettePlugin implements IPlugin {\n      name = \"VignettePlugin\";\n      priority = 200; // After core raster, before present\n\n      registerPasses(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO {\n          const shader = PostProcessPass.getDefaultShader(`\n              let dist = distance(uv, vec2f(0.5, 0.5));\n              let vignette = smoothstep(0.75, 0.2, dist * 0.50);\n              return vec4f(color.rgb * vignette, color.a);\n          `);\n          const pass = new PostProcessPass(\"VignettePass\", io.resolvedColor, shader);\n          graph.addPass(pass);\n          io.resolvedColor = pass.presentationOutput;\n          return io;\n      }\n  }"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Archetype 2: FrameGraph Render Feature Plugins"
+        },
+        {
+          "type": "paragraph",
+          "text": "For complex multi-pass rendering pipelines requiring dedicated attachments (depth pre-passes, G-buffers, velocity vectors, shadow cascades)."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "**Capabilities**:",
+              "children": [
+                "Screen-Space Ambient Occlusion (SSAO) with bilateral depth-aware blur.",
+                "Screen-Space Reflections (SSR).",
+                "Custom depth or normal map generation.",
+                "Deferred lighting passes."
+              ]
+            },
+            "**Mechanism**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Implement `registerPasses()` on `IPlugin`. The plugin receives the `FrameGraph`, `Renderer`, and `RenderIO` chain:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class SSAOPlugin implements IPlugin {\n      name = \"SSAOPlugin\";\n      priority = 20; // Runs before lighting pass\n\n      registerPasses(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO {\n          const ssaoOutput = createTextureHandle();\n          graph.addPass(new SSAOPass(io.depth, io.resolvedColor, ssaoOutput));\n          io.resolvedColor = ssaoOutput;\n          return io;\n      }\n  }\n\n  // Usage:\n  scene.use(new SSAOPlugin());"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Archetype 3: Shader & Material Extension Plugins (ShaderBuilder & WGSL Chunks)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Plugins can introduce brand-new lighting models and BRDFs without modifying `ModelFragment.ts` or `Domains.ts`."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "**Capabilities**:",
+              "children": [
+                "Non-Photorealistic Rendering (NPR): Cel/Toon, Gooch CAD illustration, Clay.",
+                "Advanced materials: Subsurface Scattering (skin/wax), Iridescent thin-film (oil slicks/soap bubbles), Velvet/Cloth fuzz.",
+                "Custom procedural patterns: Wood grain, Voronoi noise, marble vein displacement."
+              ]
+            },
+            {
+              "text": "**Mechanism**:",
+              "children": [
+                "Store the WGSL equations in `src/engine/shaders/includes/lighting/<name>.wgsl`.",
+                "`ChunkRegistry` loads them automatically.",
+                {
+                  "text": "The plugin configures the scene or injects into open pragma slots:",
+                  "children": [
+                    "`#pragma INJECT(CUSTOM_SHADING)`: Override or blend surface reflection.",
+                    "`#pragma INJECT(CUSTOM_SHADOW)`: Custom shadow filtering or penumbra shaping.",
+                    "`#pragma INJECT(USER_FUNCTIONS)`: Math utilities and noise functions."
+                  ]
+                }
+              ],
+              "ordered": true
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Archetype 4: WebGPU Compute & Simulation Plugins"
+        },
+        {
+          "type": "paragraph",
+          "text": "Plugins can leverage `composer.device` directly to run asynchronous GPU compute shaders before rendering each frame."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "**Capabilities**:",
+              "children": [
+                "Million-particle GPU simulations (fireworks, smoke, rain, sparks).",
+                "GPU Flocking / Boids behavior.",
+                "Spring-mass cloth or rope physics.",
+                "GPU Marching Cubes or fluid surface reconstruction."
+              ]
+            },
+            "**Mechanism**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The plugin creates a `GPUComputePipeline`, allocates GPU storage buffers, and registers a callback via `composer` or `scene.always(...)`."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Example Implementation**:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class GPUComputeParticlesPlugin implements IPlugin {\n      name = \"GPUComputeParticlesPlugin\";\n      private pipeline!: GPUComputePipeline;\n      private particleBuffer!: GPUBuffer;\n\n      install(scene?: Scene, composer?: SceneComposer): void {\n          if (!composer) return;\n          const device = composer.device;\n\n          this.particleBuffer = device.createBuffer({\n              size: 100_000 * 16,\n              usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,\n          });\n\n          const computeShader = device.createShaderModule({\n              code: `\n                  @group(0) @binding(0) var<storage, read_write> pos: array<vec4f>;\n                  @compute @workgroup_size(64)\n                  fn cs_main(@builtin(global_invocation_id) id: vec3u) {\n                      pos[id.x].y -= 0.05;\n                      if (pos[id.x].y < 0.0) { pos[id.x].y = 50.0; }\n                  }\n              `\n          });\n          this.pipeline = device.createComputePipeline({\n              layout: 'auto',\n              compute: { module: computeShader, entryPoint: 'cs_main' }\n          });\n\n          scene?.always(() => {\n              const encoder = device.createCommandEncoder();\n              const pass = encoder.beginComputePass();\n              pass.setPipeline(this.pipeline);\n              pass.dispatchWorkgroups(Math.ceil(100_000 / 64));\n              pass.end();\n              device.queue.submit([encoder.finish()]);\n              scene.invalidate();\n          });\n      }\n\n      dispose(): void {\n          this.particleBuffer.destroy();\n      }\n  }"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Archetype 5: Lifecycle, Physics & Interactive Tooling Plugins"
+        },
+        {
+          "type": "paragraph",
+          "text": "Plugins can hook into `InteractionManager` and the frame tick loop to add interactive tools and external engines."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "**Capabilities**:",
+              "children": [
+                "**Physics Engine Bridges**: Rapier.js / Cannon-es rigid-body integration.",
+                "**3D Transform Gizmos**: Interactive translate/rotate/scale handles in the viewport.",
+                "**Cinema Camera Rigs**: Spline-following camera dollies, camera shake dampeners.",
+                "**Exporters**: Offline MP4/WebM video rendering or GIF recording."
+              ]
+            },
+            "**Example Implementation (Physics Engine Bridge)**:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class RapierPhysicsPlugin implements IPlugin {\n      name = \"RapierPhysicsPlugin\";\n      private world: any;\n      private bindings = new Map<Entity, any>();\n\n      constructor(gravity = { x: 0, y: -9.81, z: 0 }) {\n          // Initialize Rapier world\n      }\n\n      public bindEntity(entity: Entity, rigidBody: any) {\n          this.bindings.set(entity, rigidBody);\n      }\n\n      install(scene?: Scene): void {\n          if (!scene) return;\n          scene.always(() => {\n              this.world.step();\n              for (const [entity, body] of this.bindings) {\n                  const t = body.translation();\n                  entity.transform.position.set([t.x, t.y, t.z]);\n              }\n              scene.invalidate();\n          });\n      }\n  }"
+        }
+      ]
+    },
+    {
+      "id": "5-built-in-plugins-core-engine-features",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Built-in Plugins & Core Engine Features"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam ships with several production-ready plugins and implements its own core rendering features on top of `IPlugin`:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. [AudioPlugin](../src/engine/audio/AudioPlugin.ts) (Audio Subsystem & Web Audio Bridge)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`AudioPlugin`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts) connects the [`AudioManager`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts) directly into the scene graph and animation timeline:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Lifecycle Synchronization**: Automatically handles scene `pause`, `resume`, `seek`, `reset`, and `timescale` (slow-motion / speed-up) events.",
+            "**Spatial 3D Audio**: Automatically attaches an `AudioListenerComponent` to `scene.camera` during frame updates so sounds pan and attenuate relative to the camera.",
+            "**Browser Autoplay Auto-Unlock**: Captures the first user interaction (`pointerdown`, `keydown`, `touchstart`, `click`) to unlock the browser's `AudioContext` without throwing DOM exceptions.",
+            "**Video Recording Hook**: Automatically wires the Web Audio destination stream into [`Recorder`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts) for seamless synchronous video + audio export.",
+            "**Lazy Initialization**: Accessing `scene.audio` automatically installs `AudioPlugin` if it has not been registered yet:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Explicit installation with options:\n  scene.use(new AudioPlugin({\n      autoUnlock: true,\n      autoAttachListener: true,\n      preload: [\"assets/audio/pop.mp3\", \"assets/audio/bgm.mp3\"]\n  }));\n\n  // Or lazy access:\n  scene.audio.playBGM(\"assets/audio/bgm.mp3\", { volume: 0.7, loop: true });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. [OutlinePlugin](../src/plugins/OutlinePlugin.ts) (Silhouette Inking)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`OutlinePlugin`](https://github.com/abhilasbiswas/Retiam/blob/main/src/plugins/OutlinePlugin.ts) adds real-time 8-neighbor Sobel edge detection to create Manim/technical blueprint silhouettes around 3D geometry:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Self-Contained**: Implemented 100% inside `src/plugins/OutlinePlugin.ts` with zero engine core modifications.",
+            "**Custom Shader Pass**: Injects an `OutlinePass` (extending `PostProcessPass`) into the FrameGraph color chain.",
+            "**Priority 200**: Executes after core 3D rasterization and before final screen presentation."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { OutlinePlugin } from \"retiam/plugins\";\n\n  scene.use(new OutlinePlugin({\n      threshold: 0.25,\n      thickness: 1.5,\n      color: hex(\"#0F172A\")\n  }));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Core Engine Subsystems as IPlugin Features ([CoreFeatures.ts](../src/engine/render/features/CoreFeatures.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "In Retiam, internal renderer passes are treated as first-class plugins implementing `IPlugin`:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`ShadowFeature`** (Priority 10): Renders 2048x2048 light-space depth shadow maps.",
+            "**`RaytraceFeature`** (Priority 20): Executes the hardware-accelerated Monte Carlo path tracer when enabled.",
+            "**`PPLLPrepareFeature`** (Priority 30): Allocates Per-Pixel Linked List (PPLL) head pointer and fragment buffers for Order-Independent Transparency.",
+            "**`MainRasterFeature`** (Priority 50): Rasterizes opaque 3D meshes, 2D vector shapes, SDF text, and analytical Béziers.",
+            "**`PPLLCompositeFeature`** (Priority 70): Resolves and blends transparent fragments in depth order."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. [FrameFeedbackFeature](../src/engine/render/passes/FeedbackPass.ts) (Temporal Feedback & Motion Trails)"
+        },
+        {
+          "type": "paragraph",
+          "text": "An `IPlugin` feature providing ping-pong feedback textures across frames for phosphorescent trails, visual echoes, and generative feedback loops. Enabled via `scene.enableFrameFeedback()`."
+        }
+      ]
+    },
+    {
+      "id": "6-summary-table-of-plugin-capabilities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Summary Table of Plugin Capabilities"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Capability",
+            "IPlugin Method",
+            "What It Controls",
+            "Example Use-Cases"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Post-Processing**",
+                  "type": "text"
+                },
+                {
+                  "text": "`registerPasses()`"
+                },
+                {
+                  "text": "FrameGraph color chain"
+                },
+                {
+                  "text": "Inking, Bloom, SSAO, DoF, Color LUTs"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**FrameGraph Sub-Pipelines**",
+                  "type": "text"
+                },
+                {
+                  "text": "`registerPasses()`"
+                },
+                {
+                  "text": "Custom passes & attachments"
+                },
+                {
+                  "text": "Depth pre-pass, G-Buffers, Motion vectors"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Shader Equations**",
+                  "type": "text"
+                },
+                {
+                  "text": "`install()` + chunks"
+                },
+                {
+                  "text": "WGSL Lighting & Material math"
+                },
+                {
+                  "text": "Custom BRDFs, SSS"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Direct WebGPU**",
+                  "type": "text"
+                },
+                {
+                  "text": "`install()`"
+                },
+                {
+                  "text": "Buffers, Compute pipelines"
+                },
+                {
+                  "text": "Million-particle sims, Fluid physics"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Animation Loop**",
+                  "type": "text"
+                },
+                {
+                  "text": "`install()` + `scene.always()`"
+                },
+                {
+                  "text": "Frame-by-frame updates"
+                },
+                {
+                  "text": "Rapier physics, Boids, Transform gizmos"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Scene Graph**",
+                  "type": "text"
+                },
+                {
+                  "text": "`install()` + `scene.add()`"
+                },
+                {
+                  "text": "World hierarchy"
+                },
+                {
+                  "text": "Debug bounding boxes, Light helper rigs"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Input Events**",
+                  "type": "text"
+                },
+                {
+                  "text": "`install()` + `scene.setEvent()`"
+                },
+                {
+                  "text": "Pointer, drag, mouse events"
+                },
+                {
+                  "text": "Interactive camera controls, Object picking"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Audio Subsystem**",
+                  "type": "text"
+                },
+                {
+                  "text": "`install()` + `scene.audio`"
+                },
+                {
+                  "text": "Web Audio & Recording"
+                },
+                {
+                  "text": "Sound effects, BGM, Subtitle sync"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Shading Styles**",
+                  "type": "text"
+                },
+                {
+                  "text": "`renderConfig.setCel()` / `setGooch()`"
+                },
+                {
+                  "text": "Material lighting model"
+                },
+                {
+                  "text": "Cel/Toon, Gooch, Clay (not a plugin)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7-best-practices-for-plugin-authors",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Best Practices for Plugin Authors"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Zero-Allocation Render Loops**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Always pre-allocate temporary vectors, matrices, and scratch variables outside `scene.always()` to eliminate Garbage Collection stutter at 60/120 FPS."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Implement `dispose()`**:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "Always clean up GPU buffers (`buffer.destroy()`), remove passes, and cancel active listeners when the plugin is uninstalled."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Respect the Open-Closed Principle**:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Never require end-users or other plugins to modify `ModelGeometry.ts`, `Domains.ts`, or `common.wgsl`. Rely on `IPlugin`, `ChunkRegistry`, and FrameGraph injection instead."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Fluid Chaining**:"
+          ],
+          "start": 4
+        },
+        {
+          "type": "paragraph",
+          "text": "Ensure `scene.use(...)` returns `this` to allow clean chainable configuration:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "scene\n       .use(new OutlinePlugin({ thickness: 1.5 }))\n       .use(new VignettePlugin(0.6))\n       .use(new BobAndRotatePlugin(1.2));"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Use `priority` for ordering**:"
+          ],
+          "start": 5
+        },
+        {
+          "type": "paragraph",
+          "text": "Core engine features use priority 0–50. Plugin features default to 100. Use higher values (200+) for post-processing that should run after core raster."
+        }
+      ]
+    }
+  ]
+}

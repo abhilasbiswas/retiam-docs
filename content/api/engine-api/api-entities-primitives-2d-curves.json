@@ -1,0 +1,1207 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-entities-primitives-2d-curves",
+  "title": "entities / primitives / 2d / curves API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bsplineevaluator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "BSplineEvaluator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BSplineEvaluator",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class BSplineEvaluator implements CurveEvaluator {\n    evaluate(points: Vec3[], maxSegments: number, closed: boolean, params: CurveParams, tolerance: number, outContour?: number[]): number[];\n    evaluateLinear(points: Vec3[], maxSegments: number, closed: boolean, params: CurveParams, tolerance: number, outPoly?: Vec2[], options?: FlattenSpanOptions): Vec2[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BSplineEvaluator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public evaluate(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        params: CurveParams,\n        tolerance: number,\n        outContour?: number[]\n    ): number[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.prepareBSpline`, `BSplineEvaluator._spanEvaluator`, `contour.push`, `buildAdaptiveQuadraticSpan`; return paths including `contour`; 1 explicit loop. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluateLinear(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        params: CurveParams,\n        tolerance: number,\n        outPoly?: Vec2[],\n        options?: FlattenSpanOptions\n    ): Vec2[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.prepareBSpline`, `LinearPointWriter.get`, `BSplineEvaluator._spanEvaluator`, `writer.push`, `buildSpanPoints`, `writer.finish`; return paths including `poly`, `writer.finish()`; 1 explicit loop. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L122)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "params.degree ?? 3",
+                    "[Line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L41)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.mode ?? 'adaptive'",
+                    "[Line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L142)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.tolerance ?? tolerance",
+                    "[Line 143](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L143)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.segments ?? maxSegments",
+                    "[Line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L144)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSegments ?? maxSegments",
+                    "[Line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L145)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BSplineEvaluator.prepareBSpline: private prepareBSpline(points: Vec3[], closed: boolean, params: CurveParams): { numCtrl: number; degree: number; tMin: number; tMax: number; }",
+                    "Body operations (including nested callbacks): construction of `Vec3`, `Float64Array`; calls to `BSplineEvaluator._ctrlScratch.push`, `BSplineEvaluator.fillClampedKnots`; return paths including `{ numCtrl, degree, tMin, tMax }`; 4 explicit loops.",
+                    "[Line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L35)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BSplineEvaluator.fillClampedKnots: private static fillClampedKnots(n: number, degree: number): void",
+                    "Body operations (including nested callbacks): 1 explicit loop.",
+                    "[Line 174](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L174)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BSplineEvaluator.deBoor: private static deBoor( ctrl: Vec3[], ctrlLen: number, knots: Float64Array, degree: number, t: number, out: CurvePoint2D ): void",
+                    "Body operations (including nested callbacks): calls to `isNaN`, `isFinite`; 4 explicit loops.",
+                    "[Line 189](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts#L189)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bezierevaluator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "BezierEvaluator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/primitives/2d/curves/BezierEvaluator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/primitives/2d/curves/BezierEvaluator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BezierEvaluator",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class BezierEvaluator implements CurveEvaluator {\n    evaluate(points: Vec3[], maxSegments: number, closed: boolean, _params: CurveParams, tolerance: number, outContour?: number[]): number[];\n    evaluateLinear(points: Vec3[], maxSegments: number, closed: boolean, _params: CurveParams, tolerance: number, outPoly?: Vec2[], options?: FlattenSpanOptions): Vec2[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BezierEvaluator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public evaluate(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        _params: CurveParams,\n        tolerance: number,\n        outContour?: number[]\n    ): number[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.prepareBezierPoints`, `contour.push`, `buildAdaptiveQuadraticSpan`; return paths including `contour`; 1 explicit loop. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluateLinear(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        _params: CurveParams,\n        tolerance: number,\n        outPoly?: Vec2[],\n        options?: FlattenSpanOptions\n    ): Vec2[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.prepareBezierPoints`, `LinearPointWriter.get`, `writer.push`, `buildSpanPoints`, `writer.finish`; return paths including `poly`, `writer.finish()`; 1 explicit loop. [Source line 158](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts#L158)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.mode ?? 'adaptive'",
+                    "[Line 176](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts#L176)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.tolerance ?? tolerance",
+                    "[Line 177](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts#L177)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.segments ?? maxSegments",
+                    "[Line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts#L178)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSegments ?? maxSegments",
+                    "[Line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts#L179)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BezierEvaluator.prepareBezierPoints: private prepareBezierPoints(points: Vec3[], closed: boolean): { pts: Vec3[]; totalPts: number }",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `BezierEvaluator._ptsScratch.push`; return paths including `{ pts, totalPts }`; 2 explicit loops.",
+                    "[Line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts#L54)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "catmullromevaluator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CatmullRomEvaluator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CatmullRomEvaluator",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class CatmullRomEvaluator implements CurveEvaluator {\n    evaluate(points: Vec3[], maxSegments: number, closed: boolean, params: CurveParams, tolerance: number, outContour?: number[]): number[];\n    evaluateLinear(points: Vec3[], maxSegments: number, closed: boolean, params: CurveParams, tolerance: number, outPoly?: Vec2[], options?: FlattenSpanOptions): Vec2[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CatmullRomEvaluator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public evaluate(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        params: CurveParams,\n        tolerance: number,\n        outContour?: number[]\n    ): number[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.preparePoints`, `contour.push`, `buildAdaptiveQuadraticSpan`; return paths including `contour`; 1 explicit loop. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluateLinear(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        params: CurveParams,\n        tolerance: number,\n        outPoly?: Vec2[],\n        options?: FlattenSpanOptions\n    ): Vec2[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.preparePoints`, `LinearPointWriter.get`, `writer.push`, `buildSpanPoints`, `writer.finish`; return paths including `poly`, `writer.finish()`; 1 explicit loop. [Source line 130](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts#L130)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "params.tension ?? 0.5",
+                    "[Line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts#L97)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.mode ?? 'adaptive'",
+                    "[Line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts#L149)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.tolerance ?? tolerance",
+                    "[Line 150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts#L150)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.segments ?? maxSegments",
+                    "[Line 151](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts#L151)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSegments ?? maxSegments",
+                    "[Line 152](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts#L152)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CatmullRomEvaluator.preparePoints: private preparePoints(points: Vec3[], closed: boolean): { pts: Vec3[]; spanCount: number }",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `CatmullRomEvaluator._ptsScratch.push`; return paths including `{ pts, spanCount: totalPts - 3 }`; 3 explicit loops.",
+                    "[Line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts#L44)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "curveevaluator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CurveEvaluator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/primitives/2d/curves/CurveEvaluator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/primitives/2d/curves/CurveEvaluator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "CurveType: Selects the curve interpolation method used by a Spline entity.",
+                "LinearPointWriter: Zero-allocation in-place Vec2 writer for continuous curve animation. Reuses existing Vec2 instances in the destination array to eliminate GC pressure.",
+                "buildAdaptiveQuadraticSpan: Helper to recursively subdivide a curve span into optimal quadratic bezier segments. Uses squared tolerance comparison and pushes [cpX, cpY, endX, endY] directly into outContour.",
+                "buildAdaptiveLinearSpan: Helper to recursively subdivide a continuous curve span directly into linear points [Vec2]. Measures perpendicular distance from midpoint to chord baseline.",
+                "buildSpanPoints: Builds linear points across a curve span using either adaptive or fixed mode."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CurveType",
+                    "Enum",
+                    "Selects the curve interpolation method used by a Spline entity."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CurveParams",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FlattenSpanOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CurveEvaluator",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CurvePoint2D",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SpanEvaluator",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "LinearPointWriter",
+                    "Class",
+                    "Zero-allocation in-place Vec2 writer for continuous curve animation. Reuses existing Vec2 instances in the destination array to eliminate GC pressure."
+                  ]
+                },
+                {
+                  "cells": [
+                    "buildAdaptiveQuadraticSpan",
+                    "Function",
+                    "Helper to recursively subdivide a curve span into optimal quadratic bezier segments. Uses squared tolerance comparison and pushes [cpX, cpY, endX, endY] directly into outContour."
+                  ]
+                },
+                {
+                  "cells": [
+                    "buildAdaptiveLinearSpan",
+                    "Function",
+                    "Helper to recursively subdivide a continuous curve span directly into linear points [Vec2]. Measures perpendicular distance from midpoint to chord baseline."
+                  ]
+                },
+                {
+                  "cells": [
+                    "buildSpanPoints",
+                    "Function",
+                    "Builds linear points across a curve span using either adaptive or fixed mode."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getEvaluator",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare enum CurveType {\n    CatmullRom = \"catmull-rom\",\n    BSpline = \"b-spline\",\n    Bezier = \"bezier\",\n    Hermite = \"hermite\",\n    Natural = \"natural\"\n}\nexport interface CurveParams {\n    tension?: number;\n    degree?: number;\n}\nexport interface FlattenSpanOptions {\n    mode?: TessellationMode;\n    tolerance?: number;\n    segments?: number;\n    maxSegments?: number;\n}\nexport interface CurveEvaluator {\n    evaluate(points: Vec3[], maxSegments: number, closed: boolean, params: CurveParams, tolerance: number, outContour?: number[]): number[];\n    evaluateLinear(points: Vec3[], maxSegments: number, closed: boolean, params: CurveParams, tolerance: number, outPoly?: Vec2[], options?: FlattenSpanOptions): Vec2[];\n}\nexport interface CurvePoint2D {\n    x: number;\n    y: number;\n}\nexport type SpanEvaluator = (t: number, out: CurvePoint2D) => void;\nexport declare class LinearPointWriter {\n    points: Vec2[];\n    count: number;\n    constructor(target: Vec2[]);\n    static get(target: Vec2[]): LinearPointWriter;\n    push(x: number, y: number): void;\n    finish(): Vec2[];\n}\nexport declare function buildAdaptiveQuadraticSpan(evaluator: SpanEvaluator, t0: number, t1: number, tolSq: number, depth: number, maxDepth: number, startX: number, startY: number, endX: number, endY: number, outContour: number[]): void;\nexport declare function buildAdaptiveLinearSpan(evaluator: SpanEvaluator, t0: number, t1: number, tolSq: number, depth: number, maxDepth: number, startX: number, startY: number, endX: number, endY: number, writer: LinearPointWriter): void;\nexport declare function buildSpanPoints(evaluator: SpanEvaluator, t0: number, t1: number, startX: number, startY: number, endX: number, endY: number, writer: LinearPointWriter, options?: FlattenSpanOptions): void;\nexport declare function getEvaluator(type: CurveType): CurveEvaluator;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "buildAdaptiveQuadraticSpan: Body operations (including nested callbacks): calls to `evaluator`, `buildAdaptiveQuadraticSpan`, `outContour.push`.",
+                "buildAdaptiveLinearSpan: Body operations (including nested callbacks): calls to `evaluator`, `buildAdaptiveLinearSpan`, `writer.push`.",
+                "buildSpanPoints: Body operations (including nested callbacks): calls to `evaluator`, `writer.push`, `buildAdaptiveLinearSpan`; 1 explicit loop.",
+                "getEvaluator: Body operations (including nested callbacks): construction of `CatmullRomEvaluator`, `BSplineEvaluator`, `BezierEvaluator`, `HermiteEvaluator`, `NaturalSplineEvaluator`; calls to `evaluatorCache.get`, `evaluatorCache.set`; return paths including `evaluator`; rejection paths a template-literal expression (see source)."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CurveType` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CatmullRom = \"catmull-rom\"",
+                    "\"catmull-rom\"",
+                    "Declared contract; see the implementation linked above. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BSpline = \"b-spline\"",
+                    "\"b-spline\"",
+                    "Declared contract; see the implementation linked above. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Bezier = \"bezier\"",
+                    "\"bezier\"",
+                    "Declared contract; see the implementation linked above. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Hermite = \"hermite\"",
+                    "\"hermite\"",
+                    "Declared contract; see the implementation linked above. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Natural = \"natural\"",
+                    "\"natural\"",
+                    "Declared contract; see the implementation linked above. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L17)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CurveParams` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "tension?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "degree?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L22)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FlattenSpanOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "mode?: TessellationMode;",
+                    "—",
+                    "Optional record/option field with declared type `TessellationMode`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tolerance?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "segments?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxSegments?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L29)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CurveEvaluator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "evaluate(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        params: CurveParams,\n        tolerance: number,\n        outContour?: number[]\n    ): number[];",
+                    "—",
+                    "Evaluate the curve defined by `points` and return a quadratic contour array (used for analytical mode). Contour format: [startX, startY, cp1X, cp1Y, end1X, end1Y, cp2X, cp2Y, end2X, end2Y, ...] [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "evaluateLinear(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        params: CurveParams,\n        tolerance: number,\n        outPoly?: Vec2[],\n        options?: FlattenSpanOptions\n    ): Vec2[];",
+                    "—",
+                    "Directly evaluate the curve defined by `points` into linear polyline points (used for fast triangulated mode). Bypasses intermediate quadratic curve conversion for maximum performance and precision. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L50)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CurvePoint2D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "x: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "y: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L63)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `LinearPointWriter` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public points: Vec2[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public count: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(target: Vec2[])",
+                    "—",
+                    "Implementation: `this.points = target; this.count = 0;`. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static get(target: Vec2[]): LinearPointWriter",
+                    "—",
+                    "Implementation: `LinearPointWriter._instance.points = target; LinearPointWriter._instance.count = 0; return LinearPointWriter._instance;`. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public push(x: number, y: number): void",
+                    "—",
+                    "Implementation: `if (this.count < this.points.length) { const pt = this.points[this.count]; pt.x = x; pt.y = y; } else { this.points.push(new Vec2(x, y)); } this.count++;`. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public finish(): Vec2[]",
+                    "—",
+                    "Implementation: `this.points.length = this.count; return this.points;`. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L102)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.mode ?? 'adaptive'",
+                    "[Line 217](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L217)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.segments ?? 8",
+                    "[Line 219](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L219)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.tolerance ?? 0.25",
+                    "[Line 226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L226)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSegments ?? 32",
+                    "[Line 228](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CurveEvaluator.ts#L228)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`Unknown CurveType: ${type}`)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hermiteevaluator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "HermiteEvaluator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "HermiteEvaluator",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class HermiteEvaluator implements CurveEvaluator {\n    evaluate(points: Vec3[], maxSegments: number, closed: boolean, params: CurveParams, tolerance: number, outContour?: number[]): number[];\n    evaluateLinear(points: Vec3[], maxSegments: number, closed: boolean, params: CurveParams, tolerance: number, outPoly?: Vec2[], options?: FlattenSpanOptions): Vec2[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `HermiteEvaluator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public evaluate(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        params: CurveParams,\n        tolerance: number,\n        outContour?: number[]\n    ): number[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.prepareTangents`, `contour.push`, `buildAdaptiveQuadraticSpan`; return paths including `contour`; 1 explicit loop. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluateLinear(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        params: CurveParams,\n        tolerance: number,\n        outPoly?: Vec2[],\n        options?: FlattenSpanOptions\n    ): Vec2[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.prepareTangents`, `LinearPointWriter.get`, `writer.push`, `buildSpanPoints`, `writer.finish`; return paths including `poly`, `writer.finish()`; 1 explicit loop. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts#L115)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "params.tension ?? 0.5",
+                    "[Line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts#L81)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.mode ?? 'adaptive'",
+                    "[Line 135](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts#L135)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.tolerance ?? tolerance",
+                    "[Line 136](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts#L136)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.segments ?? maxSegments",
+                    "[Line 137](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts#L137)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSegments ?? maxSegments",
+                    "[Line 138](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts#L138)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "HermiteEvaluator.prepareTangents: private prepareTangents(points: Vec3[], closed: boolean, tension: number): { n: number; tx: Float64Array; ty: Float64Array }",
+                    "Body operations (including nested callbacks): construction of `Float64Array`; return paths including `{ n, tx, ty }`; 1 explicit loop.",
+                    "[Line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts#L41)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "naturalsplineevaluator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "NaturalSplineEvaluator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "NaturalSplineEvaluator",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class NaturalSplineEvaluator implements CurveEvaluator {\n    evaluate(points: Vec3[], maxSegments: number, closed: boolean, _params: CurveParams, tolerance: number, outContour?: number[]): number[];\n    evaluateLinear(points: Vec3[], maxSegments: number, closed: boolean, _params: CurveParams, tolerance: number, outPoly?: Vec2[], options?: FlattenSpanOptions): Vec2[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `NaturalSplineEvaluator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public evaluate(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        _params: CurveParams,\n        tolerance: number,\n        outContour?: number[]\n    ): number[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `contour.push`, `this.prepareNaturalSpline`, `buildAdaptiveQuadraticSpan`; return paths including `contour`; 1 explicit loop. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluateLinear(\n        points: Vec3[],\n        maxSegments: number,\n        closed: boolean,\n        _params: CurveParams,\n        tolerance: number,\n        outPoly?: Vec2[],\n        options?: FlattenSpanOptions\n    ): Vec2[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `LinearPointWriter.get`, `writer.push`, `writer.finish`, `this.prepareNaturalSpline`, `buildSpanPoints`; return paths including `poly`, `writer.finish()`; 1 explicit loop. [Source line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L145)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.mode ?? 'adaptive'",
+                    "[Line 171](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L171)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.tolerance ?? tolerance",
+                    "[Line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L172)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.segments ?? maxSegments",
+                    "[Line 173](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L173)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSegments ?? maxSegments",
+                    "[Line 174](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L174)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "NaturalSplineEvaluator.ensureCapacity: private static ensureCapacity(n: number)",
+                    "Body operations (including nested callbacks): construction of `Float64Array`.",
+                    "[Line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L48)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "NaturalSplineEvaluator.prepareNaturalSpline: private prepareNaturalSpline(points: Vec3[], closed: boolean): { n: number; spans: number; sigmaX: Float64Array; sigmaY: Float64Array; }",
+                    "Body operations (including nested callbacks): calls to `NaturalSplineEvaluator.ensureCapacity`, `NaturalSplineEvaluator.solvePeriodic`, `NaturalSplineEvaluator.solveTridiagonal`; return paths including `{ n, spans, sigmaX, sigmaY }`.",
+                    "[Line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L63)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "NaturalSplineEvaluator.evalSpan: private static evalSpan(a: number, b: number, sa: number, sb: number, t: number): number",
+                    "Implementation: `const u = 1 - t; return sa * (u * u * u) / 6 + sb * (t * t * t) / 6 + (a - sa / 6) * u + (b - sb / 6) * t;`.",
+                    "[Line 210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L210)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "NaturalSplineEvaluator.solveTridiagonal: private static solveTridiagonal(pts: Vec3[], axis: 0 | 1, outSigma: Float64Array): void",
+                    "Body operations (including nested callbacks): 4 explicit loops.",
+                    "[Line 220](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L220)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "NaturalSplineEvaluator.solvePeriodic: private static solvePeriodic(pts: Vec3[], axis: 0 | 1, outSigma: Float64Array): void",
+                    "Body operations (including nested callbacks): calls to `NaturalSplineEvaluator.solveTridiagonal`, `NaturalSplineEvaluator.solveStrictTridiagonal`; 4 explicit loops.",
+                    "[Line 256](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L256)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "NaturalSplineEvaluator.solveStrictTridiagonal: private static solveStrictTridiagonal(diag: Float64Array, rhs: Float64Array, n: number, out: Float64Array): void",
+                    "Body operations (including nested callbacks): 2 explicit loops.",
+                    "[Line 298](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts#L298)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

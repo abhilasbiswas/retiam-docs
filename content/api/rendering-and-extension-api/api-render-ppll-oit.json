@@ -1,0 +1,505 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-render-ppll-oit",
+  "title": "render / ppll_oit API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ppllmanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PPLLManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/ppll_oit/PPLLManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/ppll_oit/PPLLManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PPLLManager",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare abstract class PPLLManager {\n    geometry_bindGroup_layout: GPUBindGroupLayout;\n    geometry_bindGroup: GPUBindGroup;\n    protected device: GPUDevice;\n    protected resolve_bindgroup_layout: GPUBindGroupLayout;\n    protected resolve_bindgroup: GPUBindGroup;\n    protected nodePoolBuffer: GPUBuffer;\n    protected sceneUniformBuffer: GPUBuffer;\n    protected compositePipeline: GPURenderPipeline;\n    protected width: number;\n    protected height: number;\n    protected maxLayers: number;\n    protected sampleCount: number;\n    protected stencil: GPUBuffer;\n    constructor(device: GPUDevice, maxLayers?: number, sampleCount?: number);\n    renderComposite(commandEncoder: GPUCommandEncoder, targetView: GPUTextureView): void;\n    abstract getGeometryLayoutEntry(): GPUBindGroupLayoutEntry[];\n    abstract getResolveLayoutEntry(sampleCount?: number): GPUBindGroupLayoutEntry[];\n    abstract resize(width: number, height: number, depthTextureView: GPUTextureView): void;\n    abstract prepareFrame(commandEncoder: GPUCommandEncoder): void;\n    abstract getCompositeWGSL(sampleCount?: number): string;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PPLLManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public geometry_bindGroup_layout: GPUBindGroupLayout",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public geometry_bindGroup: GPUBindGroup",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected device: GPUDevice",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected resolve_bindgroup_layout: GPUBindGroupLayout",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected resolve_bindgroup: GPUBindGroup",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected nodePoolBuffer!: GPUBuffer",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected sceneUniformBuffer!: GPUBuffer",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected compositePipeline: GPURenderPipeline",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected width: number",
+                    "0",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected height: number",
+                    "0",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected maxLayers: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected sampleCount: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected stencil: GPUBuffer",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(device: GPUDevice, maxLayers = 8, sampleCount = 4)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.device`, `this.maxLayers`, `this.sampleCount`, `this.geometry_bindGroup_layout`, `this.resolve_bindgroup_layout`, `this.compositePipeline`; calls to `device.createBindGroupLayout`, `this.getGeometryLayoutEntry`, `this.getResolveLayoutEntry`, `this.createCompositePipeline`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public renderComposite(commandEncoder: GPUCommandEncoder, targetView: GPUTextureView)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `commandEncoder.beginRenderPass`, `pass.setPipeline`, `pass.setBindGroup`, `pass.draw`, `pass.end`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract getGeometryLayoutEntry(): GPUBindGroupLayoutEntry[];",
+                    "—",
+                    "Abstract contract: a concrete subclass supplies this operation. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract getResolveLayoutEntry(sampleCount?: number): GPUBindGroupLayoutEntry[];",
+                    "—",
+                    "Abstract contract: a concrete subclass supplies this operation. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract resize(width: number, height: number, depthTextureView: GPUTextureView): void;",
+                    "—",
+                    "Abstract contract: a concrete subclass supplies this operation. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract prepareFrame(commandEncoder: GPUCommandEncoder): void;",
+                    "—",
+                    "Abstract contract: a concrete subclass supplies this operation. [Source line 95](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L95)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract getCompositeWGSL(sampleCount?: number): string ;",
+                    "—",
+                    "Abstract contract: a concrete subclass supplies this operation. [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L96)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PPLLManager.createCompositePipeline: private createCompositePipeline(): GPURenderPipeline",
+                    "Body operations (including nested callbacks): calls to `this.device.createRenderPipeline`, `this.device.createPipelineLayout`, `this.device.createShaderModule`, `this.getCompositeWGSL`, `navigator.gpu.getPreferredCanvasFormat`; long return expressions shown in the linked implementation.",
+                    "[Line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts#L60)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ppllmanagerglobal",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PPLLManagerGlobal"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/ppll_oit/PPLLManagerGlobal.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/ppll_oit/PPLLManagerGlobal.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PPLLManagerGlobal",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PPLLManagerGlobal extends PPLLManager {\n    constructor(device: GPUDevice, maxLayers?: number, sampleCount?: number);\n    resize(width: number, height: number, depthTextureView: GPUTextureView): void;\n    prepareFrame(commandEncoder: GPUCommandEncoder): void;\n    getCompositeWGSL(sampleCount?: number): string;\n    static getStaticGeometryLayoutEntry(): GPUBindGroupLayoutEntry[];\n    getGeometryLayoutEntry(): GPUBindGroupLayoutEntry[];\n    static getStaticResolveLayoutEntry(sampleCount?: number): GPUBindGroupLayoutEntry[];\n    getResolveLayoutEntry(sampleCount?: number): GPUBindGroupLayoutEntry[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PPLLManagerGlobal` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(device: GPUDevice, maxLayers = 8, sampleCount = 4)",
+                    "—",
+                    "Implementation: `super(device, maxLayers, sampleCount);`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resize(width: number, height: number, depthTextureView: GPUTextureView): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.width`, `this.height`, `this.headPointerBuffer`, `this.headClearArray`, `this.nodePoolBuffer`, `this.atomicCounter`, `this.sceneUniformBuffer`, `this.stencil` and other instance fields; construction of `Uint32Array`; calls to `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`, `new Uint32Array(width * height).fill`, `this.device.queue.writeBuffer`, `this.device.createBindGroup`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepareFrame(commandEncoder: GPUCommandEncoder): void",
+                    "—",
+                    "Call this at the very beginning of your frame [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCompositeWGSL(sampleCount: number = this.sampleCount ?? 4): string",
+                    "—",
+                    "Body operations (including nested callbacks): long return expressions shown in the linked implementation. [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts#L101)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getStaticGeometryLayoutEntry(): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `layout_entry`. [Source line 173](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts#L173)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getGeometryLayoutEntry(): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Implementation: `return PPLLManagerGlobal.getStaticGeometryLayoutEntry();`. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getStaticResolveLayoutEntry(sampleCount: number = 4): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `layout_entry`. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts#L188)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getResolveLayoutEntry(sampleCount: number = this.sampleCount ?? 4): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Implementation: `return PPLLManagerGlobal.getStaticResolveLayoutEntry(sampleCount);`. [Source line 206](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerGlobal.ts#L206)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ppllmanagerlocal",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PPLLManagerLocal"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/ppll_oit/PPLLManagerLocal.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/ppll_oit/PPLLManagerLocal.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PPLLManagerLocal",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PPLLManagerLocal extends PPLLManager {\n    constructor(device: GPUDevice, maxLayers?: number, sampleCount?: number);\n    resize(width: number, height: number, depthTextureView: GPUTextureView): void;\n    prepareFrame(commandEncoder: GPUCommandEncoder): void;\n    getCompositeWGSL(sampleCount?: number): string;\n    static getStaticGeometryLayoutEntry(): GPUBindGroupLayoutEntry[];\n    getGeometryLayoutEntry(): GPUBindGroupLayoutEntry[];\n    static getStaticResolveLayoutEntry(sampleCount?: number): GPUBindGroupLayoutEntry[];\n    getResolveLayoutEntry(sampleCount?: number): GPUBindGroupLayoutEntry[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PPLLManagerLocal` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(device: GPUDevice, maxLayers = 8, sampleCount = 4)",
+                    "—",
+                    "Implementation: `super(device, maxLayers, sampleCount);`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resize(width: number, height: number, depthTextureView: GPUTextureView): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.width`, `this.height`, `this.pixelCountersBuffer`, `this.nodePoolBuffer`, `this.sceneUniformBuffer`, `this.stencil`, `this.geometry_bindGroup`, `this.resolve_bindgroup`; construction of `Uint32Array`; calls to `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`, `this.device.queue.writeBuffer`, `this.device.createBindGroup`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepareFrame(commandEncoder: GPUCommandEncoder)",
+                    "—",
+                    "Implementation: `if (this.stencil) commandEncoder.clearBuffer(this.stencil, 0, this.stencil.size); commandEncoder.clearBuffer(this.pixelCountersBuffer, 0, this.pixelCountersBuffer.size);`. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCompositeWGSL(sampleCount: number = this.sampleCount ?? 4): string",
+                    "—",
+                    "Body operations (including nested callbacks): long return expressions shown in the linked implementation. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getStaticGeometryLayoutEntry(): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `layout_entry`. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getGeometryLayoutEntry(): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Implementation: `return PPLLManagerLocal.getStaticGeometryLayoutEntry();`. [Source line 174](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts#L174)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getStaticResolveLayoutEntry(sampleCount: number = 4): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `layout_entry`. [Source line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts#L178)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getResolveLayoutEntry(sampleCount: number = this.sampleCount ?? 4): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Implementation: `return PPLLManagerLocal.getStaticResolveLayoutEntry(sampleCount);`. [Source line 195](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManagerLocal.ts#L195)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

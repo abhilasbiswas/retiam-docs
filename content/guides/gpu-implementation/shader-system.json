@@ -1,0 +1,127 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "shader-system",
+  "title": "Shader builders, schemas and resources",
+  "group": "GPU implementation",
+  "summary": "Build shader declarations and bind resources with schemas that agree with the uploaded data layout.",
+  "sections": [
+    {
+      "id": "shader-assembly",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Shader assembly"
+        },
+        {
+          "type": "paragraph",
+          "text": "ShaderBuilder combines registered WGSL chunks, preprocessor flags, injection slots and schemas. ChunkRegistry resolves includes and detects missing/circular dependencies. A component can contribute helper functions and stage hooks without rewriting the whole shader. Shader compilation and pipeline validation remain runtime WebGPU operations."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [ShaderBuilder](/api-render-shader-system#shaderbuilder), [ChunkRegistry](/api-render-shader-system#chunkregistry), [Pipeline](/api-render-pipelines#pipeline)."
+        }
+      ]
+    },
+    {
+      "id": "schemas-and-memory-layout",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Schemas and memory layout"
+        },
+        {
+          "type": "paragraph",
+          "text": "VertexSchema maps shader types to vertex attributes. VaryingSchema maps inter-stage values and interpolation. UniformSchema computes fields, offsets and padded layouts; UniformBufferData writes matching CPU data. Resource declarations describe buffers, uniforms, samplers, sampled/storage textures and external video inputs. Unsupported attribute types and unknown nested uniform fields are rejected."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [VertexSchema](/api-render-shader-system-schemas#vertexschema), [VaryingSchema](/api-render-shader-system-schemas#varyingschema), [UniformSchema](/api-render-shader-system-schemas#uniformschema), [UniformBufferData](/api-render-shader-system-schemas#uniformschema), [ShaderResource](/api-render-shader-system-schemas#shadertypes), [Res](/api-render-shader-system-schemas#shadertypes)."
+        }
+      ]
+    },
+    {
+      "id": "binding-namespaces",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Binding namespaces"
+        },
+        {
+          "type": "paragraph",
+          "text": "The current shader system separates shared view/global/state resources from geometry/fragment-specific resources. Inspect ResourceLayouts, Domains and ShaderTypes before choosing a binding index. A snippet’s group/binding numbers from a notebook may belong to an earlier layout. Reflection-driven layouts and explicit WGSL declarations must agree."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Domains](/api-render-shader-system#domains)."
+        }
+      ]
+    },
+    {
+      "id": "add-a-custom-shader-safely",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Add a custom shader safely"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Start from a working geometry domain and its resource contract.",
+            "Declare vertex/varying/uniform data with matching schema types and alignment.",
+            "Inject only the stage logic needed for the effect.",
+            "Use named resources so ComputeKernel or component binding generation can resolve them.",
+            "Inspect WebGPU validation errors and compare one simple shape before adding batching or multiple views."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One aligned float uniform controls one fragment-shader ring."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-shader-uniform"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Compute kernels and instancing](/compute-instancing).",
+            "Build it step by step: [Write a custom shader with uniforms](/tutorial-custom-shader)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Rendering pipeline from scene to pixels](/rendering-architecture)"
+  ]
+}

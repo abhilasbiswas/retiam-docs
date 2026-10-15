@@ -1,0 +1,1017 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-libs-physics-2d-backends",
+  "title": "physics / 2d / backends API",
+  "group": "Library API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "iphysics2dbackend",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "IPhysics2DBackend"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/2d/backends/IPhysics2DBackend.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/2d/backends/IPhysics2DBackend.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "IPhysics2DBackend: Minimal contract for 2D physics engine backends (e.g. Planck.js, Rapier2D, Matter.js)."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "IPhysics2DBackend",
+                    "Interface",
+                    "Minimal contract for 2D physics engine backends (e.g. Planck.js, Rapier2D, Matter.js)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface IPhysics2DBackend {\n    readonly name: string;\n    step(dt: number): void;\n    addRigidBody(entity: VectorEntity, options: Rigid2DOptions): RigidBody2DComponent;\n    addSoftBody?(entity: VectorEntity, options: SoftBody2DOptions): SoftBody2DComponent;\n    addJoint(options: Joint2DOptions): Joint2D;\n    removeJoint(joint: Joint2D): void;\n    getJoints?(): Joint2D[];\n    remove(entity: VectorEntity): void;\n    getBodyAtPoint?(point: {\n        x: number;\n        y: number;\n    }): RigidBody2DComponent | null;\n    onCollision?(callback: (event: Collision2DEvent) => void): void;\n    createMouseJoint?(bodyComp: RigidBody2DComponent, target: {\n        x: number;\n        y: number;\n    }, options?: MouseDragOptions): any;\n    updateMouseJoint?(mouseJoint: any, target: {\n        x: number;\n        y: number;\n    }): void;\n    destroyMouseJoint?(mouseJoint: any): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `IPhysics2DBackend` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "readonly name: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "step(dt: number): void;",
+                    "—",
+                    "Advances the simulation by dt seconds [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "addRigidBody(entity: VectorEntity, options: Rigid2DOptions): RigidBody2DComponent;",
+                    "—",
+                    "Adds a 2D body to the simulation [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "addSoftBody?(entity: VectorEntity, options: SoftBody2DOptions): SoftBody2DComponent;",
+                    "—",
+                    "Adds a deformable soft body / spring lattice to the simulation (optional backend capability) [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "addJoint(options: Joint2DOptions): Joint2D;",
+                    "—",
+                    "Adds a joint/constraint between two bodies [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "removeJoint(joint: Joint2D): void;",
+                    "—",
+                    "Removes a joint constraint from the simulation [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getJoints?(): Joint2D[];",
+                    "—",
+                    "Returns all active joints managed by this backend [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "remove(entity: VectorEntity): void;",
+                    "—",
+                    "Removes an entity's physical body from the simulation [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getBodyAtPoint?(point: { x: number; y: number }): RigidBody2DComponent | null;",
+                    "—",
+                    "Finds the rigid body component at a given world position, if any [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "onCollision?(callback: (event: Collision2DEvent) => void): void;",
+                    "—",
+                    "Registers a listener for collision start/end events [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "createMouseJoint?(bodyComp: RigidBody2DComponent, target: { x: number; y: number }, options?: MouseDragOptions): any;",
+                    "—",
+                    "Creates an interactive mouse spring joint dragging a body towards a world target [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "updateMouseJoint?(mouseJoint: any, target: { x: number; y: number }): void;",
+                    "—",
+                    "Updates the target position of an active mouse joint [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "destroyMouseJoint?(mouseJoint: any): void;",
+                    "—",
+                    "Destroys an active mouse joint [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "destroy(): void;",
+                    "—",
+                    "Cleans up all world resources and bodies [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/IPhysics2DBackend.ts#L54)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "planck2dbackend",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Planck2DBackend"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/2d/backends/Planck2DBackend.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/2d/backends/Planck2DBackend.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Planck2DBackend",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class Planck2DBackend implements IPhysics2DBackend {\n    readonly name: string;\n    world: World;\n    scene: Scene;\n    timeStep: number;\n    velocityIterations: number;\n    positionIterations: number;\n    constructor(scene: Scene, options?: BasePhysics2DOptions);\n    step(dt?: number): void;\n    addRigidBody(entity: VectorEntity, options: Rigid2DOptions): RigidBody2DComponent;\n    static attachPolygonFixtures(body: PlanckBody, vertices: {\n        x: number;\n        y: number;\n    }[], fixtureOpts: any): void;\n    addJoint(options: Joint2DOptions): Joint2D;\n    removeJoint(joint: Joint2D): void;\n    getJoints(): Joint2D[];\n    remove(entity: VectorEntity): void;\n    onCollision(callback: (event: Collision2DEvent) => void): void;\n    getBodyAtPoint(point: {\n        x: number;\n        y: number;\n    }): RigidBody2DComponent | null;\n    createMouseJoint(bodyComp: RigidBody2DComponent, target: {\n        x: number;\n        y: number;\n    }, options?: MouseDragOptions): any;\n    updateMouseJoint(joint: any, target: {\n        x: number;\n        y: number;\n    }): void;\n    destroyMouseJoint(joint: any): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Planck2DBackend` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly name: string",
+                    "\"planck\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public world: World",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scene: Scene",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public timeStep: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public velocityIterations: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public positionIterations: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(scene: Scene, options?: BasePhysics2DOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.world`, `this.timeStep`, `this.velocityIterations`, `this.positionIterations`; construction of `World`; calls to `Vec2`, `this.world.on`, `this._handleContact`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public step(dt: number = this.timeStep): void",
+                    "—",
+                    "Implementation: `this.world.step(dt, this.velocityIterations, this.positionIterations);`. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addRigidBody(entity: VectorEntity, options: Rigid2DOptions): RigidBody2DComponent",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `RigidBody2DComponent`; calls to `this.scene.add`, `Vec2`, `this.world.createBody`, `body.createFixture`, `Box`, `PlanckCircle`, `(entity as any).getVertices`, `Planck2DBackend.attachPolygonFixtures` and additional helpers; return paths including `component`. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static attachPolygonFixtures(\n        body: PlanckBody,\n        vertices: { x: number, y: number }[],\n        fixtureOpts: any\n    ): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `isConvex`, `vertices.slice`, `computeSignedArea`, `pts.reverse`, `pts.map`, `Vec2`, `body.createFixture`, `Polygon` and additional helpers; return paths including `area / 2`, `false`, `true`; 4 explicit loops. [Source line 145](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L145)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addJoint(options: Joint2DOptions): Joint2D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Error`, `RevoluteJoint`, `DistanceJoint`, `WeldJoint`, `PrismaticJoint`; calls to `options.entityA.getComponent`, `options.entityB.getComponent`, `Vec2`, `bodyA.getLocalPoint`, `bodyB.getLocalPoint`, `this.world.createJoint`, `(nativeJoint as RevoluteJoint).setMotorSpeed`, `(nativeJoint as RevoluteJoint).setMaxMotorTorque` and additional helpers; return paths including `joint`; rejection paths `new Error(\"Both entities must have an active RigidBody2DComponent before creating a Joint.\")`, a template-literal expression (see source). [Source line 217](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L217)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removeJoint(joint: Joint2D): void",
+                    "—",
+                    "Implementation: `if (joint.nativeJoint) { this.world.destroyJoint(joint.nativeJoint); joint.nativeJoint = null; } this._joints.delete(joint.id);`. [Source line 364](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L364)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getJoints(): Joint2D[]",
+                    "—",
+                    "Implementation: `return Array.from(this._joints.values());`. [Source line 372](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L372)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(entity: VectorEntity): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this._joints.entries`, `this.removeJoint`, `entity.getComponent`, `this.world.destroyBody`; 1 explicit loop. [Source line 376](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L376)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onCollision(callback: (event: Collision2DEvent) => void): void",
+                    "—",
+                    "Implementation: `this._collisionCallbacks.push(callback);`. [Source line 389](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L389)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBodyAtPoint(point: { x: number; y: number }): RigidBody2DComponent | null",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `AABB`; calls to `Vec2`, `this.world.queryAABB`, `fixture.testPoint`, `fixture.getBody`; return paths including `false`, `true`, `foundComp`. [Source line 393](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L393)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createMouseJoint(\n        bodyComp: RigidBody2DComponent,\n        target: { x: number; y: number },\n        options?: MouseDragOptions\n    ): any",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._mouseGroundBody`; construction of `MouseJoint`; calls to `this.world.createBody`, `body.isDynamic`, `body.getMass`, `Vec2`, `this.world.createJoint`; return paths including `null`, `this.world.createJoint(mouseJoint)`. [Source line 414](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L414)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateMouseJoint(joint: any, target: { x: number; y: number }): void",
+                    "—",
+                    "Implementation: `if (joint && typeof joint.setTarget === 'function') { joint.setTarget(Vec2(target.x, target.y)); }`. [Source line 439](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L439)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroyMouseJoint(joint: any): void",
+                    "—",
+                    "Implementation: `if (joint && this.world) { this.world.destroyJoint(joint); }`. [Source line 445](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L445)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.getJoints`, `this.removeJoint`, `this._joints.clear`, `this.world.getBodyList`, `body.getNext`, `this.world.destroyBody`; 2 explicit loops. [Source line 451](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L451)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.gravity ?? [0, -9.8]",
+                    "[Line 41](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L41)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.timeStep ?? (1 / 60)",
+                    "[Line 45](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L45)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.velocityIterations ?? 8",
+                    "[Line 46](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L46)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.positionIterations ?? 3",
+                    "[Line 47](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L47)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motion ?? options.type ?? 'dynamic'",
+                    "[Line 87](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L87)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motion ?? options.type",
+                    "[Line 87](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L87)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.lockRotation ?? options.fixedRotation",
+                    "[Line 95](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L95)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.bullet || options.ccd",
+                    "[Line 99](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L99)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.density ?? 1.0",
+                    "[Line 105](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L105)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.friction ?? 0.3",
+                    "[Line 106](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L106)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.restitution ?? (entity instanceof Circle ? 0.6 : 0.2)",
+                    "[Line 107](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L107)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.isSensor ?? false",
+                    "[Line 108](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L108)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.localAnchorA ?? { x: 0, y: 0 }",
+                    "[Line 227](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L227)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.localAnchorB ?? { x: 0, y: 0 }",
+                    "[Line 228](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L228)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.enableMotor ?? (options.motorSpeed !== undefined || options.maxMotorTorque !== undefined)",
+                    "[Line 243](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L243)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motorSpeed !== undefined || options.maxMotorTorque !== undefined",
+                    "[Line 243](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L243)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.enableLimit ?? (options.limits !== undefined)",
+                    "[Line 244](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L244)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motorSpeed ?? 0",
+                    "[Line 253](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L253)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.maxMotorTorque ?? 0",
+                    "[Line 254](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L254)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.collideConnected ?? false",
+                    "[Line 256](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L256)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.maxMotorForce ?? 0",
+                    "[Line 324](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L324)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.enableMotor ?? (options.motorSpeed !== undefined)",
+                    "[Line 325](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L325)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.maxLength ?? 0",
+                    "[Line 340](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L340)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.frequencyHz ?? 5.0",
+                    "[Line 426](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L426)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.dampingRatio ?? 0.7",
+                    "[Line 427](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L427)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxForce ?? 1000",
+                    "[Line 428](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L428)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Planck2DBackend._handleContact: private _handleContact(contact: any, started: boolean): void",
+                    "Body operations (including nested callbacks): calls to `contact.getFixtureA().getBody`, `contact.getFixtureA`, `contact.getFixtureB().getBody`, `contact.getFixtureB`, `compA._dispatchCollision`, `compB._dispatchCollision`, `this._collisionCallbacks[i]`; 1 explicit loop.",
+                    "[Line 57](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Planck2DBackend.ts#L57)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"Both entities must have an active RigidBody2DComponent before creating a Joint.\")",
+                "new Error(`Unsupported joint type '${(options as any).type}' in Planck2DBackend.`)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rapier2dbackend",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Rapier2DBackend"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/2d/backends/Rapier2DBackend.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/2d/backends/Rapier2DBackend.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "rapier2dReadyPromise: Top-level promise for Rapier WebAssembly initialization"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "rapier2dReadyPromise",
+                    "First",
+                    "Top-level promise for Rapier WebAssembly initialization"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Rapier2DBackend",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const rapier2dReadyPromise: Promise<void>;\nexport declare class Rapier2DBackend implements IPhysics2DBackend {\n    readonly name: string;\n    world: RAPIER.World;\n    scene: Scene;\n    timeStep: number;\n    maxSubSteps: number;\n    constructor(scene: Scene, options?: BasePhysics2DOptions);\n    step(dt?: number, maxSubSteps?: number): void;\n    addRigidBody(entity: VectorEntity, options: Rigid2DOptions): RigidBody2DComponent;\n    addJoint(options: Joint2DOptions): Joint2D;\n    removeJoint(joint: Joint2D): void;\n    getJoints(): Joint2D[];\n    remove(entity: VectorEntity): void;\n    onCollision(callback: (event: Collision2DEvent) => void): void;\n    getBodyAtPoint(point: {\n        x: number;\n        y: number;\n    }): RigidBody2DComponent | null;\n    createMouseJoint(bodyComp: RigidBody2DComponent, target: {\n        x: number;\n        y: number;\n    }, options?: MouseDragOptions): any;\n    updateMouseJoint(mouseJoint: any, target: {\n        x: number;\n        y: number;\n    }): void;\n    destroyMouseJoint(mouseJoint: any): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Rapier2DBackend` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly name: string",
+                    "\"rapier\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public world!: RAPIER.World",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scene: Scene",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public timeStep: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxSubSteps: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(scene: Scene, options?: BasePhysics2DOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.timeStep`, `this.maxSubSteps`, `this.world`, `this.world.timestep`, `this._eventQueue`, `this._isWorldReady`, `this._pendingQueue`; construction of `RAPIER.World`, `RAPIER.EventQueue`; calls to `fn`, `initWorld`, `rapier2dReadyPromise.then`; 1 explicit loop. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public step(dt: number = this.timeStep, maxSubSteps: number = this.maxSubSteps): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.world.timestep`; calls to `this.world.step`, `this._drainCollisionEvents`; 1 explicit loop. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addRigidBody(entity: VectorEntity, options: Rigid2DOptions): RigidBody2DComponent",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `RigidBody2DComponent`; calls to `this.scene.add`, `entity.addComponent`, `RAPIER.RigidBodyDesc.fixed`, `RAPIER.RigidBodyDesc.kinematicPositionBased`, `RAPIER.RigidBodyDesc.dynamic`, `bodyDesc.setTranslation`, `bodyDesc.setRotation`, `bodyDesc.lockRotations` and additional helpers; return paths including `{ x: 0, y: 0 }`, `{ x: v.x, y: v.y }`, `comp.body ? comp.body.angvel() : 0`. [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L111)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addJoint(options: Joint2DOptions): Joint2D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Joint2D`, `Error`; calls to `this._joints.set`, `options.entityA.getComponent`, `options.entityB.getComponent`, `RAPIER.JointData.revolute`, `this.world.createImpulseJoint`, `nativeJoint.setContactsEnabled`, `(nativeJoint as RAPIER.UnitImpulseJoint).configureMotorModel`, `(nativeJoint as RAPIER.UnitImpulseJoint).setMotorMaxForce` and additional helpers; return paths including `joint`; rejection paths a template-literal expression (see source). [Source line 378](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L378)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removeJoint(joint: Joint2D): void",
+                    "—",
+                    "Implementation: `if (this._isWorldReady && this.world && joint.nativeJoint) { this.world.removeImpulseJoint(joint.nativeJoint, true); joint.nativeJoint = null; } this._joints.delete(joint.id);`. [Source line 590](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L590)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getJoints(): Joint2D[]",
+                    "—",
+                    "Implementation: `return Array.from(this._joints.values());`. [Source line 598](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L598)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(entity: VectorEntity): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this._joints.entries`, `this.removeJoint`, `entity.getComponent`, `this.world.removeRigidBody`; 1 explicit loop. [Source line 602](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L602)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onCollision(callback: (event: Collision2DEvent) => void): void",
+                    "—",
+                    "Implementation: `this._collisionCallbacks.push(callback);`. [Source line 615](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L615)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBodyAtPoint(point: { x: number; y: number }): RigidBody2DComponent | null",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.world.intersectionsWithPoint`, `collider.parent`; return paths including `null`, `false`, `true`. [Source line 619](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L619)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createMouseJoint(\n        bodyComp: RigidBody2DComponent,\n        target: { x: number; y: number },\n        options?: MouseDragOptions\n    ): any",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `targetBody.isDynamic`, `RAPIER.RigidBodyDesc.kinematicPositionBased() .setTranslation`, `RAPIER.RigidBodyDesc.kinematicPositionBased`, `this.world.createRigidBody`, `targetBody.translation`, `targetBody.rotation`, `targetBody.mass`, `RAPIER.JointData.spring` and additional helpers; return paths including `null`, `{ anchorBody, joint }`. [Source line 636](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L636)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateMouseJoint(mouseJoint: any, target: { x: number; y: number }): void",
+                    "—",
+                    "Implementation: `if (mouseJoint && mouseJoint.anchorBody) { mouseJoint.anchorBody.setNextKinematicTranslation({ x: target.x, y: target.y }); }`. [Source line 670](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L670)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroyMouseJoint(mouseJoint: any): void",
+                    "—",
+                    "Implementation: `if (mouseJoint && this.world) { if (mouseJoint.joint) { this.world.removeImpulseJoint(mouseJoint.joint, true); } if (mouseJoint.anchorBody) { this.world.removeRigidBody(mouseJoint.anchorBody); } }`. [Source line 676](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L676)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._pendingQueue`, `this._eventQueue`, `this._isWorldReady`; calls to `this.getJoints`, `this.removeJoint`, `this._joints.clear`, `this._eventQueue.free`, `this.world.free`; 1 explicit loop. [Source line 687](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L687)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.gravity ?? [0, -9.8]",
+                    "[Line 32](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L32)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.timeStep ?? (1 / 60)",
+                    "[Line 36](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L36)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSubSteps ?? 3",
+                    "[Line 37](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L37)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motion ?? options.type ?? 'dynamic'",
+                    "[Line 116](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L116)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motion ?? options.type",
+                    "[Line 116](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L116)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.lockRotation ?? options.fixedRotation",
+                    "[Line 138](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L138)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.bullet || options.ccd",
+                    "[Line 142](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L142)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.friction ?? 0.3",
+                    "[Line 235](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L235)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.restitution ?? 0.2",
+                    "[Line 237](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L237)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.density ?? 1.0",
+                    "[Line 246](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L246)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.restitution ?? 0.6",
+                    "[Line 266](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L266)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.localAnchorA ?? { x: 0, y: 0 }",
+                    "[Line 399](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L399)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.localAnchorB ?? { x: 0, y: 0 }",
+                    "[Line 400](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L400)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.enableLimit ?? true",
+                    "[Line 425](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L425)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.collideConnected ?? false",
+                    "[Line 429](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L429)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.enableMotor ?? (options.motorSpeed !== undefined || options.maxMotorTorque !== undefined)",
+                    "[Line 431](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L431)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motorSpeed !== undefined || options.maxMotorTorque !== undefined",
+                    "[Line 431](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L431)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.dampingRatio ?? 0",
+                    "[Line 489](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L489)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.axis ?? { x: 1, y: 0 }",
+                    "[Line 526](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L526)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motorSpeed !== undefined || options.maxMotorForce !== undefined",
+                    "[Line 534](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L534)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.frequencyHz ?? 5.0",
+                    "[Line 658](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L658)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.dampingRatio ?? 0.7",
+                    "[Line 659](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L659)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Rapier2DBackend._drainCollisionEvents: private _drainCollisionEvents(): void",
+                    "Body operations (including nested callbacks): calls to `this._eventQueue.drainCollisionEvents`, `this.world.getCollider`, `col1.parent`, `col2.parent`, `compA._dispatchCollision`, `compB._dispatchCollision`, `this._collisionCallbacks[i]`; 1 explicit loop.",
+                    "[Line 83](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L83)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Rapier2DBackend.configureColliderDesc: private configureColliderDesc(desc: RAPIER.ColliderDesc, options: Rigid2DOptions, isStatic: boolean): void",
+                    "Body operations (including nested callbacks): calls to `desc.setFriction`, `desc.setFrictionCombineRule`, `desc.setRestitution`, `desc.setRestitutionCombineRule`, `desc.setActiveEvents`, `desc.setSensor`, `desc.setMass`, `desc.setDensity`.",
+                    "[Line 234](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L234)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Rapier2DBackend.attachColliders: private attachColliders( body: RAPIER.RigidBody, entity: VectorEntity, options: Rigid2DOptions, isStatic: boolean ): void",
+                    "Body operations (including nested callbacks): calls to `RAPIER.ColliderDesc.cuboid`, `this.configureColliderDesc`, `this.world.createCollider`, `RAPIER.ColliderDesc.ball`, `(entity as any).getVertices`, `this.attachPolygonColliders`, `entity.getLocalAABB`.",
+                    "[Line 251](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L251)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Rapier2DBackend.attachPolygonColliders: private attachPolygonColliders( body: RAPIER.RigidBody, vertices: { x: number; y: number }[], options: Rigid2DOptions, isStatic: boolean ): void",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; calls to `flatCoords.push`, `isConvex`, `RAPIER.ColliderDesc.convexHull`, `this.configureColliderDesc`, `this.world.createCollider`, `earcut`, `RAPIER.ColliderDesc.triangle`, `triDesc.setFriction` and additional helpers; return paths including `false`, `true`; 3 explicit loops.",
+                    "[Line 297](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/backends/Rapier2DBackend.ts#L297)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`Unsupported joint type '${(options as any).type}' in Rapier2DBackend.`)"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

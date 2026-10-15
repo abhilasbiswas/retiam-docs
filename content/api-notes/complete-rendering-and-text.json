@@ -1,0 +1,522 @@
+{
+  "Scene.addPass": {
+    "description": "Keep a custom pass on this scene and forward it to the composer when attached.",
+    "parameters": {
+      "pass": "The Pass instance to register. Declare its input/output handles before relying on frame-graph ordering."
+    },
+    "notes": [
+      "Registration does not start playback and does not deduplicate repeated instances. Adding a pass before attachment keeps it in customPasses; removing a pass is a separate operation."
+    ],
+    "example": "labs/pg-post-process"
+  },
+  "Scene.removePass": {
+    "description": "Remove the first matching custom pass and forward the removal to the composer.",
+    "parameters": {
+      "pass": "The same object instance previously registered with addPass."
+    },
+    "notes": [
+      "A pass that is not registered is ignored. This removes the pipeline registration; it does not call a pass-specific destroy method or destroy resources you supplied."
+    ]
+  },
+  "FrameGraph.execute": {
+    "description": "Encode and submit one frame using the compiled graph, running scene compute work before the render passes that consume it.",
+    "parameters": {
+      "frameData": "Prepared SceneData containing views, render commands, compute commands and rendering configuration.",
+      "canvasWidth": "Output width in drawing-buffer pixels, used to size relative graph textures.",
+      "canvasHeight": "Output height in drawing-buffer pixels.",
+      "adapter": "The GPUAdapter exposed to pass execution through RenderContext."
+    },
+    "returnsDescription": "No value. Submission is queued on device.queue; this method does not wait for GPU completion.",
+    "notes": [
+      "A size change clears the transient pool and reallocates graph resources. Each pass receives a context with the current dimensions and texture/buffer resolvers.",
+      "Scene compute_queue commands are encoded first, skipping nonpositive dispatch sizes. Analytical-path and stroke-extrusion jobs follow, then compiled passes; ComputeUpdate passes are skipped because their work has already run upstream.",
+      "Call compile and resource allocation through the normal renderer lifecycle before execute. Import external resources under their owner; executing the graph does not make the graph their allocator."
+    ]
+  },
+  "FrameGraph.constructor": {
+    "description": "Create a graph associated with one GPU device.",
+    "parameters": {
+      "device": "The device used to allocate graph resources and encode/submits its commands. Handles and physical resources must belong to the matching graph/device."
+    }
+  },
+  "FrameGraph.isDirty": {
+    "description": "Track whether the graph's output size changed during the most recent execute call. A size change causes pooled relative resources to be reallocated."
+  },
+  "FrameGraph.textures": {
+    "description": "The graph's logical texture resource records. Handle indices resolve through a root record to an imported texture or a pooled physical allocation. Use GraphBuilder and imports rather than editing the array while a compiled graph is running."
+  },
+  "FrameGraph.buffers": {
+    "description": "Logical buffer records indexed by BufferHandle. Root records determine the physical allocation used by RenderContext.getBuffer; these records are graph bookkeeping rather than an application-owned buffer pool."
+  },
+  "TextOptions": {
+    "description": "Vector-text content, font and paint settings. Text inherits entity placement and shader options; glyph outlines come from an OpenType font."
+  },
+  "Text.fontSize": {
+    "description": "The scale used to lay out the font's glyph outlines in scene coordinates. The constructor currently falls back to 48 when fontSize is absent or zero; explicitly choose a size appropriate for your camera, usually much smaller in a scene spanning about 12 world units."
+  },
+  "Text.customFont": {
+    "description": "An instance-specific parsed OpenType font. getActiveFont prefers this value over the global Text.font fallback. Use setFont when changing it so the glyph paths are rebuilt."
+  },
+  "Text.fontStyle": {
+    "description": "The named font style requested through FontLoader. Resolving a style can complete asynchronously; the current global font may be used while the requested font loads."
+  },
+  "Text.font": {
+    "description": "The shared parsed font used by Text instances without a custom font. SceneComposer startup loads the default font; Text.loadFonts caches its first successful load."
+  },
+  "Text.is_loaded": {
+    "description": "Whether Text.loadFonts has completed its shared font load. When true, later loadFonts calls return the existing font even if supplied a different URL. Use an instance-specific font to choose another face."
+  },
+  "Text.loadFonts": {
+    "description": "Fetch and parse the shared OpenType font once, then reuse it on subsequent calls.",
+    "parameters": {
+      "fontUrl": "An HTTP-accessible font file containing OpenType/TrueType data, not a CSS stylesheet or an HTML page."
+    },
+    "returnsDescription": "A promise resolving to the parsed font. Fetch or parser failures reject the promise.",
+    "notes": [
+      "The is_loaded check is a completed-load cache, not an in-flight request cache. Concurrent first calls can issue separate requests.",
+      "The current loader does not check response.ok before parsing. An HTML fallback or server error may therefore appear as a font-parser error. Await startup or explicitly load a font before measuring typography."
+    ],
+    "example": "labs/pg-text-load-fonts"
+  },
+  "Text.getActiveFont": {
+    "description": "Return the instance's custom font, or the shared Text.font when no custom font is set.",
+    "returnsDescription": "The parsed OpenType font, or undefined before a usable font is available. This getter neither fetches a font nor waits for a named style to finish loading."
+  },
+  "Text.getPaths": {
+    "description": "Expose the live vector path for each visible glyph, decomposing merged text first if necessary.",
+    "returnsDescription": "A new array containing existing Path objects. Null slots such as whitespace are filtered out; the array is not indexed like the original string.",
+    "notes": [
+      "Decomposition changes the representation of the text. The returned paths remain owned by this Text and may be destroyed by rebuild or setText. Clone geometry if it needs an independent lifetime."
+    ],
+    "example": "labs/pg-text-paths"
+  },
+  "Text.rebuild": {
+    "description": "Destroy existing glyph/merged paths and reconstruct the current text with its active font and current decomposition mode.",
+    "returnsDescription": "No value.",
+    "notes": [
+      "If no font is available, the old paths are removed and reconstruction returns early. A later font resolution invokes rebuild again.",
+      "Successful reconstruction invalidates both the text and its attached scene. Previously saved glyph references are no longer valid after this operation."
+    ],
+    "example": "labs/pg-text-rebuild"
+  },
+  "Text.getSubEntities": {
+    "description": "Return the current non-null child glyph paths, enabling composite animation and geometry inspection.",
+    "returnsDescription": "A new array containing existing glyph Path objects through getPaths. This forces decomposition when the text was merged; whitespace slots are filtered out."
+  },
+  "Text.toPaths": {
+    "description": "Return the current vector glyph representation through getPaths, decomposing merged text when necessary.",
+    "returnsDescription": "Live glyph Paths owned by the text. Whitespace slots are omitted.",
+    "notes": [
+      "This is vector outline extraction. It differs from SDFText.toPaths, whose current implementation returns an empty array."
+    ],
+    "example": "labs/pg-text-paths"
+  },
+  "Text.raycast": {
+    "description": "Test the text's padded local bounding box for pointer picking rather than testing every glyph contour.",
+    "parameters": {
+      "ray": "The original world-space picking ray.",
+      "localOrigin": "Ray origin transformed into the text's local space.",
+      "localDir": "Ray direction in the same local space.",
+      "worldMatrix": "Matrix that converts the local intersection back to world coordinates.",
+      "hitTolerance": "Local-space padding around the bounds; defaults to 0.05."
+    },
+    "returnsDescription": "A promise resolving to a world-space hit on this text, or null when the box is empty or the ray misses.",
+    "notes": [
+      "Picking can succeed in the empty space between letters because the whole text rectangle is the target. Use this for readable interaction targets, not an exact test of visible ink."
+    ]
+  },
+  "SDFTextOptions": {
+    "description": "Font, glyph size and inherited entity/paint options for texture-backed distance-field text. Supply a loaded Font or a named FontStyle; the atlas must contain the characters you intend to render."
+  },
+  "SDFText.constructor": {
+    "description": "Create a text container whose children render glyphs from a distance-field font atlas.",
+    "parameters": {
+      "text": "Initial string, including whitespace and line breaks used by the layout.",
+      "options": "Font, fontSize and entity styling. Defaults are white fill, no stroke, zero stroke width and Font.default; absent or zero fontSize currently falls back to 8."
+    },
+    "notes": [
+      "The supplied options object is populated with missing paint defaults. Use a fresh object if sharing it would be surprising.",
+      "A named font begins resolving in the background and uses the default font meanwhile. For predictable measuring/export, load and pass an explicit Font before constructing the text.",
+      "Choose an explicit small scene-space fontSize and anchor for a compact orthographic scene; a default size of 8 is large in a 12-unit viewport."
+    ],
+    "example": "labs/pg-sdf-text"
+  },
+  "SDFText.fontSize": {
+    "description": "Scene-space glyph layout size, independent of the resolution used to generate the font atlas. Changing this field alone does not rebuild text; rebuild after changing layout parameters."
+  },
+  "SDFText.font": {
+    "description": "The loaded distance-field Font whose atlas and metrics supply the glyph children. Use setFont to rebuild when replacing it."
+  },
+  "SDFText.fontStyle": {
+    "description": "The named font style being resolved asynchronously by the instance. Font atlas availability and supported glyphs determine what can be drawn."
+  },
+  "SDFText.chars": {
+    "description": "The owned glyph-child slots for the text, including null whitespace slots. getSubEntities returns only renderable children; rebuilding text destroys the previous glyph objects."
+  },
+  "SDFText.rawText": {
+    "description": "Read or replace the underlying string. Assignment rebuilds the glyph layout immediately and invalidates the old character objects."
+  },
+  "SDFText.text": {
+    "description": "An alias for rawText. Assigning a string updates content by rebuilding its glyph children, not by mutating existing glyph references in place."
+  },
+  "SDFText.rebuild": {
+    "description": "Remove and destroy current glyph children, build the current string with the selected atlas font, then invalidate layout/rendering.",
+    "returnsDescription": "No value.",
+    "notes": [
+      "A rebuild can change which child object corresponds to a character. Reacquire characters through getChar/getSubEntities after setText or setFont rather than holding old glyph objects."
+    ],
+    "example": "labs/pg-sdf-rebuild"
+  },
+  "SDFText.getSubEntities": {
+    "description": "Return the live non-null SDFChar children, decomposing the text first when required.",
+    "returnsDescription": "A new array of existing glyph objects owned by this SDFText; whitespace slots are omitted.",
+    "example": "labs/pg-sdf-subentities"
+  },
+  "SDFText.toPaths": {
+    "description": "Currently return an empty array; SDF text does not expose vector outlines through this method.",
+    "returnsDescription": "An empty Path array in this implementation.",
+    "notes": [
+      "Use vector Text.toPaths when a contour modifier or geometry operation needs glyph outlines. Decomposing SDFText exposes texture-backed SDFChar children, not vector Paths."
+    ]
+  },
+  "SDFChar.toPaths": {
+    "description": "Currently return an empty array. A distance-field glyph is rendered from an atlas and does not supply a vector outline through this method.",
+    "returnsDescription": "An empty Path array."
+  },
+  "SDFText.raycast": {
+    "description": "Pick the padded bounding rectangle of the complete text, including spaces between glyphs.",
+    "parameters": {
+      "ray": "World-space picking ray used to calculate the final distance.",
+      "localOrigin": "Ray origin in the text's local coordinate system.",
+      "localDir": "Ray direction in that local coordinate system.",
+      "worldMatrix": "Transformation from local hit coordinates to world coordinates.",
+      "hitTolerance": "Padding around the local bounding box; defaults to 0.05."
+    },
+    "returnsDescription": "A promise resolving to a hit containing this text, a world-space point and distance; null if no usable box intersection exists."
+  },
+  "SceneComposer.constructor": {
+    "description": "Create an unattached composer with an empty animation queue. Await init(canvas) before using its GPU device, renderer, views or passes."
+  },
+  "SceneComposer.renderConfig": {
+    "description": "The mutable configuration used by the renderer. Its values control available rendering features; changing a value does not guarantee a required graph/resource rebuild, so use the owning feature/configuration path and invalidate as appropriate."
+  },
+  "SceneComposer.isPlayerEnabled": {
+    "description": "Read the preference for the DOM player controls. A true value does not imply that controls are mounted yet; mounting also needs a browser canvas and a non-offline composer."
+  },
+  "SceneComposer.playerEnabled": {
+    "description": "Read the player preference or assign it through enablePlayer, which mounts or destroys the DOM controls as appropriate."
+  },
+  "SceneComposer.enablePlayer": {
+    "description": "Enable the timeline player on an initialized browser canvas, or destroy the mounted player when disabled.",
+    "parameters": {
+      "enabled": "Whether controls should be enabled; defaults to true."
+    },
+    "returnsDescription": "The same composer for chaining.",
+    "notes": [
+      "Enabling is ignored for mounting purposes on OffscreenCanvas and offline rendering. Existing controls are reused; disabling destroys and clears them."
+    ]
+  },
+  "SceneComposer.disablePlayer": {
+    "description": "Disable and destroy the mounted player controls through enablePlayer(false).",
+    "returnsDescription": "The same composer."
+  },
+  "SceneComposer.setPlayerEnabled": {
+    "description": "Set the player-controls preference through enablePlayer.",
+    "parameters": {
+      "enabled": "Whether the DOM timeline controls should be enabled."
+    },
+    "returnsDescription": "The same composer."
+  },
+  "SceneComposer.staticInit": {
+    "description": "Load the default vector font and distance-field atlas used by text constructors.",
+    "parameters": {
+      "device": "Accepted by the current signature; the method body loads fonts and does not directly use this argument."
+    },
+    "returnsDescription": "A promise resolving after both default font loads complete. Loading or parsing errors reject it."
+  },
+  "SceneComposer.setRenderer": {
+    "description": "Adopt a renderer and its GPU device, then create Compute and StateDataManager helpers for that device.",
+    "parameters": {
+      "renderer": "An initialized renderer to use for this composer."
+    },
+    "notes": [
+      "This overwrites the helper references. It is initialization plumbing, not a complete hot-swap operation that disposes the previous renderer or migrates existing resources."
+    ]
+  },
+  "SceneComposer.setCanvas": {
+    "description": "Attach and configure a WebGPU canvas, then synchronize browser canvas resolution with its CSS dimensions.",
+    "parameters": {
+      "canvas": "An HTMLCanvasElement or OffscreenCanvas associated with this composer's renderer/device."
+    },
+    "returnsDescription": "Returns false when a WebGPU canvas context cannot be acquired; otherwise the current method returns no value.",
+    "notes": [
+      "For a browser canvas, resolution is devicePixelRatio times CSS dimensions, rounded down to even pixels, and a window resize listener is attached. The canvas therefore needs a nonzero CSS box.",
+      "OffscreenCanvas uses its existing dimensions and does not attach a window resize listener. Offline HTML canvases return before the live CSS resize setup."
+    ]
+  },
+  "SceneComposer.createView": {
+    "description": "Create and register a render view, initializing its GPU resources immediately when the device is available.",
+    "parameters": {
+      "width": "Initial view width in pixels.",
+      "height": "Initial view height in pixels."
+    },
+    "returnsDescription": "The new owned RenderView. Registering it marks the packed view data dirty."
+  },
+  "SceneComposer.setupUICamera": {
+    "description": "Ask the UI manager to configure a canvas-sized orthographic UI view, creating it when needed.",
+    "parameters": {
+      "config": "UI camera position, scale, layer and other options defined by UIConfig."
+    },
+    "notes": [
+      "A newly registered UI view marks view data dirty and invalidates the composer. This does not convert arbitrary scene entities to screen-space UI automatically."
+    ]
+  },
+  "SceneComposer.updateViewData": {
+    "description": "Pack the current views into the shared GPU view buffer and upload them.",
+    "parameters": {
+      "device": "The owning GPU device used for buffer creation and queue.writeBuffer."
+    },
+    "notes": [
+      "Dirty/missing storage is rebuilt first. Each view receives current composer time and canvas dimensions; view.getSize is bytes while the typed-array write offset is float elements."
+    ]
+  },
+  "SceneComposer.addPass": {
+    "description": "Register a custom pass, mark the renderer's frame graph dirty and request a frame.",
+    "parameters": {
+      "pass": "The concrete Pass instance to add."
+    },
+    "notes": [
+      "This does not deduplicate instances or destroy an old pass. Declare resource dependencies and connect presentation output as described in the extension workshop."
+    ]
+  },
+  "SceneComposer.removePass": {
+    "description": "Remove the first matching pass instance, then rebuild the frame graph on a subsequent frame.",
+    "parameters": {
+      "pass": "The registered Pass object to detach."
+    },
+    "notes": [
+      "Missing instances are ignored. Removing registration does not dispose allocations owned by your extension."
+    ]
+  },
+  "SceneComposer.addFeature": {
+    "description": "Append a rendering feature to an initialized renderer, sort features when the new feature supplies a priority, and mark the graph dirty.",
+    "parameters": {
+      "feature": "IPlugin with a rendering registration contract."
+    },
+    "returnsDescription": "The same composer.",
+    "notes": [
+      "Without a renderer, the feature is not queued for later registration. This method differs from use(plugin), which manages plugin initialization and ownership."
+    ]
+  },
+  "SceneComposer.removeFeature": {
+    "description": "Detach a registered rendering feature and call its optional dispose hook.",
+    "parameters": {
+      "feature": "The same feature object that is present in renderer.features."
+    },
+    "returnsDescription": "The same composer; missing features are ignored."
+  },
+  "SceneComposer.isFrameUpdate": {
+    "description": "Decide whether another frame is needed from scene/composer animation activity, dirty textures/video, continuous update mode and unfinished path-tracing accumulation.",
+    "returnsDescription": "Whether work remains. The check also updates FRAME_UPDATE_COUNT and IS_MOVING, so it is not a side-effect-free query."
+  },
+  "SceneComposer.invalidate": {
+    "description": "Request rendering after a state change. While paused, prepare and submit one frame immediately; otherwise start or continue the frame loop.",
+    "notes": [
+      "During seeking this returns early because seek manages its own frames. Rendering invalidation does not repair a geometry cache or modifier whose own dirty/version flag was not updated."
+    ]
+  },
+  "SceneComposer.continue": {
+    "description": "Request ten frame updates and ensure the frame loop is running. It does not resume paused scene choreography; use resume for playback control."
+  },
+  "SceneComposer.nextFrame": {
+    "description": "Schedule the supplied loop through requestAnimationFrame in live mode or a zero-delay timer in non-live mode.",
+    "parameters": {
+      "loop": "The frame-loop callback to schedule."
+    },
+    "returnsDescription": "The scheduling handle to cancel through the matching animation-frame or timer API."
+  },
+  "SceneComposer.updateTime": {
+    "description": "Advance composer time using an explicit delta, real-time delta or offline frame interval, multiplied by timeScale.",
+    "parameters": {
+      "dt": "Optional unscaled delta in milliseconds. Omission selects the live/offline clock."
+    },
+    "notes": [
+      "The final delta is stored in dt and added to time. Do not use seconds here without converting to milliseconds."
+    ]
+  },
+  "SceneComposer.update": {
+    "description": "Step composer tasks, animation insert/removal queues, the recorder and each unpaused child scene for one update.",
+    "parameters": {
+      "t": "Current composer time in milliseconds.",
+      "dt": "Scaled frame delta in milliseconds."
+    },
+    "notes": [
+      "Transient compute buffers are reset at the beginning of the update. Child scenes advance their own clocks with the same delta; paused child scenes are skipped."
+    ]
+  },
+  "SceneComposer.traverse": {
+    "description": "Walk one entity subtree to compose world state, inherit clipping and prepare reusable render commands.",
+    "parameters": {
+      "entity": "The subtree root to visit.",
+      "parentState": "The already-composed parent transform/paint state.",
+      "scene": "Owning scene context, including nested-scene traversal.",
+      "activeScissorBox": "Optional inherited world-space clipping bounds."
+    },
+    "notes": [
+      "Invisible or zero-opacity entities return before their children are visited. Renderable nodes allocate state directly in the state manager; container nodes use pooled scratch state.",
+      "Explicit z indices are retained; other nodes receive traversal order values. Nested-scene entities and ordinary children inherit the computed state and intersected scissor bounds."
+    ]
+  },
+  "SceneComposer.prepare": {
+    "description": "Prepare current view data, texture synchronization, entity command queues and GPU geometry uploads before a frame is submitted.",
+    "notes": [
+      "Ray-tracing mesh/uniform state and accumulation are updated here. Persistent rendering controls whether the prepared frame clears its target.",
+      "Texture synchronization can run asynchronously; do not treat this method as a general asset-loading barrier. It stores preparedSceneData but does not itself submit the render."
+    ]
+  },
+  "SceneComposer.submit": {
+    "description": "Render the most recently prepared scene data into the supplied texture, then clear that prepared frame.",
+    "parameters": {
+      "texture": "The output GPUTexture, normally the current canvas texture."
+    },
+    "notes": [
+      "No work is submitted if prepare has not supplied frame data or the texture is absent. A previously submitted prepared frame cannot be submitted twice through this method."
+    ]
+  },
+  "SceneComposer.getCurrentTexture": {
+    "description": "Acquire the canvas context's current presentation texture.",
+    "returnsDescription": "A GPUTexture for the current frame. Use it promptly; do not retain it as a persistent render target across frames."
+  },
+  "SceneComposer.getViews": {
+    "description": "Return the composer's registered view array.",
+    "returnsDescription": "The live views array, not a copy. Prefer createView and the view lifecycle when changing registration so dirty flags remain correct."
+  },
+  "SceneComposer.syncTextureArrays": {
+    "description": "Synchronize texture-array content for entities collected from the attached scenes.",
+    "parameters": {
+      "isFullRebuild": "True to request a full texture-array rebuild rather than an incremental synchronization."
+    },
+    "returnsDescription": "A promise for the texture manager's synchronization operation."
+  },
+  "SceneComposer.addAnim": {
+    "description": "Schedule composer-level animations, starting the loop if idle or buffering insertions while it is rendering.",
+    "parameters": {
+      "anim": "One or more prepared Animation objects. Prefer play when you also need option application and an awaited completion boundary."
+    }
+  },
+  "SceneComposer.removeAnim": {
+    "description": "Queue one animation for removal on the next update and request a frame.",
+    "parameters": {
+      "anim": "The scheduled animation instance to remove."
+    },
+    "notes": [
+      "Removal from the queue is not the same as resolving an awaited play promise. Use the animation's stop contract when interruption must settle its pending promise."
+    ]
+  },
+  "SceneComposer.isPaused": {
+    "description": "Whether composer playback is paused. Individual scenes can additionally have their own pause state."
+  },
+  "SceneComposer.isFinished": {
+    "description": "Check that the composer has no queued animations/frame updates and every attached scene reports completion.",
+    "returnsDescription": "True only when all those conditions hold. This does not establish that an external fetch, timer or application task has completed."
+  },
+  "SceneComposer.pause": {
+    "description": "Cancel the scheduled live/timer frame and pause all attached scenes.",
+    "notes": [
+      "Queued animation state is retained for resume. External DOM timers, application state and separately owned media still need their own pause coordination."
+    ]
+  },
+  "SceneComposer.resume": {
+    "description": "Resume all attached scenes, skip elapsed wall-clock pause time and restart the frame loop."
+  },
+  "SceneComposer.postRender": {
+    "description": "An empty post-render hook for a subclass. The base implementation performs no work."
+  },
+  "SceneComposer.clearColor": {
+    "description": "Set the renderer clear color using premultiplied RGB and the supplied alpha.",
+    "parameters": {
+      "color": "Color whose RGB channels are multiplied by alpha before storage in config.clear_color."
+    },
+    "notes": [
+      "This setter does not directly invalidate the composer. Request a frame when changing the background of an otherwise idle scene."
+    ]
+  },
+  "SceneComposer.applyLockedOverrides": {
+    "description": "Copy CLI/host locked configuration fields back into renderConfig. This prevents scene settings from overriding locked output choices."
+  },
+  "SceneComposer.enableFrameFeedback": {
+    "description": "Enable the renderer's frame-feedback feature and return it for configuration.",
+    "returnsDescription": "The FrameFeedbackFeature used by the initialized renderer. Feedback retains prior image information; it is different from an entity animation loop."
+  },
+  "SceneComposer.setPersistence": {
+    "description": "Enable or disable the UI manager's persistent rendering mode and request a frame.",
+    "parameters": {
+      "enable": "Whether previous output should be retained through the persistence path."
+    },
+    "returnsDescription": "The same composer."
+  },
+  "SceneComposer.setPersistentRegion": {
+    "description": "Set the rectangular region retained by persistent rendering through the UI manager.",
+    "parameters": {
+      "x": "Horizontal origin as a fraction of the output width, measured from the left.",
+      "y": "Vertical origin as a fraction of the output height, measured from the top.",
+      "w": "Width as a fraction of the output width; 1 spans the full width.",
+      "h": "Height as a fraction of the output height; 1 spans the full height."
+    },
+    "returnsDescription": "The same composer.",
+    "notes": [
+      "RenderPass multiplies these values by its current render-target dimensions. They are normalized image coordinates rather than scene coordinates. Persistence must be enabled for this preservation path to run."
+    ]
+  },
+  "SceneComposer.clearPersistentRegion": {
+    "description": "Clear the configured persistence region and invalidate output.",
+    "returnsDescription": "The same composer."
+  },
+  "SceneComposer.clearNextFrame": {
+    "description": "Ask the UI manager to force clearing on the next prepared frame, even when persistence is enabled.",
+    "returnsDescription": "The same composer."
+  },
+  "SceneComposer.addCompute": {
+    "description": "Append compute commands to the composer's compute queue for execution before downstream render passes.",
+    "parameters": {
+      "compute_commands": "Dispatch commands with their pipeline, bind group and dispatch counts."
+    },
+    "notes": [
+      "This appends work but does not directly call invalidate. Produce commands from the normal update path or request a frame after adding them to an idle composer."
+    ]
+  },
+  "SceneComposer.startOfflineRender": {
+    "description": "Switch to fixed-interval offline rendering, connect an OfflineRecorder and run the offline manager's capture loop.",
+    "parameters": {
+      "canvas": "Accepted by the signature; configure this composer's canvas/renderer before calling because the method does not attach this argument itself.",
+      "fps": "Frames per second; defaults to 60 and sets frame_interval to 1000/fps milliseconds.",
+      "maxDurationMs": "Maximum offline duration in milliseconds; zero leaves the duration choice to the offline manager.",
+      "wsUrl": "Recorder WebSocket endpoint, default ws://localhost:5001."
+    },
+    "returnsDescription": "A promise for recorder connection, denoiser preload and the offline render loop. Connection or renderer failures reject it.",
+    "notes": [
+      "This switches OFFLINE_RENDER on and RENDER_LIVE off, resets time and applies locked output overrides. Use the CLI workflow to provide the recorder server and encoding pipeline."
+    ]
+  },
+  "SceneComposer.reset": {
+    "description": "Abort composer animations, reset each scene, retire queued GPU resources safely and clear composer timing/tasks before requesting a fresh frame.",
+    "returnsDescription": "A promise resolving after scene resets and queued GPU destruction finish.",
+    "notes": [
+      "Pending animation promises reject with Error('Scene Reset'). Handle this cancellation when an awaited sequence is interrupted.",
+      "Reset clears the composer updater registry and queues but does not rerun scene choreography. It ends with PAUSED false and calls onAfterReset; use restart to invoke each scene's run again."
+    ]
+  },
+  "SceneComposer.restart": {
+    "description": "Await reset, restart the frame loop and launch run on each attached scene.",
+    "returnsDescription": "A promise resolving after reset and the run invocations, not after every scene's complete choreography.",
+    "notes": [
+      "Each run continues asynchronously. Expected Scene Reset cancellations are ignored by its attached catch; other errors are logged. Reset your own closure/module/simulation state inside run for repeatable restarts."
+    ]
+  },
+  "PersistentRegion": {
+    "description": "A rectangular part of the render target to preserve while persistent rendering is enabled. RenderPass converts the normalized x/y/w/h values to target pixels.",
+    "notes": [
+      "The origin is at the top left of the image. For example, {x:0.25,y:0.25,w:0.5,h:0.5} preserves the middle half of its width and height. This does not refer to an entity bounding box or camera world coordinates."
+    ]
+  }
+}

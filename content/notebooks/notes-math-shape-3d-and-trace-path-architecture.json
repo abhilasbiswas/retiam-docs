@@ -1,0 +1,205 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-math-shape-3d-and-trace-path-architecture",
+  "title": "3D Mathematical Shapes & Trajectory Ribbon Tracers Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/MATH_SHAPE_3D_AND_TRACE_PATH_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/MATH_SHAPE_3D_AND_TRACE_PATH_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/MATH_SHAPE_3D_AND_TRACE_PATH_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Shapes](/api-render-pipelines#pipeline), [MathShape3D](/api-entities-composites-geometry#mathshape3d), [TracePath](/api-entities-primitives-3d#tracepath), [MathSurfaceFragment](/api-components-fragment#mathsurfacefragment), [Line3D](/api-entities-primitives-3d#line3d), [Component](/api-core#component), [Model](/api-entities-primitives-3d#model), [VGroup](/api-entities-layout#vgroup), [Vec3](/api-math-vector#vec3), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [Sphere](/api-entities-primitives-3d#sphere), [Math3D](/api-math#math3d), [Color](/api-math#color), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-system-rationale",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & System Rationale"
+        },
+        {
+          "type": "paragraph",
+          "text": "Pedagogical mathematical animation requires visual idioms distinct from conventional video game 3D graphics:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`MathShape3D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts)**: Implements the iconic 3Blue1Brown / Manim mathematical aesthetic: semi-translucent volumetric surface bodies with glass transmission/refraction, paired with crisp 3D extruded stroke outlines along all unique geometric edges.",
+            "**[`TracePath`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/TracePath.ts)**: A real-time trajectory motion ribbon that dynamically follows moving entities or particles, smoothing anchor points via ping-pong GPU compute Chaikin subdivision and tapering dissipating tails."
+          ]
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "MathShape3D",
+              "description": "Surface and outline composition.",
+              "children": [
+                {
+                  "label": "Translucent surface",
+                  "description": "MathSurfaceFragment; glass transmission and ambient saturation."
+                },
+                {
+                  "label": "3D extruded outlines",
+                  "description": "Line3D unique edges; analytical joints and consistent width."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-manim-aesthetic-engine-mathshape3d-ts-src-engine-entities-composites-geometry-mathshape3d-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Manim Aesthetic Engine ([MathShape3D.ts](../src/engine/entities/composites/geometry/MathShape3D.ts))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Dual Component Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "When instantiating `MathShape3D(mesh, options)`:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Semi-Transparent Surface Body ([`Model`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Model.ts))**:",
+              "children": [
+                "Uses [`MathSurfaceFragment`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/fragment/MathSurfaceFragment.ts) with configurable `transmission` ($0.0 - 1.0$), `roughness`, and `fillOpacity`.",
+                "Evaluates lighting with an ambient floor, ensuring that back faces and shadowed regions remain saturated and mathematically readable without pitch-black falloff."
+              ]
+            },
+            {
+              "text": "**Extruded Edge Outlines ([`VGroup`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts))**:",
+              "children": [
+                "Extracts every unique topological edge in the mesh.",
+                "Renders each edge as an extruded 3D cylinder/ribbon ([`Line3D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Line3D.ts))."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Unique Edge Extraction Algorithm"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given a triangle mesh with indices $[i_0, i_1, i_2]$:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Every triangle produces three candidate edges: $(i_0, i_1)$, $(i_1, i_2)$, $(i_2, i_0)$.",
+            "Edges are normalized so that $u = \\min(i_a, i_b)$ and $v = \\max(i_a, i_b)$.",
+            "Stored in a hash map `Map<string, [Vec3, Vec3]>` keyed by `${u}_${v}`. Shared interior edges between adjacent triangles are collapsed to a single edge, preventing overlapping duplicate line draws."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-dynamic-trajectory-ribbons-tracepath-ts-src-engine-entities-primitives-3d-tracepath-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Dynamic Trajectory Ribbons ([TracePath.ts](../src/engine/entities/primitives/3d/TracePath.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "`TracePath` records historical spatial coordinates of a moving target:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Head (t = scene.time)                           Tail (t - maxAge)\nFull Stroke Width                               Tapered Width -> 0\nOpacity: 1.0                                    Opacity: 0.0\n   ●═════════════════════════════════════════════════┄┄"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Ping-Pong GPU Chaikin Smoothing"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rather than drawing rigid polygonal segments between discrete frame samples, `TracePath` executes GPU compute passes ([`chaikin_smooth.wgsl`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/chaikin_smooth.wgsl)) using ping-pong storage buffers:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Chaikin Corner-Cutting**: For segment $(\\mathbf{P}_i, \\mathbf{P}_{i+1})$, two new sub-points are generated:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{Q}_i = \\frac{3}{4}\\mathbf{P}_i + \\frac{1}{4}\\mathbf{P}_{i+1}, \\quad \\mathbf{R}_i = \\frac{1}{4}\\mathbf{P}_i + \\frac{3}{4}\\mathbf{P}_{i+1}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Configurable iterations (`smoothing: 0..3`) produce silky ribbons even with erratic physics step updates."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Dynamic Age Dissipation & Inverted Anchoring"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Points older than `maxAge` (default $1000\\text{ms}$) are pruned from the tail.",
+            "Parameter $t=0$ corresponds to the **head** (newest point) and $t=1$ corresponds to the **tail** (oldest point).",
+            "Dash patterns and taper shaders support `anchorEnd: true`, measuring pattern distance from the moving head to prevent dashes from \"swimming\" across the ribbon as it grows."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, MathShape3D, TracePath, Sphere, Math3D, Color, Vec3 } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Manim-style semi-transparent 3D cube with illuminated edges\nconst mathBox = new MathShape3D(Math3D.createBox(4, 4, 4), {\n    fill: Color.fromHex(\"#3b82f6\"),\n    fillOpacity: 0.6,\n    transmission: 0.3,\n    stroke: Color.WHITE,\n    stroke_width: 0.06\n});\nscene.add(mathBox);\n\n// 2. Moving particle tracer\nconst particle = new Sphere(0.3, { fill: Color.fromHex(\"#f43f5e\") });\nscene.add(particle);\n\n// 3. Extruded motion ribbon following the particle\nconst ribbon = new TracePath({\n    target: particle,\n    maxAge: 2000,\n    smoothing: 2,\n    tapering: true,\n    stroke: Color.fromHex(\"#fbbf24\"),\n    stroke_width: 0.15\n});\nscene.add(ribbon);\n\n// Animate orbital motion\nscene.always(({ time }) => {\n    particle.transform.position = new Vec3(\n        Math.cos(time * 2.0) * 5.0,\n        Math.sin(time * 3.0) * 2.0,\n        Math.sin(time * 2.0) * 5.0\n    );\n});"
+        }
+      ]
+    }
+  ]
+}

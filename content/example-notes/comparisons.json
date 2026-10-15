@@ -1,0 +1,46 @@
+{
+  "labs/compare-anchor-pivot": {
+    "title": "Compare a local edge with a world pivot",
+    "description": "Both rectangles rotate around a marked point. The left point is selected from the rectangle’s local edge before rotation; the right point is supplied as a world coordinate. Click a rectangle to reverse direction.",
+    "walkthrough": [
+      "Entity.getBoundaryPoint resolves LEFT against the rectangle’s local bounds, then returns the corresponding world point. Entity.setPivot stores that point while preserving the rectangle’s visible position.",
+      "The right rectangle receives an explicit world coordinate instead. Both rotations now use world pivots, but the way those points were chosen is different: one came from the object’s edge and one came from the scene."
+    ],
+    "experiments": [
+      "Change LEFT to CENTER, then move the explicit world coordinate. Notice which object reference changes."
+    ]
+  },
+  "labs/compare-local-world": {
+    "title": "Compare parent axes with world axes",
+    "description": "The two parents begin with the same rotation. The cyan dot shifts along its parent’s axis; the amber dot shifts along a world axis. Click a frame to rotate its parent and inspect the difference.",
+    "walkthrough": [
+      "Both dots are children of a rotated Entity. Entity.shift changes a dot’s position in its parent coordinates, so a positive x displacement appears along that parent’s rotated axis.",
+      "Entity.shiftWorld converts the desired world displacement through the parent transform. Both callbacks receive the same dx; the coordinate conversion makes their visible directions differ."
+    ],
+    "experiments": [
+      "Change parent rotation to zero, then pi/2. The two directions agree only when the relevant axes align."
+    ]
+  },
+  "labs/compare-sequence-parallel": {
+    "title": "Compare a sequence with simultaneous changes",
+    "description": "The upper dot moves and then grows through two awaited calls. The lower dot changes position and scale through one target-state animation. Click either dot after completion to replay.",
+    "walkthrough": [
+      "The upper row awaits movement before constructing and playing its scaling target. Those two 900-millisecond steps take 1800 milliseconds altogether.",
+      "The lower row combines position and scale in one Animator target and changes them over 900 milliseconds. Promise.all starts the upper choreography alongside the lower transition and waits until both rows finish."
+    ],
+    "experiments": [
+      "Use one play call containing two different entities’ animators to run them together. Avoid separate competing builders writing the same properties on one entity."
+    ]
+  },
+  "labs/compare-geometry-paint": {
+    "title": "Compare size with stroke width",
+    "description": "The cyan circle changes transform scale; the amber circle keeps its centerline radius and changes stroke width. Click either to freeze the comparison.",
+    "walkthrough": [
+      "The cyan circle receives an absolute scale each frame. Its geometry and painted outline grow together around the same center.",
+      "The amber circle receives a changing paint stroke width while its transform stays fixed. Inspect its centerline radius and the inner/outer coverage to separate geometry size from outline thickness."
+    ],
+    "experiments": [
+      "Compare both outside and inside edges. A thicker stroke changes rendered coverage and can affect bounds; it does not change the underlying circle radius."
+    ]
+  }
+}

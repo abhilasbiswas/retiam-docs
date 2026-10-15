@@ -1,0 +1,90 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "procedural-shapes",
+  "title": "Procedural shapes and mesh generators",
+  "group": "Libraries",
+  "summary": "Generate mathematical surfaces and procedural meshes, then inspect how their parameters change the geometry.",
+  "sections": [
+    {
+      "id": "2d-geometry-families",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2D geometry families"
+        },
+        {
+          "type": "paragraph",
+          "text": "retiam/shapes supplies option-driven paths for stars, squircles, hearts, crosses, gears, teardrops, chevrons, curved/double arrows, architectural profiles, spirals, waveforms, diamonds, trapezoids, parallelograms and crescents. It also exposes additional arc, annulus, regular-polygon, sector and wedge helpers. These inherit Path behavior, so effects, modifiers, transforms and sampling remain available."
+        },
+        {
+          "type": "paragraph",
+          "text": "The current index contains more shapes than older “16 shapes” catalog counts imply. The shapes API lists every exported class and options interface; use that as the inventory."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Star, Heart, Gear2D } from \"retiam/shapes\";\nconst star = new Star({ points: 5, outerRadius: 2, innerRadius: 0.9 });\nconst heart = new Heart({ width: 2.5, height: 2.5 });\nconst gear = new Gear2D({ teeth: 12, outerRadius: 1.8, rootRadius: 1.4 });\n// Add, place and animate these Path-derived entities in a Scene."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Star](/api-libs-shapes-2d#star), [Heart](/api-libs-shapes-2d#heart), [Gear2D](/api-libs-shapes-2d#gear2d), [Squircle](/api-libs-shapes-2d#squircle), [ArchitecturalProfile](/api-libs-shapes-2d#architecturalprofile), [Spiral2D](/api-libs-shapes-2d#spiral2d), [Waveform2D](/api-libs-shapes-2d#waveform2d)."
+        }
+      ]
+    },
+    {
+      "id": "3d-mesh-families",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3D mesh families"
+        },
+        {
+          "type": "paragraph",
+          "text": "Capsule, rounded box, prism, pyramid, Platonic solids, torus knot, helix, tube, ellipsoid, gear, truncated cone, wedge, diamond, bipyramid and superellipsoid generators create Model-compatible meshes. Radius, segment counts, topology, caps and profile parameters are shape-specific; do not assume all constructors accept the same positional arguments."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Capsule3D](/api-libs-shapes-3d#capsule3d), [RoundedBox3D](/api-libs-shapes-3d#roundedbox3d), [TorusKnot3D](/api-libs-shapes-3d#torusknot3d), [Tube3D](/api-libs-shapes-3d#tube3d), [Superellipsoid3D](/api-libs-shapes-3d#superellipsoid3d)."
+        }
+      ]
+    },
+    {
+      "id": "normals-and-topology",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Normals and topology"
+        },
+        {
+          "type": "paragraph",
+          "text": "A smooth mesh needs coherent normals and consistent winding. Flat-shaded solids require face-specific vertices/normals at sharp edges. Tubes use a transported frame along their centerline so the cross-section does not twist arbitrarily at each sample. Closed paths require a seam treatment; tight bends can produce overlapping tube geometry. Increase sampling until visible curvature is stable, then profile its memory and shading cost."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scenes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Study one parameterized 2D contour and one parameterized 3D mesh separately."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-procedural-star"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-procedural-helix"
+        }
+      ]
+    }
+  ]
+}

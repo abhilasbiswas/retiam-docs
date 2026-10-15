@@ -1,0 +1,136 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tutorial-compute-kernel",
+  "title": "Use ComputeKernel to generate an image",
+  "group": "Extending Retiam",
+  "summary": "Compute a small color grid on the GPU and render the same storage buffer with a Shader entity.",
+  "prerequisites": [
+    "[Custom shader tutorial](/tutorial-custom-shader)",
+    "[Resource ownership](/lifecycle-resources)"
+  ],
+  "outcome": "A 64 × 64 animated image whose colors are produced by custom WGSL compute logic.",
+  "difficulty": "advanced",
+  "estimatedMinutes": 35,
+  "sections": [
+    {
+      "id": "result",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "What you will build"
+        },
+        {
+          "type": "paragraph",
+          "text": "A compute kernel writes one vec4 color per cell. A fragment shader reads those colors from the same buffer. The example uses 4096 cells, making its indexing and resource use easy to inspect. Click the surface to freeze its time parameter."
+        }
+      ]
+    },
+    {
+      "id": "allocate",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Allocate the shared resources"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const side = 64, count = side * side;\nconst pixels = this.device.createBuffer({ size: count * 16, usage: GPUBufferUsage.STORAGE });\nconst params = this.device.createBuffer({\n  size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST\n});\nconst values = new Float32Array([0, side, count, 0]);"
+        },
+        {
+          "type": "paragraph",
+          "text": "A vec4f occupies 16 bytes. The GPU owns pixel values; the CPU writes only the parameter buffer. Add COPY_DST to pixels if you later initialize it from CPU data, or COPY_SRC when introducing readback."
+        }
+      ]
+    },
+    {
+      "id": "kernel",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Bind names and write compute logic"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const kernel = new ComputeKernel({\n  pixels: Res.buffer('array<vec4f>', pixels, 'read_write'),\n  params: Res.uniform('vec4f', params)\n}, `\n  let i = global_id.x;\n  if (i >= u32(params.z)) { return; }\n  pixels[i] = vec4f(f32(i % 64u) / 64.0, 0.5, 0.8, 1.0);\n`, [64, 1, 1]);"
+        },
+        {
+          "type": "paragraph",
+          "text": "This string is the generated entry point’s body; global_id and id are available. ComputeKernel also accepts a full module with a main compute entry point. When supplying one, its workgroup annotation must match your dispatch calculation. Named resources still generate declarations, so avoid duplicating their bindings."
+        }
+      ]
+    },
+    {
+      "id": "dispatch",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Queue work and display the result"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "this.device.queue.writeBuffer(params, 0, values);\nthis.addCompute(kernel.dispatch(this.device, Math.ceil(count / 64)));\nsurface.setStorageBuffer('pixels', 'array<vec4f>', pixels, 'read');"
+        },
+        {
+          "type": "paragraph",
+          "text": "dispatch returns a ComputeCommand. Scene.addCompute queues it into the frame pipeline; dispatch alone does not submit commands. Dispatch counts workgroups. The bounds check handles an incomplete final group. The scene compute stage runs before the draw that consumes the result."
+        }
+      ]
+    },
+    {
+      "id": "complete",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Run the complete compute image"
+        },
+        {
+          "type": "example",
+          "example": "labs/tutorial-compute-kernel"
+        },
+        {
+          "type": "paragraph",
+          "text": "The complete lab registers one updater, reuses one Float32Array, advances seconds from dt and renders the result. BufferOwner owns both allocations. Pause affects the time parameter while compute remains active, so you can compare state evolution with dispatch scheduling."
+        },
+        {
+          "type": "paragraph",
+          "text": "The camera updater uses the known 6 × 4 surface dimensions because the current Shader quad falls back to point bounds. Scene.setEvent supplies world coordinates for clicks; the lab tests those coordinates against the surface rectangle before freezing time. This handles the whole image without relying on shader picking geometry."
+        }
+      ]
+    },
+    {
+      "id": "practice-and-next",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Practice and continue"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Replace the radial wave with an X-axis gradient.",
+            "Change the workgroup size to 32 and change the dispatch divisor to 32.",
+            "Try a non-multiple cell count while retaining the bounds guard. Keep rendering indices within the allocated range."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Check the result: The image should animate without CPU uploads to pixels. Follow [compute and instancing](/compute-instancing) for repeated geometry and [render targets](/render-targets) for ping-pong simulations."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Chain FrameGraph passes](/tutorial-frame-graph). Use the [tutorial index](/tutorials) to choose another project."
+        }
+      ]
+    }
+  ]
+}

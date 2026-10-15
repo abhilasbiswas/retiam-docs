@@ -1,0 +1,123 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tutorial-first-video",
+  "title": "Render your first animation video",
+  "group": "Getting started tutorials",
+  "summary": "Take the npm starter from browser preview to a short draft video and a higher-resolution render.",
+  "prerequisites": [
+    "[Installation](/installation#create-a-consumer-application)",
+    "[Your first scene](/first-scene)"
+  ],
+  "outcome": "A timestamped MP4 in your project’s outputs/video directory.",
+  "difficulty": "beginner",
+  "estimatedMinutes": 20,
+  "sections": [
+    {
+      "id": "prepare",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Prepare a complete animation project"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use the installation guide’s npm starter with scenes/MyScene.ts and the browser bootstrap that loads ?file=. Its scene is four seconds long. Complete [your first scene](/first-scene) to understand add, play and wait before rendering. Run the commands below from that consumer project."
+        },
+        {
+          "type": "paragraph",
+          "text": "The headless renderer needs a usable Chrome with WebGPU and FFmpeg on PATH. The [export guide](/export#cli-preview-and-final-render) explains those dependencies and output settings."
+        }
+      ]
+    },
+    {
+      "id": "preview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Preview and check the scene"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm run dev"
+        },
+        {
+          "type": "paragraph",
+          "text": "Preview the complete timeline in the browser. Check the camera, text, asset readiness and final hold. Stop the development server when finished if you want to avoid its default port being occupied during the CLI run."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam lint scenes/MyScene.ts --json"
+        }
+      ]
+    },
+    {
+      "id": "draft",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Render a four-second draft"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm install --save-dev vite puppeteer ws cli-progress\nnpx retiam render scenes/MyScene.ts -w 1280 -h 720 -f 30 -d 4000 -o outputs/video"
+        },
+        {
+          "type": "paragraph",
+          "text": "The CLI launches the project host, selects the scene and captures frames for encoding. Duration is milliseconds and -o is an output directory. The resulting filename includes a timestamp. Open the MP4 and check its first frame, transitions and final state."
+        }
+      ]
+    },
+    {
+      "id": "final",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Increase quality after inspecting the draft"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam render scenes/MyScene.ts -w 1920 -h 1080 -f 60 -d 4000 -o outputs/video"
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep resolution, FPS and duration explicit. Assets should finish loading before their choreography uses them. Offline frame stepping stabilizes timeline samples; wall-clock media, network responses and unseeded randomness still need deliberate handling."
+        }
+      ]
+    },
+    {
+      "id": "practice-and-next",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Practice and continue"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Render at 30 FPS and 60 FPS and compare timing.",
+            "Add a longer final hold and extend -d to include it.",
+            "Capture preview snapshots with npx retiam snapshot scenes/MyScene.ts --times 1.0,2.2,3.0 --json."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Check the result: The rendered file should show the same intended sequence as the preview. Snapshot times are seconds and approximate wall-clock preview checks. For failures, follow [troubleshooting](/troubleshooting)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Build a mathematical explanation](/project-mathematical-explanation). Use the [tutorial index](/tutorials) to choose another project."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,202 @@
+{
+  "layout/arrange_basic": {
+    "description": "Place repeated entities in a grid, radial dial and parametric arch.",
+    "walkthrough": [
+      "Arrange starts with a template and a count. Each layout function computes placements, while forAll permits per-item color or scale changes.",
+      "The dial also orients its ticks tangentially. Curve placement uses the returned coordinates; it is not a bounding-box row layout."
+    ],
+    "experiments": [
+      "Increase the dial count while keeping radius fixed. Compare spacing, then disable tangent orientation."
+    ]
+  },
+  "layout/arrange_compute_wave": {
+    "description": "Update a dense instance lattice directly through a compute shader.",
+    "walkthrough": [
+      "Arrange with gpu enabled shares a template across a 256-by-256 grid. onCompute supplies WGSL that updates instance data from index and time.",
+      "The shader combines traveling waves and a radial component. CPU setup and submission still exist; the scene’s zero-CPU-overhead caption should not be read as a measured end-to-end performance guarantee."
+    ],
+    "experiments": [
+      "Reduce both grid dimensions to 64 and isolate one wave term. Inspect its motion before restoring the other terms."
+    ]
+  },
+  "layout/arrange_gpu_demo": {
+    "description": "Render a large instance grid whose transforms are updated from JavaScript.",
+    "walkthrough": [
+      "Arrange with gpu enabled batches repeated circles. Its onUpdate callback still loops through records on the CPU to calculate ripple scaling.",
+      "This differs from onCompute, where the calculation runs in WGSL. Instancing reduces repeated geometry and draw submission, but does not automatically move all update work onto the GPU."
+    ],
+    "experiments": [
+      "Freeze the onUpdate callback and compare the static grid. Then reduce the count to observe how CPU update workload changes."
+    ]
+  },
+  "layout/feature_layout": {
+    "description": "Arrange a circle grid and align neighboring labels by bounds.",
+    "walkthrough": [
+      "VGroup.arrangeInGrid distributes the circles using their dimensions. nextTo positions a label beside the completed group, and alignTo aligns the side box.",
+      "Layout depends on actual bounds. A larger circle can change spacing without any explicit change to the group’s position."
+    ],
+    "experiments": [
+      "Double one circle’s radius and rebuild the layout. Inspect neighboring spacing and label placement."
+    ]
+  },
+  "layout/zoom": {
+    "description": "Inspect a live scene through a draggable magnified viewport.",
+    "walkthrough": [
+      "ZoomView receives the scene-content entity and displays a separate view of it. Its focus box selects the source region rather than moving the underlying curve.",
+      "Dragging updates focus position, and wheel input changes zoom factor. The moving dot proves that the view mirrors current scene content rather than a static screenshot."
+    ],
+    "experiments": [
+      "Drag the focus box over the moving dot, then change zoom factor. Compare magnification with moving the main camera."
+    ]
+  },
+  "modernize/animation_fix": {
+    "description": "Chain entity animations and compare them with grouped animation.",
+    "walkthrough": [
+      "The first play call combines a rectangle transform chain with a circle placement and fill change. Those chains describe animation targets rather than applying all changes immediately.",
+      "GroupAnimator applies coordinated animation across several entities. The timing and easing options belong to the animation, while the entities retain their geometry and paint."
+    ],
+    "experiments": [
+      "Separate the first parallel play into two awaited calls. Compare the resulting order with the original overlap."
+    ]
+  },
+  "modernize/dynamic_path": {
+    "description": "Populate an initially empty path after the scene has started.",
+    "walkthrough": [
+      "Path begins with no vertices, while a rectangle confirms that ordinary rendering is active. After a wait, setVertices provides path geometry.",
+      "The renderer must accommodate the new geometry allocation. This example exercises growth from an empty path rather than merely changing a transform on an existing contour."
+    ],
+    "experiments": [
+      "Supply a shorter vertex list first, then a longer one after the second wait. Inspect both updates."
+    ]
+  },
+  "modernize/instance": {
+    "description": "Refresh a spatial vector field through its shared instance representation.",
+    "walkthrough": [
+      "VectorField3D samples the callback over a spatial range. Its arrows share rendering infrastructure instead of requiring separately managed arrow entities for every sample.",
+      "updateField refreshes the sampled directions during scene updates. Camera motion changes the viewpoint independently of the field formula."
+    ],
+    "experiments": [
+      "Freeze time in the field callback, then orbit the camera. Compare a static field with a changing viewpoint."
+    ]
+  },
+  "modifiers/custom_modifier_demo": {
+    "description": "Implement a contour modifier as a function and as a reusable class.",
+    "walkthrough": [
+      "The functional path resamples its contour before applying a polar warp. The class-based AttractorModifier stores a point, radius and strength, and returns deformed contours.",
+      "Changing external variables requires modifier invalidation; property setters in the reusable class can encapsulate that step. Keep the original contour separate from temporary output arrays."
+    ],
+    "experiments": [
+      "Reduce attractor radius while keeping strength fixed. Compare localized deformation with changing the functional modifier’s phase."
+    ]
+  },
+  "modifiers/path_modifiers_showcase": {
+    "description": "Combine resampling, displacement, trimming and corner shaping.",
+    "walkthrough": [
+      "Modifiers form an ordered contour pipeline. Resampling gives Wiggle enough points to displace, Trim chooses a visible interval, and RoundCorners changes sharp turns.",
+      "The updater changes modifier parameters through retrieved instances. Ordering matters because later modifiers receive the output of earlier ones."
+    ],
+    "experiments": [
+      "Move ResampleModifier after WiggleModifier on the wire. Compare the result with the original order."
+    ]
+  },
+  "modifiers/reverse_demo": {
+    "description": "Reverse traversal before revealing a path.",
+    "walkthrough": [
+      "Both rows use the same base curve. ReverseModifier changes the lower contour’s traversal before TrimModifier reveals its interval.",
+      "The start and end markers expose the changed direction even when the complete silhouettes match. Reversing traversal differs from reflecting the entity in space."
+    ],
+    "experiments": [
+      "Remove ReverseModifier and replay both rows. Compare their reveal direction without changing positions."
+    ]
+  },
+  "modifiers/wiggle_demo": {
+    "description": "Compare smooth and angular displacement along a resampled line.",
+    "walkthrough": [
+      "ResampleModifier supplies enough contour points for WiggleModifier. The two rows use smooth and corner modes with anchored endpoints.",
+      "Phase animation changes displacement over time. Seed, frequency and amplitude control different aspects of the noise rather than the line’s overall transform."
+    ],
+    "experiments": [
+      "Disable anchorEnds and increase amplitude. Inspect whether the endpoints stay connected to their original positions."
+    ]
+  },
+  "modifiers/wobble_demo": {
+    "description": "Compare single-pass, double-pass and overshooting sketch contours.",
+    "walkthrough": [
+      "WobbleModifier alters contour geometry with hand-drawn irregularity. Separate panels vary passes, corner crossing and endpoint anchoring.",
+      "boilFps controls how often the irregularity changes, giving a stepped line-boil effect. Paint sketch effects are additional styling and should be distinguished from displaced contour geometry."
+    ],
+    "experiments": [
+      "Set boilFps to zero in one panel. Compare a stable irregular contour with the animated neighboring panel."
+    ]
+  },
+  "modifiers/zigzag_demo": {
+    "description": "Add sharp teeth or smooth waves along a path.",
+    "walkthrough": [
+      "ZigZagModifier displaces the contour along its normals. ridges controls repeated structure; amplitude controls its distance from the original line.",
+      "The two styles share the same straight source path. Animation changes modifier settings rather than translating that path."
+    ],
+    "experiments": [
+      "Give both rows the same ridges and amplitude. Compare corner and smooth modes alone."
+    ]
+  },
+  "morph_3d/morph_catenoid_helicoid": {
+    "description": "Interpolate sampled members of the catenoid–helicoid associate family.",
+    "walkthrough": [
+      "ParametricModel evaluates each stage using the same parameterization structure. The alpha value selects the mathematical surface before Morph blends between stages.",
+      "UI labels name the destination stage while the camera remains interactive. The mathematical isometry concerns the continuous family; finite mesh sampling still limits visual precision."
+    ],
+    "experiments": [
+      "Reduce parameter segments and compare the bend with the higher-resolution version. Keep stage alpha values unchanged."
+    ]
+  },
+  "morph_3d/morph_demo": {
+    "description": "Blend a cube and sphere through a MorphModel weight.",
+    "walkthrough": [
+      "The endpoints are ordinary Model entities. MorphModel prepares the chosen matching strategy and exposes a weight that CustomAnimation drives between endpoints.",
+      "Weight changes the intermediate geometry; endpoint material settings supply appearance. A reverse weight animation returns to the starting model."
+    ],
+    "experiments": [
+      "Stop weight at 0.5 and orbit the camera. Inspect the intermediate silhouette before changing material roughness."
+    ]
+  },
+  "morph_3d/morph_dual_contouring": {
+    "description": "Morph spatial primitives using a volumetric dual-contouring strategy.",
+    "walkthrough": [
+      "The scene cycles between cube, torus and sphere with a shared morph configuration. The volumetric representation allows the transition to differ from direct one-to-one vertex blending.",
+      "Dual contouring reconstructs a sampled surface, so resolution and reconstruction settings affect edge fidelity and preparation cost. Rotation exposes intermediate silhouettes."
+    ],
+    "experiments": [
+      "Lower the configured resolution and compare cube corners during the transition. Keep easing and duration unchanged."
+    ]
+  },
+  "morph_3d/morph_mobius": {
+    "description": "Change a ribbon’s twist through compatible parameterized stages.",
+    "walkthrough": [
+      "Each ParametricModel samples a ribbon from the same parameter domain. Twist count distinguishes the cylindrical band, Möbius strip and further twisted bands.",
+      "Morph interpolates the sampled stages. Some intermediate states can have intersections; a visual interpolation is not a proof that every stage preserves topology."
+    ],
+    "experiments": [
+      "Stop the transition halfway between zero and one twist and orbit underneath the ribbon. Inspect intersections and seam behavior."
+    ]
+  },
+  "morph_3d/morph_naive": {
+    "description": "Blend meshes with matching vertex and index layouts.",
+    "walkthrough": [
+      "The sphere mesh provides the shared topology. Other endpoints reuse its index arrangement and deform corresponding vertex positions, making direct interpolation meaningful.",
+      "The naive strategy avoids finding correspondence between unrelated meshes. Reordering one endpoint’s vertices would break that correspondence even if its final silhouette still looked correct."
+    ],
+    "experiments": [
+      "Change the radial deformation amplitude while retaining vertex order. Compare the midpoint geometry with the endpoint silhouette."
+    ]
+  },
+  "morph_3d/morph_polyhedra": {
+    "description": "Morph several polyhedral forms through a shared sampling scheme.",
+    "walkthrough": [
+      "ParametricModel callbacks describe caps, sides and normals for the cube, tetrahedron, prisms and octahedron. Shared parameter sampling supplies correspondence across the stages.",
+      "The formulas, rather than a generic primitive-to-primitive matching step, decide where corresponding points lie. Face-normal choices affect the apparent sharpness of flat regions."
+    ],
+    "experiments": [
+      "Change the hexagonal prism’s height while leaving its base radius fixed. Compare corresponding side points during the morph."
+    ]
+  }
+}

@@ -1,0 +1,2813 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "shaders-compute",
+  "title": "compute WGSL",
+  "group": "Shader reference",
+  "sections": [
+    {
+      "id": "shader-implementation-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Shader implementation contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "WGSL modules are assembled through engine imports, chunk registration and ShaderBuilder. Functions, structures and bindings below come directly from the checked-out shader files. A file can be a reusable include, an active entry point or a retained experimental/legacy variant; file presence alone does not establish that it executes in the default pipeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the corresponding geometry, fragment and pass API before changing an entry point. CPU data offsets, WGSL alignment, bindings, varying interpolation, reversed depth and workgroup sizes must continue to agree."
+        }
+      ]
+    },
+    {
+      "id": "arc-length",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "arc_length.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/arc_length.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/arc_length.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Properties`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> output: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Properties;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read> indices: array<u32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<storage, read_write> segment_lengths: array<f32>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "batched-arc-length",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "batched_arc_length.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/batched_arc_length.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/batched_arc_length.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(local_invocation_id) local_id: vec3u, @builtin(workgroup_id) group_id: vec3u",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `AnalyticalJob`, `Uniforms`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> output: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> uniforms: Uniforms;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read> jobs: array<AnalyticalJob>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<storage, read> indices: array<u32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "5",
+                "var<storage, read_write> clipQuads: array<vec2f>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `256`."
+        }
+      ]
+    },
+    {
+      "id": "batched-pack-path-len",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "batched_pack_path_len.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/batched_pack_path_len.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/batched_pack_path_len.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3u",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `AnalyticalJob`, `Uniforms`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> prefix_sums: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> arc_len_buf: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> uniforms: Uniforms;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read> jobs: array<AnalyticalJob>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<storage, read> indices: array<u32>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "batched-path-encoder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "batched_path_encoder.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/batched_path_encoder.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/batched_path_encoder.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "unpackJointType",
+                "packed: u32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "unpackStartCapType",
+                "packed: u32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "unpackEndCapType",
+                "packed: u32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "tangent",
+                "p1: vec2<f32>, p2: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "perpendicular",
+                "p1: vec2f, p2: vec2f",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "intersect",
+                "p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>, p4: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "distanceLine2Point",
+                "a: vec2<f32>, b: vec2<f32>, p: vec2<f32>",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "curvePoint",
+                "p0: vec2f, p1: vec2f, p2: vec2f, t: f32",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "tangentAt",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, t: f32",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "normalAt",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, t: f32",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "curveOffsetAt",
+                "p0: vec2f, p1: vec2f, p2: vec2f, t: f32, w: f32",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "findCusp",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, offsetDistance: f32",
+                "CuspSolutions"
+              ]
+            },
+            {
+              "cells": [
+                "GH",
+                "pos: vec2f, A: vec2f, B: vec2f, C: vec2f",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "isClockwise",
+                "p0: vec2f, p1: vec2f, p2: vec2f",
+                "bool"
+              ]
+            },
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3u",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `AnalyticalJob`, `Uniforms`, `CuspSolutions`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> data: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> vertex: array<vec4f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> uniforms: Uniforms;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read> jobs: array<AnalyticalJob>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<storage, read> indices: array<u32>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "bezier-point-generator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "bezier_point_generator.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/bezier_point_generator.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/bezier_point_generator.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `VertexOut`, `Propertise`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> inputVertices: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> outputVertices: array<VertexOut>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Propertise;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "chaikin-smooth",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "chaikin_smooth.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/chaikin_smooth.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/chaikin_smooth.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Params`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> in_points: array<vec4f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> out_points: array<vec4f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> params: Params;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "compute-length",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "compute_length.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/compute_length.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/compute_length.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Propertise`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> output: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Propertise;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "copy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "copy.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/copy.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/copy.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Propertise`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> output: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Propertise;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "dual-contouring",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "dual_contouring.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/dual_contouring.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/dual_contouring.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "getSDF_3D",
+                "x: u32, y: u32, z: u32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "getSDF_Continuous",
+                "pos: vec3<f32>",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "getNormal_Continuous",
+                "pos: vec3<f32>",
+                "vec3<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "getUV",
+                "pos: vec3<f32>, normal: vec3<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "pass1_vertices",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "emitQuad",
+                "idx: u32, v0: vec3<f32>, v1: vec3<f32>, v2: vec3<f32>, v3: vec3<f32>, d0: f32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "getPrecomputedVertex",
+                "x: u32, y: u32, z: u32",
+                "vec3<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "pass2_quads",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `DCParams`, `Vertex`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> sdfA: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> sdfB: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> outVerts: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<uniform> params: DCParams;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<storage, read_write> cellVerts: array<vec4<f32>>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`, `64`."
+        }
+      ]
+    },
+    {
+      "id": "extract-line3d-len",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "extract_line3d_len.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/extract_line3d_len.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/extract_line3d_len.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Properties`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input: array<vec4f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> output: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Properties;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "interpolator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "interpolator.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/interpolator.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/interpolator.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Properties`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input_a: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> input_b: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> output: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<uniform> prop: Properties;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `${workgroupSize}`."
+        }
+      ]
+    },
+    {
+      "id": "joint",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "joint.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/joint.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/joint.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "side",
+                "p1: vec2f, p2: vec2f, p: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Propertise`, `VertexOut`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> output: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Propertise;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "mesh-generator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "mesh_generator.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/mesh_generator.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/mesh_generator.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "safe_atan2",
+                "y: f32, x: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "safe_normalize",
+                "v: vec2f",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "dir",
+                "a: vec2f, b: vec2f, c: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "line_intersection",
+                "p1: vec2f, p2: vec2f, q1: vec2f, q2: vec2f",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "cross",
+                "a: vec2f, b: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "side",
+                "p1: vec2f, p2: vec2f, p: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "angle",
+                "a: vec2f, b: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "distancePointToLine",
+                "point: vec2<f32>, lineStart: vec2<f32>, lineEnd: vec2<f32>",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Vertex`, `VertexOut`, `Propertise`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> inputVertices: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> x_position: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> outputVertices: array<VertexOut>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<uniform> prop: Propertise;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "morph-interpolator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "morph_interpolator.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/morph_interpolator.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/morph_interpolator.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `MorphParams`, `Vertex`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> inA: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> inB: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> outVertices: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<uniform> params: MorphParams;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "normalize",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "normalize.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/normalize.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/normalize.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Propertise`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> output: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Propertise;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read_write> total_len: array<f32>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "offset",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "offset.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/offset.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/offset.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "normal",
+                "p1: vec2<f32>, p2: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "lineIntersection",
+                "p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>, p4: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "lineIntersection",
+                "p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>, p4: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Uniforms`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> data: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> normals: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> u: Uniforms;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "pack-line3d-len",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "pack_line3d_len.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/pack_line3d_len.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/pack_line3d_len.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Properties`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read_write> vertices: array<vec4f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> prefix: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Properties;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read_write> total_len: array<f32>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "pack-path-len",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "pack_path_len.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/pack_path_len.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/pack_path_len.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Properties`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> prefix_sums: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> arc_len_buf: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Properties;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read> indices: array<u32>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "path-encoder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "path_encoder.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/path_encoder.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/path_encoder.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "tangent",
+                "p1: vec2<f32>, p2: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "perpendicular",
+                "p1: vec2f, p2: vec2f",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "intersect2",
+                "p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>, p4: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "intersect",
+                "p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>, p4: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "curvePoint",
+                "p0: vec2f, p1: vec2f, p2: vec2f, t: f32",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "tangentAt",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, t: f32",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "normalAt",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, t: f32",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "distanceLine2Point",
+                "a: vec2<f32>, b: vec2<f32>, p: vec2<f32>",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "curveOffsetAt",
+                "p0: vec2f, p1: vec2f, p2: vec2f, t: f32, w: f32",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "findCusp",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, offsetDistance: f32",
+                "CuspSolutions"
+              ]
+            },
+            {
+              "cells": [
+                "dot2",
+                "v: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "cro",
+                "a: vec2f, b: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "cos_acos_3",
+                "x: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "GH",
+                "pos: vec2f, A: vec2f, B: vec2f, C: vec2f",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "isClockwise",
+                "p0:vec2f, p1:vec2f, p2:vec2f",
+                "bool"
+              ]
+            },
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Uniforms`, `CuspSolutions`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> data: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> vertex: array<vec4f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Uniforms;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "path-encoder13",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "path_encoder13.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/path_encoder13.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/path_encoder13.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "tangent",
+                "p1: vec2<f32>, p2: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "perpendicular",
+                "p1: vec2f, p2: vec2f",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "intersect2",
+                "p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>, p4: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "intersect",
+                "p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>, p4: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "curvePoint",
+                "p0: vec2f, p1: vec2f, p2: vec2f, t: f32",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "tangentAt",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, t: f32",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "normalAt",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, t: f32",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "distanceLine2Point",
+                "a: vec2<f32>, b: vec2<f32>, p: vec2<f32>",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "curveOffsetAt",
+                "p0: vec2f, p1: vec2f, p2: vec2f, t: f32, w: f32",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "findCusp",
+                "p0: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, offsetDistance: f32",
+                "CuspSolutions"
+              ]
+            },
+            {
+              "cells": [
+                "GH",
+                "pos: vec2f, A: vec2f, B: vec2f, C: vec2f",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "isClockwise",
+                "p0:vec2f, p1:vec2f, p2:vec2f",
+                "bool"
+              ]
+            },
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Uniforms`, `CuspSolutions`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> data: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> vertex: array<vec4f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Uniforms;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read> indices: array<u32>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "path-interpolate",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "path_interpolate.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/path_interpolate.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/path_interpolate.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Params`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> inputA: array<vec2<f32>>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> inputB: array<vec2<f32>>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> outPoints: array<vec2<f32>>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<uniform> params: Params;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "polygon-mesh",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "polygon_mesh.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/polygon_mesh.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/polygon_mesh.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(workgroup_id) workgroup_id : vec3<u32>, @builtin(local_invocation_id) local_invocation_id : vec3<u32>, @builtin(global_invocation_id) global_invocation_id : vec3<u32>, @builtin(local_invocation_index) local_invocation_index: u32, @builtin(num_workgroups) num_workgroups: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `VertexOut`, `Propertise`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> inputVertices: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> outputVertices: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Propertise;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "prefix-copy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "prefix_copy.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/prefix_copy.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/prefix_copy.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Propertise`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read_write> data: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> blocksums: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> prop: Propertise;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `${workgroupSize}`."
+        }
+      ]
+    },
+    {
+      "id": "prefix-sum",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "prefix_sum.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/prefix_sum.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/prefix_sum.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>, @builtin(local_invocation_id) local_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Propertise`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> input: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> output: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> blocksums: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<uniform> prop: Propertise;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `${workgroupSize}`."
+        }
+      ]
+    },
+    {
+      "id": "refit-morph",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "refit_morph.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/refit_morph.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/refit_morph.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `MorphParams`, `Triangle`, `BVHNode`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<uniform> params: MorphParams;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> trisA: array<Triangle>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read> trisB: array<Triangle>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read> leafIndices: array<u32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<storage, read_write> outTris: array<Triangle>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "5",
+                "var<storage, read_write> outNodes: array<BVHNode>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "6",
+                "var<storage, read> parentIndices: array<i32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "7",
+                "var<storage, read_write> flags: array<atomic<u32>>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "sdf-marching-cubes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "sdf_marching_cubes.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/sdf_marching_cubes.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/sdf_marching_cubes.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "getSDF_3D",
+                "x: u32, y: u32, z: u32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "getNormal",
+                "x: u32, y: u32, z: u32",
+                "vec3<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "getUV",
+                "pos: vec3<f32>, normal: vec3<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "getSDF_Continuous",
+                "pos: vec3f",
+                "f32"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `MCParams`, `Vertex`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> sdfA: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> sdfB: array<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read> triTable: array<i32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read_write> outVerts: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<uniform> params: MCParams;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "spline-contour-builder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "spline_contour_builder.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/spline_contour_builder.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/spline_contour_builder.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) gid: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `ContourParams`."
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "stroke-extruder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "stroke_extruder.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/stroke_extruder.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/stroke_extruder.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3u",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `StrokeJob`, `StrokeUniforms`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> inPoints: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> jobs: array<StrokeJob>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> outVertices: array<vec2f>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read_write> outIndices: array<u32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<uniform> uniforms: StrokeUniforms;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    },
+    {
+      "id": "swarm-morph",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "swarm_morph.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/compute/swarm_morph.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/compute/swarm_morph.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "hash33",
+                "p3_in: vec3<f32>",
+                "vec3<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "fluidWind",
+                "p: vec3<f32>, time: f32",
+                "vec3<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "main",
+                "@builtin(global_invocation_id) global_id: vec3<u32>",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `MorphParams`, `Vertex`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read> inA: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read> inB: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> outVertices: array<Vertex>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<uniform> params: MorphParams;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: compute."
+        },
+        {
+          "type": "paragraph",
+          "text": "Workgroup sizes: `64`."
+        }
+      ]
+    }
+  ]
+}

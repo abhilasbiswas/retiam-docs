@@ -1,0 +1,169 @@
+{
+  "EntityOptions": {
+    "description": "Common constructor options for an entity\u2019s identity, transform, vector paint, material and rendering flags. A shape-specific options interface can extend this set."
+  },
+  "EntityOptions.label": {
+    "description": "A readable name stored in Entity.LABEL. Use it to identify an object while inspecting a scene."
+  },
+  "EntityOptions.visible": {
+    "description": "Choose whether the entity is visible. Hiding changes presentation; destruction and removal remain separate lifecycle operations."
+  },
+  "EntityOptions.zIndex": {
+    "description": "Set an explicit rendering order value. This updates Entity.z_index and records an explicit override."
+  },
+  "EntityOptions.castShadow": {
+    "description": "Allow this object to contribute to raster shadow maps when the rendering pipeline and light support shadows."
+  },
+  "EntityOptions.receiveShadow": {
+    "description": "Allow this object\u2019s raster shading to include shadows from other objects."
+  },
+  "EntityOptions.isPickable": {
+    "description": "Choose whether the interaction picking system can identify this object. Visual appearance and pointer handling are separate choices."
+  },
+  "EntityOptions.layerMask": {
+    "description": "A bitmask selecting the render layers that contain this entity. Layer zero is represented by bit one; use the layer helpers rather than treating the mask as a layer index."
+  },
+  "EntityOptions.isUI": {
+    "description": "Mark this entity as a UI overlay. applyOptions calls setAsUI(false), so this option does not automatically mark its existing children."
+  },
+  "EntityOptions.position": {
+    "description": "Set the initial translation in the entity\u2019s parent coordinate system. This is an absolute position rather than a displacement.",
+    "example": "labs/lab-hierarchy"
+  },
+  "EntityOptions.rotation": {
+    "description": "Set an initial orientation with a scalar angle, Euler vector, or Quaternion. Angular inputs use radians.",
+    "example": "labs/lab-transforms"
+  },
+  "EntityOptions.scale": {
+    "description": "Set a uniform factor or separate factors for each axis. A value of one preserves the geometry\u2019s original size.",
+    "example": "labs/lab-hierarchy"
+  },
+  "EntityOptions.pivot": {
+    "description": "Set the initial pivot from a world coordinate after applying the starting transform. Pivot synchronization preserves visible placement.",
+    "example": "labs/lab-transforms"
+  },
+  "EntityOptions.anchor": {
+    "description": "Choose a persistent normalized bounds reference. The implementation applies this anchor before position and rotation.",
+    "example": "labs/lab-transforms"
+  },
+  "EntityOptions.t": {
+    "description": "Set the general normalized animation parameter exposed through Transform. Its visible meaning depends on the shader or entity using it."
+  },
+  "EntityOptions.t1": {
+    "description": "Set the first normalized animation variable, commonly used as the beginning of a path reveal range."
+  },
+  "EntityOptions.t2": {
+    "description": "Set the second normalized animation variable, commonly used as the end of a path reveal range.",
+    "example": "labs/pg-modifierscene"
+  },
+  "EntityOptions.fill": {
+    "description": "Set the vector interior color. Color.NONE gives an unfilled path. This option changes Paint rather than a mesh\u2019s PBR material.",
+    "example": "labs/lab-paint"
+  },
+  "EntityOptions.stroke": {
+    "description": "Set the vector outline color. Pair it with strokeWidth to make the outline visible.",
+    "example": "labs/lab-paint"
+  },
+  "EntityOptions.strokeWidth": {
+    "description": "Set the outline width in scene units. Camera framing and transform scale affect its apparent thickness.",
+    "example": "labs/lab-paint"
+  },
+  "EntityOptions.opacity": {
+    "description": "Set the paint opacity multiplier. Use the overlap in the paint lab to compare transparent and opaque contributions.",
+    "example": "labs/lab-paint"
+  },
+  "EntityOptions.cap": {
+    "description": "Choose the treatment of both endpoints of an open stroked path. startCap and endCap can choose different endpoint treatments."
+  },
+  "EntityOptions.startCap": {
+    "description": "Choose the stroke treatment at the start of an open path."
+  },
+  "EntityOptions.endCap": {
+    "description": "Choose the stroke treatment at the end of an open path."
+  },
+  "EntityOptions.joint": {
+    "description": "Choose how stroked segments meet at a corner. The join becomes more noticeable with a thick outline or a sharp angle."
+  },
+  "EntityOptions.materialColor": {
+    "description": "Set the base color of the entity\u2019s 3D material. It serves a different rendering path from the vector fill color.",
+    "example": "labs/pg-modelscene"
+  },
+  "EntityOptions.emColor": {
+    "description": "Set the material\u2019s emission color. Combine it with emStrength to control the emitted contribution."
+  },
+  "EntityOptions.emStrength": {
+    "description": "Set the strength of the material\u2019s emission contribution."
+  },
+  "EntityOptions.roughness": {
+    "description": "Set material roughness, which changes the spread of reflected highlights. Inspect a rotating model to see its effect.",
+    "example": "labs/pg-modelscene"
+  },
+  "EntityOptions.metallic": {
+    "description": "Set the material\u2019s metallic response. Evaluate it together with the base color and lighting."
+  },
+  "EntityOptions.transmission": {
+    "description": "Set the material transmission amount for renderers that support transmission. This is separate from vector paint opacity."
+  },
+  "EntityOptions.ior": {
+    "description": "Set the material index of refraction used by rendering paths that model refraction."
+  },
+  "EntityOptions.frustumCull": {
+    "description": "Choose whether camera frustum culling can skip this object. Disable it deliberately for objects whose effective bounds cannot represent their visible contribution."
+  },
+  "Entity.constructor": {
+    "description": "Create the scene-graph node, connect transform mutations to world-matrix invalidation, and apply any supplied EntityOptions. Creating the entity alone does not attach it to a scene.",
+    "example": "labs/pg-hierarchyscene"
+  },
+  "Entity.visible": {
+    "description": "Read or assign the entity\u2019s visibility flag. This accessor does not remove children, stop external timers, or dispose GPU resources."
+  },
+  "Entity.anchor": {
+    "description": "Read or assign the persistent local bounds anchor. Assignment converts the supplied vector with Vec3.cast and invalidates the anchor; assigning null clears it.",
+    "example": "labs/lab-transforms"
+  },
+  "Entity.z_index": {
+    "description": "Read or assign the paint\u2019s z-index. Assignment records an explicit local ordering choice."
+  },
+  "Entity.setStrokeColor": {
+    "description": "Change the vector outline color through the entity\u2019s Paint and return the entity for chaining. Call Scene.invalidate after an interactive change if the scene is otherwise idle.",
+    "example": "labs/lab-paint"
+  },
+  "EntityEventMap": {
+    "description": "The entity event map is the InteractionEventMap contract under an entity-facing name. Its keys select the payload type for pointer and interaction callbacks.",
+    "example": "labs/pg-interactionscene"
+  },
+  "EntityEventType": {
+    "description": "The set of interaction event names accepted by entity event registration. Follow InteractionEventType for the underlying event contract.",
+    "example": "labs/pg-interactionscene"
+  },
+  "Updater": {
+    "description": "A callback shape for entity updates. It may take no arguments or read scene time and delta time in milliseconds. Prefer Entity.always when you need a managed handle or scheduling options.",
+    "example": "labs/pg-updatescene"
+  },
+  "Paint.setStrokeColor": {
+    "description": "Set the outline color and return this Paint for chaining. The stroke setter marks its override and upload flags.",
+    "example": "labs/lab-paint"
+  },
+  "Paint.setStrokeWidth": {
+    "description": "Set the outline width and return this Paint for chaining. This changes styling while leaving the original vector path intact.",
+    "example": "labs/lab-paint"
+  },
+  "Paint.version": {
+    "description": "A change-tracking revision for this paint state. Setting UPDATE_FLAG to true allocates a new global revision so buffer synchronization can detect fresh values."
+  },
+  "hex": {
+    "description": "Create a Color from a three- or six-digit hexadecimal string. Pass opacity as the second argument: hex(\"#38bdf8\", 0.2). The helper\u2019s implementation does not decode an eight-digit RGBA string.",
+    "example": "labs/lab-paint"
+  },
+  "CameraModel.PERSPECTIVE": {
+    "description": "Use perspective projection, where equally sized objects at different depths can have different apparent sizes. Camera.fov controls the viewing angle.",
+    "example": "labs/lab-camera"
+  },
+  "CameraModel.ORTHOGRAPHIC": {
+    "description": "Use orthographic projection, where depth does not introduce perspective size changes. Camera.orthoScale controls framing.",
+    "example": "labs/lab-camera"
+  },
+  "Entity.setT": {
+    "description": "Set the general animation parameter and request a redraw. The current method takes one argument; use setT1 and setT2 separately for a draw range."
+  }
+}

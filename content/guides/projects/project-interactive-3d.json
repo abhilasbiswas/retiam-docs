@@ -1,0 +1,119 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "project-interactive-3d",
+  "title": "Build an interactive 3D view",
+  "group": "Projects",
+  "summary": "Build a 3D model scene, fit its camera, and add direct interaction.",
+  "prerequisites": [
+    "[3D geometry](/three-d)",
+    "[Camera controls](/cameras)",
+    "[Pointer interaction](/interaction)"
+  ],
+  "outcome": "A framed 3D model with interactive controls.",
+  "sections": [
+    {
+      "id": "overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Rotate, inspect and frame a model"
+        },
+        {
+          "type": "paragraph",
+          "text": "Build a small model viewer in three stages: place two meshes, orbit around them, then pick a model and change its surface. Each stage keeps camera input and object state easy to inspect."
+        }
+      ]
+    },
+    {
+      "id": "stage-1",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Place the models and camera"
+        },
+        {
+          "type": "paragraph",
+          "text": "The first version places a `Box` and `Sphere` under one perspective camera. Set `Camera.fov` explicitly in radians and look toward the origin before judging the models’ scale."
+        },
+        {
+          "type": "paragraph",
+          "text": "Mesh resolution determines geometric detail. `Material.color` determines surface appearance. Change the sphere segments and then its color to compare those responsibilities."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-model-1"
+        }
+      ]
+    },
+    {
+      "id": "stage-2",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Explore the scene with an orbit camera"
+        },
+        {
+          "type": "paragraph",
+          "text": "The second version adds `OrbitCameraController`. Drag empty space to orbit and use the wheel to change distance. The models remain in their original positions."
+        },
+        {
+          "type": "paragraph",
+          "text": "Orbiting is a camera interaction. Object transforms and material state belong to the models, so viewing a different side should not secretly rotate or recolor them."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-model-2"
+        }
+      ]
+    },
+    {
+      "id": "stage-3",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Pick objects and change appearance"
+        },
+        {
+          "type": "paragraph",
+          "text": "The final version installs `InteractionManager`. Hovering supplies a subtle emissive cue; clicking a model switches its roughness between matte and glossy settings."
+        },
+        {
+          "type": "paragraph",
+          "text": "Each handler invalidates the scene after changing material state. Try clicking each model separately: their shared scene does not mean they share the same material values."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-model-3"
+        }
+      ]
+    },
+    {
+      "id": "make-it-your-own",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Use it in your own application"
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep expensive mesh rebuilding out of pointer-move handlers. Change material or transform state for ordinary interaction and rebuild topology only when the shape actually changes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Dispose the scene and its controllers when replacing the canvas. Decide whether application state should survive that replacement before reconstructing entities."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Cameras](/cameras), [3D geometry](/three-d) and [Interaction](/interaction)."
+        }
+      ]
+    }
+  ],
+  "difficulty": "intermediate",
+  "estimatedMinutes": 35
+}

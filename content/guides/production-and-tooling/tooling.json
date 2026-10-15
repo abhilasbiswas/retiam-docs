@@ -1,0 +1,227 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tooling",
+  "title": "CLI, scripts and Studio",
+  "group": "Assets and export",
+  "summary": "Use the CLI and project scripts to inspect, lint, preview, render and package scenes.",
+  "sections": [
+    {
+      "id": "command-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Command reference"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Command",
+            "Current parameters and behavior"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "retiam scaffold / init",
+                "[file], --template math/geometry/physics/3d/minimal, --force, --json"
+              ]
+            },
+            {
+              "cells": [
+                "retiam lint",
+                "<file>, --json; static scene hazard analysis"
+              ]
+            },
+            {
+              "cells": [
+                "retiam snapshot",
+                "<file>, --times seconds, --width, --height, --out, --json; PNG output"
+              ]
+            },
+            {
+              "cells": [
+                "retiam render",
+                "[file], width/height/fps/duration/out, raytrace/no-raytrace, denoiser/raw, replay"
+              ]
+            },
+            {
+              "cells": [
+                "retiam export",
+                "[file] [outputDir], --out; repository-layout web component bundler"
+              ]
+            },
+            {
+              "cells": [
+                "retiam help <command>",
+                "Dispatches the command’s own help"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Static lint catches a limited set of scene structure, async timing, dangling entity, coordinate and foreign-API patterns. Passing lint is not a TypeScript or GPU runtime proof. Some bundled scaffold templates retain old option names, so type-check the generated scene against this checkout before using it as a production template."
+        }
+      ]
+    },
+    {
+      "id": "root-scripts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Root scripts"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Script",
+            "Purpose"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "dev",
+                "vite"
+              ]
+            },
+            {
+              "cells": [
+                "build",
+                "tsc && vite build"
+              ]
+            },
+            {
+              "cells": [
+                "build:watch",
+                "vite build --watch"
+              ]
+            },
+            {
+              "cells": [
+                "export",
+                "node ./bin/cli.js export"
+              ]
+            },
+            {
+              "cells": [
+                "render",
+                "node ./bin/cli.js render"
+              ]
+            },
+            {
+              "cells": [
+                "lint:scene",
+                "node ./bin/cli.js lint"
+              ]
+            },
+            {
+              "cells": [
+                "snapshot",
+                "node ./bin/cli.js snapshot"
+              ]
+            },
+            {
+              "cells": [
+                "scaffold",
+                "node ./bin/cli.js scaffold"
+              ]
+            },
+            {
+              "cells": [
+                "cdn",
+                "vite preview"
+              ]
+            },
+            {
+              "cells": [
+                "start",
+                "npm run dev"
+              ]
+            },
+            {
+              "cells": [
+                "resolve",
+                "npm i"
+              ]
+            },
+            {
+              "cells": [
+                "tts:download",
+                "node ./tools/download_kokoro_model.mjs"
+              ]
+            },
+            {
+              "cells": [
+                "test",
+                "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+              ]
+            },
+            {
+              "cells": [
+                "unit-test",
+                "ts-node-esm test/test.ts"
+              ]
+            },
+            {
+              "cells": [
+                "gen-context",
+                "ts-node tools/context_gen/context_generator.ts ./src"
+              ]
+            },
+            {
+              "cells": [
+                "gen-index",
+                "node ./tools/index_generator/generate-index.cjs"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The manifest’s root test script runs Jest; unit-test runs the standalone TypeScript test entry. Asset download/generation, export, render and gen-index write output. The documentation has its own package scripts in retiam-docs; run npm run build there for its production website."
+        }
+      ]
+    },
+    {
+      "id": "studio-workflow",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Studio workflow"
+        },
+        {
+          "type": "paragraph",
+          "text": "studio/index.html hosts the editor, inspector, scene preview, sidebar and playback controls. The viewer page runs scene code with Vite-supported imports. Monaco and AST utilities identify values under the cursor; the inspector can tune geometry, vectors, color, easing and other supported patterns. It is a repository application, separate from the documentation viewer."
+        },
+        {
+          "type": "paragraph",
+          "text": "Use Studio for iteration, then lint/type-check and capture keyframes with the target rendering settings. State preservation helps editing but can hide initialization problems; verify a fresh start before recording a final result."
+        },
+        {
+          "type": "paragraph",
+          "text": "Studio implementation modules are cataloged on the [project map](/project-map)."
+        }
+      ]
+    },
+    {
+      "id": "player-and-parameter-controls",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Player and parameter controls"
+        },
+        {
+          "type": "paragraph",
+          "text": "PlayerControls exposes pause/resume, timeline seeking, stepping, speed and fullscreen around the composer. menu/control utilities provide parameter widgets for application values. They are DOM UI and have different capture behavior from isUI entities rendered by WebGPU."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PlayerControls](/api-control#playercontrols), [ControlPanel](/api-control#menu)."
+        }
+      ]
+    }
+  ]
+}

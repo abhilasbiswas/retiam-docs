@@ -1,0 +1,324 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "installation",
+  "title": "Installation and project setup",
+  "group": "Start here",
+  "summary": "Set up an external npm project, use the browser CDN, or prepare the documentation runtime.",
+  "sections": [
+    {
+      "id": "choose-your-setup",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose your setup"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use Retiam as an npm library in your own project, load it through CDN modules, or export a finished scene as an independent embed. The main workflow in these guides is authoring an animation in an external npm project and generating a video. Running this documentation site is a separate repository task."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Use Retiam through",
+            "Choose it for",
+            "What you deliver"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "[npm package](/installation#create-a-consumer-application)",
+                "Write scenes in your own TypeScript project; the main workflow is generating animation videos.",
+                "Scene source, rendered video and snapshots"
+              ]
+            },
+            {
+              "cells": [
+                "[CDN modules](/installation#use-the-cdn)",
+                "Load the engine directly in a browser, as the documentation’s live examples do.",
+                "A browser page that imports Retiam from a module URL"
+              ]
+            },
+            {
+              "cells": [
+                "[Independent scene export](/export#embed-from-npm)",
+                "Publish a finished scene on another website.",
+                "An exported web component and its bundled assets, without a separate Retiam installation or engine CDN"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "create-a-consumer-application",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Install Retiam in your own npm project"
+        },
+        {
+          "type": "paragraph",
+          "text": "Create a project for your animations. Your scene imports the public package instead of reaching into the engine’s source tree. Core types come from retiam; specialized libraries use entry points such as retiam/charts, retiam/physics and retiam/shapes."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "mkdir my-retiam-animation\ncd my-retiam-animation\nnpm init -y\nnpm pkg set type=module\nnpm install retiam\nnpm install --save-dev typescript vite @webgpu/types\nnpm pkg set scripts.dev=\"vite\" scripts.check=\"tsc --noEmit\""
+        },
+        {
+          "type": "paragraph",
+          "text": "If you are working with an unpublished engine checkout, build it and run npm pack in the engine repository, then install that tarball in this project instead of the registry package. The project layout and package imports stay the same."
+        },
+        {
+          "type": "tree",
+          "variant": "folder",
+          "nodes": [
+            {
+              "label": "my-retiam-animation/",
+              "children": [
+                {
+                  "label": "package.json",
+                  "description": "Retiam dependency and project scripts"
+                },
+                {
+                  "label": "index.html",
+                  "description": "Canvas host for preview and CLI rendering"
+                },
+                {
+                  "label": "tsconfig.json",
+                  "description": "Type-checks scene and host code, including WebGPU types"
+                },
+                {
+                  "label": "scenes/",
+                  "children": [
+                    {
+                      "label": "MyScene.ts",
+                      "description": "Your animation script"
+                    }
+                  ]
+                },
+                {
+                  "label": "src/",
+                  "children": [
+                    {
+                      "label": "main.ts",
+                      "description": "Loads the selected scene and starts it"
+                    }
+                  ]
+                },
+                {
+                  "label": "retiam.config.js",
+                  "description": "Optional video output settings"
+                },
+                {
+                  "label": "vite.config.ts",
+                  "description": "Preserve the packaged ESM and asset URLs during development."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Save this as tsconfig.json so TypeScript can check the scene, browser entry and WebGPU types."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"compilerOptions\": {\n    \"target\": \"ES2022\",\n    \"module\": \"ESNext\",\n    \"moduleResolution\": \"Bundler\",\n    \"lib\": [\n      \"ES2022\",\n      \"DOM\"\n    ],\n    \"types\": [\n      \"@webgpu/types\"\n    ],\n    \"strict\": true,\n    \"skipLibCheck\": true,\n    \"noEmit\": true\n  },\n  \"include\": [\n    \"scenes\",\n    \"src\"\n  ]\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Save the scene below as scenes/MyScene.ts. Its four-second sequence reveals a circle, moves it, holds briefly and fades it out. Durations are milliseconds; the same scene can be previewed and rendered without changing its choreography."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Create, FadeOut, CameraModel, hex } from \"retiam\";\n\nexport default class MyScene extends Scene {\n  async run() {\n    this.clearColor(hex(\"#090E1B\"));\n    this.camera.model = CameraModel.ORTHOGRAPHIC;\n    this.camera.orthoScale = 12;\n    this.camera.position.set([0, 0, 20]);\n    this.camera.lookAt([0, 0, 0]);\n\n    const circle = new Circle(1, { fill: hex(\"#38BDF8\") });\n    circle.move([-2, 0, 0]);\n    this.add(circle);\n    await this.play(new Create(circle, { duration: 1200 }));\n    await this.play(circle.animate.move([2, 0, 0]), { duration: 1000 });\n    await this.wait(800);\n    await this.play(new FadeOut(circle, { duration: 600 }));\n    await this.wait(400);\n  }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Save the canvas host as index.html. The CSS gives the canvas a real display size; the composer sets its drawing resolution for browser preview or CLI output."
+        },
+        {
+          "type": "paragraph",
+          "text": "Save this as `vite.config.ts`. Retiam ships a split ESM bundle whose font and other assets are resolved relative to its modules. Exclude it from Vite dependency prebundling so those URLs stay at the package location. The render and snapshot CLI also load this configuration from the consumer project."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { defineConfig } from 'vite';\n\nexport default defineConfig({\n  // Retiam already ships as split ESM with assets relative to its modules.\n  optimizeDeps: { exclude: ['retiam'] }\n});"
+        },
+        {
+          "type": "code",
+          "language": "html",
+          "code": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>My Retiam animation</title>\n    <style>\n      html, body { margin: 0; width: 100%; height: 100%; }\n      canvas { display: block; width: 100%; height: 100%; }\n    </style>\n  </head>\n  <body>\n    <canvas id=\"canvas\"></canvas>\n    <script type=\"module\" src=\"/src/main.ts\"></script>\n  </body>\n</html>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Save this entry as src/main.ts. It loads a default-exported Scene class from the file query parameter, so the CLI can choose your scene. Scene.start creates the composer, whose initialization reads the CLI’s offline rendering settings."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene } from \"retiam\";\n\nasync function bootstrap() {\n  const canvas = document.querySelector<HTMLCanvasElement>(\"#canvas\");\n  if (!canvas) throw new Error(\"Missing scene canvas.\");\n  if (!navigator.gpu) throw new Error(\"WebGPU is unavailable in this browser context.\");\n\n  // The CLI supplies ?file=scenes/MyScene.ts; normal preview uses this default.\n  const file = new URLSearchParams(location.search).get(\"file\") || \"scenes/MyScene.ts\";\n  const sceneModule = await import(/* @vite-ignore */ \"/\" + file.replace(/^\\/+/, \"\"));\n  const SceneClass = sceneModule.default;\n  if (typeof SceneClass !== \"function\" || !(SceneClass.prototype instanceof Scene)) {\n    throw new Error(\"The scene module must default-export a Scene subclass.\");\n  }\n\n  const scene: Scene = new SceneClass();\n  await scene.start(canvas);\n  window.addEventListener(\"pagehide\", () => scene.destroy(), { once: true });\n}\n\nbootstrap().catch(console.error);"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm run check\nnpm run dev"
+        },
+        {
+          "type": "paragraph",
+          "text": "Open the local URL printed by Vite to preview the animation. Next, follow [video rendering](/export#cli-preview-and-final-render) for the CLI dependencies, output settings and render command. The current render and snapshot commands serve this project’s index.html, so keep the host and file selection entry alongside your scenes."
+        }
+      ]
+    },
+    {
+      "id": "use-the-cdn",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Load Retiam from a CDN"
+        },
+        {
+          "type": "paragraph",
+          "text": "Load the built ES module directly in a browser when you want a live scene without installing Retiam in that page. This is how the documentation’s editable examples load the engine. The current local engine server is http://localhost:3000; the import URL is http://localhost:3000/retiam.es.js."
+        },
+        {
+          "type": "code",
+          "language": "html",
+          "code": "<div style=\"height:540px\">\n  <canvas id=\"canvas\" style=\"display:block;width:100%;height:100%\"></canvas>\n</div>\n<script type=\"importmap\">\n{\n  \"imports\": {\n    \"retiam\": \"http://localhost:3000/retiam.es.js\",\n    \"retiam/charts\": \"http://localhost:3000/libs/charts/index.js\"\n  }\n}\n</script>\n<script type=\"module\">\n  import { Scene, Circle, Create, CameraModel, hex } from \"retiam\";\n\n  class BrowserScene extends Scene {\n    async run() {\n      this.camera.model = CameraModel.ORTHOGRAPHIC;\n      this.camera.orthoScale = 12;\n      this.camera.position.set([0, 0, 20]);\n      this.camera.lookAt([0, 0, 0]);\n      const circle = new Circle(1, { fill: hex(\"#38BDF8\") });\n      this.add(circle);\n      await this.play(new Create(circle, { duration: 1200 }));\n      await this.wait(1000);\n    }\n  }\n\n  const scene = new BrowserScene();\n  scene.start(document.querySelector(\"#canvas\")).catch(console.error);\n</script>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Serve this HTML over HTTP locally. An import map lets JavaScript scene modules use the same package names as npm projects; add only the sublibrary mappings your scene needs. A browser page uses JavaScript modules, so transpile TypeScript before loading it directly. The documentation editor provides that compilation for its live examples."
+        },
+        {
+          "type": "paragraph",
+          "text": "For a published page, replace the local server URLs with a versioned npm CDN URL. Serve the engine’s emitted assets and sublibrary bundles with the module, and enable CORS for the page’s origin. [Documentation authoring](/docs-authoring#engine-cdn) explains that configuration."
+        }
+      ]
+    },
+    {
+      "id": "independent-scene-export",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Export an independent embedded scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Export packages a finished scene with the engine code it needs into a web component. The receiving site serves the exported JavaScript and assets; it can run the scene without installing Retiam or importing a separate engine CDN. Use this when sharing the animation itself as an interactive scene on a website."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with the [npm embed recipe](/export#embed-from-npm) for a complete package-based component entry, build configuration and receiving page. The [repository export CLI](/export#standalone-embeds) has separate setup requirements. Keep any emitted assets with the bundle. Fonts, videos, models or services referenced by remote URLs remain runtime dependencies until the scene packages or localizes them."
+        }
+      ]
+    },
+    {
+      "id": "browser-and-asset-requirements",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Browser and asset requirements"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam needs a working WebGPU device and a canvas with non-zero dimensions. Both npm and CDN scenes execute in a browser context that exposes navigator.gpu, such as localhost or a suitable secure origin. Video rendering uses a headless browser with those same GPU requirements. The current Box3D backend uses the single-threaded standard WebAssembly build, so it does not require COOP/COEP and can run on static hosts such as GitHub Pages. A future threaded WebAssembly feature would require a host that serves the necessary isolation headers."
+        },
+        {
+          "type": "paragraph",
+          "text": "A consumer bundler must resolve package exports and emitted assets. Import `retiam/shapes` and the other sublibraries through their package entry points. Do not paste `../../../src` imports from a repository demo into an unrelated application."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "if (!navigator.gpu) {\n  throw new Error(\"This browser context does not expose WebGPU.\");\n}\nconst adapter = await navigator.gpu.requestAdapter();\nif (!adapter) throw new Error(\"No WebGPU adapter is available.\");"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Avoid hard-coded browser-version guarantees. Feature availability depends on browser build, operating system, GPU, driver and execution context. Check capabilities where the feature is used."
+        }
+      ]
+    },
+    {
+      "id": "run-the-repository",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Work on the engine or documentation repository"
+        },
+        {
+          "type": "paragraph",
+          "text": "Clone Retiam for engine or Studio development. Clone the separate retiam-docs project to maintain this documentation; its normal install, build and tests require no engine checkout. For an external npm animation project, use the setup above."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm install\nnpm run dev"
+        },
+        {
+          "type": "paragraph",
+          "text": "In a separate clone of retiam-docs, install its dependencies and start the documentation viewer:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm ci\nnpm run dev"
+        },
+        {
+          "type": "paragraph",
+          "text": "The standalone retiam-docs repository prepares its own scene modules and assets, then imports Retiam from cdnUrl in content/config.json. Run npm ci and npm run dev in that project. The local engine URL remains http://localhost:3000/retiam.es.js; run that CDN separately when needed. GitHub Pages builds use a pinned published HTTPS URL in the same configuration file. Optional speech and model services are configured under services in that file and hosted separately."
+        }
+      ]
+    },
+    {
+      "id": "builds-and-entry-points",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Builds and entry points"
+        },
+        {
+          "type": "paragraph",
+          "text": "`npm run build` runs TypeScript and Vite. The core bundle is `dist/retiam.es.js`; library bundles are `dist/libs/<name>/index.js`. Declarations live under `dist/src` and `dist/libs`. The root barrel `src/index.ts` is generated; change source modules rather than hand-editing the barrel."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [SceneComposer](/api-core-scenecomposer#scenecomposer), [RenderConfig](/api-render#renderconfig)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Your first scene](/first-scene)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ]
+}

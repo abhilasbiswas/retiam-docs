@@ -1,0 +1,186 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-post-processing-blur-and-aa-pipeline-architecture",
+  "title": "Post-Processing, Anti-Aliasing & Blur Pipelines Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/POST_PROCESSING_BLUR_AND_AA_PIPELINE_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/POST_PROCESSING_BLUR_AND_AA_PIPELINE_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/POST_PROCESSING_BLUR_AND_AA_PIPELINE_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [FrameGraph](/api-render-frame-graph#framegraph), [AntiAliasingPass](/api-render-passes#antialiasingpass), [BlurPass](/api-render-passes#blurpass), [PostProcessPass](/api-render-passes#postprocesspass), [FeedbackPass](/api-render-passes#feedbackpass), [Shader](/api-entities-primitives-2d#shader), [Scene](/api-core-scene#scene), [Color](/api-math#color), [Compute](/api-compute#compute), [Pass](/api-render-frame-graph#pass), [BlurPassOptions](/api-render-passes#blurpass), [Pipeline](/api-render-pipelines#pipeline), [Group](/api-core#group), [Input](/api-camera#camera), [Entity](/api-core-entity#entity)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Post-processing transforms the raw rendered framebuffer into production-ready cinematic frames. Retiam implements a modular post-processing pass architecture managed within the declarative [`FrameGraph`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts):"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`AntiAliasingPass`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/AntiAliasingPass.ts)**: Resolves the multi-sampled or supersampled intermediate color buffer into the swap-chain canvas texture using configurable anti-aliasing algorithms.",
+            "**[`BlurPass`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts)**: High-performance 2-pass separable Gaussian blur leveraging 5-tap bilinear hardware sampling (effective 9-tap) and ping-pong textures.",
+            "**[`PostProcessPass`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts)**: Fullscreen quad pass executing arbitrary custom WGSL fragment shaders with automatic time and resolution uniform binding.",
+            "**[`FeedbackPass`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts)**: Temporal frame feedback loop preserving the previous frame's rendered texture for motion blur, phosphorescent trails, and video feedback loops.",
+            "**[`Shader`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Shader.ts)**: Procedural 2D shader entity providing Shadertoy-like rapid fragment experimentation within the scene graph."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  R[\"Forward rasterization / PPLL OIT\"] --> C[\"Intermediate scene color\"]\n  C --> B[\"BlurPass<br/>Horizontal and vertical passes\"]\n  C --> P[\"PostProcessPass<br/>Fullscreen WGSL: time and uniforms\"]\n  C --> F[\"FeedbackPass<br/>Ping-pong buffer and temporal trails\"]\n  C --> K[\"Custom compute<br/>Simulation / particles\"]\n  B --> A[\"AntiAliasingPass<br/>SSAA / bilinear downsampling\"]\n  P --> A\n  F --> A\n  K --> A\n  A --> O[\"Canvas swapchain\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-2-pass-separable-gaussian-blur-blurpass-ts-src-engine-render-passes-blurpass-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. 2-Pass Separable Gaussian Blur ([BlurPass.ts](../src/engine/render/passes/BlurPass.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Computing a 2D Gaussian kernel of size $K \\times K$ directly requires $K^2$ texture fetches per pixel. Because the 2D Gaussian function is mathematically separable:"
+        },
+        {
+          "type": "math",
+          "tex": "G(x, y) = \\frac{1}{2\\pi\\sigma^2} e^{-\\frac{x^2+y^2}{2\\sigma^2}} = \\left(\\frac{1}{\\sqrt{2\\pi}\\sigma} e^{-\\frac{x^2}{2\\sigma^2}}\\right) \\left(\\frac{1}{\\sqrt{2\\pi}\\sigma} e^{-\\frac{y^2}{2\\sigma^2}}\\right) = G(x) \\cdot G(y)"
+        },
+        {
+          "type": "paragraph",
+          "text": "the convolution is decomposed into two $1\\text{D}$ passes (Horizontal then Vertical), reducing complexity to $2K$ fetches."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5-Tap Bilinear Hardware Sampling"
+        },
+        {
+          "type": "paragraph",
+          "text": "By exploiting the GPU's hardware bilinear filtering, Retiam samples between adjacent texel centers:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}_{\\text{sample}} = \\frac{w_1 \\mathbf{p}_1 + w_2 \\mathbf{p}_2}{w_1 + w_2}, \\quad w_{\\text{combined}} = w_1 + w_2"
+        },
+        {
+          "type": "paragraph",
+          "text": "A 5-tap shader fetch achieves an **effective 9-tap Gaussian filter**, yielding smooth defocus at high frame rates:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface BlurPassOptions {\n    /** Blur radius in texels (Default: 4. 0 = bypass) */\n    radius?: number;\n\n    /** Number of blur iterations for deeper defocus (Default: 1) */\n    iterations?: number;\n\n    /** Custom pass label */\n    name?: string;\n}"
+        }
+      ]
+    },
+    {
+      "id": "3-anti-aliasing-pipeline-antialiasingpass-ts-src-engine-render-passes-antialiasingpass-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Anti-Aliasing Pipeline ([AntiAliasingPass.ts](../src/engine/render/passes/AntiAliasingPass.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `AntiAliasingPass` is strictly the terminal GPU pass in the FrameGraph and is flagged `builder.markUnculled()`:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Dynamic Shader Macro Injection**: The engine injects the user's chosen anti-aliasing formula directly into the WGSL shader template:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const shaderCode = anti_aliasing_wgsl.replace(/\\$\\{AA_FUNCTION\\}/g, renderConfig.AA_Function);"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Screen-Space Downsampling**: When running in Super-Sampled Anti-Aliasing (SSAA) mode, the scene is rasterized at $2\\times$ or $4\\times$ resolution and resolved to standard display resolution via box-filter downsampling.",
+            "**Hardware Canvas Target**: Formatted dynamically to `navigator.gpu.getPreferredCanvasFormat()` (`bgra8unorm` on macOS)."
+          ],
+          "start": 2
+        }
+      ]
+    },
+    {
+      "id": "4-fullscreen-post-processing-passes-postprocesspass-ts-src-engine-render-passes-postprocesspass-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Fullscreen Post-Processing Passes ([PostProcessPass.ts](../src/engine/render/passes/PostProcessPass.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Custom post-processing effects (vignettes, chromatic aberration, tone mappers, bloom filters) inherit from `PostProcessPass`:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Bind Group 0**: Input texture handle and bilinear filtering sampler.",
+            "**Bind Group 1 ([`Pipeline.view_layout`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/Pipeline.ts))**: Automatically binds global scene view uniforms (`view.time`, `view.size`, `view.cameraPosition`), eliminating manual uniform buffer management."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { PostProcessPass, createTextureHandle } from \"retiam\";\n\nconst chromaticAberrationPass = new PostProcessPass(\n    \"ChromaticAberration\",\n    sceneColorHandle,\n    `\n    @fragment fn fs_main(@builtin(position) pos: vec4f) -> @location(0) vec4f {\n        let uv = pos.xy / view.size;\n        let dist = length(uv - 0.5);\n        let offset = vec2f(dist * 0.008, 0.0);\n        \n        let r = textureSample(inputTexture, texSampler, uv + offset).r;\n        let g = textureSample(inputTexture, texSampler, uv).g;\n        let b = textureSample(inputTexture, texSampler, uv - offset).b;\n        \n        return vec4f(r, g, b, 1.0);\n    }\n    `\n);"
+        }
+      ]
+    },
+    {
+      "id": "5-procedural-2d-shader-entity-shader-ts-src-engine-entities-primitives-2d-shader-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Procedural 2D Shader Entity ([Shader.ts](../src/engine/entities/primitives/2d/Shader.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Unlike fullscreen passes which affect the entire canvas, the [`Shader`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Shader.ts) entity represents a positioned, scalable quad in world space executing custom fragment logic:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Shader } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// Animated plasma ripple surface\nconst plasma = new Shader(8.0, 5.0, `\n    let uv = input.uv * 4.0;\n    let v1 = sin(uv.x + view.time);\n    let v2 = sin(uv.y + view.time * 1.5);\n    let v3 = sin(uv.x + uv.y + view.time);\n    let col = 0.5 + 0.5 * vec3f(v1, v2, v3);\n    finalColor = vec4f(col, 1.0);\n`);\nscene.add(plasma);"
+        }
+      ]
+    }
+  ]
+}

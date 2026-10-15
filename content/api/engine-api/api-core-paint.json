@@ -1,0 +1,571 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-core-paint",
+  "title": "Paint API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paint",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Paint"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Paint.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Paint.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PaintFlags: Bitmask flags to track which styling properties were explicitly set by the user. Facilitates inheritance resolution down the Scene Graph tree.",
+                "Paint: Manages rendering styles (fill colors, stroke details, opacity, clip ranges) for an [[Entity]], mapped directly to a Float32Array slice for WebGPU performance."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PaintFlags",
+                    "Enum",
+                    "Bitmask flags to track which styling properties were explicitly set by the user. Facilitates inheritance resolution down the Scene Graph tree."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Paint",
+                    "Class",
+                    "Manages rendering styles (fill colors, stroke details, opacity, clip ranges) for an [[Entity]], mapped directly to a Float32Array slice for WebGPU performance."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare enum PaintFlags {\n    FILL = 1,\n    STROKE = 2,\n    STROKE_WIDTH = 4,\n    Z_INDEX = 8,\n    JOINT_CAP = 16,\n    OPACITY = 32,\n    CLIP = 64\n}\nexport declare class Paint implements PaintFunctions<Paint> {\n    static BYTELENGTH: number;\n    static F32LENGTH: number;\n    readonly _fill: Color;\n    readonly _stroke: Color;\n    readonly _stroke_width: Float32Array;\n    readonly _z_index: Float32Array;\n    readonly _joint: Float32Array;\n    readonly _opacity: Float32Array;\n    readonly _clip_start: Vec2;\n    readonly _clip_end: Vec2;\n    static _globalVersion: number;\n    version: number;\n    get UPDATE_FLAG(): boolean;\n    set UPDATE_FLAG(val: boolean);\n    set_mask: number;\n    readonly data: Float32Array;\n    binding?: GPUBufferBinding;\n    constructor(data: Float32Array, copy?: boolean);\n    get fill(): Color;\n    set fill(color: ColorLike);\n    get stroke(): Color;\n    set stroke(color: ColorLike);\n    get strokeWidth(): number;\n    set strokeWidth(value: number);\n    get z_index(): number;\n    set z_index(value: number);\n    get joint(): JointType;\n    set joint(joint: JointType);\n    get startCap(): CapType;\n    set startCap(cap: CapType);\n    get endCap(): CapType;\n    set endCap(cap: CapType);\n    get cap(): CapType;\n    set cap(cap: CapType);\n    get opacity(): number;\n    set opacity(opacity: number);\n    get clip_space_start(): Vec2;\n    set clip_space_start(v: Vec2);\n    get clip_space_end(): Vec2;\n    set clip_space_end(v: Vec2);\n    setCap(cap: CapType | number, end?: CapType | number): Paint;\n    setStartCap(cap: CapType | number): Paint;\n    setEndCap(cap: CapType | number): Paint;\n    setJoint(joint: JointType | number): Paint;\n    setStroke(strokeWidth: number, color?: ColorLike): Paint;\n    setStrokeColor(color: ColorLike): Paint;\n    setStrokeWidth(strokeWidth: number): Paint;\n    setFill(color: ColorLike): Paint;\n    setClip(start: Vec2, end: Vec2): Paint;\n    setOpacity(opacity: number): Paint;\n    getData(): Float32Array;\n    copy(): Paint;\n    apply(local: Paint, parent: Paint): void;\n    set(paint: Paint): void;\n    static size(): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PaintFlags` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FILL = 1 << 0",
+                    "1 << 0",
+                    "Declared contract; see the implementation linked above. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "STROKE = 1 << 1",
+                    "1 << 1",
+                    "Declared contract; see the implementation linked above. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "STROKE_WIDTH = 1 << 2",
+                    "1 << 2",
+                    "Declared contract; see the implementation linked above. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Z_INDEX = 1 << 3",
+                    "1 << 3",
+                    "Declared contract; see the implementation linked above. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "JOINT_CAP = 1 << 4",
+                    "1 << 4",
+                    "Declared contract; see the implementation linked above. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "OPACITY = 1 << 5",
+                    "1 << 5",
+                    "Declared contract; see the implementation linked above. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CLIP = 1 << 6",
+                    "1 << 6",
+                    "Declared contract; see the implementation linked above. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L29)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Paint` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static BYTELENGTH: number",
+                    "Paint.size()",
+                    "Total byte length of a single paint memory block. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static F32LENGTH: number",
+                    "this.BYTELENGTH / 4",
+                    "Total number of Float32 elements (fields) in the paint memory slice. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly _fill: Color",
+                    "—",
+                    "Primary fill color components mapping. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly _stroke: Color",
+                    "—",
+                    "Stroke color components mapping. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly _stroke_width: Float32Array",
+                    "—",
+                    "Stroke width value mapping. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly _z_index: Float32Array",
+                    "—",
+                    "Render depth z-index sorting index. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly _joint: Float32Array",
+                    "—",
+                    "Packed joint and cap style value. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly _opacity: Float32Array",
+                    "—",
+                    "Entity local opacity multiplier mapping. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly _clip_start: Vec2",
+                    "—",
+                    "Clipping bounding start coordinates [X, Y]. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly _clip_end: Vec2",
+                    "—",
+                    "Clipping bounding end coordinates [X, Y]. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _globalVersion",
+                    "1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public version",
+                    "Paint._globalVersion++",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get UPDATE_FLAG(): boolean",
+                    "—",
+                    "Flag indicating whether local paint values have changed and need VRAM synchronization. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set UPDATE_FLAG(val: boolean)",
+                    "—",
+                    "Implementation: `this._updateFlag = val; if (val) this.version = Paint._globalVersion++;`. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set_mask: number",
+                    "0",
+                    "Bitmask tracking which fields were explicitly overridden on this instance. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly data: Float32Array",
+                    "—",
+                    "The raw underlying Float32 memory slice. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public binding?: GPUBufferBinding",
+                    "—",
+                    "Bind group details mapping this paint buffer. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(data: Float32Array, copy = false)",
+                    "—",
+                    "Creates a new Paint instance mapped to a shared Float32Array slice. Param: data Shared array slice. Param: copy If true, skip writing defaults. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get fill(): Color",
+                    "—",
+                    "Gets or sets the fill color. Triggers change tracking flags. Accepts Color or ColorLike (e.g. hex string). [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set fill(color: ColorLike)",
+                    "—",
+                    "Implementation: `const c = Color.from(color); this._fill.rgba = c._rgba; this.set_mask |= PaintFlags.FILL; this.UPDATE_FLAG = true;`. [Source line 140](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L140)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get stroke(): Color",
+                    "—",
+                    "Gets or sets the stroke color. Triggers change tracking flags. Accepts Color or ColorLike (e.g. hex string). [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set stroke(color: ColorLike)",
+                    "—",
+                    "Implementation: `const c = Color.from(color); this._stroke.rgba = c._rgba; this.set_mask |= PaintFlags.STROKE; this.UPDATE_FLAG = true;`. [Source line 151](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L151)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get strokeWidth(): number",
+                    "—",
+                    "Gets or sets the stroke width. Triggers change tracking flags. [Source line 161](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L161)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set strokeWidth(value: number)",
+                    "—",
+                    "Implementation: `this._stroke_width[0] = value; this.set_mask |= PaintFlags.STROKE_WIDTH; this.UPDATE_FLAG = true;`. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get z_index(): number",
+                    "—",
+                    "Gets or sets the z-index depth sorting order. [Source line 173](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L173)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set z_index(value: number)",
+                    "—",
+                    "Implementation: `this._z_index[0] = value; this.set_mask |= PaintFlags.Z_INDEX; this.UPDATE_FLAG = true;`. [Source line 176](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L176)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get joint(): JointType",
+                    "—",
+                    "Gets or sets the stroke joints type (Miter, Round, Bevel). [Source line 185](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L185)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set joint(joint: JointType)",
+                    "—",
+                    "Implementation: `const cur = Math.round(this._joint[0]); this._joint[0] = (cur & ~(JOINT_MASK << JOINT_SHIFT)) | ((joint & JOINT_MASK) << JOINT_SHIFT); this.set_mask |= PaintFlags.JOINT_CAP; this.UPDATE_FLAG = true;`. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L188)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get startCap(): CapType",
+                    "—",
+                    "Gets or sets the stroke start tip type (Butt, Round, Square, Triangle). [Source line 198](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L198)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set startCap(cap: CapType)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._joint[0]`, `this.set_mask`, `this.UPDATE_FLAG`. [Source line 201](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L201)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get endCap(): CapType",
+                    "—",
+                    "Gets or sets the stroke end tip type (Butt, Round, Square, Triangle). [Source line 211](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L211)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set endCap(cap: CapType)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._joint[0]`, `this.set_mask`, `this.UPDATE_FLAG`. [Source line 214](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L214)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get cap(): CapType",
+                    "—",
+                    "Gets or sets stroke caps (sets both start and end caps simultaneously). [Source line 224](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L224)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set cap(cap: CapType)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._joint[0]`, `this.set_mask`, `this.UPDATE_FLAG`. [Source line 227](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L227)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get opacity(): number",
+                    "—",
+                    "Gets or sets the local transparency level [0.0 - 1.0]. [Source line 238](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L238)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set opacity(opacity: number)",
+                    "—",
+                    "Implementation: `this._opacity[0] = opacity; this.set_mask |= PaintFlags.OPACITY; this.UPDATE_FLAG = true;`. [Source line 239](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L239)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get clip_space_start(): Vec2",
+                    "—",
+                    "Gets or sets the start clipping coordinates. [Source line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L248)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set clip_space_start(v: Vec2)",
+                    "—",
+                    "Implementation: `this._clip_start[0] = v.x; this._clip_start[1] = v.y; this.set_mask |= PaintFlags.CLIP; this.UPDATE_FLAG = true;`. [Source line 249](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L249)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get clip_space_end(): Vec2",
+                    "—",
+                    "Gets or sets the end clipping coordinates. [Source line 259](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L259)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set clip_space_end(v: Vec2)",
+                    "—",
+                    "Implementation: `this._clip_end[0] = v.x; this._clip_end[1] = v.y; this.set_mask |= PaintFlags.CLIP; this.UPDATE_FLAG = true;`. [Source line 260](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L260)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setCap(cap: CapType | number, end?: CapType | number): Paint",
+                    "—",
+                    "Sets the cap style. If end is specified, sets startCap and endCap independently. [Source line 270](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L270)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStartCap(cap: CapType | number): Paint",
+                    "—",
+                    "Sets the start cap style. [Source line 280](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L280)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setEndCap(cap: CapType | number): Paint",
+                    "—",
+                    "Sets the end cap style. [Source line 285](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L285)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setJoint(joint: JointType | number): Paint",
+                    "—",
+                    "Sets the joint style. [Source line 290](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L290)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStroke(strokeWidth: number, color?: ColorLike): Paint",
+                    "—",
+                    "Sets stroke details. Param: strokeWidth Border thickness. Param: color Border color. [Source line 301](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L301)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStrokeColor(color: ColorLike): Paint",
+                    "—",
+                    "Implementation: `this.stroke = color; // Triggers mask return this;`. [Source line 308](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L308)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStrokeWidth(strokeWidth: number): Paint",
+                    "—",
+                    "Implementation: `this.strokeWidth = strokeWidth; // Triggers mask return this;`. [Source line 312](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L312)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFill(color: ColorLike): Paint",
+                    "—",
+                    "Sets the fill color. [Source line 317](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L317)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setClip(start: Vec2, end: Vec2): Paint",
+                    "—",
+                    "Sets clipping boundaries. [Source line 322](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L322)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setOpacity(opacity: number): Paint",
+                    "—",
+                    "Sets transparency levels. [Source line 328](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L328)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getData(): Float32Array",
+                    "—",
+                    "Returns a separate copy of the raw float data array. [Source line 345](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L345)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public copy(): Paint",
+                    "—",
+                    "Clones this Paint instance. [Source line 350](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L350)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(local: Paint, parent: Paint)",
+                    "—",
+                    "Hierarchy resolution mapping. Inherits parent fields while overlaying local overrides. Param: local The child entity's style settings. Param: parent The parent entity's style settings. [Source line 362](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L362)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set(paint: Paint)",
+                    "—",
+                    "Copies all values from another paint instance. [Source line 397](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L397)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static size(): number",
+                    "—",
+                    "Size computation of the structure alignment in bytes. [Source line 405](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts#L405)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PaintFunctions](/api-animation#animationfunctions)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,301 @@
+{
+  "Entity.move": {
+    "description": "Place an entity at a target position. Without an anchor, the target places its origin. With a local bounding-box anchor, Retiam subtracts the transformed anchor offset so that the selected edge lands at the target.",
+    "notes": [
+      "`Entity.move` and `Entity.setPosition` have different anchor handling in the current implementation. `move` adjusts the target for the selected bounds point; `setPosition` resolves the supplied reference as a pivot before assigning translation.",
+      "A `{ pivot: [...] }` argument does not provide an anchor offset for `move`; that branch leaves the target unchanged. Use `Entity.setPivot` when you want to change the center of rotation.",
+      "The target is interpreted through the entity’s local transform. For a child under a transformed parent, use `Entity.worldToLocal` or parent-space conversion when starting with a world coordinate."
+    ],
+    "example": "labs/lab-hierarchy",
+    "parameters": {
+      "target": "Desired position in the parent’s coordinate system, in scene units.",
+      "anchor": "A normalized local bounds point (for example LEFT or [−1, 0, 0]), or an options object with a local anchor or world pivot. Omit it to use the current reference."
+    }
+  },
+  "Entity.setPosition": {
+    "description": "Assign the entity’s translation. This is an absolute assignment, so calling it repeatedly with the same coordinates does not accumulate movement.",
+    "notes": [
+      "When a reference argument is supplied, this implementation resolves it and calls `Entity.setPivot` before setting the translation. It does not use the anchor-offset calculation in `Entity.move`."
+    ],
+    "example": "labs/lab-transforms",
+    "parameters": {
+      "position": "Absolute translation in the parent’s coordinate system, in scene units.",
+      "anchor": "A normalized local bounds point (for example LEFT or [−1, 0, 0]), or an options object with a local anchor or world pivot. Omit it to use the current reference."
+    }
+  },
+  "Entity.rotate": {
+    "description": "Add a rotation to the entity’s current orientation. A scalar angle rotates in the 2D plane; vector and quaternion inputs describe spatial rotation. Angles use radians.",
+    "notes": [
+      "An optional local anchor is resolved against the current bounds. A `{ pivot: [...] }` option supplies a world coordinate directly. Both paths set the entity’s pivot before rotating.",
+      "The supplied pivot is retained by this implementation. If a later operation should use a different reference, set it explicitly. Calling `rotate` twice adds two rotations; use `Entity.setRotation` for an absolute orientation."
+    ],
+    "example": "labs/lab-transforms",
+    "parameters": {
+      "angle": "Incremental angle in radians, Euler-angle vector, or quaternion. A scalar turns around Z.",
+      "anchor": "A normalized local bounds point (for example LEFT or [−1, 0, 0]), or an options object with a local anchor or world pivot. Omit it to use the current reference."
+    }
+  },
+  "Entity.setRotation": {
+    "description": "Replace the entity’s orientation rather than adding another turn. This is useful for sliders and other controls that represent an absolute angle.",
+    "notes": [
+      "Angles are expressed in radians. If you accept degrees in an application UI, multiply by `Math.PI / 180` before calling this method."
+    ],
+    "example": "labs/lab-hierarchy",
+    "parameters": {
+      "angle": "Absolute orientation: scalar Z angle in radians, Euler vector, or quaternion.",
+      "anchor": "A normalized local bounds point (for example LEFT or [−1, 0, 0]), or an options object with a local anchor or world pivot. Omit it to use the current reference."
+    }
+  },
+  "Entity.scale": {
+    "description": "Multiply the current scale by a uniform factor or separate factors for each axis. Repeated calls compound: scaling by 2 twice produces a factor of 4.",
+    "notes": [
+      "Use `Entity.setScale` when the input represents an absolute size. A selected anchor or world pivot controls which point remains fixed while the object grows."
+    ],
+    "example": "labs/lab-transforms",
+    "parameters": {
+      "factor": "Multipliers for the current scale. A scalar is uniform; [x, y, z] scales axes independently.",
+      "anchor": "A normalized local bounds point (for example LEFT or [−1, 0, 0]), or an options object with a local anchor or world pivot. Omit it to use the current reference."
+    }
+  },
+  "Entity.setScale": {
+    "description": "Assign absolute scale factors to the transform. A number applies the same factor on every axis; a vector lets you stretch each axis independently.",
+    "example": "labs/lab-hierarchy",
+    "parameters": {
+      "scale": "Absolute scale factors. One means original size, and a scalar applies uniformly.",
+      "anchor": "A normalized local bounds point (for example LEFT or [−1, 0, 0]), or an options object with a local anchor or world pivot. Omit it to use the current reference."
+    }
+  },
+  "Entity.setPivot": {
+    "description": "Choose a world coordinate as the entity’s new pivot while preserving its current visible placement. Later rotations and scales operate around that reference.",
+    "notes": [
+      "The implementation clears the persistent local anchor and passes the parent world matrix into `Transform.setPivot`. This allows pivot changes under transformed parents.",
+      "Changing the pivot alone should not visibly move the geometry. It changes the relationship between the transform origin and geometry offset."
+    ],
+    "example": "labs/lab-transforms",
+    "parameters": {
+      "anchorWorld": "Absolute world coordinate that later rotation and scaling should use."
+    }
+  },
+  "Entity.setAnchor": {
+    "description": "Choose a persistent point relative to the entity’s bounds. The anchor uses normalized coordinates, with the center at zero and boundary directions represented by values such as LEFT and UP.",
+    "notes": [
+      "A persistent anchor follows changes in the object’s geometry. A world pivot instead chooses a coordinate in the scene. These choices are useful for different kinds of placement."
+    ],
+    "example": "labs/lab-transforms",
+    "parameters": {
+      "anchor": "Persistent normalized bounds coordinate. Center is [0, 0, 0]; boundaries use values from −1 to 1."
+    }
+  },
+  "Entity.getBoundaryPoint": {
+    "description": "Find a point on the entity’s bounds in the requested direction and return its world coordinate. Use it to place markers, align objects, or choose a pivot from an object’s edge.",
+    "example": "labs/lab-transforms",
+    "parameters": {
+      "direction": "Normalized direction selecting a point on the world-aligned bounding box."
+    },
+    "returnsDescription": "A point on the world-aligned bounding box, including the hierarchy. A rotated object’s world bounds differ from its local bounds."
+  },
+  "Entity.shift": {
+    "description": "Add a translation offset in the local coordinate system. This expresses movement relative to the entity’s current placement.",
+    "notes": [
+      "Under a parent transform, local displacement follows the parent’s axes and scale. `Entity.shiftWorld` expresses a displacement in world space."
+    ],
+    "example": "labs/lab-hierarchy",
+    "parameters": {
+      "offset": "Displacement in parent coordinates, in scene units.",
+      "anchor": "A normalized local bounds point (for example LEFT or [−1, 0, 0]), or an options object with a local anchor or world pivot. Omit it to use the current reference."
+    }
+  },
+  "Entity.shiftWorld": {
+    "description": "Translate by a displacement measured along world axes. Use it when a child should move in a consistent scene direction even though its parent is rotated or scaled.",
+    "example": "labs/lab-hierarchy",
+    "parameters": {
+      "offset": "World-axis displacement in scene units, converted through the parent transform."
+    }
+  },
+  "Entity.localToWorld": {
+    "description": "Transform a local point through the entity and its ancestors to obtain a world coordinate. Supply a destination vector when you want to reuse storage in repeated calculations.",
+    "example": "labs/lab-hierarchy",
+    "parameters": {
+      "point": "Point in this entity’s local geometry coordinates.",
+      "dst": "Optional reusable output vector. The returned value is this vector when supplied."
+    },
+    "returnsDescription": "The transformed world point. Reuses dst when supplied."
+  },
+  "Entity.worldToLocal": {
+    "description": "Express a world point in this entity’s local coordinate system. This is useful when converting pointer hits or world positions into coordinates for a nested object.",
+    "example": "labs/lab-hierarchy",
+    "parameters": {
+      "point": "Point in world coordinates to express in this entity’s local space.",
+      "dst": "Optional reusable output vector; avoid retaining it as an independent snapshot after reusing it."
+    },
+    "returnsDescription": "The transformed local point. Reuses dst when supplied."
+  },
+  "Entity.add": {
+    "description": "Attach entities as children of this entity. Children inherit the parent’s transform and participate in traversal through the scene graph.",
+    "notes": [
+      "Grouping is a structural relationship. If objects should be arranged together but then move independently, consider the container-free layout helpers."
+    ],
+    "example": "labs/lab-hierarchy",
+    "parameters": {
+      "entities": "Children to attach. A child under another parent is detached from that parent first."
+    }
+  },
+  "Entity.setOpacity": {
+    "description": "Set the vector paint opacity. Values between zero and one control how strongly the entity contributes over objects behind it.",
+    "notes": [
+      "An invisible appearance does not automatically remove an entity, unregister its updates, or dispose its resources. Choose lifecycle operations separately."
+    ],
+    "example": "labs/lab-paint",
+    "parameters": {
+      "opacity": "Vector-paint opacity multiplier, normally from zero (transparent) to one (opaque)."
+    }
+  },
+  "Entity.setStrokeWidth": {
+    "description": "Set the width of a vector outline in scene units. Adjust camera framing and object size when evaluating its apparent thickness.",
+    "example": "labs/lab-paint",
+    "parameters": {
+      "strokeWidth": "Outline width in scene units; camera projection determines its displayed thickness."
+    }
+  },
+  "Scene": {
+    "description": "A scene owns the entities and choreography for one animation or interactive experiment. A `SceneComposer` provides the GPU renderer and frame loop; the scene supplies content through `Scene.run`.",
+    "notes": [
+      "For a standalone scene, implement `run` and call `Scene.start` with a canvas. Keep initialization in `run` so the renderer is available before you create content that needs it."
+    ],
+    "example": "labs/pg-firstscene"
+  },
+  "Scene.start": {
+    "description": "Start a standalone scene on a canvas. If the scene has no composer, this method creates and initializes one, attaches the scene, and starts its render loop before invoking `run`.",
+    "notes": [
+      "The returned promise covers startup; it does not wait for the whole animation in `run` to finish. Failures from `run` are reported through the scene’s error handler.",
+      "Call `Scene.destroy` when the canvas or its owning view is removed. Restarting a documentation example creates a fresh scene instance."
+    ],
+    "example": "labs/pg-firstscene",
+    "parameters": {
+      "canvas": "The canvas that receives this scene’s output. HTMLCanvasElement permits normal browser interaction; OffscreenCanvas supports offscreen use."
+    },
+    "returnsDescription": "Resolves after startup and invocation of run. It does not wait for the entire run sequence."
+  },
+  "Scene.run": {
+    "description": "Describe the scene’s setup and sequence by overriding this method. Add objects to the scene and await `Scene.play` or `Scene.wait` wherever the next step depends on completion.",
+    "example": "labs/pg-firstscene"
+  },
+  "Scene.always": {
+    "description": "Register work that should run as scene time advances. The callback can read the current time and elapsed `dt`, and its handle provides pause, resume and stop controls.",
+    "notes": [
+      "Time and delta time use milliseconds. With an interval or FPS limit, the callback receives accumulated delta time so a lower update rate does not unintentionally slow the simulation.",
+      "Choose a phase deliberately. Scene callbacks default to pre; use post for a follower that must read positions after animations and entity updates."
+    ],
+    "example": "labs/pg-always-options",
+    "parameters": {
+      "callback": "Called with scene time and accumulated dt in milliseconds; an optional context exposes scheduling state. Returning false unregisters it.",
+      "options": "Phase, priority, rate limit, conditions and lifetime. Scene callbacks default to the pre phase."
+    },
+    "returnsDescription": "An AlwaysHandle that can pause, resume, reset or stop this registration."
+  },
+  "Entity.always": {
+    "description": "Register an updater attached to this entity. It is useful for behavior that belongs to an object, such as rotation, tracking or reactive geometry.",
+    "notes": [
+      "Entity updates default to the update phase. Visibility and destruction options let you tie the callback’s lifetime to the object."
+    ],
+    "example": "labs/pg-entity-always",
+    "parameters": {
+      "func": "Object-owned callback receiving time and dt in milliseconds. Return false to stop it.",
+      "options": "Scheduling and lifetime settings. Entity callbacks default to the update phase."
+    },
+    "returnsDescription": "An AlwaysHandle tied to this entity’s updater registry; destroying the entity clears that registry."
+  },
+  "Scene.play": {
+    "description": "Schedule animations or animators on the scene’s timeline. Await the returned promise before starting work that depends on those animations finishing.",
+    "notes": [
+      "Passing multiple playables in one call lets them run together. Separate awaited calls express a sequence. Playback options can set duration, easing and stepping behavior for the scheduled work."
+    ],
+    "example": "labs/pg-scene-play",
+    "parameters": {
+      "target": "One Animation, Animator or GroupAnimator to prepare and schedule.",
+      "targets": "Playables scheduled together. Nested animation structures retain their own internal sequencing.",
+      "options": "Shared timing and playback options, applied before preparation. Duration is in milliseconds.",
+      "args": "Playables, arrays of playables and an optional final options object."
+    },
+    "returnsDescription": "Resolves when every scheduled animation finishes, with the maximum nonnegative overshoot reported by those animations. This is not a wall-clock duration."
+  },
+  "Scene.pause": {
+    "description": "Pause the scene timeline and its managed media playback. Geometry stays available for inspection.",
+    "notes": [
+      "External application timers and global event listeners are outside this pause mechanism. An example that uses them must manage them separately."
+    ],
+    "example": "labs/lab-easing"
+  },
+  "Scene.resume": {
+    "description": "Resume the timeline, skip the accumulated real-time gap, restore managed media playback, and request a new frame.",
+    "example": "labs/lab-easing"
+  },
+  "Scene.destroy": {
+    "description": "Stop and destroy the associated composer, then clear this scene’s animations, snapshots, plugins and event listeners.",
+    "notes": [
+      "The current implementation destroys the whole associated composer, even when it contains other scenes. For a single composed-scene removal, detach through SceneComposer.remove and manage the detached scene’s lifetime.",
+      "Scene subclasses do not receive an automatic onDestroy hook. Override destroy and call super.destroy when adding a scene-level cleanup path."
+    ],
+    "returnsDescription": "No value."
+  },
+  "Scene.invalidate": {
+    "description": "Request another rendered frame from the composer. Call it after an interactive change when the scene is otherwise idle.",
+    "notes": [
+      "Invalidation is suppressed during seeking. A scene without a composer has no renderer to invalidate."
+    ],
+    "example": "labs/lab-bezier"
+  },
+  "AlwaysOptions": {
+    "description": "Control when an updater executes, how often it runs, and when it stops. Combine scheduling options to express a short-lived effect, a throttled simulation, or a post-update constraint.",
+    "example": "labs/pg-always-options"
+  },
+  "AnimOptions": {
+    "description": "Configure animation timing and progress. Duration chooses the time span; easing chooses how motion is distributed within it; stepping options choose how frequently state is evaluated.",
+    "example": "labs/pg-scene-play"
+  },
+  "Rate": {
+    "description": "Create rate functions that map normalized progress to an eased value. Use these functions to make motion accelerate, settle, bounce, or maintain constant speed.",
+    "notes": [
+      "A rate function changes progress within an animation. It does not change the duration by itself, and some curves can reverse direction or overshoot."
+    ],
+    "example": "labs/lab-easing"
+  },
+  "Paint": {
+    "description": "Style vector geometry with fill, stroke, opacity, clipping and related appearance settings. Paint changes how a path is rendered while its transform and geometry describe where it is and what shape it has.",
+    "example": "labs/lab-paint"
+  },
+  "Camera": {
+    "description": "Choose how the world is projected onto the canvas. Camera position, orientation and projection work together to determine framing and the apparent size of objects.",
+    "example": "labs/lab-camera"
+  },
+  "Camera.fov": {
+    "description": "Perspective vertical field of view in radians.",
+    "example": "labs/lab-camera",
+    "notes": [
+      "Assign Math.PI / 3 for 60 degrees. The current constructor default is the literal 45, despite the radians contract; set an explicit sensible radian value."
+    ]
+  },
+  "Camera.orthoScale": {
+    "description": "Vertical world-space extent of the orthographic view.",
+    "example": "labs/lab-camera",
+    "notes": [
+      "getProjectionMatrix uses half-height = orthoScale / 2 and half-width = orthoScale × aspect / 2. Larger values make objects appear smaller."
+    ]
+  },
+  "Bezier": {
+    "description": "Build a curve from control points. The endpoints lie on the curve; the interior points shape its direction and curvature.",
+    "example": "labs/lab-bezier"
+  },
+  "Bezier.setPoints": {
+    "description": "Replace the control points used to construct the curve. Update any handles or control polygon alongside it so the displayed inputs remain consistent.",
+    "example": "labs/lab-bezier"
+  },
+  "InteractionComponent": {
+    "description": "Attach pointer behavior to an entity. Configure dragging and callbacks to turn rendered geometry into something a reader can manipulate.",
+    "example": "labs/lab-bezier"
+  },
+  "VGroup": {
+    "description": "Group vector entities under a shared parent. Moving, rotating or scaling the group transforms all its children while each child keeps its own local placement.",
+    "example": "labs/lab-hierarchy"
+  }
+}

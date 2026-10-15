@@ -1,0 +1,243 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "shaders-fill",
+  "title": "fill WGSL",
+  "group": "Shader reference",
+  "sections": [
+    {
+      "id": "shader-implementation-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Shader implementation contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "WGSL modules are assembled through engine imports, chunk registration and ShaderBuilder. Functions, structures and bindings below come directly from the checked-out shader files. A file can be a reusable include, an active entry point or a retained experimental/legacy variant; file presence alone does not establish that it executes in the default pipeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the corresponding geometry, fragment and pass API before changing an entry point. CPU data offsets, WGSL alignment, bindings, varying interpolation, reversed depth and workgroup sizes must continue to agree."
+        }
+      ]
+    },
+    {
+      "id": "gradient",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "gradient.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/fill/gradient.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/fill/gradient.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "getColorFromStops",
+                "t_in: f32",
+                "vec4<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "vs",
+                "vert: Vertex",
+                "VertexOutput"
+              ]
+            },
+            {
+              "cells": [
+                "safe_atan2",
+                "y: f32, x: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "fs",
+                "vin: VertexOutput",
+                "@location(0) vec4<f32>"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `GradientParams`, `Vertex`, `VertexOutput`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "3",
+                "0",
+                "var<uniform> u_params: GradientParams;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: fragment, vertex."
+        }
+      ]
+    },
+    {
+      "id": "texture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "texture.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/fill/texture.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/fill/texture.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "vs",
+                "vert: Vertex",
+                "VertexOutput"
+              ]
+            },
+            {
+              "cells": [
+                "fs",
+                "vin:VertexOutput",
+                "@location(0) vec4<f32>"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Vertex`, `VertexOutput`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "3",
+                "0",
+                "var mySampler: sampler;"
+              ]
+            },
+            {
+              "cells": [
+                "3",
+                "1",
+                "var myTexture: texture_2d<f32>;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: fragment, vertex."
+        }
+      ]
+    },
+    {
+      "id": "video",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "video.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/fill/video.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/fill/video.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "vs",
+                "vert: Vertex",
+                "VertexOutput"
+              ]
+            },
+            {
+              "cells": [
+                "fs",
+                "vin: VertexOutput",
+                "@location(0) vec4<f32>"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Vertex`, `VertexOutput`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "3",
+                "0",
+                "var mySampler: sampler;"
+              ]
+            },
+            {
+              "cells": [
+                "3",
+                "1",
+                "var myTexture: texture_external;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: fragment, vertex."
+        }
+      ]
+    }
+  ]
+}

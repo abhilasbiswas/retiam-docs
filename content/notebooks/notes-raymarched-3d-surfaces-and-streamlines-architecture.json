@@ -1,0 +1,223 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-raymarched-3d-surfaces-and-streamlines-architecture",
+  "title": "3D Raymarched Surface Graphing & 2D Streamlines Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/RAYMARCHED_3D_SURFACES_AND_STREAMLINES_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/RAYMARCHED_3D_SURFACES_AND_STREAMLINES_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/RAYMARCHED_3D_SURFACES_AND_STREAMLINES_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Streamlines2D](/api-entities-composites-plotting#streamlines2d), [ImplicitCurve2DGPU](/api-entities-composites-plotting#implicitcurve2dgpu), [Box](/api-entities-primitives-3d#box), [ShaderDomain](/api-render-shader-system#domains), [RaymarchStyle](/api-entities-composites-plotting#raymarchplot3d), [Line3D](/api-entities-primitives-3d#line3d), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [ThreeDAxes](/api-entities-composites-coordinates#threedaxes), [RaymarchColorMode](/api-entities-composites-plotting#raymarchplot3d), [Color](/api-math#color)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Advanced scientific visualizations require real-time GPU computation for mathematical functions that are impractical or inefficient to evaluate via classical CPU polygon triangulation."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`RaymarchPlot3D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/plotting/RaymarchPlot3D.ts)**: A 654-line GPU-accelerated implicit and explicit 3D surface raymarcher that visualizes bivariate functions $y = f(x, z)$ in real time across 6 rendering styles and 4 color mapping modes.",
+            "**[`Streamlines2D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/plotting/Streamlines2D.ts)**: A fluidic particle advection engine that simulates and renders flowing streamlines through dynamic 2D vector fields $\\vec{F}(x, y, t)$.",
+            "**[`ImplicitCurve2DGPU`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/plotting/ImplicitCurve2DGPU.ts)**: GPU-based level-set contour evaluator executing parallel Marching Squares inside WebGPU compute passes."
+          ]
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "RaymarchPlot3D",
+              "children": [
+                {
+                  "label": "Bounded box raymarching",
+                  "description": "Bounding-volume traversal, analytical normal gradients and the PPLL OIT ShaderDomain."
+                },
+                {
+                  "label": "Visual styles",
+                  "description": "SOLID, WIREFRAME, HEATMAP, CONTOUR, DEPTH and TOPOGRAPHY; multi-axis colormaps."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-3d-gpu-raymarched-surfaces-raymarchplot3d-ts-src-engine-entities-composites-plotting-raymarchplot3d-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. 3D GPU Raymarched Surfaces ([RaymarchPlot3D.ts](../src/engine/entities/composites/plotting/RaymarchPlot3D.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rather than generating dense polygonal grids on the CPU, `RaymarchPlot3D` bounds the domain $(x, z) \\in [x_{\\min}, x_{\\max}] \\times [z_{\\min}, z_{\\max}]$ inside an oriented bounding box and marches viewing rays inside the fragment shader."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Surface Root Finding"
+        },
+        {
+          "type": "paragraph",
+          "text": "For camera ray $\\mathbf{r}(t) = \\mathbf{o} + t\\vec{d}$:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The ray intersects the top/bottom domain bounds.",
+            "An adaptive sphere-tracing / secant march tracks the signed distance between the ray height and the surface function:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "g(t) = r_y(t) - f\\big(r_x(t), r_z(t)\\big)"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Root convergence $g(t^*) = 0$ identifies the exact surface hit without geometric discretization error."
+          ],
+          "start": 3
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Analytical Surface Normals"
+        },
+        {
+          "type": "paragraph",
+          "text": "Surface normals are evaluated analytically via central finite differences:"
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{n} = \\text{normalize}\\left(\\begin{bmatrix}\n-\\frac{f(x + \\varepsilon, z) - f(x - \\varepsilon, z)}{2\\varepsilon} \\\\\n1.0 \\\\\n-\\frac{f(x, z + \\varepsilon) - f(x, z - \\varepsilon)}{2\\varepsilon}\n\\end{bmatrix}\\right)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Visual Styles (RaymarchStyle)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`SOLID`**: Smooth Blinn-Phong shaded surface.",
+            "**`WIREFRAME`**: Modulo fractional grid lines evaluated in screen space.",
+            "**`HEATMAP`**: Continuous elevation colormap.",
+            "**`CONTOUR`**: Equidistant horizontal level-set rings:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{contour} = \\text{fract}(y \\cdot N_{\\text{levels}}) < \\text{width}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`DEPTH`**: Linearized camera depth buffer visualization.",
+            "**`TOPOGRAPHIC`**: Solid geological block with stratified internal depth banding and surface contours."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. PPLL Order-Independent Transparency"
+        },
+        {
+          "type": "paragraph",
+          "text": "`RaymarchPlot3D` declares a custom `RAYMARCH_DOMAIN` in the shader system, integrating with Retiam's Per-Pixel Linked List (PPLL) A-buffer so transparent mathematical plots cleanly interpenetrate other 3D meshes."
+        }
+      ]
+    },
+    {
+      "id": "3-vector-streamlines-simulation-streamlines2d-ts-src-engine-entities-composites-plotting-streamlines2d-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Vector Streamlines Simulation ([Streamlines2D.ts](../src/engine/entities/composites/plotting/Streamlines2D.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Streamlines2D` renders animated flow lines through velocity vector fields $\\vec{v}(x, y, t)$:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Spawn Particle -> Numerical RK4 Step -> Extrude Ribbon Trail -> Age Decay -> Kill / Respawn"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Particle Advection**: Tracer particles follow Runge-Kutta 4th-order (RK4) trajectories:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\frac{d\\mathbf{x}}{dt} = \\vec{v}(\\mathbf{x}, t)"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Dynamic Ribbon Trails**: Each active particle extrudes a [`Line3D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Line3D.ts) smooth ribbon with round caps and joints.",
+            "**Lifecycle Recycling**: When particle age exceeds `maxAge`, it is terminated and respawned randomly across the domain, maintaining steady streamline visual density."
+          ],
+          "start": 2
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, ThreeDAxes, RaymarchPlot3D, RaymarchStyle, RaymarchColorMode, Color } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\nconst axes = new ThreeDAxes({\n    xRange: [-4, 4, 1],\n    yRange: [-3, 3, 1],\n    zRange: [-4, 4, 1]\n});\nscene.add(axes);\n\n// 3D Raymarched Sinc ripple function: f(x, z) = 2.0 * sin(r) / r\nconst surface = new RaymarchPlot3D(axes, {\n    userFunctions: `\n        fn surfaceFunc(x: f32, z: f32) -> f32 {\n            let r = sqrt(x * x + z * z) + 0.0001;\n            return 2.0 * sin(r) / r;\n        }\n    `,\n    viewStyle: RaymarchStyle.TOPOGRAPHIC,\n    colorMode: RaymarchColorMode.RADIAL,\n    showContour: true,\n    showGrid: true\n});\nscene.add(surface);"
+        }
+      ]
+    }
+  ]
+}

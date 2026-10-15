@@ -1,0 +1,204 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "entities",
+  "title": "Entities, components and ownership",
+  "group": "Core authoring",
+  "summary": "Build a scene graph and understand how entities, components and groups share transforms and ownership.",
+  "sections": [
+    {
+      "id": "what-an-entity-owns",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "What an entity owns"
+        },
+        {
+          "type": "paragraph",
+          "text": "Entity is the base node for geometry, composites, cameras and custom scene nodes. It owns State, transform, paint, material, children and component references. GeometryComponent describes geometry and resources; FragmentComponent describes shading; RendererComponent prepares draw behavior. High-level primitives install compatible components for you."
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "SceneComposer: GPU and frame loop",
+              "children": [
+                {
+                  "label": "Scene: entities and local timeline",
+                  "children": [
+                    {
+                      "label": "Entity",
+                      "children": [
+                        {
+                          "label": "State: Transform / Paint / Material"
+                        },
+                        {
+                          "label": "Geometry / Fragment / Renderer components"
+                        },
+                        {
+                          "label": "Children: more entities"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n  S[Scene] --> E[Entity]\n  E --> T[Transform]\n  E --> P[Paint]\n  E --> C[Component]\n  E --> V[VectorEntity]\n  V --> R[RendererComponent]"
+        },
+        {
+          "type": "paragraph",
+          "text": "Read this as an ownership and specialization map: Scene contains entities; each Entity carries a Transform and Paint and can attach components. VectorEntity specializes the base node with vector geometry. Click a named node to open its API reference and inspect its members."
+        }
+      ]
+    },
+    {
+      "id": "entity-class-hierarchy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "How entity types inherit behavior"
+        },
+        {
+          "type": "paragraph",
+          "text": "Camera, VectorEntity and the other branches below extend Entity. Follow VectorEntity to the geometry types, or select a concrete type to see its ancestors. The arrows describe type inheritance; the parent/child links in your scene describe ownership between instances."
+        },
+        {
+          "type": "class-hierarchy",
+          "root": "Entity",
+          "depth": 1
+        },
+        {
+          "type": "paragraph",
+          "text": "Use the [complete class hierarchy](/class-hierarchy#explorer) to explore engine and library types."
+        }
+      ]
+    },
+    {
+      "id": "compare-local-world",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compare parent axes with world axes"
+        },
+        {
+          "type": "paragraph",
+          "text": "The two parents begin with the same rotation. The cyan dot shifts along its parent’s axis; the amber dot shifts along a world axis. Click a frame to rotate its parent and inspect the difference."
+        },
+        {
+          "type": "example",
+          "example": "labs/compare-local-world"
+        }
+      ]
+    },
+    {
+      "id": "interactive-hierarchy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore parent and child transforms"
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-hierarchy"
+        }
+      ]
+    },
+    {
+      "id": "hierarchy-and-grouping",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Hierarchy and grouping"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use `parent.add(child)` for a spatial hierarchy and `this.add(parent)` for a root. VGroup is a VectorEntity composite. Group is a collection of entities with group animation helpers; it does not extend Entity and is not a scene-graph parent. Static HBox/VBox arrangement positions independent entities without parenting them."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-hierarchyscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Do not register the same child as both a scene root and a child of another root. Traverse and animate a collection through the ownership model intended for it."
+        }
+      ]
+    },
+    {
+      "id": "removal-and-cleanup",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Removal and cleanup"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Scene.remove()` collects descendants, removes matching scene roots, clears scene references and calls `destroy()` on the collected entities. It is a destructive lifecycle operation. `parent.remove(child)` detaches a child without destroying it. `Scene.destroy()` currently shuts down its whole composer, including other scenes hosted by that composer. Follow [lifecycle ownership](/lifecycle-resources) when reusing nodes or composing multiple scenes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retained allocator slots, buffers, textures, DOM overlays, update tasks and plugins all have lifetimes. Dispose the object that owns a resource; do not destroy a shared GPU buffer merely because one wrapper stops displaying it."
+        }
+      ]
+    },
+    {
+      "id": "visibility-culling-and-picking",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Visibility, culling and picking"
+        },
+        {
+          "type": "paragraph",
+          "text": "z_index participates in ordering and adds a projected depth bias of z_index × 0.001 in shared vertex helpers. It is not an unlimited painter-order integer: a large bias can move otherwise visible geometry outside the depth clip range. Use small explicit biases when needed and verify the camera/depth configuration."
+        },
+        {
+          "type": "paragraph",
+          "text": "Rendering visibility, FRUSTUM_CULL, CAST_SHADOW, RECEIVE_SHADOW, RT_ENABLE, layerMask and isPickable serve separate jobs. A visually opaque object is not automatically an interaction target. Rendering state setters typically mark versioned state dirty, while raw typed-array mutation may require explicit refresh or invalidation."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Entity](/api-core-entity#entity), [State](/api-core#state), [Component](/api-core#component), [GeometryComponent](/api-components#geometrycomponent), [FragmentComponent](/api-components#fragmentcomponent), [RendererComponent](/api-components#renderercomponent), [Group](/api-core#group), [VGroup](/api-entities-layout#vgroup)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Transforms, anchors and pivots](/transforms).",
+            "Build it step by step: [Create a reusable custom entity](/tutorial-custom-entity)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Your first scene](/first-scene)"
+  ]
+}

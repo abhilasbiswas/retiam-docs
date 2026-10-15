@@ -1,0 +1,2785 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-components-geometry",
+  "title": "components / geometry API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "beziergeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "BezierGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/BezierGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/BezierGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BezierGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class BezierGeometry extends PolyGeometry {\n    control_point_buffer: GPUBuffer;\n    control_points_data: Float32Array;\n    segments: number;\n    degree?: number;\n    constructor(segments?: number, isClosed?: boolean, degree?: number);\n    setControlPoints(controlPoints: Float32Array | number[], isClosed?: boolean, segments?: number, degree?: number): void;\n    static evalDeCasteljau(points: Vec2[], t: number): Vec2;\n    static evalDerivative(points: Vec2[], t: number): Vec2;\n    static getCompositeSpans(points: Vec2[], degree: number, isClosed?: boolean): Vec2[][];\n    prepare(scene: Scene, state: State): void;\n    getClipSpace(strokeWidth: number): Vec2[];\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BezierGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public control_point_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public control_points_data: Float32Array",
+                    "new Float32Array(0)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public segments: number",
+                    "32",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public degree?: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(segments: number = 32, isClosed: boolean = false, degree?: number)",
+                    "—",
+                    "Implementation: `super(isClosed); this.segments = segments; this.degree = degree;`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setControlPoints(\n        controlPoints: Float32Array | number[],\n        isClosed: boolean = false,\n        segments?: number,\n        degree?: number\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.control_points_data`, `this.isClosed`, `this.segments`, `this.degree`, `this.isDirty`; construction of `Float32Array`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static evalDeCasteljau(points: Vec2[], t: number): Vec2",
+                    "—",
+                    "Evaluates a single Bézier curve at parameter t using De Casteljau's algorithm. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static evalDerivative(points: Vec2[], t: number): Vec2",
+                    "—",
+                    "Evaluates the first derivative vector (d/dt) of a Bézier curve at parameter t. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getCompositeSpans(points: Vec2[], degree: number, isClosed: boolean = false): Vec2[][]",
+                    "—",
+                    "Splits M points into composite C1-continuous degree-d Bézier spans. [Source line 105](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L105)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override prepare(scene: Scene, state: State): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_buffer`, `this.control_point_buffer`, `this.total_len_buffer`, `this.stroke_vertex_buffer`, `this.fill_vertex_buffer`, `this.strokeVertexCount`, `this.fillVertexCount`, `this.isDirty` and other instance fields; construction of `Vec2`, `Float32Array`; calls to `pts.push`, `BezierGeometry.getCompositeSpans`, `sampled.push`, `BezierGeometry.evalDeCasteljau`, `Renderer.destroyBuffers`, `createBuffer`, `scene.device.queue.writeBuffer`, `scene.compute.generateBezierVertices` and additional helpers; 4 explicit loops. [Source line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L163)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override getClipSpace(strokeWidth: number): Vec2[]",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec2`; calls to `PathGeometryUtils.clip2`; return paths including `[new Vec2(), new Vec2(), new Vec2(), new Vec2()]`, `PathGeometryUtils.clip2(this.control_points_data, strokeWidth)`. [Source line 271](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L271)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override onDestroy(): void",
+                    "—",
+                    "Implementation: `Renderer.destroyBuffers(this.control_point_buffer); super.onDestroy();`. [Source line 278](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/BezierGeometry.ts#L278)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deformablemeshgeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "DeformableMeshGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/DeformableMeshGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/DeformableMeshGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "DeformableMeshGeometry: High-performance textured 2D triangle mesh geometry for deformable images and sprites. Encapsulates tightly packed [x, y, u, v] vertex buffers and indexed triangle topologies."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "DeformableMeshGeometry",
+                    "Class",
+                    "High-performance textured 2D triangle mesh geometry for deformable images and sprites. Encapsulates tightly packed [x, y, u, v] vertex buffers and indexed triangle topologies."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class DeformableMeshGeometry extends GeometryComponent {\n    vertex_buffer: GPUBuffer;\n    index_buffer: GPUBuffer;\n    indexCount: number;\n    constructor();\n    getPasses(): Record<string, GeometryPassConfig>;\n    setVertices(vertices: Float32Array, indices?: Uint32Array): void;\n    updateVertices(vertices: Float32Array): void;\n    prepare(scene: Scene): void;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName?: string): DrawCall[];\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DeformableMeshGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public index_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indexCount: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor()",
+                    "—",
+                    "Implementation: `super();`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPasses`; construction of `VertexSchema`, `VaryingSchema`; return paths including `this._cachedPasses`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertices(vertices: Float32Array, indices?: Uint32Array): void",
+                    "—",
+                    "Sets or updates mesh vertices and triangle indices. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateVertices(vertices: Float32Array): void",
+                    "—",
+                    "Updates vertex positions and UVs in-place. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vBufferCapacity`, `this.vertex_buffer`, `this.iBufferCapacity`, `this.index_buffer`, `this.isDirty`; calls to `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`, `device.queue.writeBuffer`. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Implementation: `if (this.vertex_buffer) RenderStateCache.setVertexBuffer(pass, 0, this.vertex_buffer);`. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `[]`, `this._cachedDrawCalls`. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `if (this.vertex_buffer) Renderer.destroyBuffers(this.vertex_buffer); if (this.index_buffer) Renderer.destroyBuffers(this.index_buffer);`. [Source line 128](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/DeformableMeshGeometry.ts#L128)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "geometry2d",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Geometry2D"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/Geometry2D.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/Geometry2D.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Geometry2D",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class Geometry2D extends GeometryComponent {\n    vertex_buffer: GPUBuffer;\n    topology: GPUPrimitiveTopology;\n    constructor();\n    getPasses(): Record<string, GeometryPassConfig>;\n    setBuffer(buffer: GPUBuffer, count: number): void;\n    setVertices(vertices: Float32Array, count: number): void;\n    prepare(scene: Scene): void;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName?: string): DrawCall[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Geometry2D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public topology: GPUPrimitiveTopology",
+                    "'triangle-strip'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor()",
+                    "—",
+                    "Implementation: `super();`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPasses`; construction of `VertexSchema`, `VaryingSchema`; return paths including `this._cachedPasses`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBuffer(buffer: GPUBuffer, count: number)",
+                    "—",
+                    "Attach a GPUBuffer modified by Compute Shaders directly to this geometry [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertices(vertices: Float32Array, count: number)",
+                    "—",
+                    "Implementation: `this.vertex_data = vertices; this.vertexCount = count; this.isExternalBuffer = false; this.isDirty = true;`. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_buffer`, `this.isDirty`; calls to `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`, `device.queue.writeBuffer`. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Implementation: `if (this.vertex_buffer) { RenderStateCache.setVertexBuffer(pass, 0, this.vertex_buffer); }`. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Implementation: `if (this.vertexCount === 0) return []; this._cachedDrawCalls[0].vertexCount = this.vertexCount; this._cachedDrawCalls[0].instanceCount = this.instanceCount; return this._cachedDrawCalls;`. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Geometry2D.ts#L91)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "indexgeometry2d",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "IndexGeometry2D"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/IndexGeometry2D.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/IndexGeometry2D.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "IndexGeometry2D",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class IndexGeometry2D extends GeometryComponent {\n    vertex_buffer: GPUBuffer;\n    index_buffer: GPUBuffer;\n    indexCount: number;\n    topology: GPUPrimitiveTopology;\n    constructor();\n    getPasses(): Record<string, GeometryPassConfig>;\n    setBuffer(vertexBuffer: GPUBuffer, indexBuffer: GPUBuffer, indexCount?: number): void;\n    setVertices(vertices: number[] | Float32Array, indices: number[] | Uint32Array): void;\n    prepare(scene: Scene): void;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName?: string): DrawCall[];\n    render(pass: GPURenderPassEncoder, material: FragmentComponent, state: State): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `IndexGeometry2D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public index_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indexCount: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public topology: GPUPrimitiveTopology",
+                    "'triangle-list'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor()",
+                    "—",
+                    "Implementation: `super();`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPasses`; construction of `VertexSchema`, `VaryingSchema`; return paths including `this._cachedPasses`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBuffer(vertexBuffer: GPUBuffer, indexBuffer: GPUBuffer, indexCount?: number): void",
+                    "—",
+                    "Binds externally created GPU buffers [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertices(vertices: number[] | Float32Array, indices: number[] | Uint32Array): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_data`, `this.index_data`, `this.indexCount`, `this.isExternalBuffer`, `this.isDirty`; construction of `Error`, `Float32Array`, `Uint32Array`; rejection paths `new Error(\"[IndexGeometry2D] vertices and indices cannot be null or undefined.\")`. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vBufferCapacity`, `this.vertex_buffer`, `this.iBufferCapacity`, `this.index_buffer`, `this.isDirty`; calls to `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`, `device.queue.writeBuffer`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Implementation: `if (this.vertex_buffer) RenderStateCache.setVertexBuffer(pass, 0, this.vertex_buffer);`. [Source line 131](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L131)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `[]`, `this._cachedDrawCalls`. [Source line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L142)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public render(pass: GPURenderPassEncoder, material: FragmentComponent, state: State): void",
+                    "—",
+                    "Implementation: ``. [Source line 151](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/IndexGeometry2D.ts#L151)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"[IndexGeometry2D] vertexBuffer and indexBuffer cannot be null or undefined.\")",
+                "new Error(`[IndexGeometry2D] indexCount must be greater than 0, got ${count}.`)",
+                "new Error(`[IndexGeometry2D] indexCount (${count}) exceeds buffer capacity (${maxIndices} indices for buffer of ${indexBuffer.size} bytes).`)",
+                "new Error(\"[IndexGeometry2D] vertices and indices cannot be null or undefined.\")"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "line3dgeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Line3DGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/Line3DGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/Line3DGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Line3DGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class Line3DGeometry extends GeometryComponent {\n    vertex_buffer: GPUBuffer;\n    total_len_buffer: GPUBuffer;\n    actualVertexCount: number;\n    constructor();\n    getPasses(): Record<string, GeometryPassConfig>;\n    setup(builder: ShaderBuilder, name: string): void;\n    setBuffer(buffer: GPUBuffer, actual_vertex_count: number): void;\n    setVertices(data: Float32Array): void;\n    refreshLengthComputation(): void;\n    prepare(scene: Scene): void;\n    getDrawCalls(passName?: string): DrawCall[];\n    getTotalLength(device: GPUDevice): Promise<number>;\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Line3DGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public total_len_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public actualVertexCount: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor()",
+                    "—",
+                    "Implementation: `super();`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `VaryingSchema`; return paths including `{ 'main': passConfig, 'clear': passConfig }`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setup(builder: ShaderBuilder, name: string): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `builder.define`, `builder.inject`. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L188)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBuffer(buffer: GPUBuffer, actual_vertex_count: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_buffer`, `this.actualVertexCount`, `this.vertexCount`, `this.isExternalBuffer`, `this.computeNeedsDispatch`, `this.isDirty`, `this.version`; calls to `Renderer.destroyBuffers`. [Source line 204](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L204)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertices(data: Float32Array)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertices_data`, `this.actualVertexCount`, `this.vertexCount`, `this.vertex_buffer`, `this.vertexBufferCapacity`, `this.isExternalBuffer`, `this.isDirty`, `this.version`. [Source line 216](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L216)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public refreshLengthComputation()",
+                    "—",
+                    "Implementation: `this.computeNeedsDispatch = true;`. [Source line 231](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L231)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_buffer`, `this.vertexBufferCapacity`, `this.isDirty`, `this.total_len_buffer`, `this.version`, `this.lenArena`, `this.prefixArena`, `this.blockSumArena` and other instance fields; construction of `GPUArena`; calls to `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`, `device.queue.writeBuffer`, `this.lenArena.ensureCapacity`, `this.prefixArena.ensureCapacity`, `this.blockSumArena.ensureCapacity`, `this.blockSumOutArena.ensureCapacity`, `scene.compute.computeLine3DArcLength` and additional helpers. [Source line 235](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L235)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Implementation: `if (this.vertexCount === 0) return []; this._cachedDrawCalls[0].vertexCount = this.vertexCount; this._cachedDrawCalls[0].instanceCount = this.instanceCount; return this._cachedDrawCalls;`. [Source line 304](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L304)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async getTotalLength(device: GPUDevice): Promise<number>",
+                    "—",
+                    "Implementation: `if (!this.total_len_buffer) return 0; return await readBuffer(device, this.total_len_buffer, 0);`. [Source line 311](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L311)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `super.onDestroy`, `Renderer.destroyBuffers`. [Source line 316](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/Line3DGeometry.ts#L316)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "linegeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "LineGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/LineGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/LineGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "LineGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class LineGeometry extends GeometryComponent {\n    vertex_buffer: GPUBuffer;\n    vertex_data: Float32Array;\n    actualVertexCount: number;\n    constructor();\n    getPasses(): Record<string, GeometryPassConfig>;\n    setVertices(data: Float32Array): void;\n    prepare(scene: Scene): void;\n    getDrawCalls(passName?: string): DrawCall[];\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `LineGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertex_data!: Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public actualVertexCount: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor()",
+                    "—",
+                    "Implementation: `super();`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `VaryingSchema`; calls to `Res.buffer`; return paths including `{ 'main': passConfig, 'clear': passConfig // Required to expose the pass for the Stencil Clear }`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertices(data: Float32Array)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_data`, `this.actualVertexCount`, `this.version`, `this.vertexCount`, `this.isDirty`. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertexBufferCapacity`, `this.vertex_buffer`, `this.version`, `this.isDirty`; calls to `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`, `device.queue.writeBuffer`. [Source line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L178)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Implementation: `if (this.vertexCount === 0) return []; this._cachedDrawCalls[0].vertexCount = this.vertexCount; this._cachedDrawCalls[0].instanceCount = this.instanceCount; return this._cachedDrawCalls;`. [Source line 203](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L203)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `super.onDestroy(); if (this.vertex_buffer) Renderer.destroyBuffers(this.vertex_buffer);`. [Source line 210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/LineGeometry.ts#L210)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modelgeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ModelGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/ModelGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/ModelGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ModelGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ModelGeometry extends GeometryComponent {\n    vertex_buffer: GPUBuffer;\n    vertexCount: number;\n    indices_buffer: GPUBuffer;\n    indicesCount: number;\n    mesh: WebGPUMesh;\n    active_phase: string;\n    setMesh(mesh: WebGPUMesh): void;\n    setVertices(positions: any[] | Float32Array, indices: any[] | Uint32Array | null, uvs?: any[] | Float32Array, topology?: Topology): void;\n    setBuffer(vertexBuffer: GPUBuffer, vertexCount: number, indexBuffer?: GPUBuffer, indicesCount?: number): void;\n    prepare(scene: Scene): void;\n    getPasses(): Record<string, GeometryPassConfig>;\n    getActivePhase(): string;\n    setup(builder: ShaderBuilder, name: string): void;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName?: string): DrawCall[];\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ModelGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertexCount: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indices_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indicesCount: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public mesh!: WebGPUMesh",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public active_phase",
+                    "\"main\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMesh(mesh: WebGPUMesh)",
+                    "—",
+                    "Implementation: `this.mesh = mesh; this.vertexCount = this.mesh.vertices.length / 3; this.indicesCount = this.mesh.indices ? this.mesh.indices.length : 0; this.isExternalBuffer = false; this.isDirty = true;`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertices(positions: any[] | Float32Array, indices: any[] | Uint32Array | null, uvs?: any[] | Float32Array, topology: Topology = \"smooth\")",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.mesh`, `this.mesh.indices`, `this.vertexCount`, `this.indicesCount`, `this.isExternalBuffer`, `this.isDirty`; construction of `Uint32Array`; calls to `Math3D.computeSmoothShading`, `Math3D.computeFlatShading`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBuffer(vertexBuffer: GPUBuffer, vertexCount: number, indexBuffer?: GPUBuffer, indicesCount?: number)",
+                    "—",
+                    "Attach a GPUBuffer modified by Compute Shaders directly to this geometry [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_buffer`, `this.indices_buffer`, `this.isDirty`; calls to `Math3D.packToF32Array`, `Renderer.destroyBuffers`, `createBuffer`, `scene.device.queue.writeBuffer`, `GPUAllocator.safeCreateBuffer`. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPassesBuffer`, `this._cachedPasses`; construction of `VertexSchema`, `VaryingSchema`; calls to `Res.texture`, `Res.sampler`; return paths including `this._cachedPasses`. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getActivePhase(): string",
+                    "—",
+                    "Implementation: `return this.active_phase;`. [Source line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L144)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setup(builder: ShaderBuilder, name: string): void",
+                    "—",
+                    "Implementation: ``. [Source line 148](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L148)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Implementation: `if (this.vertex_buffer) RenderStateCache.setVertexBuffer(pass, 0, this.vertex_buffer);`. [Source line 153](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L153)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `this._cachedIndexedDrawCall`, `this._cachedNonIndexedDrawCall`. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `Renderer.destroyBuffers( this.vertex_buffer, this.indices_buffer );`. [Source line 181](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts#L181)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "morphgeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MorphGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/MorphGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/MorphGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MorphGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class MorphGeometry extends ModelGeometry {\n    meshA: WebGPUMesh;\n    meshB: WebGPUMesh;\n    bufVertexA: GPUBuffer;\n    bufVertexB: GPUBuffer;\n    parentIndices: Int32Array | null;\n    leafIndices: Uint32Array | null;\n    orderedTrisA: any[];\n    orderedTrisB: any[];\n    bufTrisA: GPUBuffer;\n    bufTrisB: GPUBuffer;\n    bufLeafIndices: GPUBuffer;\n    bufParentIndices: GPUBuffer;\n    bufFlags: GPUBuffer;\n    bufParams: GPUBuffer;\n    refitPipeline: GPUComputePipeline;\n    morphBindGroup: GPUBindGroup;\n    bvhRootOffset: number;\n    triOffset: number;\n    morphWeight: number;\n    isSetup: boolean;\n    options: MorphOptions;\n    bufSdfA: GPUBuffer;\n    bufSdfB: GPUBuffer;\n    bufTriTable: GPUBuffer;\n    bufCellVerts: GPUBuffer;\n    constructor();\n    setMorphTargets(meshA: WebGPUMesh, meshB: WebGPUMesh, options?: MorphOptions): void;\n    prepare(scene: Scene, state?: State): void;\n    setupGPU(device: GPUDevice, globalTrisBuffer: GPUBuffer, globalNodesBuffer: GPUBuffer): void;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName?: string): import(\"../GeometryComponent\").DrawCall[];\n    getPasses(): Record<string, GeometryPassConfig>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MorphGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public meshA!: WebGPUMesh",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public meshB!: WebGPUMesh",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufVertexA!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufVertexB!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public parentIndices: Int32Array | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public leafIndices: Uint32Array | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public orderedTrisA!: any[]",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public orderedTrisB!: any[]",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufTrisA!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufTrisB!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufLeafIndices!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufParentIndices!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufFlags!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufParams!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public refitPipeline!: GPUComputePipeline",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public morphBindGroup!: GPUBindGroup",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bvhRootOffset: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public triOffset: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public morphWeight: number",
+                    "0.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isSetup: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public options!: MorphOptions",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufSdfA!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufSdfB!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufTriTable!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufCellVerts!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor()",
+                    "—",
+                    "Implementation: `super();`. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMorphTargets(meshA: WebGPUMesh, meshB: WebGPUMesh, options?: MorphOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.options`, `this.isSetup`, `this.meshA`, `this.meshB`, `this.mesh`, `this.vertexCount`, `this.indicesCount`, `this.customData` and other instance fields; calls to `processor.process`. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene, state?: State): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.bufSdfA`, `this.bufSdfB`, `this.bufCellVerts`, `this.bufTriTable`, `this.vertex_buffer`, `this.bufVertexA`, `this.bufVertexB`, `this.quadBuffer` and other instance fields; construction of `Int32Array`, `Float32Array`, `Uint32Array`; calls to `Renderer.destroyBuffers`, `createBuffer`, `GPUAllocator.safeCreateBuffer`, `new Int32Array(this.bufTriTable.getMappedRange()).set`, `this.bufTriTable.getMappedRange`, `this.bufTriTable.unmap`, `Math3D.packToF32Array`, `new Uint32Array(this.indices_buffer.getMappedRange()).set` and additional helpers. [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L96)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setupGPU(device: GPUDevice, globalTrisBuffer: GPUBuffer, globalNodesBuffer: GPUBuffer)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.bufTrisA`, `this.bufTrisB`, `this.bufLeafIndices`, `this.bufParentIndices`, `this.bufFlags`, `this.bufParams`, `this.refitPipeline`, `this.morphBindGroup` and other instance fields; construction of `Float32Array`; calls to `Renderer.destroyBuffers`, `serializeTris`, `GPUAllocator.safeCreateBuffer`, `device.queue.writeBuffer`, `device.createShaderModule`, `device.createComputePipeline`, `device.createBindGroup`, `this.refitPipeline.getBindGroupLayout`; return paths including `arr`; 1 explicit loop. [Source line 195](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L195)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `RenderStateCache.setVertexBuffer`. [Source line 258](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L258)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): import(\"../GeometryComponent\").DrawCall[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `this._cachedDrawCalls`. [Source line 269](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L269)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `VertexSchema`, `VaryingSchema`; calls to `Res.texture`, `Res.sampler`, `Res.storage`, `super.getPasses`; return paths including `super.getPasses()`. [Source line 300](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts#L300)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pathgeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PathGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/PathGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/PathGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PathGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PathGeometry extends GeometryComponent {\n    get vertex_buffer(): GPUBuffer;\n    set vertex_buffer(buf: GPUBuffer);\n    get indices_buffer(): GPUBuffer;\n    set indices_buffer(buf: GPUBuffer);\n    get stroke_vertex(): GPUBuffer;\n    set stroke_vertex(buf: GPUBuffer);\n    get arc_len_buffer(): GPUBuffer;\n    set arc_len_buffer(buf: GPUBuffer);\n    get clip_buffer(): GPUBuffer;\n    set clip_buffer(buf: GPUBuffer);\n    allocation: AnalyticalAllocationRange | null;\n    indices: number[];\n    vertex_data: number[];\n    paint: Paint;\n    isClipStatic: boolean;\n    isExternalBuffer: boolean;\n    computeNeedsDispatch: boolean;\n    get isDirty(): boolean;\n    set isDirty(val: boolean);\n    constructor(d: string);\n    getPasses(): Record<string, GeometryPassConfig>;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName: string): DrawCall[];\n    setup(builder: ShaderBuilder, name: string): void;\n    setBuffer(buffer: GPUBuffer, indicesOrVertexCount?: number | number[] | Uint32Array): void;\n    refreshCompute(): void;\n    get closed(): boolean;\n    set closed(val: boolean);\n    isClosed(): boolean;\n    prepare(scene: Scene, state?: State): void;\n    drawStencilChain(pass: GPURenderPassEncoder, baseFirstInstance?: number): void;\n    drawStroke(pass: GPURenderPassEncoder, baseFirstInstance?: number): void;\n    generateMesh(scene: Scene, strokeWidth: number, joint: JointType): void;\n    createBuffers(device: GPUDevice, scene: Scene): boolean;\n    setRawContour(contour: number[]): void;\n    decode(vertices: string | number[][]): void;\n    getArcLenSize(): number;\n    getStrokeVertexSize(): number;\n    getClipBuffer(): GPUBuffer;\n    getClipBounds(out4: Float32Array): boolean;\n    getClipSpace(stroke_width?: number): Vec2[];\n    segmentCount(): number;\n    contourCount(): number;\n    getTotalLength(device: GPUDevice, contourIndex?: number): Promise<number>;\n    getBuffer(): GPUBuffer;\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PathGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public get vertex_buffer(): GPUBuffer",
+                    "—",
+                    "Implementation: `return this._vertex_buffer || GlobalAnalyticalAllocator.getInstance().gpuGlobalPoints;`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set vertex_buffer(buf: GPUBuffer)",
+                    "—",
+                    "Implementation: `this._vertex_buffer = buf;`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get indices_buffer(): GPUBuffer",
+                    "—",
+                    "Implementation: `return this._indices_buffer || GlobalAnalyticalAllocator.getInstance().gpuGlobalIndices;`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set indices_buffer(buf: GPUBuffer)",
+                    "—",
+                    "Implementation: `this._indices_buffer = buf;`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get stroke_vertex(): GPUBuffer",
+                    "—",
+                    "Implementation: `return this._stroke_vertex || GlobalAnalyticalAllocator.getInstance().gpuGlobalStrokeMesh;`. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set stroke_vertex(buf: GPUBuffer)",
+                    "—",
+                    "Implementation: `this._stroke_vertex = buf;`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get arc_len_buffer(): GPUBuffer",
+                    "—",
+                    "Implementation: `return this._arc_len_buffer || GlobalAnalyticalAllocator.getInstance().gpuGlobalArcLengths;`. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set arc_len_buffer(buf: GPUBuffer)",
+                    "—",
+                    "Implementation: `this._arc_len_buffer = buf;`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get clip_buffer(): GPUBuffer",
+                    "—",
+                    "Implementation: `return this._clip_buffer || GlobalAnalyticalAllocator.getInstance().gpuGlobalClipQuads;`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set clip_buffer(buf: GPUBuffer)",
+                    "—",
+                    "Implementation: `this._clip_buffer = buf;`. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public allocation: AnalyticalAllocationRange | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "indices: number[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertex_data: number[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "paint: Paint",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isClipStatic: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isExternalBuffer: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeNeedsDispatch: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get isDirty(): boolean",
+                    "—",
+                    "Implementation: `return super.isDirty;`. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set isDirty(val: boolean)",
+                    "—",
+                    "Implementation: `super.isDirty = val; if (val) this._clipDirty = true;`. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(d: string)",
+                    "—",
+                    "Implementation: `super(); this.decode(d);`. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `VaryingSchema`, `VertexSchema`; calls to `GlobalAnalyticalAllocator.getInstance`, `Res.buffer`; long return expressions shown in the linked implementation. [Source line 107](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L107)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Implementation: `if ((passName === 'clear' || passName === 'fill_cover') && this.clip_buffer) { RenderStateCache.setVertexBuffer(pass, 0, this.clip_buffer); }`. [Source line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L248)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName: string): DrawCall[]",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `PathGeometry._quadDrawCalls`, `[]`. [Source line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L254)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setup(builder: ShaderBuilder, name: string): void",
+                    "—",
+                    "Implementation: ``. [Source line 264](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L264)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBuffer(buffer: GPUBuffer, indicesOrVertexCount?: number | number[] | Uint32Array)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._externalBuffer`, `this.vertex_buffer`, `this.indices`, `this.isExternalBuffer`, `this.computeNeedsDispatch`, `this.isDirty`, `this.version`. [Source line 269](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L269)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public refreshCompute()",
+                    "—",
+                    "Implementation: `this.computeNeedsDispatch = true;`. [Source line 288](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L288)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get closed(): boolean",
+                    "—",
+                    "Implementation: `if (this._closed !== null) return this._closed; return this.isClosed();`. [Source line 294](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L294)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set closed(val: boolean)",
+                    "—",
+                    "Implementation: `this._closed = val; this.isDirty = true;`. [Source line 299](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L299)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isClosed(): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `this._closed`, `false`, `(dx * dx + dy * dy) < 0.0001`. [Source line 304](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L304)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene, state?: State): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.isDirty`, `this._lastStrokeWidth`, `this._lastJointWord`, `this._allocatorBufferVersion`, `this.vertex_buffer`, `this.indices_buffer`, `this.stroke_vertex`, `this.arc_len_buffer` and other instance fields; calls to `GlobalAnalyticalAllocator.getInstance`, `GlobalAnalyticalPipeline.getInstance`, `this.segmentCount`, `this.contourCount`, `allocator.allocateRange`, `allocator.writeIndices`, `pipeline.queueJob`, `this.isClosed` and additional helpers. [Source line 313](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L313)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public drawStencilChain(pass: GPURenderPassEncoder, baseFirstInstance: number = 0): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.contourCount`, `pass.draw`; 1 explicit loop. [Source line 396](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L396)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public drawStroke(pass: GPURenderPassEncoder, baseFirstInstance: number = 0): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.contourCount`, `pass.draw`; 1 explicit loop. [Source line 408](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L408)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public generateMesh(scene: Scene, strokeWidth: number, joint: JointType)",
+                    "—",
+                    "Implementation: ``. [Source line 422](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L422)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createBuffers(device: GPUDevice, scene: Scene): boolean",
+                    "—",
+                    "Implementation: `return false;`. [Source line 426](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L426)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRawContour(contour: number[]): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_data`, `this.indices.length`, `this.indices[0]`, `this.indices[1]`, `this._indicesDirty`, `this.isExternalBuffer`, `this.isDirty`. [Source line 430](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L430)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public decode(vertices: string | number[][]): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_data`, `this.indices`, `this._indicesDirty`, `this.isExternalBuffer`, `this.isDirty`; calls to `PathGeometryUtils.decode`, `this.setRawContour`, `PathGeometryUtils.flatten`. [Source line 448](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L448)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getArcLenSize()",
+                    "—",
+                    "Implementation: `let size = this.segmentCount() * (T_POINTS_PER_CURVE + 1); return size;`. [Source line 465](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L465)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getStrokeVertexSize()",
+                    "—",
+                    "Implementation: `let size = this.segmentCount() * POINTS_BEZIER_SEGMENT << 2; return size;`. [Source line 470](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L470)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getClipBuffer(): GPUBuffer",
+                    "—",
+                    "Implementation: `return this.clip_buffer;`. [Source line 475](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L475)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getClipBounds(out4: Float32Array): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `false`, `true`; 1 explicit loop. [Source line 479](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L479)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getClipSpace(stroke_width?: number): Vec2[]",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedClipSpace`, `this._cachedClipWidth`, `this._clipDirty`; calls to `PathGeometryUtils.clip2`; return paths including `this._cachedClipSpace`, `clip`. [Source line 499](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L499)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public segmentCount()",
+                    "—",
+                    "Implementation: `let count = 0; for (let i = 1; i < this.indices.length; i++) { count += Math.max(0, (((this.indices[i] - this.indices[i - 1]) - 1) >> 1)); } return count;`. [Source line 514](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L514)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public contourCount(): number",
+                    "—",
+                    "Implementation: `return this.indices.length - 1;`. [Source line 522](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L522)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async getTotalLength(device: GPUDevice, contourIndex: number = 0): Promise<number>",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.contourCount`, `readBuffer`; return paths including `0`, `await readBuffer(device, this.arc_len_buffer, offsetIndex)`. [Source line 526](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L526)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBuffer(): GPUBuffer",
+                    "—",
+                    "Implementation: `return this.vertex_buffer;`. [Source line 539](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L539)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `if (this.allocation) { GlobalAnalyticalAllocator.getInstance().free(this.allocation); this.allocation = null; } this.clip_buffer = null as any;`. [Source line 543](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts#L543)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "polygeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PolyGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/PolyGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/PolyGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PolyGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PolyGeometry extends GeometryComponent {\n    margin: number;\n    vertex_buffer: GPUBuffer;\n    stroke_vertex_buffer: GPUBuffer;\n    fill_vertex_buffer: GPUBuffer;\n    clip_buffer: GPUBuffer;\n    total_len_buffer: GPUBuffer;\n    vertices_data: number[] | Float32Array;\n    isClosed: boolean;\n    fillVertexCount: number;\n    strokeVertexCount: number;\n    constructor(isClosed: boolean);\n    getPasses(): Record<string, GeometryPassConfig>;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName: string): DrawCall[];\n    prepare(scene: Scene, state?: State): void;\n    setVertices(vertices: number[], isClosed?: boolean): void;\n    getClipBuffer(): GPUBuffer;\n    updateClip(device: GPUDevice, strokeWidth: number): void;\n    getClipSpace(strokeWidth: number): Vec2[];\n    getTotalLength(device: GPUDevice): Promise<number>;\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PolyGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "margin",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public stroke_vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fill_vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clip_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public total_len_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertices_data!: number[] | Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isClosed: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fillVertexCount: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokeVertexCount: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(isClosed: boolean)",
+                    "—",
+                    "Implementation: `super(); this.isClosed = isClosed;`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPasses`; construction of `VertexSchema`, `VaryingSchema`; return paths including `this._cachedPasses`. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `RenderStateCache.setVertexBuffer`. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName: string): DrawCall[]",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedFillDrawCall[0].vertexCount`, `this._cachedStrokeDrawCall[0].vertexCount`; return paths including `[]`, `this._cachedFillDrawCall`, `this._cachedStrokeDrawCall`. [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L96)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene, state?: State): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_buffer`, `this.total_len_buffer`, `this.stroke_vertex_buffer`, `this.fill_vertex_buffer`, `this.strokeVertexCount`, `this.fillVertexCount`, `this.isDirty`, `this.version`; construction of `Float32Array`; calls to `Renderer.destroyBuffers`, `createBuffer`, `scene.device.queue.writeBuffer`, `scene.compute.generateMesh`, `scene.addCompute`, `scene.compute.generateTriangeleMesh`, `this.updateClip`. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertices(vertices: number[], isClosed = false)",
+                    "—",
+                    "Implementation: `this.vertices_data = vertices; this.isDirty = true; this.isClosed = isClosed;`. [Source line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L163)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getClipBuffer(): GPUBuffer",
+                    "—",
+                    "Implementation: `return this.clip_buffer;`. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateClip(device: GPUDevice, strokeWidth: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.clip_buffer`; construction of `Float32Array`; calls to `GPUAllocator.safeCreateBuffer`, `this.getClipSpace`, `clipt_data.set`, `device.queue.writeBuffer`; 1 explicit loop. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L188)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getClipSpace(strokeWidth: number): Vec2[]",
+                    "—",
+                    "Implementation: `let clip = PathGeometryUtils.clip2(this.vertices_data, strokeWidth); return clip;`. [Source line 209](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L209)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async getTotalLength(device: GPUDevice): Promise<number>",
+                    "—",
+                    "Implementation: `if (!this.total_len_buffer) return 0; return await readBuffer(device, this.total_len_buffer, 0);`. [Source line 216](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L216)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `Renderer.destroyBuffers( this.vertex_buffer, this.stroke_vertex_buffer, this.fill_vertex_buffer, this.clip_buffer, this.total_len_buffer );`. [Source line 221](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PolyGeometry.ts#L221)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quadgeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "QuadGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/QuadGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/QuadGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "QuadGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class QuadGeometry extends GeometryComponent {\n    vertexBuffer: GPUBuffer;\n    vertexData: Float32Array;\n    constructor(width: number, height: number);\n    getPasses(): Record<string, GeometryPassConfig>;\n    setUVRegion(uMin: number, vMin: number, uMax: number, vMax: number): void;\n    setBuffer(buffer: GPUBuffer, count?: number): void;\n    updateSize(width: number, height: number): void;\n    prepare(scene: Scene, state?: State): void;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName?: string): DrawCall[];\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `QuadGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertexBuffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertexData!: Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(width: number, height: number)",
+                    "—",
+                    "Implementation: `super(); this.width = width; this.height = height; this.vertexCount = 4; this.sync();`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPasses`; construction of `VertexSchema`, `VaryingSchema`; return paths including `this._cachedPasses`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setUVRegion(uMin: number, vMin: number, uMax: number, vMax: number)",
+                    "—",
+                    "Implementation: `this.uMin = uMin; this.vMin = vMin; this.uMax = uMax; this.vMax = vMax; this.sync(); this.version++;`. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBuffer(buffer: GPUBuffer, count: number = 4)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertexBuffer`, `this.vertexCount`, `this.isExternalBuffer`, `this.isDirty`, `this.version`; calls to `Renderer.destroyBuffers`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateSize(width: number, height: number)",
+                    "—",
+                    "Implementation: `this.width = width; this.height = height; this.sync(); this.version++;`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene, state?: State): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertexBuffer`, `this.isDirty`; calls to `Renderer.destroyBuffers`, `createBuffer`, `scene.device.queue.writeBuffer`. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Implementation: `if (this.vertexBuffer) RenderStateCache.setVertexBuffer(pass, 0, this.vertexBuffer);`. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Implementation: `if (this.vertexCount === 0) return []; this._cachedDrawCalls[0].vertexCount = this.vertexCount; this._cachedDrawCalls[0].instanceCount = this.instanceCount; return this._cachedDrawCalls;`. [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `if (this.vertexBuffer) { Renderer.destroyBuffers(this.vertexBuffer); } if ((this as any).vertex_buffer) { Renderer.destroyBuffers((this as any).vertex_buffer); }`. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L119)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "QuadGeometry.sync: private sync()",
+                    "Body operations (including nested callbacks): assignments to `this.vertexData`, `this.isDirty`; construction of `Float32Array`.",
+                    "[Line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/QuadGeometry.ts#L53)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "textgeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TextGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/TextGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/TextGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class TextGeometry extends GeometryComponent {\n    vertex_buffer: GPUBuffer;\n    text: string;\n    font: Font;\n    geometry: TextGeometryData;\n    constructor(font?: Font);\n    get fontSize(): number;\n    set fontSize(val: number);\n    setText(text: string): void;\n    buildGeometry(): void;\n    getPasses(): Record<string, GeometryPassConfig>;\n    prepare(scene: Scene): void;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName?: string): DrawCall[];\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TextGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertex_buffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public text: string",
+                    "''",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public font: Font",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public geometry!: TextGeometryData",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(font?: Font)",
+                    "—",
+                    "Implementation: `super(); this.font = font || Font.default;`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get fontSize(): number",
+                    "—",
+                    "Implementation: `return this._fontSize;`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set fontSize(val: number)",
+                    "—",
+                    "Implementation: `this._fontSize = val; this.buildGeometry(); this.isDirty = true;`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setText(text: string)",
+                    "—",
+                    "Implementation: `this.text = text; this.buildGeometry(); this.isDirty = true;`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public buildGeometry()",
+                    "—",
+                    "Implementation: `if (this.font && this.text) { this.geometry = this.font.geometry(this.text, this._fontSize); }`. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPassesBuffer`, `this._cachedPasses`; construction of `VaryingSchema`; calls to `Res.storage`; return paths including `this._cachedPasses`. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.vertex_buffer`, `this.version`, `this.isDirty`; calls to `this.buildGeometry`, `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`, `scene.device.queue.writeBuffer`. [Source line 126](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L126)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Implementation: ``. [Source line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L149)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedDrawCalls[0].instanceCount`; return paths including `[]`, `this._cachedDrawCalls`. [Source line 155](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L155)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `if ((this as any).vertex_buffer) { Renderer.destroyBuffers((this as any).vertex_buffer); }`. [Source line 162](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts#L162)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "triangulatedpathgeometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TriangulatedPathGeometry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/TriangulatedPathGeometry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/TriangulatedPathGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "StrokeExtruder",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TriangulatedPathGeometryOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TriangulatedPathGeometry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type StrokeExtruder = 'cpu' | 'gpu';\nexport interface TriangulatedPathGeometryOptions {\n    tessellation?: TessellationMode;\n    tolerance?: number;\n    segments?: number;\n    maxSegments?: number;\n    adaptivePixelTolerance?: number;\n    adaptiveToleranceMargin?: number;\n    minTolerance?: number;\n    maxTolerance?: number;\n    extruder?: StrokeExtruder;\n    fillTriangulator?: FillTriangulator;\n    overlap?: boolean;\n}\nexport declare class TriangulatedPathGeometry extends GeometryComponent {\n    rawContours: number[][];\n    vertex_data: number[];\n    indices: number[];\n    fillAllocation: AllocationRange | null;\n    strokeAllocation: AllocationRange | null;\n    tessellation: TessellationMode;\n    tolerance: number;\n    segments: number;\n    maxSegments: number;\n    adaptivePixelTolerance?: number;\n    adaptiveToleranceMargin?: number;\n    minTolerance: number;\n    maxTolerance: number;\n    onTessellationChange?: (newTolerance: number) => void;\n    extruder: StrokeExtruder;\n    fillTriangulator: FillTriangulator;\n    overlap: boolean;\n    get allocation(): AllocationRange | null;\n    isExternalBuffer: boolean;\n    isClipStatic: boolean;\n    clip_buffer: GPUBuffer | null;\n    vertex_buffer: GPUBuffer | null;\n    svgString: string;\n    constructor(d?: string | number[][], options?: TriangulatedPathGeometryOptions);\n    refreshCompute(): void;\n    createBuffers(device: GPUDevice, scene: any): boolean;\n    getPasses(): Record<string, GeometryPassConfig>;\n    decode(vertices: string | number[][]): void;\n    setRawContour(contour: number[]): void;\n    setDirectPolyline(poly: Vec2[]): void;\n    setDirectPolylines(polylines: Vec2[][]): void;\n    warpVertices(fn: (p: Vec3) => Vec3, alpha?: number): void;\n    resetWarp(): void;\n    prepare(scene: Scene, state?: State): void;\n    bindBuffers(pass: GPURenderPassEncoder, passName: string): void;\n    getDrawCalls(passName?: string): DrawCall[];\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TriangulatedPathGeometryOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "tessellation?: TessellationMode;",
+                    "—",
+                    "Optional record/option field with declared type `TessellationMode`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tolerance?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "segments?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxSegments?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "adaptivePixelTolerance?: number;",
+                    "—",
+                    "Target screen pixel tolerance for dynamic adaptive LOD (disabled by default). [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "adaptiveToleranceMargin?: number;",
+                    "—",
+                    "Hysteresis tolerance margin in screen pixels before re-tessellation is triggered. Defaults to 0.5 * adaptivePixelTolerance. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "minTolerance?: number;",
+                    "—",
+                    "Minimum local tolerance clamp floor. Default 0.0001. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxTolerance?: number;",
+                    "—",
+                    "Maximum local tolerance clamp ceiling. Default 10.0. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "extruder?: StrokeExtruder;",
+                    "—",
+                    "Stroke triangulation extruder engine: - 'gpu': Hardware-accelerated WebGPU compute shader parallel extrusion. - 'cpu': In-house zero-GC CPU scalar normal extrusion. Default: 'gpu' [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillTriangulator?: FillTriangulator;",
+                    "—",
+                    "Fill triangulation engine: - 'auto': Uses polygon-clipping for self-intersections/overlap; earcut for simple contours (default). - 'polygon-clipping': Resolves self-intersections using Martinez-Rueda clipping then triangulates with earcut. - 'libtess': Uses GLU Tessellator (Bentley-Ottmann + Monotone decomposition). - 'earcut': Direct ear clipping (fastest, requires simple non-self-crossing polygons). Default: 'auto' [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "overlap?: boolean;",
+                    "—",
+                    "Use non-zero winding fill so the fill is solid at self-intersections. Default false (even-odd). [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L61)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TriangulatedPathGeometry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public rawContours: number[][]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertex_data: number[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indices: number[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fillAllocation: AllocationRange | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokeAllocation: AllocationRange | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public tessellation: TessellationMode",
+                    "'adaptive'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public tolerance: number",
+                    "0.025",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L99)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public segments: number",
+                    "8",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxSegments: number",
+                    "32",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L101)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public adaptivePixelTolerance?: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public adaptiveToleranceMargin?: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public minTolerance: number",
+                    "0.0001",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxTolerance: number",
+                    "10.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 105](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L105)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onTessellationChange?: (newTolerance: number)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public extruder: StrokeExtruder",
+                    "'gpu'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 107](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L107)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fillTriangulator: FillTriangulator",
+                    "'auto'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public overlap: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get allocation(): AllocationRange | null",
+                    "—",
+                    "Backward compatibility alias for single allocation queries [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isExternalBuffer: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isClipStatic: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clip_buffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertex_buffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public svgString: string",
+                    "\"\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L122)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(d?: string | number[][], options?: TriangulatedPathGeometryOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.tessellation`, `this.tolerance`, `this.segments`, `this.maxSegments`, `this.adaptivePixelTolerance`, `this.adaptiveToleranceMargin`, `this.minTolerance`, `this.maxTolerance` and other instance fields; calls to `this.decode`. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public refreshCompute(): void",
+                    "—",
+                    "Implementation: `this.isDirty = true;`. [Source line 159](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L159)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createBuffers(device: GPUDevice, scene: any): boolean",
+                    "—",
+                    "Implementation: `return false;`. [Source line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L163)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPasses(): Record<string, GeometryPassConfig>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `VertexSchema`, `VaryingSchema`; return paths including `TriangulatedPathGeometry._cachedPasses`. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public decode(vertices: string | number[][]): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.svgString`, `this.rawContours`, `this._directPolylines`, `this.vertex_data.length`, `this.indices.length`, `this.vertex_data`, `this.indices`, `this.isDirty`; calls to `PathTriangulator.pathToPolylines`, `this.indices.push`, `this.vertex_data.push`, `PathGeometryUtils.flatten`; 2 explicit loops. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L188)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRawContour(contour: number[]): void",
+                    "—",
+                    "Implementation: `this.svgString = \"\"; this._directPolylines = null; this.rawContours = [contour]; this.vertex_data = contour; this.indices = [0, contour.length >> 1]; this.isDirty = true;`. [Source line 226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L226)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setDirectPolyline(poly: Vec2[]): void",
+                    "—",
+                    "Directly sets pre-flattened polyline vertices (e.g. from Spline in fast mode). Reuses vertex_data and indices in-place without heap allocations. [Source line 239](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L239)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setDirectPolylines(polylines: Vec2[][]): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.svgString`, `this._directPolylines`, `this.vertex_data.length`, `this.indices.length`, `this.isDirty`; calls to `this.indices.push`, `this.vertex_data.push`; 2 explicit loops. [Source line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L254)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public warpVertices(fn: (p: Vec3) => Vec3, alpha: number = 1.0): void",
+                    "—",
+                    "Warps all underlying polylines using a spatial transformation function without reallocating memory or breaking triangulation caches. [Source line 277](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L277)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resetWarp(): void",
+                    "—",
+                    "Implementation: `this.warpVertices((p) => p, 0.0);`. [Source line 312](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L312)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(scene: Scene, state?: State): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._lastBufferVersion`, `this.isDirty`, `this.tolerance`, `this._lastStrokeWidth`, `this._lastStartCap`, `this._lastEndCap`, `this._lastJoint`, `this._lastHasFill` and other instance fields; construction of `Vec3`; calls to `Boolean`, `GlobalGeometryAllocator.getInstance`, `(this as any).entity?.getWorldTransform`, `mat.getTranslate`, `cam.getWorldTransform().matrix.getTranslate`, `cam.getWorldTransform`, `entityWorldPos.sub`, `toEntity.dot` and additional helpers; 4 explicit loops. [Source line 316](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L316)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindBuffers(pass: GPURenderPassEncoder, passName: string): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `GlobalGeometryAllocator.getInstance`, `RenderStateCache.setVertexBuffer`, `RenderStateCache.setIndexBuffer`. [Source line 591](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L591)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getDrawCalls(passName?: string): DrawCall[]",
+                    "—",
+                    "Implementation: `return this._cachedDrawCalls;`. [Source line 601](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L601)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.fillAllocation`, `this.strokeAllocation`, `this._cachedDrawCalls.length`; calls to `GlobalGeometryAllocator.getInstance`, `allocator.free`. [Source line 605](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L605)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TriangulatedPathGeometry._updateDrawCalls: private _updateDrawCalls(): void",
+                    "Body operations (including nested callbacks): assignments to `this._cachedDrawCalls.length`; calls to `this._cachedDrawCalls.push`.",
+                    "[Line 563](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts#L563)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GeometryComponent](/api-components#geometrycomponent)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

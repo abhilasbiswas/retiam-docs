@@ -1,0 +1,412 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-transform-anchor-and-pivot-architecture",
+  "title": "Transform, Anchor & Pivot System Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/TRANSFORM_ANCHOR_AND_PIVOT_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/TRANSFORM_ANCHOR_AND_PIVOT_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/TRANSFORM_ANCHOR_AND_PIVOT_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Transform](/api-core-transform#transform), [Entity](/api-core-entity#entity), [Animator](/api-animation#animator), [GroupAnimator](/api-animation#groupanimator), [AnimationFunctions](/api-animation#animationfunctions), [UP](/api-core#constants), [DL](/api-core#constants), [CENTER](/api-core#constants), [ORIGIN](/api-core#constants), [Point](/api-math-vector#point), [Vec3](/api-math-vector#vec3), [Compute](/api-compute#compute), [Box](/api-entities-primitives-3d#box), [AABB](/api-math#aabb), [TransformOption](/api-core#constants), [TransformOptions](/api-core#constants), [Vec3Type](/api-math-vector#vec3), [DOWN](/api-core#constants), [LEFT](/api-core#constants), [RIGHT](/api-core#constants), [UL](/api-core#constants), [UR](/api-core#constants), [DR](/api-core#constants), [Mat4](/api-math-vector#mat4)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a comprehensive technical breakdown of the **Transform, Anchor, and Pivot Subsystem** in the Retiam WebGPU Engine. It details the mathematical foundations, continuous local anchoring vs. absolute world pivoting, type definitions ([`Constants.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Constants.ts)), low-level matrix transformations ([`Transform.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts)), entity declarative layout ([`Entity.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)), and state synchronization during animation ([`Animator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Animator.ts), [`GroupAnimator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/GroupAnimator.ts), [`AnimationFunctions.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/AnimationFunctions.ts))."
+        }
+      ]
+    },
+    {
+      "id": "1-high-level-architectural-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. High-Level Architectural Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a unified, continuous coordinate system bridging local geometry space, local pivot offset, hierarchical matrix propagation, and world scene coordinates:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph \"Spatial Definitions\"\n        LA[\"Local Anchor: continuous [-1, 1] range<br/>UP, DL, [0, 0.5, 0], [0, 0, 0] (CENTER/ORIGIN)\"]\n        WP[\"World Pivot: absolute scene coordinates<br/>[0, 0, 0] (World Center), [20, 20, 0]\"]\n    end\n\n    subgraph \"Resolution Layer\"\n        LA -->|\"Entity.getLocalAABB().getBoundaryPoint()\"| LP[\"Local Geometry Point (local space)\"]\n        LP -->|\"M_parent * M_local * T(offset)\"| WA[\"World Anchor Coordinate\"]\n        WP -->|\"Vec3.cast()\"| WA\n    end\n\n    subgraph \"Transform Operations\"\n        WA -->|\"move(target, anchor)\"| MO[\"Compute target - M_rot_scale * LP<br/>Aligns anchor edge to target\"]\n        WA -->|\"rotate / scale with anchor/pivot\"| SP[\"Temporarily setPivot(WA)<br/>Execute op<br/>syncPivot(oldOffset)\"]\n        WA -->|\"setPivot(WA)\"| PO[\"syncOffset(): shifts local offset<br/>counter-translates matrix<br/>preserves visual world position\"]\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-resolving-the-ambiguity-anchor-vs-pivot",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Resolving the Ambiguity: Anchor vs. Pivot"
+        },
+        {
+          "type": "paragraph",
+          "text": "A core design challenge in 2D/3D scene graphs is distinguishing between:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Local Bounding-Box Anchor (`anchor`)**: Coordinates expressed relative to the entity's own bounding box dimensions. Here, `[0, 0, 0]` represents the geometric center of the entity's AABB.",
+            "**Absolute World Pivot (`pivot`)**: Coordinates expressed in world space. Here, `[0, 0, 0]` represents the scene's global center."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Previously, using `ORIGIN` (`[0, 0, 0]`) created ambiguity: users inspecting `ORIGIN` saw `[0, 0, 0]` and could confuse the entity's local center with the world origin."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Disambiguation Matrix"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Concept",
+            "Option Key",
+            "Domain",
+            "Value Range",
+            "Meaning of `[0, 0, 0]`",
+            "Example"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Local Anchor**",
+                  "type": "text"
+                },
+                {
+                  "text": "`anchor`"
+                },
+                {
+                  "text": "Local AABB"
+                },
+                {
+                  "text": "Continuous $[-1, 1]$ per axis"
+                },
+                {
+                  "text": "Geometric Center of Entity"
+                },
+                {
+                  "text": "`rect.rotate(angle, { anchor: [0, 0.5, 0] })`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**World Pivot**",
+                  "type": "text"
+                },
+                {
+                  "text": "`pivot`"
+                },
+                {
+                  "text": "World Space"
+                },
+                {
+                  "text": "Arbitrary $\\mathbb{R}^3$"
+                },
+                {
+                  "text": "World Space Center"
+                },
+                {
+                  "text": "`rect.rotate(angle, { pivot: [0, 0, 0] })`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Bare Vector**",
+                  "type": "text"
+                },
+                {
+                  "text": "—"
+                },
+                {
+                  "text": "Local Anchor"
+                },
+                {
+                  "text": "Continuous $[-1, 1]$ per axis"
+                },
+                {
+                  "text": "Shorthand for `{ anchor: vec }`"
+                },
+                {
+                  "text": "`rect.rotate(angle, UP)`"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-core-types-guards-constants-ts-src-engine-core-constants-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Core Types & Guards ([Constants.ts](../src/engine/core/Constants.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "All transform and animation methods accept `TransformOption`, which seamlessly supports both explicit options and bare anchor vectors:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface TransformOptions {\n    /**\n     * Local bounding-box anchor in continuous [-1, 1] range per axis.\n     * Mapped linearly across the entity's AABB via `getBoundaryPoint()`.\n     *\n     * - `[0, 0, 0]` (or `CENTER`, `ORIGIN`) → bounding-box center\n     * - `[0, 1, 0]` (or `UP`) → top edge center\n     * - `[-1, -1, 0]` (or `DL`) → bottom-left corner\n     * - `[0, 0.5, 0]` → halfway between center and top edge\n     */\n    anchor?: Vec3Type;\n\n    /**\n     * Absolute World Space coordinate point.\n     * Transforms occur directly around this scene position.\n     *\n     * - `[0, 0, 0]` → world origin\n     * - `[20, 20, 0]` → specific world coordinate\n     */\n    pivot?: Vec3Type;\n}\n\n/**\n * Accepts either a bare Vec3Type anchor (shorthand for `{ anchor: vec }`)\n * or an explicit `TransformOptions` object.\n */\nexport type TransformOption = Vec3Type | TransformOptions;\n\n/** Type guard to distinguish TransformOptions from Vec3Type vectors/arrays. */\nexport function isOptions(val: any): val is TransformOptions {\n    return typeof val === 'object' && val !== null && !('x' in val) && !('length' in val);\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-mathematical-foundations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Mathematical Foundations"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Continuous Anchor to Local Point Mapping"
+        },
+        {
+          "type": "paragraph",
+          "text": "An anchor $a = (a_x, a_y, a_z) \\in [-1, 1]^3$ maps linearly across the entity's local bounding box $[x_{min}, x_{max}] \\times [y_{min}, y_{max}] \\times [z_{min}, z_{max}]$:"
+        },
+        {
+          "type": "math",
+          "tex": "p_x = \\frac{x_{min} + x_{max}}{2} + \\frac{x_{max} - x_{min}}{2} \\cdot a_x"
+        },
+        {
+          "type": "math",
+          "tex": "p_y = \\frac{y_{min} + y_{max}}{2} + \\frac{y_{max} - y_{min}}{2} \\cdot a_y"
+        },
+        {
+          "type": "math",
+          "tex": "p_z = \\frac{z_{min} + z_{max}}{2} + \\frac{z_{max} - z_{min}}{2} \\cdot a_z"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because $a$ is continuous, users are not restricted to predefined constants (`UP`, `DOWN`, `LEFT`, `RIGHT`, `UL`, `UR`, `DL`, `DR`). Any intermediate value (e.g. `[0, 0.25, 0]`) computes the exact fractional boundary point."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. World Space Pivot Resolution"
+        },
+        {
+          "type": "paragraph",
+          "text": "To evaluate where a local anchor point sits in world space:"
+        },
+        {
+          "type": "math",
+          "tex": "P_{world} = M_{parent} \\cdot M_{local} \\cdot T(\\text{offset}) \\cdot P_{local}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Where:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "$M_{parent}$ is the world matrix of the parent entity (or Identity if root).",
+            "$M_{local}$ is the local transform matrix $\\left( T \\cdot R \\cdot S \\right)$.",
+            "$T(\\text{offset})$ is the translation by the local pivot offset."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "In [`Entity.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts), this is implemented cleanly as:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "private resolveTargetPivot(options?: TransformOption): Vec3 | undefined {\n    if (!options) return undefined;\n    if (isOptions(options)) {\n        if (options.pivot !== undefined) return Vec3.cast(options.pivot);\n        if (options.anchor !== undefined) return this.resolveLocalAnchor(options.anchor);\n        return undefined;\n    }\n    return this.resolveLocalAnchor(options);\n}\n\nprivate resolveLocalAnchor(anchor: Vec3Type): Vec3 {\n    const localAABB = this.getLocalAABB();\n    const localPt = localAABB.getBoundaryPoint(anchor);\n\n    const wt = this.getWorldTransform();\n    const offsetMat = Mat4.translation(wt.offset);\n    return wt.matrix.mul(offsetMat).transformPoint(localPt);\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Anchor-Aligned Move Calculation"
+        },
+        {
+          "type": "paragraph",
+          "text": "When calling `entity.move(target, anchor)`, the entity's position is adjusted so that the chosen anchor lands exactly at `target`, rather than the entity's local origin:"
+        },
+        {
+          "type": "math",
+          "tex": "T_{adjusted} = \\text{target} - M_{rot\\_scale} \\cdot P_{local}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Where $M_{rot\\_scale}$ includes only rotation and scaling (no translation), ensuring the anchor offset accurately accounts for the entity's orientation and scale."
+        }
+      ]
+    },
+    {
+      "id": "5-low-level-matrix-transforms-transform-ts-src-engine-core-transform-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Low-Level Matrix Transforms ([Transform.ts](../src/engine/core/Transform.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The low-level [`Transform`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts) operates directly on 16-element Float32 matrices. All method signatures accept direct vectors and uniform numbers without redundant runtime argument unpackers:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Position\npublic move(p: Vec3Type): Transform;\n\n// Shift (relative local / world)\npublic shift(offset: Vec3Type): Transform;\npublic shiftWorld(offset: Vec3Type): Transform;\n\n// Scale (uniform or per-axis, optional local anchor)\npublic setScale(scale: Vec3Type | number, anchor?: Vec3Type): Transform;\npublic scale(factor: Vec3Type | number, anchor?: Vec3Type): Transform;\npublic scaleWorld(factor: Vec3Type | number, anchor?: Vec3Type): Transform;\n\n// Rotation\npublic setRotation(angle: Quaternion | Vec3Type | number): Transform;\npublic rotate(angle: Quaternion | Vec3Type | number, anchor?: Vec3Type): Transform;\npublic rotateWorld(angle: Quaternion | Vec3Type | number, anchorWorld?: Vec3Type): Transform;"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Offset & Pivot Synchronization (syncOffset & setPivot)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Changing an object's pivot point in Retiam alters the origin around which future rotations and scales orbit, **without visually jumping the entity**:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "public syncOffset(newOffset: Vec3Type): Transform {\n    const offset_new = Vec3.cast(newOffset);\n    const diff = this.offset.sub(offset_new);\n    const worldShift = this._matrix.transformVector(diff);\n    \n    this.offset = offset_new;\n    this._matrix.translateWorld(worldShift, this._matrix);\n    this.UPDATE_FLAG = true;\n    return this;\n}\n\npublic setPivot(anchorWorld: Vec3Type): Transform {\n    const A = Vec3.cast(anchorWorld);\n    const invM = this._matrix.inverse();\n    const V_anchor = invM.transformPoint(A).sub(this.offset);\n    const offset_new = new Vec3(-V_anchor.x, -V_anchor.y, -V_anchor.z);\n    return this.syncOffset(offset_new);\n}"
+        }
+      ]
+    },
+    {
+      "id": "6-entity-declarative-api-entity-ts-src-engine-core-entity-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Entity Declarative API ([Entity.ts](../src/engine/core/Entity.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) class provides the high-level declarative interface used in scenes:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Position & Move\npublic setPosition(position: Vec3Type, options?: TransformOptions): this;\npublic setPosition(position: Vec3Type, anchor?: Vec3Type): this;\npublic setPosition(position: Vec3Type, options?: TransformOption): this;\n\npublic move(position: Vec3Type, options?: TransformOptions): this;\npublic move(position: Vec3Type, anchor?: Vec3Type): this;\npublic move(position: Vec3Type, options?: TransformOption): this;\n\n// Scale\npublic setScale(scale: Vec3Type | number, options?: TransformOption): this;\npublic scale(factor: Vec3Type | number, options?: TransformOption): this;\n\n// Rotation\npublic setRotation(angle: Quaternion | Vec3Type | number, options?: TransformOption): this;\npublic rotate(angle: number | Quaternion | Vec3Type, options?: TransformOption): this;\n\n// Shift\npublic shift(offset: Vec3Type, options?: TransformOption): this;\n\n// Pivot\npublic setPivot(anchorWorld: Vec3Type): this;"
+        }
+      ]
+    },
+    {
+      "id": "7-animation-system-integration-animator-ts-src-engine-animation-animator-ts-groupanimator-ts-src-engine-animation-groupanimator-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Animation System Integration ([Animator.ts](../src/engine/animation/Animator.ts) & [GroupAnimator.ts](../src/engine/animation/GroupAnimator.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "During animations, the transform state operates on two endpoints: `start` and `target`. When an animation specifies an anchor or pivot, the system evaluates the anchor in the target state and keeps start/target pivot offsets synchronized:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "private withPivot(options: TransformOption | undefined, fn: () => void): void {\n    const oldOffset = this.anim.target.transform.offset.clone();\n    const pivot = this.resolveTargetPivot(options);\n    if (pivot) this.anim.target.transform.setPivot(pivot);\n    fn();\n    this.syncPivot(oldOffset);\n}\n\nprivate syncPivot(oldOffset: Vec3): void {\n    const newOffset = this.anim.target.transform.offset;\n    if (!oldOffset.equalsApprox(newOffset)) {\n        this.anim.start.transform.syncOffset(newOffset);\n        this.entity.transform.syncOffset(newOffset);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Multi-Entity Group Pivoting ([GroupAnimator.ts](../src/engine/animation/GroupAnimator.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "For groups (`VGroup` / [`GroupAnimator`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/GroupAnimator.ts)), local anchors are evaluated against the **combined collective bounding box** of all child entities:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "private resolveGroupLocalAnchor(anchor: Vec3Type): Vec3 {\n    return this.getGroupTargetAABB().getBoundaryPoint(anchor);\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "All children in the group are then transformed in unison around this shared centroid or edge anchor."
+        }
+      ]
+    },
+    {
+      "id": "8-usage-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Usage Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Moving with Continuous Anchors"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Align bottom-left corner to [0, 0, 0]\nrect.move([0, 0, 0], DL);\n\n// Align halfway between center and top edge to [10, 20, 0]\nrect.move([10, 20, 0], [0, 0.5, 0]);\n\n// Explicit options syntax\nrect.move([10, 20, 0], { anchor: [0, 0.5, 0] });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Rotating Around a World Pivot vs. Local Anchor"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Rotate around entity's own bottom-left corner\nrect.rotate(Math.PI / 4, DL);\n\n// Rotate around continuous local anchor\nrect.rotate(Math.PI / 4, { anchor: [0, 0.5, 0] });\n\n// Rotate around specific world coordinate [25, 0, 0]\nrect.rotate(Math.PI / 4, { pivot: [25, 0, 0] });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Animating Transforms with Anchors & Pivots"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Animate rotation around top edge\nawait scene.play(\n    rect.animate.rotate(Math.PI, UP)\n);\n\n// Animate scale around world coordinate\nawait scene.play(\n    rect.animate.scale(2.0, { pivot: [0, 0, 0] })\n);\n\n// Animate group rotation around group center\nawait scene.play(\n    vgroup.animate.rotate(Math.PI / 2, CENTER)\n);"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,269 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-global-allocator-and-megadraw-architecture",
+  "title": "Global Allocator & Mega-Draw Batching Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/GLOBAL_ALLOCATOR_AND_MEGADRAW_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/GLOBAL_ALLOCATOR_AND_MEGADRAW_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/GLOBAL_ALLOCATOR_AND_MEGADRAW_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [State](/api-core#state), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [GlobalGeometryAllocator](/api-render-allocator#globalgeometryallocator), [MegaDrawBatchManager](/api-render-allocator#megadrawbatchmanager), [Scene](/api-core-scene#scene), [DirtyBufferTracker](/api-render-allocator#dirtybuffertracker), [Storage](/api-render-pipelines#resourcelayouts), [Fill](/api-core#fill), [Color](/api-math#color), [Mode](/api-render-frame-graph#resource), [Mat4](/api-math-vector#mat4), [Vec3](/api-math-vector#vec3), [Group](/api-core#group), [Pipeline](/api-render-pipelines#pipeline), [Path](/api-entities-primitives-2d#path), [Poly](/api-entities-primitives-2d#poly), [Circle](/api-entities-primitives-2d#circle), [Rect](/api-entities-primitives-2d#rect), [Tex](/api-entities-composites-text#tex), [SDFText](/api-entities-composites-text#sdftext), [Axes](/api-entities-composites-coordinates#axes), [AllocationRange](/api-render-allocator#globalgeometryallocator), [Shader](/api-entities-primitives-2d#shader), [Triangle](/api-entities-primitives-2d#triangle)."
+        }
+      ]
+    },
+    {
+      "id": "1-executive-summary-design-rationale",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Executive Summary & Design Rationale"
+        },
+        {
+          "type": "paragraph",
+          "text": "Traditional WebGL and naive WebGPU engines suffer from severe CPU-side overhead when rendering scenes with thousands of discrete mathematical objects:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Buffer Thrashing**: Creating individual vertex (`VBO`) and index (`IBO`) buffers for each circle, line, arrow, or character incurs driver allocation costs and garbage collection overhead.",
+            "**BindGroup / State Churn**: Switching uniform bind groups and vertex buffer bindings per entity creates CPU submission stalls and pipeline validation bubbles.",
+            "**Draw Call Overhead**: Issuing thousands of `pass.drawIndexed()` calls per frame limits framerates on complex motion graphics compositions."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam solves this through a unified **Global GPU Memory Pooling and Programmable Mega-Draw Batching** architecture:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Single Global State Buffer**: All entity transforms, materials, and paint parameters reside in a single GPU storage buffer of 256-byte aligned slabs managed by [`GlobalStateAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts).",
+            "**Single Global Geometry Buffer**: All 2D vector shapes, polygons, and triangulated paths sub-allocate ranges from massive shared vertex and index buffers managed by [`GlobalGeometryAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts).",
+            "**Programmable Mega-Draw**: Batches thousands of distinct vector path draw packets into a **single WebGPU draw call** via storage buffer vertex-pulling in [`MegaDrawBatchManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts)."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  E[\"Scene entity tree\"] --> S[\"GlobalStateAllocator<br/>256-byte aligned slabs\"]\n  E --> G[\"GlobalGeometryAllocator<br/>Shared VBO / IBO\"]\n  S -->|DirtyBufferTracker coalesced streaming| SB[\"GPU storage buffer<br/>array of EntityState\"]\n  G -->|DirtyBufferTracker coalesced streaming| GB[\"Global GPU VBO / IBO<br/>Storage and vertex buffers\"]\n  SB --> M[\"MegaDrawBatchManager<br/>Storage-pulling batch\"]\n  GB --> M\n  M -->|pass.draw: totalTriangles * 3, 1, 0, 0| R[\"WebGPU rasterizer\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-global-state-allocator-globalstateallocator-ts-src-engine-render-allocator-globalstateallocator-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Global State Allocator ([GlobalStateAllocator.ts](../src/engine/render/allocator/GlobalStateAllocator.ts))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "256-Byte Slabs & Memory Layout"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every entity in Retiam maps its GPU state to a contiguous 256-byte slab (64 floats) inside a single global GPU Storage Buffer (`array<EntityState>`):"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "+---------------------------------------------------------------------------------------+\n|                                256-BYTE STATE SLAB                                    |\n+---------------------------+---------------------------+-------------------------------+\n|     PAINT (64 Bytes)      |   TRANSFORM (96 Bytes)    |     MATERIAL (96 Bytes)       |\n|  - Fill Color / Mode      |  - World Matrix (Mat4)    |  - Roughness / Metallic       |\n|  - Stroke Color / Width   |  - Offset / Anchor (Vec3) |  - Emissive / Opacity         |\n|  - Glow Radius / Stepped  |  - Normal Matrix / Pivot  |  - IOR / Custom Uniforms      |\n+---------------------------+---------------------------+-------------------------------+"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Zero Memory Fragmentation**: Since all slabs are fixed at 256 bytes, slots can be recycled in $O(1)$ time without compaction.",
+            "**Single BindGroup**: `globalBindGroup` is bound once at Group 1 (`Pipeline.state_layout`). Shaders look up their state using the instance index without rebinding."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Coalesced Streaming via DirtyBufferTracker"
+        },
+        {
+          "type": "paragraph",
+          "text": "CPU writes to the local mirror `cpuData: Float32Array` are registered with [`DirtyBufferTracker.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Adjacent or closely-spaced dirty state slabs are automatically merged if the gap is smaller than a configurable margin threshold.",
+            "At the start of the frame, `allocator.flush()` transfers only modified slabs to GPU VRAM via minimal `device.queue.writeBuffer` calls."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-global-geometry-allocator-globalgeometryallocator-ts-src-engine-render-allocator-globalgeometryallocator-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Global Geometry Allocator ([GlobalGeometryAllocator.ts](../src/engine/render/allocator/GlobalGeometryAllocator.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "All 2D vector shapes (`Path`, `Poly`, `Circle`, `Rect`, `Tex`, `SDFText`, `Axes`) sub-allocate from a pair of massive shared GPU buffers:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`gpuVertexBuffer`**: Packed $(x, y)$ floats (8 bytes per vertex).",
+            "**`gpuIndexBuffer`**: Packed `Uint32` indices (4 bytes per index)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Sub-Allocation Ranges"
+        },
+        {
+          "type": "paragraph",
+          "text": "Entities hold an [`AllocationRange`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L11-L28) descriptor:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface AllocationRange {\n    id: number;\n    vertexStartIndex: number; // Offset in vertices\n    vertexLength: number;     // Active vertices\n    vertexCapacity: number;   // Allocated capacity\n    indexStartIndex: number;  // Offset in indices\n    indexLength: number;      // Active indices\n    indexCapacity: number;    // Allocated capacity\n    source?: 'cpu' | 'gpu';   // 'cpu' fill or 'gpu' compute stroke\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Free-List Recycling & Dynamic Resizing"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Bump Allocation**: Initial allocations advance `_vertexHead` and `_indexHead`.",
+            "**Free Lists**: When an entity is destroyed or shrunk, its block is placed onto `_freeVertexBlocks` / `_freeIndexBlocks`. Subsequent allocations search for matching blocks before bumping.",
+            "**Dynamic Doubling**: When geometry exceeds capacity, the allocator creates a new buffer with double the size, copies existing data, updates GPU bind groups, and invalidates pipelines."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-programmable-mega-draw-batching-megadrawbatchmanager-ts-src-engine-render-allocator-megadrawbatchmanager-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Programmable Mega-Draw Batching ([MegaDrawBatchManager.ts](../src/engine/render/allocator/MegaDrawBatchManager.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Instead of issuing hundreds of separate `pass.drawIndexed()` commands, `MegaDrawBatchManager` collapses multiple consecutive triangulated 2D path draw calls into a **single draw command**:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{pass.draw}(\\text{totalTriangles} \\times 3, 1, 0, 0)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Storage-Pulling Vertex Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "The GPU vertex shader fetches vertices and per-instance states entirely through storage buffers:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "@group(3) @binding(0) var<storage, read> globalVertices: array<vec2<f32>>;\n@group(3) @binding(1) var<storage, read> globalIndices:  array<u32>;\n@group(3) @binding(2) var<storage, read> drawItems:      array<DrawItem>;\n@group(3) @binding(3) var<storage, read> triangleLookup:  array<u32>;\n\nstruct DrawItem {\n    firstIndex: u32,\n    firstVertex: u32,\n    firstTriangle: u32,\n    packedInstance: u32,\n};"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Vertex Shader Execution Flow"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Triangle Indexing**: The hardware vertex index `vi` determines the global triangle index:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "T = \\lfloor vi / 3 \\rfloor, \\quad \\text{corner} = vi \\pmod 3"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Draw Item Lookup**: The shader reads `triangleLookup[T]` to determine which `DrawItem` owns this triangle.",
+            "**Index Pulling**: It fetches the vertex index from `globalIndices[item.firstIndex + (T - item.firstTriangle) * 3 + corner] + item.firstVertex`.",
+            "**Vertex Pulling**: It loads the $(x, y)$ coordinate directly from `globalVertices`.",
+            "**State Unpacking**: It unpacks `item.packedInstance` to load world matrix, paint color, and opacity from `globalState`."
+          ],
+          "start": 2
+        }
+      ]
+    },
+    {
+      "id": "5-firstinstance-bit-packing-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. FirstInstance Bit-Packing Contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "To convey both metadata flags and entity indices through standard WebGPU draw parameters without additional uniform buffers, Retiam uses a 32-bit packed instance format:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "+----+----+------------------------------+------------------------------+\n| 31 | 30 |           29 .. 16           |           15 .. 0            |\n+----+----+------------------------------+------------------------------+\n| S  | M  |     State Index (14 bits)    |  Local Start Index (16 bits) |\n+----+----+------------------------------+------------------------------+"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Bit 31 (`S` - Stroke Flag)**: `1` if rendering a stroke, `0` if rendering a fill.",
+            "**Bit 30 (`M` - MegaDraw Flag)**: `1` if the draw call originates from `MegaDrawBatchManager`.",
+            "**Bits 29–16 (State Index)**: Identifies the 256-byte slab in `GlobalStateAllocator` (supports up to 16,384 active entities).",
+            "**Bits 15–0 (Local Start / Contour Index)**: Identifies the sub-contour or dash offset."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "WGSL Branchless Decoder"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn unpackInstanceIndex(packed: u32) -> UnpackedInstance {\n    var res: UnpackedInstance;\n    res.isStroke = (packed & 0x80000000u) != 0u;\n    res.isMega   = (packed & 0x40000000u) != 0u;\n    res.stateIdx = (packed >> 16u) & 0x3FFFu;\n    res.localIdx = packed & 0xFFFFu;\n    return res;\n}"
+        }
+      ]
+    }
+  ]
+}

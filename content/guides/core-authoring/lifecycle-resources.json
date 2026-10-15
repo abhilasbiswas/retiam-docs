@@ -1,0 +1,177 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "lifecycle-resources",
+  "title": "Lifecycle, removal and resource ownership",
+  "group": "Core authoring",
+  "summary": "Choose the right removal, reset or destruction operation and keep shared resources under a clear owner.",
+  "sections": [
+    {
+      "id": "ownership",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Assign an owner before allocating"
+        },
+        {
+          "type": "paragraph",
+          "text": "A scene root owns its child hierarchy. An entity owns its attached components. A composer owns a WebGPU frame loop and its render graph. Application code also creates resources that those objects cannot infer: a custom GPU buffer, a media element, an orbit controller, a DOM listener or a fetched request. Give each one a single cleanup path at the level that created it."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Operation",
+            "What happens",
+            "When to use it"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "`parent.remove(child)`",
+                "Detaches that child; leaves its local transform and components intact. Returns the parent.",
+                "Reparenting or temporary detachment. Reattach with `add`; detachment does not preserve world coordinates automatically."
+              ]
+            },
+            {
+              "cells": [
+                "`Scene.remove(entity)`",
+                "Collects descendants, removes matching scene roots, clears scene references and invokes destruction.",
+                "Retire scene content. It is not a reversible hide operation."
+              ]
+            },
+            {
+              "cells": [
+                "`Entity.destroy()`",
+                "Clears entity tasks, calls component cleanup and recurses into children. Does not detach the node or clear its component arrays.",
+                "Owned teardown; do not keep drawing a destroyed entity."
+              ]
+            },
+            {
+              "cells": [
+                "`Entity.dispose()`",
+                "Performs broader node cleanup and removes parent linkage; root scene registration is a separate concern.",
+                "Permanent disposal when following the owner’s graph-removal path."
+              ]
+            },
+            {
+              "cells": [
+                "`Scene.reset()`",
+                "Rejects queued plays with `Scene Reset`, destroys entities, clears tasks and resets time/camera. Does not run the scene again.",
+                "Clear the current run before rebuilding."
+              ]
+            },
+            {
+              "cells": [
+                "`Scene.restart()`",
+                "Resets then launches `run()` again.",
+                "Replay a scene whose setup and custom state are resettable."
+              ]
+            },
+            {
+              "cells": [
+                "`Scene.destroy()`",
+                "Stops and destroys its composer, then clears scene/plugin/listener state.",
+                "Shutdown an independently owned preview. This affects the whole composer."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "To hide an object temporarily, keep its ownership intact and change visibility or opacity. To move it between parents, explicitly decide whether its local position or its world placement should remain fixed. For a child retirement, detach it from its parent and retire it through the appropriate cleanup path; merely clearing its scene reference does not remove that parent link."
+        }
+      ]
+    },
+    {
+      "id": "component-lifetime",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Components are a useful cleanup boundary"
+        },
+        {
+          "type": "paragraph",
+          "text": "`addComponent` assigns `component.entity` before calling `onInit()`. During updates, enabled components that override `update(time, dt)` are called with milliseconds. `removeComponent(component)` removes it from update lists and calls `onDestroy()` after clearing its entity reference. Store anything needed for cleanup in the component itself; its entity may be unavailable at removal."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-component-update"
+        },
+        {
+          "type": "paragraph",
+          "text": "Disabling the turntable leaves its state, attachment and resources intact. Removing the component calls cleanup; rebuilding the tile is unnecessary. This distinction matters for input controllers and compute buffers as much as for rotation."
+        }
+      ]
+    },
+    {
+      "id": "shared-resources",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Shared data needs a shared lifetime"
+        },
+        {
+          "type": "paragraph",
+          "text": "Cloned entities copy state and hierarchy, but heavy geometry can be shared. A texture or buffer referenced by multiple materials must outlive all consumers. Registering a shader resource creates a binding; it does not establish an application-level reference-counted owner. Keep reusable font atlases and shared meshes at an application or asset-service boundary, and per-scene buffers at a scene/component boundary."
+        },
+        {
+          "type": "paragraph",
+          "text": "For buffers used by submitted work, use `Renderer.destroyBuffers(...)` to defer destruction through the engine’s queue. Immediate `buffer.destroy()` while an old render loop can still submit that buffer produces validation errors. The uniform lab uses an owner component and the deferred queue. Make custom cleanup idempotent: current recursive removal paths can reach descendants more than once, so a closed resource should not be closed again."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-shader-uniform"
+        },
+        {
+          "type": "paragraph",
+          "text": "A frame-graph transient texture belongs to the graph pool. An imported persistent resource is supplied by its external owner; keep it alive until graph references are removed. `FrameGraph.reset()` clears graph declarations and queues its pooled allocations for release. “Persistent” means across frames, not immortal. Never reuse handles from a reset graph."
+        }
+      ]
+    },
+    {
+      "id": "cleanup-checklist",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Close the lifetime at the same boundary"
+        },
+        {
+          "type": "paragraph",
+          "text": "An `AlwaysHandle` can unregister a task. An orbit controller or `ControlPanel` has its own destruction method. Disconnect ResizeObservers, remove native input listeners, stop owned audio/video and abort owned fetches when a preview closes. Scene destruction cleans registered plugins; a plugin should release its own allocations in `dispose()` and avoid destroying assets shared with another scene."
+        },
+        {
+          "type": "paragraph",
+          "text": "In a subclass with application resources, override `destroy()` only when needed and call `super.destroy()` so the render loop stops before final resource retirement. For reset/replay, recreate those resources in `run()` or reset their custom state explicitly; a final destroy hook alone does not define replay behavior. Test mount/unmount, failed startup, replay and shared-composer removal as separate transitions."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [2D primitives and vector paths](/vector-paths).",
+            "Build it step by step: [Create and use a custom component](/tutorial-custom-component)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Scenes, composer and subscenes](/scene-composition)"
+  ]
+}

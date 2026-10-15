@@ -1,0 +1,127 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tutorial-custom-entity",
+  "title": "Create a reusable custom entity",
+  "group": "Extending Retiam",
+  "summary": "Compose built-in geometry into a named entity with options, child ownership and a small public API.",
+  "prerequisites": [
+    "[Entities and ownership](/entities)",
+    "[Transforms](/transforms)"
+  ],
+  "outcome": "Two labeled markers whose children share their parent transforms and whose captions respond to clicks.",
+  "difficulty": "intermediate",
+  "estimatedMinutes": 25,
+  "sections": [
+    {
+      "id": "result",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "What you will build"
+        },
+        {
+          "type": "paragraph",
+          "text": "A LabeledMarker owns a dot and a caption. The amber marker rotates as one object; click the cyan dot to change its caption. Begin with composition: the Entity parent carries shared state while the children supply rendering."
+        }
+      ]
+    },
+    {
+      "id": "define-options",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Define one reusable constructor"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "interface MarkerOptions { label: string; accent?: string; }\nclass LabeledMarker extends Entity {\n  readonly dot: Dot;\n  private caption: SDFText;\n  constructor(options: MarkerOptions) {\n    super();\n    this.dot = new Dot([0, 0, 0], { radius: 0.22, fill: hex(options.accent || '#38bdf8') });\n    this.caption = new SDFText(options.label, { fontSize: 0.42, anchor: CENTER, fill: hex('#e2e8f0') });\n    this.caption.move([0, 0.8, 0]);\n    this.add(this.dot, this.caption);\n  }\n  setLabel(text: string) { this.caption.setText(text); this.invalidate(); return this; }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "The constructor can run before the entity belongs to a scene. It creates CPU objects and uses compatible built-in components; it does not request a GPU device. Keep child creation here and expose deliberate setters for later changes."
+        }
+      ]
+    },
+    {
+      "id": "attach",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Add the parent and manipulate it"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const marker = new LabeledMarker({ label: 'A' });\nmarker.move([-2, 0, 0]);\nthis.add(marker);\nmarker.setLabel('Selected');"
+        },
+        {
+          "type": "paragraph",
+          "text": "Add the parent as the scene root. Its children remain owned by that parent. Moving or rotating the parent transforms the dot and caption together. The rendered dot receives the click event because the grouping parent supplies no pickable geometry of its own."
+        }
+      ]
+    },
+    {
+      "id": "complete",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Run the complete entity"
+        },
+        {
+          "type": "example",
+          "example": "labs/tutorial-custom-entity"
+        },
+        {
+          "type": "paragraph",
+          "text": "The complete source includes explicit package imports, camera setup, interaction and awaited animation. Use it as the starting file in your npm project. A custom geometry entity is the next level: compatible GeometryComponent, FragmentComponent and RendererComponent must agree on attributes, resources and shader layout. See [rendering architecture](/rendering-architecture)."
+        }
+      ]
+    },
+    {
+      "id": "ownership",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Keep lifecycle ownership explicit"
+        },
+        {
+          "type": "paragraph",
+          "text": "Detaching a child with parent.remove does not destroy it. Scene.remove destroys the selected entity and its descendants. Release resources allocated by your own components in onDestroy; use [resource ownership](/lifecycle-resources) before adding buffers, textures or listeners. Entity cloning copies component state through the current clone implementation; custom owned resources need an explicit review before promising independent clones."
+        }
+      ]
+    },
+    {
+      "id": "practice-and-next",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Practice and continue"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Add a third marker with another caption.",
+            "Move the caption locally, then rotate the parent and compare the result.",
+            "Change the public setter to update the dot color too."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Check the result: Both marker children should move together, and clicking cyan should change only its caption. If only one child moves, check which transform you changed."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Create a custom component](/tutorial-custom-component). Use the [tutorial index](/tutorials) to choose another project."
+        }
+      ]
+    }
+  ]
+}

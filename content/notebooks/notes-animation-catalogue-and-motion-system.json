@@ -1,0 +1,795 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-animation-catalogue-and-motion-system",
+  "title": "Animation Catalogue & Motion Mechanics Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/ANIMATION_CATALOGUE_AND_MOTION_SYSTEM.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/ANIMATION_CATALOGUE_AND_MOTION_SYSTEM.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/ANIMATION_CATALOGUE_AND_MOTION_SYSTEM.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Animation](/api-animation#animation), [Scene](/api-core-scene#scene), [Concurrent](/api-animation#concurrent), [Sequential](/api-animation#sequential), [Create](/api-animation-creation#create), [FadeIn](/api-animation#fadein), [ScatterAssemble](/api-animation-creation#scatterassemble), [CascadeIn](/api-animation-creation#cascadein), [Animator](/api-animation#animator), [Rate](/api-animation#rate), [State](/api-core#state), [Excalidraw](/api-style-excalidraw#excalidraw), [Uncreate](/api-animation-creation#uncreate), [DrawBorderOnly](/api-animation-creation#drawborderonly), [DrawBorderThenFill](/api-animation-creation#drawborderthenfill), [TraceBack](/api-animation-creation#traceback), [Write](/api-animation#write), [Text](/api-entities-composites-text#text), [Unwrite](/api-animation-creation#unwrite), [Typewriter](/api-animation-creation#typewriter), [Code](/api-entities-composites-text#code), [StaggerWrite](/api-animation-creation#staggerwrite), [Complex](/api-math#complex), [GrowFromCenter](/api-animation-creation#growfromcenter)."
+        }
+      ]
+    },
+    {
+      "id": "1-timeline-architecture-execution-mechanics",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Timeline Architecture & Execution Mechanics"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam's animation system is built around asynchronous timeline promises, deterministic clock stepping, and declarative motion choreography."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  S[\"Scene timeline<br/>scene.play / scene.wait\"] --> A[\"Atomic animations<br/>Create / FadeIn / MoveTo\"]\n  S --> C[\"Concurrent animations<br/>ScatterAssemble / CascadeIn\"]\n  S --> Q[\"Sequential animations<br/>Serial choreography\"]\n  A --> AT[\"Animator.ts<br/>Progress alpha with Rate.ts easing\"]\n  C --> CT[\"Concurrent.ts<br/>Per-child stagger using lagRatio\"]\n  Q --> QT[\"Sequential.ts<br/>Zero-gap dt handoff to queued children\"]\n  AT --> U[\"State updates<br/>Transforms, paints, stencil and geometries\"]\n  CT --> U\n  QT --> U"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "For in-depth architectural specifications on serial and concurrent orchestration, composite hierarchies, proportional time scaling, and completion-boundary handoffs, see [`SEQUENTIAL_AND_CONCURRENT_ANIMATION_ARCHITECTURE.md`](/notes-sequential-and-concurrent-animation-architecture)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Rate & Easing Mechanics ([Rate.ts](../src/engine/animation/Rate.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every animation samples progress $t \\in [0, 1]$ through configurable easing curves:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`linear`: Constant speed.",
+            "`smooth`: Standard cubic ease-in-out ($3t^2 - 2t^3$).",
+            "`easeInOutCubic`: Steeper cubic transition.",
+            "`rushInto` / `rushFrom`: Rapid acceleration or deceleration.",
+            "`doubleSmooth`: Quintic polynomial with zero first and second derivatives at endpoints.",
+            "`wiggle(n)`: Sinusoidal oscillation around target value.",
+            "`thereAndBack`: Ping-pong curve reaching $1.0$ at $t = 0.5$ and returning to $0.0$ at $t = 1.0$.",
+            "`spring({ damping, stiffness, mass })`: Physically accurate damped harmonic oscillator simulation."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-complete-catalogue-of-creation-animations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Complete Catalogue of Creation Animations"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides 34 specialized entrance and reveal animations organized by visual paradigm:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Outline & Contour Drawing"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Animation",
+            "File",
+            "Visual Effect",
+            "Best Used For"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`Create`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Create.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/Create.ts)"
+                },
+                {
+                  "text": "Animates path stroke drawing from $0\\%$ to $100\\%$ arc length, followed by optional fill fade. Supports `stagger` (`'sequential'`, `'simultaneous'`, cascade ratio) and arc-length `distribution` (`'balanced'`, `'length'`, `'equal'`)."
+                },
+                {
+                  "text": "Vectors, geometric shapes, SVGs, Excalidraw sketches."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Uncreate`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Uncreate.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/Uncreate.ts)"
+                },
+                {
+                  "text": "Reverses stroke drawing, erasing the entity from end to start."
+                },
+                {
+                  "text": "Removing geometric entities."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`DrawBorderOnly`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`DrawBorderOnly.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/DrawBorderOnly.ts)"
+                },
+                {
+                  "text": "Draws only the stroke boundary without fading in the interior fill."
+                },
+                {
+                  "text": "Technical outlines, wireframes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`DrawBorderThenFill`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`DrawBorderThenFill.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/DrawBorderThenFill.ts)"
+                },
+                {
+                  "text": "Draws the complete boundary stroke before fading in the interior fill."
+                },
+                {
+                  "text": "Prominent geometric figures."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`TraceBack`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`TraceBack.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/TraceBack.ts)"
+                },
+                {
+                  "text": "Traces stroke in reverse direction."
+                },
+                {
+                  "text": "Mathematical back-tracking."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Typography & Formulas"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Animation",
+            "File",
+            "Visual Effect",
+            "Best Used For"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`Write`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Write.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Write.ts)"
+                },
+                {
+                  "text": "Glyphs are revealed sequentially using stroke extrusion or staggered fades."
+                },
+                {
+                  "text": "Text labels and LaTeX equations."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Unwrite`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Unwrite.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/Unwrite.ts)"
+                },
+                {
+                  "text": "Erases characters or LaTeX glyphs in reverse order."
+                },
+                {
+                  "text": "Erasing text or mathematical formulas."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Typewriter`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Typewriter.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/Typewriter.ts)"
+                },
+                {
+                  "text": "Types glyphs character-by-character with optional cursor line."
+                },
+                {
+                  "text": "Code presentations and terminal text."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`StaggerWrite`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`StaggerWrite.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/StaggerWrite.ts)"
+                },
+                {
+                  "text": "Staggered path reveal across multi-part text groupings."
+                },
+                {
+                  "text": "Complex math expressions."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Spatial & Scale Entrances"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Animation",
+            "File",
+            "Visual Effect",
+            "Best Used For"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`GrowFromCenter`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`GrowFromCenter.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/GrowFromCenter.ts)"
+                },
+                {
+                  "text": "Scales up from local origin $(0, 0, 0)$ to $100\\%$ scale."
+                },
+                {
+                  "text": "Icons, dots, callouts."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`GrowFromEdge`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`GrowFromEdge.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/GrowFromEdge.ts)"
+                },
+                {
+                  "text": "Expands outward from a specified directional edge (`LEFT`, `RIGHT`, `UP`, `DOWN`)."
+                },
+                {
+                  "text": "Panels, sidebars, bounding boxes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`PopIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`PopIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/PopIn.ts)"
+                },
+                {
+                  "text": "Fast scale with elastic overshoot and settling."
+                },
+                {
+                  "text": "Attention badges, markers."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`SlideIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`SlideIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/SlideIn.ts)"
+                },
+                {
+                  "text": "Slides into position from an off-screen offset."
+                },
+                {
+                  "text": "UI cards, headers, labels."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`SpinIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`SpinIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/SpinIn.ts)"
+                },
+                {
+                  "text": "Simultaneous rotation and scale expansion."
+                },
+                {
+                  "text": "Mathematical matrices, coordinate frames."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`DropIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`DropIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/DropIn.ts)"
+                },
+                {
+                  "text": "Drops from top with gravitational bounce."
+                },
+                {
+                  "text": "Objects introduced into a physics scene."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`UnfoldFromCenter`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`UnfoldFromCenter.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/UnfoldFromCenter.ts)"
+                },
+                {
+                  "text": "Unfolds symmetrically along orthogonal axes."
+                },
+                {
+                  "text": "Tables, coordinate grids."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Clipping & Geometric Masks"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Animation",
+            "File",
+            "Visual Effect",
+            "Best Used For"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`WipeIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`WipeIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/WipeIn.ts)"
+                },
+                {
+                  "text": "Sweeps a linear clip plane across the entity in any direction."
+                },
+                {
+                  "text": "Diagrams, graphs, images."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`IrisIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`IrisIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/IrisIn.ts)"
+                },
+                {
+                  "text": "Expands a circular mask aperture from center."
+                },
+                {
+                  "text": "Focusing on a circular region."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`RevealFromClip`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`RevealFromClip.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/RevealFromClip.ts)"
+                },
+                {
+                  "text": "Expands a rectangular bounding scissor box."
+                },
+                {
+                  "text": "Window previews, code blocks."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`EraseIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`EraseIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/EraseIn.ts)"
+                },
+                {
+                  "text": "Inverted directional wipe revealing content."
+                },
+                {
+                  "text": "Transition wipes between scenes."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. Particle, Swarm & Stylized Effects"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Animation",
+            "File",
+            "Visual Effect",
+            "Best Used For"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`ScatterAssemble`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`ScatterAssemble.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/ScatterAssemble.ts)"
+                },
+                {
+                  "text": "Scatters child elements randomly, then flies them back into formation."
+                },
+                {
+                  "text": "Logos, complex vector groupings."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`CrystallizeIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`CrystallizeIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/CrystallizeIn.ts)"
+                },
+                {
+                  "text": "Sharp, faceted geometric growth."
+                },
+                {
+                  "text": "Polygons, graphs, Voronoi cells."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`BloomIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`BloomIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/BloomIn.ts)"
+                },
+                {
+                  "text": "Intense luminescence bloom settling to standard fill."
+                },
+                {
+                  "text": "Highlighting key formulas or points."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`BurstIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`BurstIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/BurstIn.ts)"
+                },
+                {
+                  "text": "Explosive expansion from origin."
+                },
+                {
+                  "text": "Energy points, fireworks, impact triggers."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`CascadeIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`CascadeIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/CascadeIn.ts)"
+                },
+                {
+                  "text": "Staggered sequence entry with vertical bounce."
+                },
+                {
+                  "text": "Lists, matrices, VBox / HBox elements."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`WaveIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`WaveIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/WaveIn.ts)"
+                },
+                {
+                  "text": "Sinusoidal undulation wave introducing children."
+                },
+                {
+                  "text": "Grid arrays, coordinate planes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`GlowIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`GlowIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/GlowIn.ts)"
+                },
+                {
+                  "text": "Expands radial glow halo before solidifying."
+                },
+                {
+                  "text": "Stars, dots, lasers."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`ShimmerIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`ShimmerIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/ShimmerIn.ts)"
+                },
+                {
+                  "text": "Luminance highlight sweeps diagonally across geometry."
+                },
+                {
+                  "text": "Premium titles, gold foil effects."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`MaterializeFrom`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`MaterializeFrom.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/MaterializeFrom.ts)"
+                },
+                {
+                  "text": "Reconstructs geometry from a remote target point."
+                },
+                {
+                  "text": "Teleportation, transform origins."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`TransmitIn`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`TransmitIn.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/TransmitIn.ts)"
+                },
+                {
+                  "text": "Digital scanline interference effect."
+                },
+                {
+                  "text": "Sci-fi / computer graphics animations."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Create3D`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Create3D.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/Create3D.ts)"
+                },
+                {
+                  "text": "3D wireframe outline reveal for 3D meshes."
+                },
+                {
+                  "text": "3D models, surfaces, polyhedra."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-motion-physics-animations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Motion & Physics Animations"
+        },
+        {
+          "type": "paragraph",
+          "text": "Located in [`src/engine/animation/motion/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/motion):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`MotionPath`**: Moves an entity along an arbitrary 2D/3D spline or vector path with automatic tangent rotation.",
+            "**`OrbitAnimation`**: Orbits an entity around an arbitrary 3D pivot coordinate at configurable angular velocity.",
+            "**`ShakeAnimation`**: Introduces traumatic vibrational camera shake using Perlin noise decay ($e^{-\\lambda t}$).",
+            "**`SpiralAnimation`**: Moves entities along Archimedean or logarithmic spirals ($r = a + b\\theta$).",
+            "**`SplineAnimation`**: Evaluates smooth Catmull-Rom or Natural Cubic Spline trajectories through control points.",
+            "**`SpringAnimation`**: Physics-driven spring animation with real-time mass, damping, and spring constant equations.",
+            "**`LissajousAnimation`**: Harmonically driven motion governed by $x = A\\sin(at + \\delta), y = B\\sin(bt)$."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-transform-morph-animations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Transform & Morph Animations"
+        },
+        {
+          "type": "paragraph",
+          "text": "Located in [`src/engine/animation/transform/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`Morph`**: Smoothly interpolates path geometry between two distinct vector shapes using Chaikin subdivision and arc-length curve equalization ([`PathEqualizer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/PathEqualizer.ts)).",
+            "**`HomotopyAnimation`**: Implements continuous mathematical homotopy:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "H(x, y, t) = (1 - t)f(x, y) + t \\, g(x, y)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`TransformMatchingShapes`**: Analyzes source and target composite shapes, automatically aligns identical sub-shapes, and morphs unmatched elements.",
+            "**`TransformMatchingTex`**: Parses LaTeX expressions, identifies identical mathematical terms (e.g. variables $x$, exponents, equal signs), slides them into their new positions, and morphs altered operators.",
+            "**`TransformMatchingText`**: Word- and letter-level alignment for text transitions.",
+            "**`SDF3DTransform`**: Continuous blending between two 3D Signed Distance Fields using smooth minimum interpolation.",
+            "**`VectorTransform`**: Visualizes linear algebra matrix transformations:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{v}' = A \\vec{v}"
+        }
+      ]
+    },
+    {
+      "id": "5-camera-choreography",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Camera Choreography"
+        },
+        {
+          "type": "paragraph",
+          "text": "Located in [`src/engine/animation/camera/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/camera):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`CameraMove`**: Smoothly translates the camera through 3D space with spherical rotation interpolation.",
+            "**`CameraLookAt`**: Reorients the camera to face a target entity or point.",
+            "**`CameraOrbit`**: Rotates the camera around the active focal point over time.",
+            "**`CameraDollyZoom`**: Recreates the classic cinematic Hitchcock \"Vertigo\" effect by simultaneously dollying the camera forward while widening the Field of View:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{FOV}(t) = 2 \\arctan\\left(\\frac{h}{2 \\cdot \\text{distance}(t)}\\right)"
+        }
+      ]
+    }
+  ]
+}

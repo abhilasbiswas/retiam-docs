@@ -1,0 +1,189 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-spline-curves-and-evaluation-architecture",
+  "title": "Spline Curves & Multi-Method Interpolation Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SPLINE_CURVES_AND_EVALUATION_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SPLINE_CURVES_AND_EVALUATION_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SPLINE_CURVES_AND_EVALUATION_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Spline](/api-entities-primitives-2d#spline), [Path](/api-entities-primitives-2d#path), [CatmullRomEvaluator](/api-entities-primitives-2d-curves#catmullromevaluator), [BSplineEvaluator](/api-entities-primitives-2d-curves#bsplineevaluator), [NaturalSplineEvaluator](/api-entities-primitives-2d-curves#naturalsplineevaluator), [HermiteEvaluator](/api-entities-primitives-2d-curves#hermiteevaluator), [BezierEvaluator](/api-entities-primitives-2d-curves#bezierevaluator), [CurveEvaluator](/api-entities-primitives-2d-curves#curveevaluator), [CurveType](/api-entities-primitives-2d-curves#curveevaluator), [SVG](/api-entities-composites-svg#svg), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [Vec3](/api-math-vector#vec3), [Color](/api-math#color)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Smooth mathematical curves passing through or approximated by control points are foundational to scientific visualization, kinematic motion trajectories, and generative graphics."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a modular spline architecture:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`Spline`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Spline.ts)**: A high-performance vector entity that inherits directly from [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts), ensuring zero hierarchy overhead and native GPU anti-aliased extrusion.",
+            {
+              "text": "**Evaluator Subsystem ([`src/engine/entities/primitives/2d/curves/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves))**: Five dedicated mathematical curve algorithms implementing standard parametric formulations:",
+              "children": [
+                "**Catmull-Rom** ([`CatmullRomEvaluator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/CatmullRomEvaluator.ts))",
+                "**B-Spline / de Boor** ([`BSplineEvaluator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BSplineEvaluator.ts))",
+                "**$C^2$ Natural Cubic Spline** ([`NaturalSplineEvaluator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/NaturalSplineEvaluator.ts))",
+                "**Cubic Hermite** ([`HermiteEvaluator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/HermiteEvaluator.ts))",
+                "**Composite Bézier** ([`BezierEvaluator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/curves/BezierEvaluator.ts))"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  P[\"Control points: P₀ … Pₙ\"] --> E[\"CurveEvaluator strategy\"]\n  E --> C[\"Catmull-Rom<br/>Interpolation\"]\n  E --> B[\"B-spline<br/>de Boor\"]\n  E --> N[\"Natural<br/>C² continuity\"]\n  E --> H[\"Hermite<br/>Tangents\"]\n  E --> Z[\"Bézier<br/>Bernstein\"]\n  C --> S[\"Segment sampling and tessellation\"]\n  B --> S\n  N --> S\n  H --> S\n  Z --> S\n  S --> R[\"Raw numeric contours\"] --> G[\"Path WebGPU buffers\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-mathematical-formulations-evaluators",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Mathematical Formulations & Evaluators"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Catmull-Rom Cubic Spline (CurveType.CatmullRom)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Behavior**: Passes directly through all control points with $C^1$ continuity.",
+            "**Formulation**: For four consecutive control points $\\mathbf{P}_{i-1}, \\mathbf{P}_i, \\mathbf{P}_{i+1}, \\mathbf{P}_{i+2}$ and tension parameter $\\tau \\in [0, 1]$ (default $\\tau = 0.5$):"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{C}(t) = \\begin{bmatrix} 1 & t & t^2 & t^3 \\end{bmatrix} \\begin{bmatrix} 0 & 1 & 0 & 0 \\\\ -\\tau & 0 & \\tau & 0 \\\\ 2\\tau & \\tau-3 & 3-2\\tau & -\\tau \\\\ -\\tau & 2-\\tau & \\tau-2 & \\tau \\end{bmatrix} \\begin{bmatrix} \\mathbf{P}_{i-1} \\\\ \\mathbf{P}_i \\\\ \\mathbf{P}_{i+1} \\\\ \\mathbf{P}_{i+2} \\end{bmatrix}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. B-Spline via de Boor's Algorithm (CurveType.BSpline)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Behavior**: Smooth approximating curve contained within the convex hull of the control polygon. Degree $p$ (default $p = 3$).",
+            "**Recurrence Relation**: Evaluates basis functions using Cox-de Boor recursion over a non-decreasing knot vector $\\mathbf{U} = \\{u_0, u_1, \\dots, u_m\\}$:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "N_{i, 0}(u) = \\begin{cases} 1 & \\text{if } u_i \\le u < u_{i+1} \\\\ 0 & \\text{otherwise} \\end{cases}"
+        },
+        {
+          "type": "math",
+          "tex": "N_{i, p}(u) = \\frac{u - u_i}{u_{i+p} - u_i} N_{i, p-1}(u) + \\frac{u_{i+p+1} - u}{u_{i+p+1} - u_{i+1}} N_{i+1, p-1}(u)"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{S}(u) = \\sum_{i=0}^n N_{i, p}(u) \\mathbf{P}_i"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. $C^2$ Natural Cubic Spline (CurveType.Natural)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Behavior**: Continuous second derivatives ($\\mathbf{S}''(x)$ is continuous everywhere) with zero curvature at endpoints ($\\mathbf{S}''(x_0) = \\mathbf{S}''(x_n) = 0$).",
+            "**Solver**: Sets up a tridiagonal linear system $\\mathbf{A}\\mathbf{D} = \\mathbf{B}$ solved in $O(n)$ time via the Thomas algorithm, eliminating angular kinks under high magnification."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Cubic Hermite Spline (CurveType.Hermite)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Behavior**: Interpolates points given explicit tangent vectors $\\mathbf{m}_0, \\mathbf{m}_1$ at the boundary:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{H}(t) = (2t^3 - 3t^2 + 1)\\mathbf{P}_0 + (t^3 - 2t^2 + t)\\mathbf{m}_0 + (-2t^3 + 3t^2)\\mathbf{P}_1 + (t^3 - t^2)\\mathbf{m}_1"
+        }
+      ]
+    },
+    {
+      "id": "3-high-performance-zero-allocation-updates",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. High-Performance Zero-Allocation Updates"
+        },
+        {
+          "type": "paragraph",
+          "text": "Unlike conventional graphics libraries that re-serialize path commands into SVG strings (`\"M ... C ...\"`), Retiam's `Spline` updates geometry in-place:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Raw Numeric Buffers**: The evaluator writes directly into contiguous `Float32Array` or numeric contour arrays (`number[][]`).",
+            "**Dynamic Invalidation**: Calling `spline.setPoints(newPoints)` uploads modified vertices straight to the GPU VBO/IBO buffers, allowing 60 FPS real-time spline deformation inside `scene.always(() => ...)`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Spline, CurveType, Vec3, Color } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\nconst points = [\n    new Vec3(-8, -2, 0),\n    new Vec3(-4, 3, 0),\n    new Vec3(0, -1, 0),\n    new Vec3(4, 4, 0),\n    new Vec3(8, -2, 0)\n];\n\n// 1. Natural C² Spline\nconst naturalSpline = new Spline(points, {\n    type: CurveType.Natural,\n    stroke: Color.fromHex(\"#38bdf8\"),\n    stroke_width: 0.12,\n    segments: 30\n});\nscene.add(naturalSpline);\n\n// 2. Closed B-Spline loop\nconst bSpline = new Spline(points, {\n    type: CurveType.BSpline,\n    degree: 3,\n    closed: true,\n    stroke: Color.fromHex(\"#f43f5e\"),\n    stroke_width: 0.08\n});\nscene.add(bSpline);\n\n// 3. Dynamic per-frame control point oscillation\nscene.always(({ time }) => {\n    points[2].y = Math.sin(time * 3.0) * 2.5;\n    naturalSpline.setPoints(points);\n});"
+        }
+      ]
+    }
+  ]
+}

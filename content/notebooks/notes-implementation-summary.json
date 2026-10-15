@@ -1,0 +1,668 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-implementation-summary",
+  "title": "Retiam Engine: Comprehensive Implementation & Architecture Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/IMPLEMENTATION_SUMMARY.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/IMPLEMENTATION_SUMMARY.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/IMPLEMENTATION_SUMMARY.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [State](/api-core#state), [SceneComposer](/api-core-scenecomposer#scenecomposer), [Entity](/api-core-entity#entity), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [Pipeline](/api-render-pipelines#pipeline), [Queue](/api-utils#utility), [RenderStateCache](/api-render#renderstatecache), [RenderPass](/api-render-passes#renderpass), [ShadowPass](/api-render-passes#shadowpass), [Shader](/api-entities-primitives-2d#shader), [Storage](/api-render-pipelines#resourcelayouts), [Pass](/api-render-frame-graph#pass), [Paint](/api-core-paint#paint), [Material](/api-core-material#material), [Mode](/api-render-frame-graph#resource), [RendererComponent](/api-components#renderercomponent), [Domains](/api-render-shader-system#domains), [ShaderBuilder](/api-render-shader-system#shaderbuilder), [Instanced](/api-entities#instanced), [ModelGeometry](/api-components-geometry#modelgeometry), [MorphGeometry](/api-components-geometry#morphgeometry), [TextGeometry](/api-components-geometry#textgeometry)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an exhaustive, up-to-date reference of all major architectural subsystems, memory models, rendering pipelines, geometry allocators, and performance optimizations implemented in the **Retiam WebGPU Engine**."
+        }
+      ]
+    },
+    {
+      "id": "1-system-architecture-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. System Architecture Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam is a high-performance, WebGPU-native 2D/3D graphics and mathematical animation engine designed for real-time rendering, complex mathematical visualization, and cinematic video export with **0.0 KB Minor GC (Zero Garbage Collection)** and **sub-millisecond CPU frame times**."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph SceneGraph [1. Scene Graph & State System]\n        Scene[Scene / SceneComposer] --> RootEntity[Entity Hierarchy]\n        RootEntity --> DirectSlots[Persistent State Slots in GlobalStateAllocator]\n        DirectSlots --> VersionMemo[Hierarchical Version Memoization]\n    end\n\n    subgraph MemoryGPU [2. GPU Memory & Buffer Upload]\n        VersionMemo --> CPUData[Contiguous cpuData Buffer]\n        CPUData --> WriteBuffer[Single queue.writeBuffer Upload]\n        WriteBuffer --> GlobalStorage[\"@group(2) Global State Buffer (EntityState[])\"]\n    end\n\n    subgraph RenderPipeline [3. Render Pipeline & Execution]\n        Scene --> RenderQueue[Render Queue Build]\n        RenderQueue --> StateCache[RenderStateCache: Pipeline, Buffer & Scissor Caching]\n        StateCache --> RenderPass[RenderPass / ShadowPass / OffscreenPass]\n    end\n\n    subgraph Shaders [4. Bindless WGSL Shader Execution]\n        GlobalStorage --> VS[\"Vertex Shader: Read states[getStateIndex(instance_index)]\"]\n        VS --> FlatVaryings[\"Flat Varyings Forwarding (@interpolate(flat))\"]\n        FlatVaryings --> FS[Fragment Shader: Zero Storage Reads]\n        FS --> Framebuffer[Target Framebuffer / Output]\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-bindless-rendering-architecture-group-2",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Bindless Rendering Architecture (@group(2))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implemented in commit `194d9c8a`, Retiam transitioned from dynamic uniform buffer offsets to a **global bindless storage architecture**."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Global State Storage"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Single Pass-Level Binding:** `@group(2)` is bound **once per render pass** rather than per entity packet.",
+            "**WGSL Definition ([`common.wgsl`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/common.wgsl)):**"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "struct EntityState {\n      paint: Paint,\n      transform: State,\n      material: Material,\n  };\n\n  @group(2) @binding(0) var<storage, read> states: array<EntityState>;"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Dual-Mode 32-Bit Index Packing (packInstanceIndex)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Entity state slot indices and sub-instance/contour indices are bit-packed into the 32-bit `firstInstance` (`instance_index`) WebGPU built-in:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Encoder ([`RendererComponent.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/RendererComponent.ts)):**"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export function packInstanceIndex(stateIndex: number, localIndex: number = 0, isMega: boolean = false): number {\n      if (isMega || localIndex > 16383) {\n          // Mega-Instance Mode: MSB = 1, 13-bit state (0..8,191), 18-bit local (0..262,143)\n          return (0x80000000 | ((stateIndex & 0x1FFF) << 18) | (localIndex & 0x3FFFF)) >>> 0;\n      }\n      // Standard Mode: MSB = 0, 18-bit state (0..262,144), 14-bit local (0..16,383)\n      return (((stateIndex & 0x3FFFF) << 14) | (localIndex & 0x3FFF)) >>> 0;\n  }"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Decoder ([`common.wgsl`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/common.wgsl)):**"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn getStateIndex(instance_index: u32) -> u32 {\n      let is_mega = (instance_index & 0x80000000u) != 0u;\n      return select(instance_index >> 14u, (instance_index >> 18u) & 0x1FFFu, is_mega);\n  }\n\n  fn getLocalIndex(instance_index: u32) -> u32 {\n      let is_mega = (instance_index & 0x80000000u) != 0u;\n      return select(instance_index & 0x3FFFu, instance_index & 0x3FFFFu, is_mega);\n  }"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Flat Varying State Forwarding (Zero Fragment Storage Reads)"
+        },
+        {
+          "type": "paragraph",
+          "text": "To prevent memory bandwidth bottlenecks on mobile and integrated GPUs, fragment shaders do not read the global storage buffer:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Vertex Shader Fetch & Packing ([`Domains.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/Domains.ts)):** The Vertex Shader reads `states[getStateIndex(instance_index)]` once and packs `Paint`, `State`, and `Material` properties into `@interpolate(flat)` varyings (`v_paint_fill`, `v_paint_stroke`, `v_paint_params`, `v_paint_clip`, `v_state_params`, `v_mat_color`, `v_mat_em`, `v_mat_pbr`, `v_mat_tex`).",
+            "**Fragment Shader Unpacking:** The Fragment Shader unpacks structs directly from vertex varyings, achieving **zero storage buffer memory reads** during the pixel shading phase."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. AST-Free Clip Parameter Regex Transforms"
+        },
+        {
+          "type": "paragraph",
+          "text": "[`ShaderBuilder.injectInstanceIndexIntoClipCalls()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts) parses compiled shader sources and injects `instance_index` into single-argument `clip2D(p)`, `clip3D(p)`, and `clipSpace(p)` calls at shader build time."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. Programmable Vertex Pulling"
+        },
+        {
+          "type": "paragraph",
+          "text": "Replaced vertex buffer bindings with `@group(3)` storage buffer resources and vertex pulling:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`Instanced.ts`:** Pulls `iPosScale`, `iColor`, `iRot` from storage via `getLocalIndex(instance_index)`.",
+            "**`ModelGeometry.ts` & `MorphGeometry.ts`:** Splats and swarm particles pull positions and normals via `getLocalIndex(instance_index)`.",
+            "**`TextGeometry.ts`:** Text glyph vertices are stored in storage buffers and pulled programmatically.",
+            "**`PathGeometry.ts`:** Analytical curve contours pass `contourStartIndex` through `state.transform.pad2`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-persistent-zero-copy-state-allocator-globalstateallocator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Persistent Zero-Copy State Allocator (GlobalStateAllocator)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Located in [`src/engine/render/allocator/GlobalStateAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts), this allocator manages CPU/GPU state synchronization."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Key Capabilities:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Persistent Retained Slots (`acquireSlot()` / `releaseSlot()`):**",
+              "children": [
+                "Each entity acquires a fixed slot index in `GlobalStateAllocator` during initialization.",
+                "`entity.worldState` directly overlays a 256-byte slice (64 floats) of `cpuData`.",
+                "When entities are destroyed, slots are recycled into `_freeSlots`."
+              ]
+            },
+            {
+              "text": "**Direct Frame Allocation (`allocateDirect()`):**",
+              "children": [
+                "Dynamically allocated temporary states (e.g. for sub-passes) receive pre-mapped contiguous slot instances without object allocations."
+              ]
+            },
+            {
+              "text": "**Geometric Growth & Safety:**",
+              "children": [
+                "When capacity is exceeded, the allocator grows geometrically ($2\\times$), preserves existing state data, and remaps active state views."
+              ]
+            },
+            {
+              "text": "**Contiguous GPU Streaming:**",
+              "children": [
+                "Replaces fragmented range tracking with a single contiguous `queue.writeBuffer(gpuBuffer, 0, cpuData, 0, maxSlots * BYTES_PER_STATE)` per frame."
+              ]
+            },
+            {
+              "text": "**Exact 256-Byte Struct Alignment:**",
+              "children": [
+                "`State.BYTELENGTH = 256` (64 floats) aligned to 16-byte GPU uniform/storage standards."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-performance-zero-gc-engine-core",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Performance & Zero-GC Engine Core"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam is architected to eliminate Garbage Collection and minimize CPU overhead:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Optimization",
+            "Implementation Detail",
+            "Performance Impact"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Hierarchical Version Memoization**",
+                  "type": "text"
+                },
+                {
+                  "text": "Tracks monotonic `localVersion` and `parentVersion` across `Transform`, `Paint`, and `Material`. Bypasses `worldState.apply()` when unmutated."
+                },
+                {
+                  "text": "Eliminates 30,000 matrix multiplications on static nodes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Scene Graph Caching (`_sceneGraphDirty`)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Bypasses `buildRenderQueues()`, `traverse()`, and state buffer uploads during camera-only interactions (orbit/pan/zoom)."
+                },
+                {
+                  "text": "Frame time drops to **< 0.05 ms (600+ FPS)**."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Subtree Update Culling (`_childUpdateCount`)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Tracks active updaters down the hierarchy. When `0`, `Entity.update()` early-outs in $O(1)$."
+                },
+                {
+                  "text": "Skips 30,000 empty update hooks and closure allocations."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Raycaster Pruning (`_childPickableCount`)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Tracks interactive descendants. Prunes non-pickable branches at root."
+                },
+                {
+                  "text": "Reduces pointer move traversal from 30,000 nodes to 1 check."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Zero-Allocation `getDrawCalls()`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Pre-allocates and caches retained `DrawCall[]` arrays across all geometry classes."
+                },
+                {
+                  "text": "Eliminates 30,000 temporary array instantiations per frame."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**WebGPU Scissor & State Caching**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`RenderStateCache`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/RenderStateCache.ts) caches pipelines, vertex buffers, index buffers, and scissor rectangles."
+                },
+                {
+                  "text": "Reduces WebGPU driver scissor calls from 30,000 to **1 per frame**."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-2d-path-svg-geometry-system",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. 2D Path & SVG Geometry System"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam features a dual-engine 2D vector geometry pipeline:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "graph LR\n    SVGSource[SVG String / Path Data] --> Parser[SVG Parser & Path Normalizer]\n    Parser --> Choice{Rendering Mode}\n    Choice -- \"fast / accurate / fill\" --> Earcut[TriangulatedPathGeometry: CPU Earcut & Tessellation]\n    Choice -- \"analytical / stroke\" --> GlobalPoints[GlobalAnalyticalAllocator: Bezier Curve Storage]\n    Earcut --> GPUIndices[Global Index / Vertex Buffer]\n    GlobalPoints --> ComputeShader[GPU Stencil & Path Stroke Pipelines]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Triangulated Path Engine (TriangulatedPathGeometry & SVG)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Modes:** Supports `method: \"fast\" | \"accurate\" | \"fill\" | \"stroke\" | \"analytical\"`.",
+            "**Configurable Tessellation:** Parameters for `tolerance` and `maxSegments` allow tuning between visual fidelity and vertex count.",
+            "**Extrusion & Fill:** Integrated CPU polygon triangulation (via Earcut) and polyline stroke extrusion for single-pass triangle list rendering.",
+            "**Overlap & Z-Fighting Resolution:** Dedicated vertex depth offsetting and overlap resolution for complex SVG artwork (e.g. Paris 30K)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Analytical Bezier Curve Engine (PathGeometry & GlobalAnalyticalAllocator)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**GPU Curve Representation:** Stores quadratic and cubic Bézier curves directly in global analytical GPU buffers (`gpuGlobalPoints`, `gpuGlobalIndices`).",
+            {
+              "text": "**Multi-Phase Stencil Pipeline:**",
+              "children": [
+                "`stencil_chain` & `stencil_quad`: Evaluates Bézier winding numbers into the stencil buffer.",
+                "`fill_cover`: Draws bounding geometry masked by the stencil buffer.",
+                "`path_stroke_hard` & `path_stroke_edge`: GPU-evaluated variable-width stroke rendering with anti-aliased edges.",
+                "`clear`: Clears stencil state for subsequent path rendering."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-3d-rendering-sdf-raymarching-shading-domains",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. 3D Rendering, SDF Raymarching & Shading Domains"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Built-In Shading Domains ([Domains.ts](../src/engine/render/shadersystem/Domains.ts))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`CUSTOM_UNLIT`: General unlit 2D/3D geometry with user-defined vertex and fragment logic.",
+            "`COMMON_2D`: 2D paths, shapes, and sprite geometry.",
+            "`STENCIL_OPS`: Hardware stencil operations and vector path winding evaluation.",
+            "`PATH_STROKE`: GPU analytical Bézier curve stroking.",
+            "`MODEL3D`: Complete 3D mesh domain with PBR material parameters, lighting, and normal transformations."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. 3D SDF Raymarching Pipeline (SDFFragment & RaymarchPlot3D)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Mathematical 3D implicit surface raymarching with analytical normals, soft shadows, ambient occlusion, and lighting.",
+            "**Module-Scoped WGSL State (`var<private> state: State;`):** Enables direct access to transform matrices, bounding parameters, and animation variables (`state.t1`, `state.t2`) inside nested math equations (`map(p)`, `calcNormal(p)`, `surfaceFunc(x, z)`).",
+            "**Flat Material Varying Unpacking:** Material properties (`v_mat_color`, `v_mat_em`, `v_mat_pbr`, `v_mat_tex`) are interpolated flat from the vertex shader and unpacked in registers, achieving **zero storage buffer reads** in fragment shaders."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Texturing & Filtered Texture Array Sampling"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Full support for `texture_2d_array` textures for materials and font atlases.",
+            "[`sampleTexture4xGrad`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/math.wgsl) uses `textureSampleGrad(..., dx, dy)` with screen-space UV derivatives to eliminate texture array sampling seams and derivative artifacts."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7-pass-architecture-framegraph",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Pass Architecture & FrameGraph"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam organizes GPU rendering into modular passes:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "graph TD\n    ShadowPass[ShadowPass: Light-Space Depth Map Generation] --> MainRenderPass[RenderPass: Main Scene Rasterization]\n    OffscreenPass[OffscreenRenderPass: Nested & Layer Textures] --> MainRenderPass\n    MainRenderPass --> FeedbackTexture[PersistentRenderTexture: Feedback & Ping-Pong Loops]\n    FeedbackTexture --> PostProcess[Post-Processing & SSAA]"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**`RenderPass`:** Primary rasterization pass executing sorted `render_queue` commands with layer mask culling, viewport clipping, and aggregated shadow/texture bind groups.",
+              "children": [
+                "**Dynamic `@group(3)` Bind Group Cache Invalidation:** Tracks `_instancedAlbedoTex`, `_instancedNormalTex`, and `_instancedExtraBuffer` on geometries to prevent stale/destroyed texture references when global texture arrays are re-allocated."
+              ]
+            },
+            "**`ShadowPass`:** Generates light-space depth maps for 3D model casting and self-shadowing.",
+            "**`OffscreenRenderPass` & `PersistentRenderTexture`:** Supports rendering layers to offscreen textures, persistent feedback buffers, and multi-camera viewport compositions.",
+            "**Anti-Aliasing & AI Denoising:** Multi-sample anti-aliasing (SSAA, Bilinear) and integration with Intel Open Image Denoise (`oidn-web`)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-animation-video-export-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Animation & Video Export Pipeline"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Atomic & Composite Animators:** Transitions including `Create`, `FadeIn`, `FadeOut`, `Transform`, `MoveTo`, `ScaleTo`, `RotateBy`, and property tweens with customizable easing functions.",
+            "**Timeline Controller:** Playback speed, seeking, reverse playback, and time-scale controls.",
+            "**Hardware-Accelerated Video Recording:** In-browser MP4 and WebM video export via WebCodecs, `mp4-muxer`, and `webm-muxer` for deterministic 60 FPS frame capture and rendering."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "9-related-implementation-guides",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "9. Related Implementation Guides"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**[Poly (Polygon & Polyline) Architecture & GPU Extrusion](/notes-poly-architecture-and-usage)**: Deep dive into GPU compute ribbon stroke extrusion, dual-mode stencil filling (non-zero & even-odd), analytical rounded corner mathematics, and raycasting.",
+            "**[Scene Graph Architecture, Hierarchy Traversal & State Synchronization](/notes-scene-graph-architecture)**: Deep dive into the Entity hierarchy, SceneComposer traversal, 256-byte aligned GPU state memory blocks, matrix propagation, and zero-GC render queue building.",
+            "**[GPU Compute & ComputeKernel Architecture](/notes-compute-and-compute-kernel-architecture)**: Deep dive into the declarative `ComputeKernel` API, low-level engine compute pipelines (`Compute.ts`), workgroup sizing, parallel prefix scan, and FrameGraph integration.",
+            "**[FrameGraph Architecture, Extensibility & Custom Pass Guide](/notes-frame-graph-architecture-and-extensibility)**: Deep dive into DAG compilation, Kahn's topological sort, dead-code culling, transient resource memory pooling, `@read`/`@write`/`@create` decorators, and writing custom `IPlugin` render features.",
+            "**[Analytical Path Architecture, SDF Geometry & Stencil Pipeline](/notes-analytical-path-architecture)**: Bit-by-bit breakdown of SVG quadratic decomposition, GlobalAnalyticalAllocator, GPU compute encoders, Cardano cubic root solvers, and Stencil-and-Cover Fill & SDF Stroke pipelines.",
+            "**[firstInstance Bit-Packing Architecture & Limits](/notes-first-instance-bit-packing-architecture)**: Exhaustive breakdown of `firstInstance` multiplexing, Dual-Mode bit allocation, Bit 30 pass discrimination, hardware instancing addition carries, and mathematical limits.",
+            "**[Instanced Architecture & Usage Guide](/notes-instanced-architecture-and-usage)**: Deep dive into programmable vertex-pulling hardware instancing, storage buffer layouts, and vector path instancing.",
+            "**[Instanced, Arrange & WebGPU Compute Architecture & Usage Guide](/notes-arrange-and-instanced-compute-architecture)**: Comprehensive guide covering Instanced, Arrange (CPU vs. GPU instancing modes), real-time WebGPU Compute Shader integration (`onCompute`), memory layout, and 65,536-instance demonstrations.",
+            "**[Fast Path & Adaptive LOD Architecture](/notes-fast-path-and-adaptive-lod)**: High-speed CPU triangulation, intermediate quadratic representations, and screen-space hysteresis LOD.",
+            "**[Bindless Varying State Architecture](/notes-bindless-varying-state-architecture)**: 32-bit state packing, draw call batching, and branchless WGSL decoders.",
+            "**[RenderTarget Architecture & Unified API Guide](/notes-render-target-architecture-and-api)**: Physics3D-style entity management, direct Sprite integration, pre-raster zero-latency scheduling, and camera/projection options for intermediate render targets.",
+            "**[TrackBuilder & TrackAnimation Architecture](/notes-track-builder-and-animation-architecture)**: Declarative entity-level animation lifecycle, fluent `TrackBuilder` timeline sequencing (.add parallel/series, .wait), proportional duration scaling, and seamless `Create` delegation.",
+            "**[Performance Optimizations](/notes-performance-optimizations)**: Zero-GC memory pools, render state caching, and batch dispatching."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10-file-module-structure",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "10. File & Module Structure"
+        },
+        {
+          "type": "tree",
+          "variant": "folder",
+          "nodes": [
+            {
+              "label": "src/engine/",
+              "children": [
+                {
+                  "label": "_core/",
+                  "description": "Core Entity, Scene, State, Transform, Paint, Material",
+                  "children": [
+                    {
+                      "label": "Entity.ts",
+                      "description": "Base entity hierarchy, component container & update hooks"
+                    },
+                    {
+                      "label": "Scene.ts",
+                      "description": "Main scene coordinator & lifecycle manager"
+                    },
+                    {
+                      "label": "SceneComposer.ts",
+                      "description": "Render queue builder, hierarchy traversal, version memoization"
+                    },
+                    {
+                      "label": "State.ts",
+                      "description": "256-byte aligned entity state container"
+                    },
+                    {
+                      "label": "StateDataManager.ts",
+                      "description": "Interface between entities and global state allocator"
+                    },
+                    {
+                      "label": "Transform.ts",
+                      "description": "4x4 matrix transforms, hierarchy propagation, metadata"
+                    }
+                  ]
+                },
+                {
+                  "label": "entities/",
+                  "description": "High-level Entity implementations (Instanced, SVG, Text, Primitives)",
+                  "children": [
+                    {
+                      "label": "Instanced.ts",
+                      "description": "Programmable vertex-pulling hardware instancing container"
+                    },
+                    {
+                      "label": "SVG.ts",
+                      "description": "Multi-layer vector SVG parser and hierarchy generator"
+                    },
+                    {
+                      "label": "primitives/",
+                      "description": "2D and 3D shapes (Path, Circle, Poly, Arc, Model, Line3D)"
+                    }
+                  ]
+                },
+                {
+                  "label": "components/",
+                  "description": "ECS component architecture",
+                  "children": [
+                    {
+                      "label": "geometry/",
+                      "description": "GeometryComponent implementations (Path, Model, Triangulated, Text, SDF)"
+                    },
+                    {
+                      "label": "fragment/",
+                      "description": "FragmentComponent implementations (PBR, SDF, Unlit, Texture)"
+                    },
+                    {
+                      "label": "renderers/",
+                      "description": "Renderers (MeshRenderer, PathRenderer, ModelRenderer, TriangulatedPathRenderer)"
+                    }
+                  ]
+                },
+                {
+                  "label": "render/",
+                  "description": "WebGPU render engine",
+                  "children": [
+                    {
+                      "label": "allocator/",
+                      "description": "GlobalStateAllocator, GlobalGeometryAllocator, MegaDrawBatchManager"
+                    },
+                    {
+                      "label": "passes/",
+                      "description": "Pass graph (RenderPass, ShadowPass, OffscreenRenderPass, PersistentRenderTexture)"
+                    },
+                    {
+                      "label": "pipelines/",
+                      "description": "Pipeline descriptors & bind group layout management"
+                    },
+                    {
+                      "label": "shader_system/",
+                      "description": "ShaderBuilder, Domains, VertexSchema, VaryingSchema, Resource bindings"
+                    },
+                    {
+                      "label": "RenderStateCache.ts",
+                      "description": "State caching for pipelines, buffers, and scissor rects"
+                    },
+                    {
+                      "label": "Renderer.ts",
+                      "description": "WebGPU device initialization, sort loop, frame graph execution"
+                    }
+                  ]
+                },
+                {
+                  "label": "shaders/",
+                  "description": "WGSL shader source files",
+                  "children": [
+                    {
+                      "label": "includes/",
+                      "description": "common.wgsl, math.wgsl, math3d.wgsl, path_utils.wgsl, stencil_ops.wgsl"
+                    },
+                    {
+                      "label": "fill/",
+                      "description": "gradient.wgsl, texture.wgsl, video.wgsl"
+                    },
+                    {
+                      "label": "stencil/",
+                      "description": "stencil_fill.wgsl"
+                    }
+                  ]
+                },
+                {
+                  "label": "utils/",
+                  "description": "GPUAllocator, Raycaster, Color, Math primitives, Muxers"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

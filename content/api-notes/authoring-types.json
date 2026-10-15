@@ -1,0 +1,655 @@
+{
+  "GroupAnimator": {
+    "description": "Build coordinated state animations for a list of entities, with optional staggering.",
+    "notes": [
+      "Each child receives its own StateAnimation. Chain setters on the group animator, then pass it to Scene.play; ordinary Entity setters change the scene immediately.",
+      "Pivot and anchor resolution uses the group bounds. Inspect the individual method contract before mixing a group transform with child-local transforms."
+    ]
+  },
+  "Write": {
+    "description": "Draw vector contours and reveal their fill, with a small stagger between components.",
+    "notes": [
+      "Write extends DrawBorderThenFill and defaults lagRatio to 0.05. It accepts vector entities; MSDF text has a different glyph representation and should use its supported animation or decomposition workflow."
+    ]
+  },
+  "CameraLookAt": {
+    "description": "Animate camera orientation toward an entity or a world-space position.",
+    "notes": [
+      "prepare() samples the target position and computes the ending quaternion. The update interpolates orientation with spherical interpolation; it does not continuously track a moving target after preparation."
+    ]
+  },
+  "CameraMove": {
+    "description": "Animate camera position, yaw, pitch and field of view together.",
+    "notes": [
+      "The starting values are captured in the constructor, and omitted targets retain those values. Construct this animation close to the point where it will play if earlier camera movement could change its starting state."
+    ]
+  },
+  "CameraOrbit": {
+    "description": "Animate a camera around a target by a signed angle in radians.",
+    "notes": [
+      "The axis defaults to UP and a supplied axis is normalized. Use a camera controller for ongoing pointer-driven navigation and this animation for a scripted orbit."
+    ]
+  },
+  "DrawBorderThenFill": {
+    "description": "Decompose vector content into component animations that draw borders before revealing fills.",
+    "notes": [
+      "The constructor collects subentities after decomposition. Its outline width can come from the requested option, a text-size heuristic or the existing visible stroke. Set strokeWidth explicitly when you need consistent styling across mixed targets."
+    ]
+  },
+  "GrowFromCenter": {
+    "description": "Introduce an entity by growing from zero scale to its saved state.",
+    "notes": [
+      "Construction snapshots the target state and immediately sets the entity scale to zero. Scene.play manages introduction of the entity. Avoid creating this animation far in advance if the entity should remain visible before playback."
+    ]
+  },
+  "ModelTransform": {
+    "description": "Animate between mesh models using the selected morph representation.",
+    "notes": [
+      "A temporary MorphModel renders the transition and is cleaned up on completion. Choose the mode for the geometry: matching parameter grids support direct interpolation, while a swarm transition uses particles and has a different performance cost."
+    ]
+  },
+  "SDF3DTransform": {
+    "description": "Animate between SDF entities using a temporary distance-field morph.",
+    "notes": [
+      "The transition builds an SDFMorph3D from the source and target node trees. Geometry, material and transform interpolation belong to this animation; it is separate from the mesh vertex correspondence used by ModelTransform."
+    ]
+  },
+  "TransformMatchingShapes": {
+    "description": "Match vector contours by geometric similarity and animate their correspondence.",
+    "notes": [
+      "The implementation decomposes both sides, compares contour silhouettes using Procrustes analysis and builds animations for the matches. Geometry supplies the matching identity rather than a text character or formula symbol."
+    ]
+  },
+  "TransformMatchingTex": {
+    "description": "Match decomposed formula paths by symbol identity and animate their new positions.",
+    "notes": [
+      "MathJax labels identify symbols where available; the implementation falls back to entity and bounds information. Repeated symbols require matching among multiple candidates, so inspect ambiguous equations with a simple example first."
+    ]
+  },
+  "TransformMatchingText": {
+    "description": "Match repeated characters between two vector Text entities and animate their rearrangement.",
+    "notes": [
+      "Both texts are decomposed before matching. Whitespace is skipped when mapping visible characters; unmatched characters follow the options selected for the transition."
+    ]
+  },
+  "VectorTransform": {
+    "description": "Morph vector entities by matching and equalizing their path contours.",
+    "notes": [
+      "MatchingPolicy.SPATIAL is the constructor default. This operation works with evaluated vector paths, so choose another morph implementation for models or distance fields. A target with no valid paths produces a warning rather than useful geometry."
+    ]
+  },
+  "Instanced": {
+    "description": "Render many copies of one template using compact per-instance data.",
+    "notes": [
+      "Each instance can have its own position, scale, color and rotation without owning a complete child Entity. After CPU setters, call updateInstances to upload the changed data; use compute for a GPU-driven update path.",
+      "The standard layout uses 12 floats per instance and the extended layout uses 16. Choose the layout required by the fields you write rather than assuming every shader reads the same stride."
+    ]
+  },
+  "Axes": {
+    "description": "Map two-dimensional mathematical coordinates into a physical Cartesian drawing.",
+    "notes": [
+      "xRange and yRange describe numerical bounds and tick steps; width and height describe the drawing size. Use c2p and p2c to cross between coordinate values and scene positions rather than adding raw mathematical values to transforms."
+    ]
+  },
+  "PolarAxes": {
+    "description": "Draw radial and angular coordinates and convert them into scene positions.",
+    "notes": [
+      "rMax is the numerical radial limit while radius is the physical drawing radius. Theta steps use radians. Keeping these quantities separate lets you change the data range without resizing the whole diagram."
+    ]
+  },
+  "ThreeDAxes": {
+    "description": "Map three mathematical ranges into a physical three-dimensional coordinate system.",
+    "notes": [
+      "The numerical xRange, yRange and zRange are independent of width, height and depth. Plot helpers use that mapping to place curves and surfaces; transforms then position the complete drawing in the scene."
+    ]
+  },
+  "Arrow": {
+    "description": "Draw a line or sampled curve with independently configurable start and end tips.",
+    "notes": [
+      "The composite owns a body path and separate tip geometry. putStartAndEndOn changes endpoints, while setPoints supports a longer path. Choose tip types and head sizes relative to the stroke and the available curve length."
+    ]
+  },
+  "Arrow3D": {
+    "description": "Combine a three-dimensional line body with a conical arrowhead.",
+    "notes": [
+      "The constructor builds a Line3D body and a Cone head. headLength, headRadius and headSegments control the solid tip; use Arrow when a flat vector tip is the intended appearance."
+    ]
+  },
+  "BooleanOps": {
+    "description": "Combine evaluated vector regions in world coordinates using polygon clipping.",
+    "notes": [
+      "Curves are sampled into rings before the operation; the result can then be simplified and reconstructed as a Path. Resolution and simplification settings affect fidelity, especially around small curves and narrow gaps."
+    ]
+  },
+  "Union": {
+    "description": "Create a Path containing the area covered by either of two vector entities.",
+    "notes": [
+      "Construction evaluates BooleanOps.combine once and copies the resulting geometry and paint. Moving an input afterward does not create a continuously linked Boolean computation."
+    ]
+  },
+  "Difference": {
+    "description": "Create a Path representing the first vector region with the second region removed.",
+    "notes": [
+      "Operand order matters: Difference(A, B) cuts B out of A. The constructor evaluates the operation once; rebuild the result when changed inputs should alter the cutout."
+    ]
+  },
+  "Intersection": {
+    "description": "Create a Path containing only the overlap of two vector regions.",
+    "notes": [
+      "The output is evaluated geometry. A non-overlapping pair can produce an empty result; inspect transforms and world-space placement when an expected region disappears."
+    ]
+  },
+  "Exclusion": {
+    "description": "Create a Path containing areas covered by exactly one of two vector regions.",
+    "notes": [
+      "This is the exclusive-or Boolean operation: shared overlap is removed while the non-overlapping portions remain. It evaluates the current input geometry at construction."
+    ]
+  },
+  "Brace": {
+    "description": "Draw a brace beside the bounds of an entity, entity list or group.",
+    "notes": [
+      "direction defaults to DOWN and padding defaults to 0.2. sync recalculates the brace from the target bounds; getText and getTex create aligned captions. Updating a caption is separate from changing the target geometry."
+    ]
+  },
+  "ImplicitCurve2D": {
+    "description": "Sample a CPU function over a coordinate system to extract an implicit contour or region.",
+    "notes": [
+      "The equality operator draws the zero contour. Other operators can supply inequality coverage when a fill is requested. Resolution controls the sampling grid and influences detail and CPU work."
+    ]
+  },
+  "ImplicitCurve2DGPU": {
+    "description": "Evaluate a WGSL implicit equation over a quad mapped to a coordinate system.",
+    "notes": [
+      "The fragment implementation uses screen derivatives of the equation to estimate distance to its contour. It avoids CPU contour extraction but remains a shader-rendered surface, with resource bindings available through setResource."
+    ]
+  },
+  "ImplicitSurface3D": {
+    "description": "Generate an implicit surface on the GPU from a WGSL scalar field.",
+    "notes": [
+      "The implementation dispatches voxel generation and marching cubes, producing mesh geometry for rendering. Resolution controls volumetric sampling cost; use RaymarchedPlot3D or SDFVolume when you want a field evaluated during rendering instead."
+    ]
+  },
+  "ParametricCurve2D": {
+    "description": "Build and sample a two-dimensional curve from one parameter.",
+    "notes": [
+      "The overloads accept a vector-valued function or separate coordinate functions. tRange supplies the parameter interval; getPointAtT, tangents and arc-length queries support placing or moving other entities along the curve."
+    ]
+  },
+  "ParametricCurve3D": {
+    "description": "Build a three-dimensional Line3D from a parameterized function.",
+    "notes": [
+      "The overloads support a vector-valued function or separate coordinates, optionally mapped through axes. setFunction, setFunctions and setTRange rebuild the sampled curve rather than merely moving its transform."
+    ]
+  },
+  "ParametricSurface3D": {
+    "description": "Generate a mesh by sampling a function of two parameters.",
+    "notes": [
+      "uRange and vRange describe the parameter domains; uSegments and vSegments control tessellation. updateFunction regenerates the surface. Keep matching grids and parameter directions when using the surface as a direct morph target."
+    ]
+  },
+  "RaymarchedPlot3D": {
+    "description": "Render a WGSL height-field plot inside the physical bounds of ThreeDAxes.",
+    "notes": [
+      "The entity uses a bounding mesh and a specialized fragment component to evaluate the plot through raymarching. It disables ordinary raster shadow casting and raytrace participation in its constructor; its field-rendering contract differs from a generated surface mesh."
+    ]
+  },
+  "Streamlines2D": {
+    "description": "Trace animated particles through a time-dependent two-dimensional vector field.",
+    "notes": [
+      "The field callback receives mathematical coordinates and time. The implementation pools line entities and updates their trails; choose the number of lines and trail settings for both readability and update cost."
+    ]
+  },
+  "SurfaceGraph3D": {
+    "description": "Generate a sampled height-field mesh from a CPU function and ThreeDAxes.",
+    "notes": [
+      "The function gives height over a two-coordinate domain. Segment counts control mesh detail, while SurfaceFragment provides view styling. updateFunction changes the surface geometry; transforming the entity moves the existing result."
+    ]
+  },
+  "VectorField2D": {
+    "description": "Display a time-dependent planar vector field as a grid of arrows.",
+    "notes": [
+      "The callback maps each mathematical location and time to a vector. The entity rebuilds its grid when the axes range changes and updates the field separately from the axes drawing."
+    ]
+  },
+  "VectorField3D": {
+    "description": "Display a spatial vector field using instanced three-dimensional arrows.",
+    "notes": [
+      "The constructor samples the configured XYZ ranges and creates an Instanced arrow template. Its callback receives a Vec3 position and time; grid spacing controls the number of instances and the density of the visualization."
+    ]
+  },
+  "Tex": {
+    "description": "Turn a LaTeX expression into vector geometry suitable for scene layout and animation.",
+    "notes": [
+      "fontStyle selects the formula styling; display controls display-math layout. getPaths and split expose rendered glyph paths, which can be animated or matched as vector entities. Symbol paths are rendering output rather than a parsed algebra expression."
+    ]
+  },
+  "Font": {
+    "description": "Load and use a bitmap/MSDF glyph atlas with its layout metadata.",
+    "notes": [
+      "The JSON data supplies glyph metrics and kerning while the bitmap supplies distance-field pixels. Font is the atlas representation used by text rendering; FontLoader and the resolver handle other font-loading workflows."
+    ]
+  },
+  "TextureAtlas": {
+    "description": "Load one image and describe named subtextures within it.",
+    "notes": [
+      "Use fromGrid for uniform cells or addFrame for explicit frame rectangles. A SubTexture describes a region of the shared image, allowing sprites to reuse the atlas texture without loading a separate image for each frame."
+    ]
+  },
+  "TextureFill": {
+    "description": "Sample an image or canvas resource as a fill in the material pipeline.",
+    "notes": [
+      "A URL is loaded asynchronously; an existing image, bitmap or canvas supplies an immediate source object. Image dimensions and texture initialization are distinct from the geometry receiving the fill."
+    ]
+  },
+  "VideoFill": {
+    "description": "Use VideoData as a material fill with per-frame external texture handling.",
+    "notes": [
+      "update refreshes the video resource and cleanup releases its fill resources. Video playback state belongs to the VideoData object; changing an entity transform does not itself control the media clock."
+    ]
+  },
+  "BarChart": {
+    "description": "Build a Cartesian bar chart with themed axes, grid lines and data animation.",
+    "notes": [
+      "The chart groups its drawing components under a common Chart base. animateIn introduces the drawing, while animateData changes values through an animation. Use those methods when a transition should be visible rather than replacing geometry immediately."
+    ]
+  },
+  "LineChart": {
+    "description": "Build a themed line chart with separate axes, grid and data-point groups.",
+    "notes": [
+      "Chart options supply dimensions and data. animateIn introduces the rendered chart; the independent component groups allow chart decoration and data marks to remain separate when extending its appearance."
+    ]
+  },
+  "PieChart": {
+    "description": "Build a pie or donut-style chart from data values and themed slice components.",
+    "notes": [
+      "The composite groups slices, center content and legend separately. animateIn controls the entrance. Data values determine wedge angles; keep labels and legends readable when adding many small slices."
+    ]
+  },
+  "AutomatonRunner": {
+    "description": "Coordinate animated execution of an Automaton against a Tape.",
+    "notes": [
+      "The runner owns prebuilt verdict badges and sequences state transitions, tape movement and status changes. It provides the visual execution workflow; the Automaton supplies the transition rules."
+    ]
+  },
+  "Tape": {
+    "description": "Display symbols as cells with a movable head indicator for automata demonstrations.",
+    "notes": [
+      "setSymbols creates the displayed sequence. writeSymbol changes a cell and moveHead animates the indicator. Cell size and gap describe presentation geometry rather than the machine's transition rules."
+    ]
+  },
+  "GraphEdge": {
+    "description": "Draw a directed or undirected connection between two graph nodes.",
+    "notes": [
+      "Curvature and self-loop settings select the route, and the composite owns an Arrow and optional label. updateGeometry follows endpoint positions; highlight and createFlowAnimation provide transient emphasis."
+    ]
+  },
+  "GraphNode": {
+    "description": "Draw a graph state with its label, start indicator and optional accepting-state ring.",
+    "notes": [
+      "GraphNode keeps a nodeId distinct from its Entity identity. setActive, setVisited and pulse express traversal state; setPosition moves the visual node and connected edges can update their geometry afterward."
+    ]
+  },
+  "SDFNode": {
+    "description": "Compose an abstract syntax tree of signed-distance operations before creating a renderable SDF entity.",
+    "notes": [
+      "compile emits WGSL distance expressions and getAABB estimates the required bounds. Fluent transforms and Boolean methods return wrapper nodes; adding an SDFNode directly to a Scene does not create drawable geometry."
+    ]
+  },
+  "SDFMorph": {
+    "description": "Blend two distance expressions using the renderer's morph weight.",
+    "notes": [
+      "Its bounds combine both children so the transition can fit inside the volume. The weight comes from sdfParams.rmParams.w rather than a constructor argument."
+    ]
+  },
+  "SDFUnion": {
+    "description": "Combine two distance fields with a union operation.",
+    "notes": [
+      "A positive k selects smooth union; zero selects the strict operation. Bounds cover both inputs. Use SDFNode.union to construct this node through the fluent API."
+    ]
+  },
+  "SDFSubtract": {
+    "description": "Subtract the second distance field from the first.",
+    "notes": [
+      "A positive k selects smooth subtraction. The bounds retain the first input bounds; subtracting a field cannot require the complete bounds of the cutter."
+    ]
+  },
+  "SDFIntersect": {
+    "description": "Retain the overlap of two distance fields.",
+    "notes": [
+      "A positive k selects smooth intersection. The current bounds implementation retains the first child bounds rather than computing the tight intersection of both boxes."
+    ]
+  },
+  "SDFTranslate": {
+    "description": "Translate a child distance field by evaluating it at an offset coordinate.",
+    "notes": [
+      "The generated expression subtracts the translation from the evaluation point. Bounds are translated by the same vector. This node changes field geometry, while an Entity transform moves a renderable instance."
+    ]
+  },
+  "SDFScale": {
+    "description": "Apply a uniform scale to a child distance field.",
+    "notes": [
+      "The evaluation point is divided by the factor and the returned distance is multiplied by it. Use a positive nonzero factor; zero would divide the generated expression by zero."
+    ]
+  },
+  "SDFRotate": {
+    "description": "Rotate a child distance field by applying an inverse rotation to the evaluation point.",
+    "notes": [
+      "Constructor angles are radians. The implementation emits a fixed rotation matrix and uses an enlarged bounds estimate; an Entity transform is the more direct path for repeatedly animating whole-object rotation."
+    ]
+  },
+  "SDFMirror": {
+    "description": "Reflect a child distance field across selected coordinate planes.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFRepeat": {
+    "description": "Repeat a child field through space, optionally with a finite repetition limit.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFTwist": {
+    "description": "Twist the evaluation domain before calculating a child distance.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFRound": {
+    "description": "Round a child field by subtracting a radius from its distance.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFShell": {
+    "description": "Turn a child field into a shell using its absolute distance and thickness.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFSphere": {
+    "description": "Describe a sphere as a signed-distance primitive.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFBox": {
+    "description": "Describe an axis-aligned box as a signed-distance primitive.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFCylinder": {
+    "description": "Describe a capped cylinder as a signed-distance primitive.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFTorus": {
+    "description": "Describe a ring surface using major and tube radii.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFCapsule": {
+    "description": "Describe a rounded segment between two endpoints as a distance field.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "SDFOctahedron": {
+    "description": "Describe an octahedron as a signed-distance primitive.",
+    "notes": [
+      "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
+    ]
+  },
+  "Entity": {
+    "description": "Own a scene-graph node with local state, transforms, paint, material, children and attachable components. Use an Entity as a structural parent, or use a drawable subclass that installs geometry and rendering components.",
+    "notes": [
+      "Adding children establishes transform inheritance. Add the parent as a scene root and let it carry its subtree; avoid registering the same child independently as another root.",
+      "The transform and paint builders expose immediate setters, while Entity.animate produces an animation for Scene.play. Resource cleanup follows ownership rather than visual disappearance alone."
+    ],
+    "example": "labs/pg-hierarchyscene"
+  },
+  "Model.constructor": {
+    "description": "Create a mesh entity from options, a WebGPUMesh, CPU positions, or externally supplied GPU buffers. Choose the overload that matches where your geometry is produced.",
+    "parameters": {
+      "options": "Entity and model styling options, including topology and shading. The options-only form creates an empty model ready for later geometry.",
+      "mesh": "Mesh data containing positions and optional normals, indices and UVs. This form retains the mesh representation for geometry preparation.",
+      "positions": "CPU positions as Vec3 values or a packed XYZ numeric array. Geometry processing derives the shading data required by the chosen topology.",
+      "indices": "Optional triangle indices. Their values address the position vertices; pass null when no index data is supplied.",
+      "uvs": "Optional texture coordinates for the CPU-position form, packed as UV pairs.",
+      "vertexBuffer": "Existing GPU vertex storage in the model vertex layout. Supply compatible VERTEX usage and any additional usages required by your compute work.",
+      "vertexCount": "Number of vertex records to draw, not the number of floats or bytes.",
+      "indexBuffer": "Optional GPU index storage. Its usage must support indexed drawing.",
+      "indicesCount": "Number of index entries to draw. When supplying indexBuffer, supply this count as well."
+    },
+    "notes": [
+      "The GPU-buffer overload delegates to ModelGeometry.setBuffer and avoids CPU geometry packing. Its standard vertex layout is eight floats: XYZ position, XYZ normal and UV coordinates.",
+      "For CPU positions, topology defaults to smooth. The flat path expands triangles and uses non-indexed geometry. Read the overload parameter tables rather than passing the internal arg1/arg2 implementation signature."
+    ],
+    "example": "labs/pg-modelscene"
+  },
+  "Circle.constructor": {
+    "description": "Create a complete circular Arc using a radius in scene units.",
+    "parameters": {
+      "radius": "Distance from the center to the perimeter. The constructor doubles it to obtain both arc dimensions.",
+      "options": "Inherited arc, path and entity styling options."
+    },
+    "example": "labs/lab-paint"
+  },
+  "Circle.setRadius": {
+    "description": "Change the circle radius and rebuild its arc dimensions.",
+    "parameters": {
+      "r": "The new radius in local scene units. Both width and height become twice this value."
+    }
+  },
+  "Circle.radius": {
+    "description": "Read or assign the local geometry radius. Assignment delegates to setRadius; transform scaling changes the displayed size without changing this stored radius."
+  },
+  "Circle.getPointAtT": {
+    "description": "Evaluate a point on the circle in its local geometry coordinates.",
+    "parameters": {
+      "t": "Normalized parameter: zero begins at the positive X axis; one completes a full turn."
+    },
+    "notes": [
+      "This analytical override does not apply the entity transform. Convert the result with the appropriate local-to-world operation when placing another entity in world space."
+    ]
+  },
+  "Rect.constructor": {
+    "description": "Create a centered rectangular Path from dimensions or an external path buffer.",
+    "parameters": {
+      "width": "Local width of the rectangle.",
+      "height": "Local height of the rectangle.",
+      "buffer": "An existing GPUBuffer containing compatible path geometry.",
+      "vertexCount": "The number of path vertex records in the supplied buffer.",
+      "options": "Rectangle corner settings and inherited EntityOptions. Without an explicit fill, Rect uses white."
+    },
+    "example": "labs/lab-transforms"
+  },
+  "Ellipse.constructor": {
+    "description": "Create a full elliptical Arc from its width and height.",
+    "parameters": {
+      "width": "Full local width, rather than an X radius.",
+      "height": "Full local height, rather than a Y radius.",
+      "options": "Inherited arc and entity styling options."
+    }
+  },
+  "ParametricCurve2D.constructor": {
+    "description": "Construct a sampled planar curve using one vector-valued function or two scalar functions.",
+    "parameters": {
+      "func": "A function mapping the parameter to the curve point.",
+      "funcX": "A scalar function giving the X coordinate at the parameter.",
+      "funcY": "A scalar function giving the Y coordinate at the parameter.",
+      "axes": "Optional coordinate-system mapping for mathematical coordinates. It can also be supplied through the options.",
+      "options": "Sampling, parameter-domain, primitive and styling settings."
+    },
+    "notes": [
+      "Overload selection distinguishes a function in the second argument from a coordinate-system object or options object. Keep the argument order shown by the matching signature."
+    ]
+  },
+  "TextureAtlas.constructor": {
+    "description": "Describe an atlas source and its optional image dimensions; load it before requesting GPU textures.",
+    "parameters": {
+      "source": "The image or manifest source to load.",
+      "width": "Known image width, or zero until the load resolves it.",
+      "height": "Known image height, or zero until the load resolves it."
+    }
+  },
+  "SDFBox.constructor": {
+    "description": "Create a box field centered at the origin from full dimensions.",
+    "parameters": {
+      "width": "Full X dimension. The stored extent is half this value.",
+      "height": "Full Y dimension. The stored extent is half this value.",
+      "depth": "Full Z dimension. The stored extent is half this value."
+    }
+  },
+  "SDFSphere.constructor": {
+    "description": "Create a sphere field centered at the origin.",
+    "parameters": {
+      "radius": "Radius in local field coordinates; defaults to one."
+    }
+  },
+  "SDFCapsule.constructor": {
+    "description": "Create a rounded distance field around a line segment.",
+    "parameters": {
+      "start": "First segment endpoint in the field coordinate system.",
+      "end": "Second segment endpoint in the field coordinate system.",
+      "radius": "Distance from the segment to the capsule surface."
+    }
+  },
+  "AnimatedSprite": {
+    "description": "Play a sequence of subtextures from an atlas while retaining ordinary Sprite placement and styling.",
+    "notes": [
+      "playAnimation selects the frame list, frames-per-second rate and looping behavior. Scene time advances frame selection; setting one frame is separate from playing the sequence."
+    ]
+  },
+  "Arc": {
+    "description": "Draw an elliptical arc using full dimensions and a signed angular span.",
+    "notes": [
+      "startAngle and sweep use radians. Positive sweep runs counter-clockwise and negative sweep clockwise; changing dimensions or angles rebuilds the path rather than changing its transform."
+    ]
+  },
+  "Circle": {
+    "description": "Draw a complete circular path, with analytical point sampling, circumference and hit testing.",
+    "notes": [
+      "radius changes local geometry. Entity.scale changes its displayed transform instead; choose the operation that matches the quantity you want to preserve."
+    ],
+    "example": "labs/lab-paint"
+  },
+  "Dot": {
+    "description": "Place a small circular marker at a requested position.",
+    "notes": [
+      "Dot extends Circle, so its radius and paint can be adjusted with the same methods. Use it for sample points, graph annotations and interactive handles."
+    ]
+  },
+  "Mesh2D": {
+    "description": "Render indexed two-dimensional geometry supplied by CPU arrays or GPU buffers.",
+    "notes": [
+      "CPU vertices are packed XY coordinates. GPU vertices use vec2f records and indices use u32 entries. The GPU form infers the index count from buffer size unless options specify it."
+    ]
+  },
+  "Path": {
+    "description": "Draw and manipulate vector contours from SVG path data, decoded contours or a compatible GPU path buffer.",
+    "notes": [
+      "Path provides the source geometry for fills, outlines, sampling, modifiers and vector morphs. Transform changes move the evaluated geometry; replacing vertices changes the path itself."
+    ]
+  },
+  "Poly": {
+    "description": "Draw a polyline or polygon from Vec2 points or a compatible GPU buffer.",
+    "notes": [
+      "The constructor defaults isClosed to false. Enable closure when the last point should connect to the first; fill rules and self-overlap settings affect the interpretation of a closed region."
+    ]
+  },
+  "Rect": {
+    "description": "Draw a centered rectangle with optional rounded corners.",
+    "notes": [
+      "Width, height and corner settings rebuild its vector Path. The standard constructor supplies a white fill when none is specified; use Color.NONE explicitly for an outline-only rectangle."
+    ],
+    "example": "labs/lab-transforms"
+  },
+  "Triangle": {
+    "description": "Render and raycast a triangle from three vertex positions or a compatible GPU buffer.",
+    "notes": [
+      "The triangle installs its own geometry and fragment components while retaining Entity paint and transform behavior. Keep vertex order consistent when changing its points."
+    ]
+  },
+  "Cone": {
+    "description": "Create a conical mesh as a specialized Cylinder with one end radius set to zero.",
+    "notes": [
+      "Radial and height segment settings determine tessellation. Material styling comes from the Model base rather than vector Paint."
+    ]
+  },
+  "Cylinder": {
+    "description": "Create a mesh cylinder with independently specified end radii and height.",
+    "notes": [
+      "Equal radii produce a straight cylinder; unequal radii produce a tapered shape. Segment options affect mesh detail and the cost of rendering or morphing it."
+    ]
+  },
+  "Sphere": {
+    "description": "Create a sampled sphere mesh from a radius and segment options.",
+    "notes": [
+      "The radius changes generated geometry, while inherited Entity scaling changes the transform. Use sufficient segments for the intended silhouette and camera distance."
+    ]
+  },
+  "Torus": {
+    "description": "Create a torus mesh from a ring radius and a tube radius.",
+    "notes": [
+      "The generated ring lies around the Z axis, with tube displacement extending through Z. radialSegments and tubularSegments sample the tube and ring directions; they are independent detail controls."
+    ]
+  },
+  "SDFVolume": {
+    "description": "Render a WGSL distance function inside a bounded three-dimensional volume.",
+    "notes": [
+      "mapLogic returns a distance at p and userHelpers supplies additional WGSL functions. The volume swaps in specialized geometry and SDF shading; choose bounds that contain the entire field."
+    ]
+  },
+  "TracePath": {
+    "description": "Record positions over scene time and display the accumulated trace as a Line3D.",
+    "notes": [
+      "Configure the target or callback and history settings through TracePathOptions. The trace is geometry with its own lifetime; moving or removing the tracked object does not by itself define how much history to retain."
+    ]
+  },
+  "MorphModel": {
+    "description": "Render an intermediate model representation between two model hierarchies.",
+    "notes": [
+      "The constructor extracts and merges usable mesh data and selects a morph processor from the requested mode. ModelTransform manages this proxy during a timeline transition; use MorphModel directly when controlling the intermediate representation yourself."
+    ]
+  },
+  "Terrain3D": {
+    "description": "Generate an elevation mesh on the GPU from a heightmap image.",
+    "notes": [
+      "Await generateFromHeightmap with an initialized Scene. The implementation falls back to procedural data when image loading fails. width and height span X and Z; depthScale controls Y elevation."
+    ]
+  },
+  "RTImage": {
+    "description": "Display an image on a three-dimensional Model quad participating in supported raster and raytrace paths.",
+    "notes": [
+      "setSource assigns the texture map and updateSize rebuilds the quad. This constructor uses ordinary material settings; the commented emissive setup is not active."
+    ]
+  },
+  "RTVideo": {
+    "description": "Display VideoData on a three-dimensional Model quad and update its texture as frames become available.",
+    "notes": [
+      "load waits for decoded video data before assigning the texture and enabling the emissive screen appearance. Playback control belongs to the video resource; cleanup and scene timing remain separate responsibilities."
+    ]
+  },
+  "RTHTML": {
+    "description": "Combine a three-dimensional quad with HTML content and the selected DOM or texture presentation mode.",
+    "notes": [
+      "RTHTMLOptions controls the mode and capture resolution. DOM input and content changes can invalidate the representation; inspect the mode-specific source before using it as a rasterized or raytraced surface."
+    ]
+  },
+  "Environment": {
+    "description": "Store sky color, ground color and intensity for the engine environment lighting configuration.",
+    "notes": [
+      "The exported env instance is shared configuration, not a scene-graph Entity. Its constructor initializes white sky, dark-gray ground and intensity 1.2."
+    ]
+  },
+  "Light": {
+    "description": "Store the engine light color and position configuration.",
+    "notes": [
+      "The exported light instance is shared configuration rather than an Entity. Its initial color values are intentionally much larger than normalized display colors, so interpret them as lighting intensity."
+    ]
+  }
+}

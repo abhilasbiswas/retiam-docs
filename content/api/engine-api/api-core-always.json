@@ -1,0 +1,606 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-core-always",
+  "title": "Always API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "always",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Always"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Always.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Always.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AlwaysOptions: Execution options for frame update callbacks registered with `always()`.",
+                "AlwaysContext: Rich contextual data and controls provided to the update callback.",
+                "AlwaysCallback: Callback function signature for `always()`. Return `false` to automatically stop and unregister the callback.",
+                "AlwaysHandle: Handle returned by `always()` to inspect and control the update task.",
+                "AlwaysTask: Internal representation of a registered update task.",
+                "AlwaysRegistry: Task registry for managing, sorting, and executing update tasks safely."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AlwaysOptions",
+                    "Interface",
+                    "Execution options for frame update callbacks registered with `always()`."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AlwaysContext",
+                    "Interface",
+                    "Rich contextual data and controls provided to the update callback."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AlwaysCallback",
+                    "TypeAlias",
+                    "Callback function signature for `always()`. Return `false` to automatically stop and unregister the callback."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AlwaysHandle",
+                    "Interface",
+                    "Handle returned by `always()` to inspect and control the update task."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AlwaysTask",
+                    "Class",
+                    "Internal representation of a registered update task."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AlwaysRegistry",
+                    "Class",
+                    "Task registry for managing, sorting, and executing update tasks safely."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface AlwaysOptions {\n    interval?: number;\n    fps?: number;\n    delay?: number;\n    duration?: number;\n    times?: number;\n    phase?: 'pre' | 'update' | 'post';\n    priority?: number;\n    while?: () => boolean;\n    until?: () => boolean;\n    signal?: AbortSignal;\n    onlyWhenVisible?: boolean;\n    autoDestroy?: boolean;\n    paused?: boolean;\n}\nexport interface AlwaysContext {\n    readonly elapsed: number;\n    readonly count: number;\n    readonly dt: number;\n    readonly frameDt: number;\n    stop(): void;\n    pause(): void;\n    resume(): void;\n}\nexport type AlwaysCallback = (time: number, dt: number, ctx: AlwaysContext) => any;\nexport interface AlwaysHandle {\n    readonly id: number;\n    stop(): void;\n    pause(): void;\n    resume(): void;\n    reset(): void;\n    readonly isRunning: boolean;\n    readonly isPaused: boolean;\n    readonly count: number;\n    readonly elapsed: number;\n}\nexport declare class AlwaysTask implements AlwaysHandle {\n    readonly id: number;\n    fn: (...args: any[]) => void | boolean;\n    options: AlwaysOptions;\n    phase: 'pre' | 'update' | 'post';\n    priority: number;\n    isRunning: boolean;\n    isPaused: boolean;\n    count: number;\n    elapsed: number;\n    get effectiveInterval(): number | undefined;\n    constructor(fn: (...args: any[]) => void | boolean, options?: AlwaysOptions, defaultPhase?: 'pre' | 'update' | 'post');\n    stop(): void;\n    pause(): void;\n    resume(): void;\n    reset(): void;\n    step(time: number, dt: number): boolean;\n}\nexport declare class AlwaysRegistry {\n    constructor(defaultPhase?: 'pre' | 'update' | 'post');\n    add(callback: (...args: any[]) => void | boolean, options?: AlwaysOptions): AlwaysHandle;\n    remove(callbackOrHandle: ((...args: any[]) => void | boolean) | AlwaysHandle): boolean;\n    step(phase: 'pre' | 'update' | 'post', time: number, dt: number, taskFilter?: (task: AlwaysTask) => boolean): void;\n    get hasActiveTasks(): boolean;\n    get count(): number;\n    clear(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AlwaysOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "interval?: number;",
+                    "—",
+                    "Minimum interval between invocations in milliseconds (e.g. 100 = at most 10 times/second). The callback receives the accumulated `dt` elapsed since its last invocation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fps?: number;",
+                    "—",
+                    "Target frames per second (e.g. 12 = 12 updates per second). Automatically converted to `interval = 1000 / fps`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "delay?: number;",
+                    "—",
+                    "Initial delay in milliseconds before the first invocation. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "duration?: number;",
+                    "—",
+                    "Maximum duration in milliseconds to run before automatically unregistering. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "times?: number;",
+                    "—",
+                    "Maximum number of invocations before automatically unregistering. For example, `times: 1` runs once (optionally delayed) and then stops. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "phase?: 'pre' | 'update' | 'post';",
+                    "—",
+                    "Execution phase: - 'pre': Runs before scene animations and entity updates (default for Scene). - 'update': Runs during standard entity updates (default for Entity). - 'post': Runs after all entities and animations have updated. Essential for camera follow, look-at, and post-update constraints to avoid 1-frame jitter. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "priority?: number;",
+                    "—",
+                    "Execution priority within the phase (higher numbers execute first, default: 0). [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "while?: () => boolean;",
+                    "—",
+                    "Condition evaluated before each frame. Continues running only while this returns true. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "until?: () => boolean;",
+                    "—",
+                    "Condition evaluated before each frame. Stops and unregisters once this returns true. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "signal?: AbortSignal;",
+                    "—",
+                    "Standard Web AbortSignal for external cancellation. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "onlyWhenVisible?: boolean;",
+                    "—",
+                    "[Entity only] If true, only executes when the entity (and its ancestors) is visible. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "autoDestroy?: boolean;",
+                    "—",
+                    "[Entity only] Automatically unregister when the entity is destroyed or disposed. Default is true. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "paused?: boolean;",
+                    "—",
+                    "If true, starts in a paused state. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L77)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AlwaysContext` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "readonly elapsed: number;",
+                    "—",
+                    "Total active elapsed time in milliseconds since this task was registered. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly count: number;",
+                    "—",
+                    "Total number of times this callback has executed. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly dt: number;",
+                    "—",
+                    "Accumulated delta time in milliseconds since the previous execution of this callback. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly frameDt: number;",
+                    "—",
+                    "Raw frame delta time in milliseconds. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stop(): void;",
+                    "—",
+                    "Stops and unregisters this callback immediately. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pause(): void;",
+                    "—",
+                    "Pauses execution without unregistering. [Source line 95](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L95)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "resume(): void;",
+                    "—",
+                    "Resumes execution if paused. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L97)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AlwaysHandle` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "readonly id: number;",
+                    "—",
+                    "Unique task identifier. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L115)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stop(): void;",
+                    "—",
+                    "Unregisters and stops this task. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pause(): void;",
+                    "—",
+                    "Pauses execution. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "resume(): void;",
+                    "—",
+                    "Resumes execution. [Source line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L121)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "reset(): void;",
+                    "—",
+                    "Resets the elapsed timer, interval accumulator, and invocation count. [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly isRunning: boolean;",
+                    "—",
+                    "True if the task is currently active and not stopped. [Source line 125](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L125)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly isPaused: boolean;",
+                    "—",
+                    "True if the task is paused. [Source line 127](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L127)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly count: number;",
+                    "—",
+                    "Number of times the callback has executed. [Source line 129](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L129)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly elapsed: number;",
+                    "—",
+                    "Total active time in milliseconds since registration. [Source line 131](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L131)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AlwaysTask` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly id: number",
+                    "++AlwaysTask._seq",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 140](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L140)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fn: (...args: any[])",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 141](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L141)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public options: AlwaysOptions",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L142)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public phase: 'pre' | 'update' | 'post'",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 143](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L143)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public priority: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L144)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isRunning: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 146](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L146)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isPaused: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 147](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L147)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public count: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 148](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L148)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public elapsed: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L149)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get effectiveInterval(): number | undefined",
+                    "—",
+                    "Resolves the effective interval in milliseconds from interval or fps. [Source line 158](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L158)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        fn: (...args: any[]) => void | boolean,\n        options?: AlwaysOptions,\n        defaultPhase: 'pre' | 'update' | 'post' = 'update'\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.fn`, `this.options`, `this.phase`, `this.priority`, `this.isPaused`, `this._delayRemaining`, `this.isRunning`, `this._signalCleanup`; calls to `this.stop`, `this.options.signal.addEventListener`, `this.options.signal?.removeEventListener`. [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L165)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public stop(): void",
+                    "—",
+                    "Implementation: `if (!this.isRunning) return; this.isRunning = false; if (this._signalCleanup) { this._signalCleanup(); this._signalCleanup = undefined; }`. [Source line 190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L190)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pause(): void",
+                    "—",
+                    "Implementation: `this.isPaused = true;`. [Source line 199](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L199)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resume(): void",
+                    "—",
+                    "Implementation: `this.isPaused = false;`. [Source line 203](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L203)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset(): void",
+                    "—",
+                    "Implementation: `this.count = 0; this.elapsed = 0; this._intervalAccumulator = 0; this._delayRemaining = Math.max(0, this.options.delay ?? 0);`. [Source line 207](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L207)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public step(time: number, dt: number): boolean",
+                    "—",
+                    "Executes the task for the current frame if conditions are satisfied. [Source line 217](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L217)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AlwaysRegistry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(defaultPhase: 'pre' | 'update' | 'post' = 'update')",
+                    "—",
+                    "Implementation: `this._defaultPhase = defaultPhase;`. [Source line 297](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L297)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add(\n        callback: (...args: any[]) => void | boolean,\n        options?: AlwaysOptions\n    ): AlwaysHandle",
+                    "—",
+                    "Registers a new update callback. [Source line 304](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L304)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(callbackOrHandle: ((...args: any[]) => void | boolean) | AlwaysHandle): boolean",
+                    "—",
+                    "Unregisters a callback by function reference or by AlwaysHandle. [Source line 321](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L321)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public step(\n        phase: 'pre' | 'update' | 'post',\n        time: number,\n        dt: number,\n        taskFilter?: (task: AlwaysTask) => boolean\n    ): void",
+                    "—",
+                    "Steps all tasks registered for the given phase. Concurrent modifications during execution are completely safe. [Source line 363](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L363)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get hasActiveTasks(): boolean",
+                    "—",
+                    "Returns true if there are any active tasks registered. [Source line 397](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L397)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get count(): number",
+                    "—",
+                    "Total number of registered tasks. [Source line 404](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L404)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear(): void",
+                    "—",
+                    "Clears all registered tasks. [Source line 411](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L411)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AlwaysRegistry._flushPending: private _flushPending(): void",
+                    "Implementation: `if (this._pendingAdd.length > 0) { for (const t of this._pendingAdd) { if (t.isRunning) this._tasks.push(t); } this._pendingAdd.length = 0; this._needsSort = true; }`.",
+                    "[Line 419](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L419)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "AlwaysRegistry._purgeStopped: private _purgeStopped(): void",
+                    "Implementation: `let hasDead = false; for (let i = 0; i < this._tasks.length; i++) { if (!this._tasks[i].isRunning) { hasDead = true; break; } } if (hasDead) { this._tasks = this._tasks.filter(t => t.isRunning); }`.",
+                    "[Line 429](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L429)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "AlwaysRegistry._sortTasks: private _sortTasks(): void",
+                    "Implementation: `this._tasks.sort((a, b) => b.priority - a.priority);`.",
+                    "[Line 442](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts#L442)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

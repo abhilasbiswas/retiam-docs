@@ -1,0 +1,499 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-retiam-architecture-review",
+  "title": "Retiam Engine: Architectural Review & Technical Evaluation",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/retiam_architecture_review.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/retiam_architecture_review.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/retiam_architecture_review.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Topology](/api-entities-primitives-3d#model), [Scene](/api-core-scene#scene), [SceneComposer](/api-core-scenecomposer#scenecomposer), [Graph](/api-libs-graphs-graph#graph), [Entity](/api-core-entity#entity), [Renderer](/api-render#renderer), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [GlobalGeometryAllocator](/api-render-allocator#globalgeometryallocator), [GlobalAnalyticalAllocator](/api-render-allocator#globalanalyticalallocator), [Storage](/api-render-pipelines#resourcelayouts), [FrameGraph](/api-render-frame-graph#framegraph), [RenderPass](/api-render-passes#renderpass), [ShadowPass](/api-render-passes#shadowpass), [Light](/api-entities-primitives-3d#light), [Compute](/api-compute#compute), [Path](/api-entities-primitives-2d#path), [AntiAliasingPass](/api-render-passes#antialiasingpass), [PostProcessPass](/api-render-passes#postprocesspass), [PresentPass](/api-render-passes#presentpass), [State](/api-core#state), [MegaDrawBatchManager](/api-render-allocator#megadrawbatchmanager), [Domains](/api-render-shader-system#domains), [Model](/api-entities-primitives-3d#model), [Transform](/api-core-transform#transform)."
+        }
+      ]
+    },
+    {
+      "id": "executive-summary",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Executive Summary"
+        },
+        {
+          "type": "paragraph",
+          "text": "**Retiam** is an ambitious, high-performance, WebGPU-native animation and graphics engine. Designed with the programmatic and mathematical elegance of [3Blue1Brown's Manim](https://github.com/3b1b/manim), it departs from traditional Python/Cairo/FFmpeg offline rendering stacks by adopting modern game-engine architecture:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**WebGPU-first rendering** utilizing bindless storage buffers, programmable vertex pulling, and GPU compute pipelines.",
+            "**Zero-GC runtime philosophy** (0.0 KB minor garbage collection per frame) achieving sub-millisecond CPU frame times (<0.05 ms during static/camera-only updates).",
+            "**Dual vector path rendering**: fast CPU-triangulated tessellation vs. GPU analytical Bézier curve stencil-and-cover.",
+            "**Hybrid raster/raytracing pipeline** with hardware-accelerated BVH/TLAS compute raymarching and AI denoising (Intel OIDN).",
+            "**Deterministic in-browser video export** via WebCodecs (`mp4-muxer` and `webm-muxer`)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "This review evaluates the system across its core subsystems, identifying architectural strengths, engineering achievements, latent technical debt, and actionable recommendations for production scalability."
+        }
+      ]
+    },
+    {
+      "id": "1-high-level-architecture-topology",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. High-Level Architecture Topology"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "graph TD\n    subgraph Client [\"Application & Scene Layer\"]\n        App[User Scene Script / Studio]\n        Composer[SceneComposer: Master GPU Orchestrator]\n        Scene[Scene: Local Timeline & Graph Container]\n        App --> Composer\n        Composer --> Scene\n    end\n\n    subgraph CoreGraph [\"Scene Graph & Memory Subsystem\"]\n        Entity[Entity Hierarchy]\n        Comp[Components: Geometry / Fragment / Renderer / Interaction]\n        GSA[GlobalStateAllocator: 256B Aligned CPU/GPU Buffer]\n        GGA[GlobalGeometryAllocator: Massive VBO/IBO]\n        GAA[GlobalAnalyticalAllocator: Bézier Storage]\n        Scene --> Entity\n        Entity --> Comp\n        Entity --> GSA\n        Comp --> GGA\n        Comp --> GAA\n    end\n\n    subgraph FramePipeline [\"FrameGraph & Render Engine\"]\n        FG[FrameGraph: DAG Scheduler & Resource Pool]\n        RP[RenderPass: Main Rasterizer]\n        SP[ShadowPass: Light-Space Depth]\n        RT[RaytracePasses: Compute BVH & Path Tracer]\n        PPLL[PPLL: Order-Independent Transparency]\n        AA[AntiAliasingPass & PostProcessPass]\n        Present[PresentPass: Canvas Output]\n\n        FG --> SP\n        FG --> RT\n        FG --> PPLL\n        FG --> RP\n        FG --> AA\n        FG --> Present\n    end\n\n    subgraph Execution [\"WebGPU Execution\"]\n        Group2[\"@group(2) Bindless State Storage Buffer\"]\n        DrawBatch[MegaDrawBatchManager: Storage-Pulled Draw Calls]\n        Shaders[WGSL Dynamic Domains & Modules]\n        GSA --> Group2\n        GGA --> DrawBatch\n        Group2 --> Shaders\n        DrawBatch --> Shaders\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-in-depth-subsystem-analysis",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. In-Depth Subsystem Analysis"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.1 Scene Orchestration & The Composition Model"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [SceneComposer.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts), [Scene.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts), [Entity.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts), [Transform.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts)",
+            "**Role**: Manages multi-scene composition (analogous to Adobe After Effects compositions), canvas binding, device acquisition, frame loops, and spatial hierarchies.",
+            {
+              "text": "**Architectural Mechanics**:",
+              "children": [
+                "`SceneComposer` acts as the single source of truth for WebGPU device initialization, texture management, and loop scheduling.",
+                "`Scene` acts as a lightweight, scoped container for entities, animations, and timelines.",
+                "`Entity` implements a hierarchical scene graph node with cached world transform propagation.",
+                "**Hierarchical Version Memoization**: Entities maintain `localVersion` and `parentVersion` counters. If neither has incremented, matrix recomputation and state syncing are completely bypassed, eliminating up to tens of thousands of redundant matrix multiplications per frame.",
+                "**Subtree Culling Flags**: `_childUpdateCount` and `_childPickableCount` allow $O(1)$ early-exit pruning of non-interactive or non-updating subtrees during frame updates and raycasting."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.2 Memory Architecture & Zero-GC Allocators"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [GlobalStateAllocator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts), [GlobalGeometryAllocator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts), [GlobalAnalyticalAllocator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts), [MegaDrawBatchManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts)",
+            "**Role**: Replaces isolated, per-entity WebGPU buffer creations with unified, contiguous memory arenas.",
+            {
+              "text": "**Architectural Mechanics**:",
+              "children": [
+                "**Persistent Retained State Slots**: Each `Entity` acquires a fixed 256-byte slice (64 floats) in a monolithic contiguous `cpuData` buffer via `GlobalStateAllocator`. The entire frame state is uploaded in a single `queue.writeBuffer()` call.",
+                "**Unified Geometry Arenas**: `GlobalGeometryAllocator` manages massive GPU vertex (VBO) and index (IBO) buffers with continuous CPU mirrors and free-list recycling.",
+                "**Programmable Mega-Draw Batching**: `MegaDrawBatchManager` coalesces thousands of consecutive 2D path draw commands into a single `pass.draw()` call via programmable vertex pulling from storage buffers."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.3 Bindless Shading & The Dual-Mode Packing Model"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [RendererComponent.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/RendererComponent.ts), [Domains.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/Domains.ts), [ShaderBuilder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts)",
+            "**Role**: Eliminates per-entity bind group swaps and uniform buffer dynamic offset overhead.",
+            {
+              "text": "**Architectural Mechanics**:",
+              "children": [
+                "**Pass-Level `@group(2)` Binding**: All entity states (`Paint`, `Transform`, `Material`) reside in `states: array<EntityState>` at `@group(2) @binding(0)`, bound once per render pass.",
+                {
+                  "text": "**32-Bit `firstInstance` Multiplexing**: Encodes both the state slot index and local primitive/sub-instance indices into WebGPU's `instance_index`:",
+                  "children": [
+                    "*Standard Mode* (Bit 31 = 0): 18-bit state index ($262,144$ max entities) + 14-bit local index ($16,384$ contours).",
+                    "*Mega Mode* (Bit 31 = 1): 13-bit state index ($8,192$ max entities) + 18-bit local index ($262,144$ primitives)."
+                  ]
+                },
+                "**Flat Varyings Forwarding**: The vertex shader fetches `states[getStateIndex(instance_index)]` once and forwards packed values through `@interpolate(flat)` varyings. **The fragment shader performs zero storage buffer reads**, preserving high throughput on bandwidth-constrained mobile and integrated GPUs."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.4 Modular FrameGraph (DAG Scheduler)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [FrameGraph.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts), [Pass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts), [ResourcePool.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts)",
+            "**Role**: Decouples render passes from fixed execution pipelines, enabling automated dependency ordering and transient memory aliasing.",
+            {
+              "text": "**Architectural Mechanics**:",
+              "children": [
+                "Declarative passes register resource reads (`@read`) and writes (`@write`).",
+                "The graph performs dead-code elimination (culling inactive passes) and Kahn's algorithm topological sorting to build the optimal pass execution order.",
+                "`ResourcePool` handles transient texture and buffer aliasing based on calculated resource lifetimes, avoiding physical VRAM over-allocation."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.5 Dual Vector Graphics Engine"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [Path.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts), [TriangulatedPathGeometry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts), [GlobalAnalyticalAllocator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts), [SVG.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/svg/SVG.ts)",
+            "**Role**: Addresses the classic vector rendering dilemma (tessellation speed vs. curve precision).",
+            {
+              "text": "**Dual Pipeline Design**:",
+              "children": [
+                "**Triangulated Path Engine**: Uses CPU Earcut polygon triangulation and polyline extrusion. High draw-call efficiency via `MegaDrawBatchManager`, ideal for static complex SVGs (e.g., Paris map with 30k+ paths).",
+                "**Analytical GPU Stencil-and-Cover Engine**: Uploads Bézier control points directly to GPU analytical buffers. Evaluates curve winding numbers in a multi-pass stencil pipeline (`stencil_chain`, `stencil_quad`) followed by cover geometry fills and exact analytical anti-aliased strokes. Perfect for dynamic, zooming mathematical curves."
+              ],
+              "ordered": true
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.6 Advanced Typography & Mathematical Notation"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [SDFText.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts), [Tex.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts), [Code.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts), Font.ts",
+            "**Role**: Delivers crisp typography and mathematical equations at any zoom level.",
+            {
+              "text": "**Implementation**:",
+              "children": [
+                "Multi-channel Signed Distance Field (MSDF) text rendering with glyph metrics parsing via OpenType.js.",
+                "Headless LaTeX compilation through `mathjax-full` / `liteAdaptor`, converted to vector paths and rendered directly with GPU acceleration.",
+                "Syntax-highlighted code rendering via `PrismJS`, supporting character-by-character animations (`Typewriter`, `StaggerWrite`)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.7 Hybrid 3D, BVH Compute & Raytracing Pipeline"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [RaytraceManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts), [BVHBuilder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts), [RaytraceShaders.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceShaders.ts)",
+            "**Role**: Bridges real-time rasterization with cinematic path tracing.",
+            {
+              "text": "**Implementation**:",
+              "children": [
+                "Builds CPU-side Bounding Volume Hierarchies (BVH) and Top-Level Acceleration Structures (TLAS), uploaded to GPU storage arenas.",
+                "Supports physical depth-of-field (aperture, focus distance), multiple light bounces, and temporal accumulation ping-pong textures.",
+                "Integrated AI denoising with Intel Open Image Denoise (`oidn-web`)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.8 Animation Lifecycle & Timeline Orchestration"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [Animation.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Animation.ts), [Animator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Animator.ts), [GroupAnimator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/GroupAnimator.ts)",
+            "**Role**: Provides a clean, async/await-based timeline API for mathematical choreography.",
+            {
+              "text": "**Implementation**:",
+              "children": [
+                "Animations are first-class promise-based objects. Playing an animation returns a promise that resolves with the overshoot delta.",
+                "Rich library of Manim-style creation, transformation, and indication animations (`Create`, `Uncreate`, `Morph`, `HomotopyAnimation`, `Circumscribe`, `Flash`).",
+                "Supports non-linear easing functions, reverse playback, and time dilation (`timeScale`)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.9 Deterministic Video Export & Input Virtualization"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files**: [Recorder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts), [OfflineRecorder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts), [InputRecorder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts)",
+            "**Role**: Enables programmatic video capture and reproducible interactive sessions.",
+            {
+              "text": "**Implementation**:",
+              "children": [
+                "Leverages WebCodecs `VideoEncoder` combined with `mp4-muxer` and `webm-muxer` to capture frames in-memory without server round-trips.",
+                "`InputRecorder` captures and serializes normalized pointer and keyboard deltas to JSON, allowing headless, pixel-perfect video generation at arbitrary resolutions (1080p, 4K)."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-key-architectural-strengths",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Key Architectural Strengths"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**True WebGPU Native Design**: Rather than porting a WebGL engine and substituting WebGPU draw calls, Retiam embraces WebGPU idioms from the ground up: bindless `@group(2)` storage buffers, compute shaders for geometry processing, storage-texture ping-ponging, and programmable vertex pulling.",
+            "**Extreme CPU Efficiency & Zero-GC**: The combination of pre-allocated scratch objects, monotonic version memoization, direct contiguous memory slicing in `GlobalStateAllocator`, and draw-call array caching eliminates GC pressure during interactive animation.",
+            "**Dual Vector Path Strategy**: The hybrid support for both CPU-triangulated tessellation and GPU analytical Bézier stencil evaluation solves the classic trade-off between vertex count and infinite zoom fidelity.",
+            "**Cinematic Ergonomics**: The developer experience mimics Manim's declarative elegance while running natively in real-time inside the browser at 60-144 FPS."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-technical-debt-risks-architectural-weaknesses",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Technical Debt, Risks & Architectural Weaknesses"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Area",
+            "Issue Description",
+            "Severity",
+            "Impact"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Monolithic \"God Classes\"**",
+                  "type": "text"
+                },
+                {
+                  "text": "`Entity.ts` (~1,600 lines, 62 KB), `SceneComposer.ts` (~1,560 lines, 56 KB), `Compute.ts` (~950 lines, 42 KB), and `Camera2DController.ts` (~57 KB) have amassed excessive responsibilities."
+                },
+                {
+                  "text": "**High**"
+                },
+                {
+                  "text": "High cognitive overhead, tight coupling, and elevated risk of regression during refactoring."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Hybrid ECS vs. OOP Friction**",
+                  "type": "text"
+                },
+                {
+                  "text": "`Entity` serves as a scene-graph node, a transform hierarchy, a container for direct component slots (`geometryComponent`, `rendererComponent`, etc.), and a state carrier (`paint`, `material`, `transform`)."
+                },
+                {
+                  "text": "**Medium**"
+                },
+                {
+                  "text": "Blurs single-responsibility principles; makes extending components independently from `Entity` confusing."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**FrameGraph Annotations & Edge Cases**",
+                  "type": "text"
+                },
+                {
+                  "text": "In [FrameGraph.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L217-L247), methods `buildDAGAndCull` and `topologicalSort` contain unaddressed `//Fix-Me` comments regarding pass ordering and unculled pass retention."
+                },
+                {
+                  "text": "**Medium**"
+                },
+                {
+                  "text": "Potential subtle bugs when complex custom post-processing or compute passes are dynamically added or removed."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Main-Thread Bound Rendering**",
+                  "type": "text"
+                },
+                {
+                  "text": "Live video recording (`LiveRecorder`) and complex tessellation (`PathTriangulator`) run on the browser's main UI thread."
+                },
+                {
+                  "text": "**Medium**"
+                },
+                {
+                  "text": "Long export runs or large SVG triangulations can cause UI freezes or stuttering on lower-spec hardware."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**WebGPU Device Recovery Gaps**",
+                  "type": "text"
+                },
+                {
+                  "text": "While basic `device.lost` events are captured in [Renderer.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/Renderer.ts#L108-L111), there is no unified recovery pipeline to re-initialize global allocators, re-compile pipelines, and restore GPU state buffers automatically."
+                },
+                {
+                  "text": "**Low / Med**"
+                },
+                {
+                  "text": "A GPU driver crash or memory eviction forces a full page reload rather than transparent recovery."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-architectural-recommendations-modernization-roadmap",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Architectural Recommendations & Modernization Roadmap"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "timeline\n    title Architectural Evolution Roadmap\n    Phase 1 : Modularize God Classes : Decouple Entity and SceneComposer into specialized delegates\n    Phase 2 : Refactor Component System : Formalize ECS lifecycle and extract render state synchronization\n    Phase 3 : Off-Main-Thread Pipeline : OffscreenCanvas & Web Worker video rendering and background tessellation\n    Phase 4 : Enterprise Resilience : End-to-end WebGPU device loss recovery and automated WGSL reflection tests"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 1: Modularize Core Monoliths"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "**Break down `Entity.ts`**:",
+              "children": [
+                "Extract spatial math and hierarchy operations into a dedicated `SceneNode` or `HierarchyManager`.",
+                "Extract layer masking, pickability flags, and raycasting into a clean `SpatialCullingDelegate`."
+              ]
+            },
+            {
+              "text": "**Break down `SceneComposer.ts`**:",
+              "children": [
+                "Separate loop management (`RenderLoopController`), GPU device ownership (`DeviceContext`), and multi-scene composition (`CompositionStack`)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 2: Formalize the ECS Lifecycle"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Transition from ad-hoc direct slots on `Entity` (`geometryComponent`, `rendererComponent`, `fragmentComponent`) to a strict, typed component registry.",
+            "Replace manual `entity.syncState()` calls with a clean observable or dirty-flag pipeline integrated into `GlobalStateAllocator`."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 3: Off-Main-Thread Video Rendering & Worker Tessellation"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Implement Web Worker offloading for `PathTriangulator` and `earcut` calculations.",
+            "Support rendering via `OffscreenCanvas` inside a dedicated Web Worker so that video rendering and WebCodecs export run at full speed without blocking UI interactivity."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 4: Full WebGPU Device Loss & Context Recovery"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Formalize a `rebuildGPUResources()` lifecycle method across `GlobalStateAllocator`, `GlobalGeometryAllocator`, `Pipeline`, and `FrameGraph`.",
+            "Re-bind textures and flush cached states transparently upon device restoration."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-conclusion",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Conclusion"
+        },
+        {
+          "type": "paragraph",
+          "text": "The Retiam architecture demonstrates exceptional technical maturity and a deep command of modern GPU programming. Its bindless state architecture, 0-GC memory management, and dual vector graphics pipeline establish it as one of the most sophisticated WebGPU graphics engines currently built for the web. Addressing the identified architectural monoliths and formalizing worker-based rendering will solidify Retiam as an enterprise-grade standard for browser-based cinematic and mathematical visualization."
+        }
+      ]
+    }
+  ]
+}

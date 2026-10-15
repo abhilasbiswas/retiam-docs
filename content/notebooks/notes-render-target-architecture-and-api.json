@@ -1,0 +1,322 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-render-target-architecture-and-api",
+  "title": "Retiam RenderTarget Architecture & Unified API Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/RENDER_TARGET_ARCHITECTURE_AND_API.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/RENDER_TARGET_ARCHITECTURE_AND_API.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/RENDER_TARGET_ARCHITECTURE_AND_API.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [RenderTarget](/api-render#rendertarget), [Physics3D](/api-libs-physics-3d#physics3d), [Entity](/api-core-entity#entity), [Camera](/api-camera#camera), [Pipeline](/api-render-pipelines#pipeline), [Pass](/api-render-frame-graph#pass), [MainRasterFeature](/api-render-features#corefeatures), [Scene](/api-core-scene#scene), [Write](/api-animation#write), [Texture](/api-render-pipelines#resourcelayouts), [Tex](/api-entities-composites-text#tex), [Sprite](/api-entities-primitives-2d#sprite), [Graph](/api-libs-graphs-graph#graph), [FrameGraph](/api-render-frame-graph#framegraph), [OffscreenRenderPass](/api-render-passes#offscreenrenderpass), [PersistentRenderTexture](/api-render-passes#persistentrendertexture), [PostProcessPass](/api-render-passes#postprocesspass), [Material](/api-core-material#material), [RenderTargetOptions](/api-render#rendertarget), [RenderTargetType](/api-render#rendertarget), [Compute](/api-compute#compute), [RenderTargetCameraOption](/api-render#rendertarget), [Color](/api-math#color), [TRANSPARENT](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In WebGPU rendering engines, intermediate render targets (offscreen canvases, persistent textures, frame feedback, and G-Buffers) often suffer from clunky, fragmented APIs requiring manual texture bindings, custom quad shaders, and fragile non-null assertions."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam redesigns the **`RenderTarget`** subsystem around the clean, entity-centric ergonomics of **`Physics3D`**. Instead of forcing users to manage low-level texture handles, bitmasks, and manual scene attachments, `RenderTarget` provides an intuitive, high-level interface:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph Initialization [\"1. Initialization (Physics3D-Style)\"]\n        RT[\"new RenderTarget(scene, options)\"]\n    end\n\n    subgraph EntityManagement [\"2. Entity Registration & Layer Isolation\"]\n        RT -->|\"add(entity)\"| AutoLayer[\"Auto-assign Isolated Layer Bit (Layer 2..31)\"]\n        AutoLayer --> AutoScene[\"Auto-register in scene.entities\"]\n        AutoScene --> MainCam[\"Main Camera ignores layer automatically\"]\n    end\n\n    subgraph PipelineSchedule [\"3. Zero-Latency Pre-Raster Pipeline\"]\n        PrePass[\"Pre-Raster Custom Pass (Offscreen / Persistent)\"]\n        MainRaster[\"MainRasterFeature (Scene & Sprites)\"]\n        PrePass -->|\"Write Texture (Current Frame)\"| Tex[\"GPUTexture\"]\n        Tex -->|\"Read Texture (0-Latency)\"| MainRaster\n    end\n\n    subgraph Consumption [\"4. Flexible Texture Consumption\"]\n        Tex --> SpriteDirect[\"renderTarget.toSprite() / new Sprite(renderTarget)\"]\n        Tex --> MatDirect[\"model.material.texture = renderTarget.texture\"]\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-core-architectural-principles",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Architectural Principles"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Automatic Layer Isolation & Scene Graph Retention"
+        },
+        {
+          "type": "paragraph",
+          "text": "When an entity is added via `renderTarget.add(entity)`:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Scene Graph Live**: The entity is registered in `scene.entities`. It receives normal `update(t, dt)` ticks, animation callbacks (`scene.always()`, `scene.play()`), state matrix evaluations, and component preparations.",
+            "**Main Camera Culling**: The main camera executes `ignoreLayer(allocatedLayer)` so the entity **never** renders directly onto the main canvas.",
+            "**Dedicated Pass Drawing**: The RenderTarget’s pass filters the render queue for `(packet.entity.layerMask & this.layerMask) !== 0` and renders it exclusively into the offscreen texture.",
+            "**Hierarchical Propagation**: Child entities added to the entity inherit the parent’s layer mask, ensuring complex hierarchies (e.g. text characters, composite models) remain isolated."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Zero-Latency FrameGraph Ordering"
+        },
+        {
+          "type": "paragraph",
+          "text": "Previously, custom passes added to the scene were appended at the end of the FrameGraph (as post-processing). This introduced an inherent **1-frame latency**, because `MainRasterFeature` rendered scene sprites *before* the render target texture was updated."
+        },
+        {
+          "type": "paragraph",
+          "text": "The redesigned pipeline splits custom passes:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Pre-Raster Passes** (`OffscreenRenderPass`, `PersistentRenderTexture`, compute storage passes): Executed **before** `MainRasterFeature`.",
+            "**Post-Process Passes** (`PostProcessPass`): Executed **after** `MainRasterFeature` and anti-aliasing."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "This guarantees that any Sprite or Material in the main scene sampling `renderTarget.texture` receives the **current frame's fresh render** with zero delay."
+        }
+      ]
+    },
+    {
+      "id": "3-configuration-options-interface",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Configuration & Options Interface"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "RenderTargetOptions ([RenderTarget.ts](../src/engine/render/RenderTarget.ts))"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export type RenderTargetType = \n    | 'offscreen'   // Cleared every frame (loadOp: 'clear') - minimaps, monitors\n    | 'persistent'  // Retains pixels across frames (loadOp: 'load') - drawing boards, heatmaps\n    | 'feedback'    // Previous-frame ping-pong feedback\n    | 'storage'     // Compute shader writable storage texture\n    | 'pingpong'    // Double-buffered compute/render target\n    | 'gbuffer';    // Multi-render-target deferred buffer (Albedo, Normal, Position)\n\nexport type RenderTargetCameraOption = \n    | 'ortho'        // Dedicated 1:1 pixel orthographic camera (default)\n    | 'perspective'  // Dedicated 3D perspective camera (FOV 45°, depth enabled)\n    | 'scene'        // Automatically mirrors the main scene camera\n    | 'none' | false // Identity orthographic projection (no camera movement)\n    | Camera;        // Explicit custom Camera instance\n\nexport interface RenderTargetOptions {\n    /** Optional friendly name or label for GPU debugging */\n    name?: string;\n    label?: string;\n\n    /** Texture width in pixels (default: 512) */\n    width?: number;\n\n    /** Texture height in pixels (default: 512) */\n    height?: number;\n\n    /** Target output type (default: 'offscreen') */\n    type?: RenderTargetType;\n\n    /** Texture format (default: preferred canvas format) */\n    format?: GPUTextureFormat;\n\n    /** Initial entities to render exclusively into this render target */\n    entities?: Entity[];\n\n    /** Explicit layer bit index (0..31). If omitted, auto-allocated (layer 2..29) */\n    layer?: number;\n\n    /** Camera configuration for this render target */\n    camera?: RenderTargetCameraOption;\n\n    /** Background clear color (e.g. Color.TRANSPARENT, new Color(0,0,0,0), or [r, g, b, a]) */\n    clearColor?: Color | { r: number; g: number; b: number; a: number } | [number, number, number, number];\n\n    /** Automatically register added entities in the scene (default: true) */\n    autoAddToScene?: boolean;\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. API Reference"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Constructors"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Clean, Physics3D-style (Recommended):\nconst rt = new RenderTarget(scene, {\n    width: 1024,\n    height: 1024,\n    type: 'persistent',\n    clearColor: new Color(0, 0, 0, 0)\n});\n\n// 2. Named legacy overload (100% backward compatible):\nconst rt = new RenderTarget(scene, \"MyBoard\", { width: 512, height: 512 });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Entity Management"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Single or multiple entities:\nrt.add(brush);\nrt.add(dot, trail1, trail2, border);\n\n// Batch array:\nrt.addMany([star1, star2, star3]);\n\n// Remove and restore to default scene layer:\nrt.remove(brush);\n\n// Check membership:\nif (rt.has(brush)) { ... }"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. First-Class Sprite Integration"
+        },
+        {
+          "type": "paragraph",
+          "text": "A RenderTarget can be immediately used as a 2D or 3D `Sprite` without manual texture binding or non-null assertions:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Method 1: Helper method (auto-sized or explicit size)\nconst tvScreen = rt.toSprite(6, 6);   // 6x6 world units for 3D panels\nconst fullBoard = rt.toSprite();      // Defaults to rt.width x rt.height (1024x1024)\n\n// Method 2: Pass RenderTarget directly into Sprite constructor\nconst tvScreen = new Sprite(6, 6, rt);\nconst board2D  = new Sprite(rt);     // Automatically reads rt.width and rt.height\n\n// Method 3: Lazy default Sprite instance\nthis.add(rt.sprite);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Camera & View Controls"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Access dedicated camera:\nrt.camera?.position.set([0, 5, 20]);\nrt.camera?.lookAt([0, 0, 0]);\n\n// Attach an interactive camera controller directly to the offscreen camera:\nnew OrbitCameraController(this, rt.camera!);\n\n// Replace active camera dynamically:\nrt.camera = customCamera;"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. Buffer Operations"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Wipe persistent canvas (optionally with a new clear color):\nrt.clear(new Color(1, 1, 1, 1)); // Clears to white\n\n// Swap double-buffered ping-pong target:\nrt.swap();\n\n// Cleanup passes and registered entities:\nrt.destroy();"
+        }
+      ]
+    },
+    {
+      "id": "5-camera-projection-modes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Camera & Projection Modes"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Mode",
+            "Coordinate Space",
+            "Use Cases"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`'ortho'`** *(default)*",
+                  "type": "text"
+                },
+                {
+                  "text": "1 unit = 1 pixel. Center is `(0, 0)`. Bounds: `[-width/2..width/2, -height/2..height/2]`."
+                },
+                {
+                  "text": "2D drawing, paint canvases, UI viewports, minimaps."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`'perspective'`**",
+                  "type": "text"
+                },
+                {
+                  "text": "3D space with 45° FOV and depth buffer. Framed at origin."
+                },
+                {
+                  "text": "Security cameras, picture-in-picture 3D monitors, sub-scenes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`'scene'`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Synchronizes with `scene.camera` position, orientation, and FOV, maintaining target aspect ratio."
+                },
+                {
+                  "text": "Mirrors, portals, post-process silhouette/depth passes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`'none'` / `false`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Identity orthographic mapping without camera translation."
+                },
+                {
+                  "text": "Fullscreen quads, procedural textures, compute blits."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Camera`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Direct use of a user-configured `Camera` entity."
+                },
+                {
+                  "text": "Custom lenses, multi-camera rigs, specialized angles."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-practical-code-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Practical Code Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 1: 3D TV with Persistent Drawing Board ([persistentdraw.ts](../examples/demos/persistence/persistentdraw.ts))"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Model, Math3D, Color, Circle, OrbitCameraController, RenderTarget } from \"retiam\";\n\nexport class PersistentDrawShowcase extends Scene {\n    public async run() {\n        this.camera.position.set([0, 0, 15]);\n        new OrbitCameraController(this, this.camera);\n\n        // 1. Clean Physics3D-style RenderTarget initialization\n        const canvas = new RenderTarget(this, {\n            width: 1024,\n            height: 1024,\n            type: \"persistent\",\n            clearColor: new Color(0.02, 0.05, 0.1, 1.0)\n        });\n\n        // 2. Add brush directly\n        const brush = new Circle(25);\n        brush.paint.fill = new Color(0.2, 0.9, 0.6, 1.0);\n        canvas.add(brush);\n\n        this.always(() => {\n            const t = this.time * 0.003;\n            brush.transform.position.set([Math.sin(t) * 350, Math.sin(t * 2) * 350, 0]);\n            brush.paint.fill.r = Math.sin(t * 0.5) * 0.5 + 0.5;\n            brush.paint.fill.b = Math.cos(t * 0.5) * 0.5 + 0.5;\n        });\n\n        // 3. Mount onto a 3D TV using toSprite()\n        const tvCasing = new Model(Math3D.createCube(6));\n        tvCasing.transform.setScale(1.0, 1.0, 0.05);\n\n        const tvScreen = canvas.toSprite(6, 6);\n        tvScreen.transform.position.z = 3.05;\n        tvScreen.transform.setScale(0.9, 0.9, 1.0);\n\n        tvCasing.add(tvScreen);\n        this.add(tvCasing);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 2: Picture-in-Picture 3D Security Camera"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Create offscreen target with 3D perspective camera\nconst securityCam = new RenderTarget(this, {\n    width: 512,\n    height: 512,\n    type: 'offscreen',\n    camera: 'perspective',\n    clearColor: new Color(0.05, 0.05, 0.08, 1.0)\n});\n\n// 2. Aim the security camera at the guard tower\nsecurityCam.camera?.position.set([0, 8, 12]);\nsecurityCam.camera?.lookAt([0, 0, 0]);\n\n// 3. Add 3D models exclusively into the security cam view\nsecurityCam.add(tower, patrolBot);\n\n// 4. Place a 2D monitor on the HUD\nconst monitor = securityCam.toSprite(240, 240);\nmonitor.transform.position.set([canvas.width / 2 - 140, canvas.height / 2 - 140, 0]);\nthis.add(monitor);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 3: Camera Mirroring (camera: 'scene')"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Captures a specific subset of entities through the player's exact perspective\nconst outlineBuffer = new RenderTarget(this, {\n    width: this.canvas.width,\n    height: this.canvas.height,\n    type: 'offscreen',\n    camera: 'scene',\n    clearColor: Color.TRANSPARENT\n});\n\noutlineBuffer.add(highlightedChest, targetEnemy);\n\n// Use in custom post-processing or blit directly\nconst overlay = outlineBuffer.toSprite(this.canvas.width, this.canvas.height);\nthis.add(overlay);"
+        }
+      ]
+    }
+  ]
+}

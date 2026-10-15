@@ -1,0 +1,102 @@
+{
+  "BarChart.constructor": {
+    "description": "Create axes, grid lines, bars and optional category/value labels from the initial data. The established category order and vertical scale are reused by animateData.",
+    "parameters": {
+      "options": "Chart dimensions and theme, category/value data, optional yRange, colors and label formatting. Width and height use scene units."
+    },
+    "notes": [
+      "The constructor builds immediately. Calling build again appends another set of drawing entities; it does not clear the previous bars. Create a replacement chart deliberately when categories or domain change."
+    ],
+    "example": "labs/pg-barchart"
+  },
+  "BarChart.animateIn": {
+    "description": "Prepare hidden, almost-zero-height bars, then return a staggered entrance animation. Preparation happens when this method is called; play the returned animation with Scene.play.",
+    "parameters": {
+      "options": "Duration in milliseconds; defaults to 1600. This entrance uses its own spring-like ease for each bar and a linear outer animation."
+    },
+    "returnsDescription": "An Animation to pass to Scene.play; this call does not start playback.",
+    "notes": [
+      "The entrance restores the heights captured from the original data. Replaying it after animateData can therefore return to those original heights."
+    ],
+    "example": "labs/pg-barchart-animate-in"
+  },
+  "BarChart.animateData": {
+    "description": "Interpolate the heights of existing bars to new values on the existing vertical scale, preserving their baseline positions.",
+    "parameters": {
+      "newData": "Replacement values matched by array index. Keep the same category count and order; categories and colors are not rebuilt.",
+      "options": "Duration defaults to 1200 milliseconds, and rate_func defaults to easeInOutCubic."
+    },
+    "returnsDescription": "An Animation to play with Scene.play.",
+    "notes": [
+      "It does not update options.data, category labels, the original entrance target heights or hover tooltip values. Store current application data separately.",
+      "Value labels switch to the target values while heights interpolate. Extra incoming entries are ignored; bars without an incoming entry retain their old geometry."
+    ],
+    "example": "labs/pg-barchart-data"
+  },
+  "ValueTracker.animateValue": {
+    "description": "Build an animation toward an absolute numeric value. The tracker stores that number in Transform.t1 and draws no geometry.",
+    "parameters": {
+      "targetValue": "The final scalar in your application’s units. It replaces the current value rather than adding to it."
+    },
+    "returnsDescription": "An Animator builder. Pass it to Scene.play, supplying duration in milliseconds there.",
+    "notes": [
+      "Read tracker.value in an updater to derive other geometry. Add the tracker to the scene alongside the objects using it."
+    ],
+    "example": "labs/pg-value-tracker"
+  },
+  "Axes.c2p": {
+    "description": "Map mathematical x/y coordinates into the axes rectangle using its current ranges, width and height.",
+    "parameters": {
+      "x": "The horizontal mathematical coordinate. Values outside the range extrapolate.",
+      "y": "The vertical mathematical coordinate. Values outside the range extrapolate."
+    },
+    "returnsDescription": "A new Vec3 with z = 0, centered around the axes rectangle’s origin.",
+    "notes": [
+      "This calculation does not apply the axes entity or its parent transform. Despite the internal variable names, treat the returned point as coordinates of the untransformed axes rectangle; convert it explicitly when the axes are moved or rotated."
+    ],
+    "example": "labs/pg-axes-conversion"
+  },
+  "Axes.p2c": {
+    "description": "Convert a point in the axes rectangle’s untransformed coordinate space back to mathematical x/y values.",
+    "parameters": {
+      "point": "A Vec3 in the same coordinate space as Axes.c2p output. A world point must be transformed first if the axes are moved or rotated."
+    },
+    "returnsDescription": "An [x, y] tuple; access [0] and [1], not .x and .y.",
+    "notes": [
+      "No clamping is applied. Clamp the result if interaction should remain within a chosen mathematical domain."
+    ],
+    "example": "labs/pg-axes-conversion"
+  },
+  "FunctionGraph2D.constructor": {
+    "description": "Sample a scalar function through a coordinate system and construct the selected line/fill primitives.",
+    "parameters": {
+      "axes": "The coordinate system defining the range and mathematical-to-scene mapping.",
+      "func": "A synchronous scalar function y = f(x). Keep it finite and inexpensive over the sampled range.",
+      "options": "Sampling/domain and paint settings. Defaults include cyan stroke, strokeWidth 0.08 and the coordinate system’s primitive, falling back to line3d."
+    },
+    "notes": [
+      "The constructor fills missing stroke fields on the supplied options object. Use a fresh options object if you need independent settings."
+    ],
+    "example": "labs/pg-function-graph"
+  },
+  "FunctionGraph2D.setFunction": {
+    "description": "Replace the sampled function and rebuild the curve immediately.",
+    "parameters": {
+      "func": "The new synchronous function y = f(x)."
+    },
+    "returnsDescription": "The same FunctionGraph2D for chaining.",
+    "example": "labs/pg-function-update"
+  },
+  "OrbitCameraController.constructor": {
+    "description": "Attach orbit, pan and zoom handling to a scene and camera. It initializes orbit direction from the current camera position and registers itself as scene.controls.",
+    "parameters": {
+      "scene": "The running scene whose canvas receives input. Construct the controller in Scene.run after the scene has started.",
+      "camera": "The camera to control, usually scene.camera.",
+      "options": "Optional targetCenter, radius, sensitivity, inertia and radius limits. Defaults include origin target, radius derived from current distance (or 20), and limits 0.1 to 5000."
+    },
+    "notes": [
+      "This constructor replaces scene.controls. Keep one controller per camera and dispose a controller explicitly when replacing it during a scene."
+    ],
+    "example": "labs/pg-orbit-controller"
+  }
+}

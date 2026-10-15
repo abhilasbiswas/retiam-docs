@@ -1,0 +1,197 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-spring-physics-and-dynamic-binding-architecture",
+  "title": "2D Physics Springs & Dynamic Entity Binding Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SPRING_PHYSICS_AND_DYNAMIC_BINDING_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SPRING_PHYSICS_AND_DYNAMIC_BINDING_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SPRING_PHYSICS_AND_DYNAMIC_BINDING_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Entity](/api-core-entity#entity), [Spring](/api-entities-primitives-2d#spring), [Scene](/api-core-scene#scene), [SpringStyle](/api-entities-primitives-2d#spring), [SpringEntityOptions](/api-entities-primitives-2d#spring), [LineOptions](/api-entities-primitives-2d#line), [Vec2Type](/api-math-vector#vec2), [Usage](/api-utils#gpu-utils), [Circle](/api-entities-primitives-2d#circle), [Color](/api-math#color), [Vec3](/api-math-vector#vec3), [Rate](/api-animation#rate), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-system-rationale",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & System Rationale"
+        },
+        {
+          "type": "paragraph",
+          "text": "Harmonic oscillators, mass-spring-damper simulations, and mechanical physics animations require a dedicated spring entity that updates dynamically as masses move."
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`Spring`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Spring.ts) entity provides:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Multiple Visual Styles**: Supports classic physics zigzag coils, smooth helical sine waves, and rigid connecting rods.",
+            "**Dynamic Entity Attachment**: Dynamically connects two independent [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) instances via local anchor points, automatically recalculating length, orientation angle, elongation, and compression each frame.",
+            "**Reactive Scene Hooking**: Can attach directly to a [`Scene`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts) instance to execute zero-allocation vertex rebuilding inside the continuous animation loop."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Entity A (Suspension Anchor)\n                    │\n           localAnchorA (Offset)\n                    │\n                    ▼\n           ┌─────────────────┐  (leadLength)\n           │ Straight Lead-In│\n           ├─────────────────┤\n           │   Coil Turns    │  (coils: 8, radius: 0.35)\n           │(Zigzag / Helix) │  Oscillates along normal vector\n           ├─────────────────┤\n           │Straight Lead-Out│\n           └─────────────────┘\n                    │\n           localAnchorB (Offset)\n                    │\n                    ▼\n          Entity B (Oscillating Mass)"
+        }
+      ]
+    },
+    {
+      "id": "2-geometry-synthesis-mathematics",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Geometry Synthesis & Mathematics"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Basis Vectors & Kinematic Projections"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given world-space anchor points $\\mathbf{p}_A$ and $\\mathbf{p}_B$:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The displacement vector and current spring span are:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{D} = \\mathbf{p}_B - \\mathbf{p}_A, \\quad L = \\|\\vec{D}\\|"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The unit longitudinal tangent vector $\\vec{u}$ and orthogonal normal vector $\\vec{n}$ are:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{u} = \\frac{\\vec{D}}{L}, \\quad \\vec{n} = \\begin{bmatrix} -u_y \\\\ u_x \\\\ 0 \\end{bmatrix}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The effective spring active coil span after subtracting straight lead-ins ($d_{\\text{lead}}$) is:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "math",
+          "tex": "L_{\\text{coils}} = \\max(L - 2d_{\\text{lead}}, 0.05)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Visual Styles (SpringStyle)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Zigzag Coil (`style: 'coil'`)**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Generates $2N_{\\text{coils}}$ alternating triangular teeth. For tooth $k \\in [0, 2N_{\\text{coils}}]$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}_k = \\mathbf{p}_A + \\vec{u} \\cdot \\left(d_{\\text{lead}} + \\frac{k + 0.5}{2N_{\\text{coils}}} L_{\\text{coils}}\\right) + \\vec{n} \\cdot (-1)^k R"
+        },
+        {
+          "type": "paragraph",
+          "text": "where $R$ is the configured coil radius."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Smooth Helix (`style: 'helix'`)**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Generates a continuous harmonic sine wave sampled at $S$ points per turn:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}(s) = \\mathbf{p}_A + \\vec{u} \\cdot \\Big(d_{\\text{lead}} + s \\cdot L_{\\text{coils}}\\Big) + \\vec{n} \\cdot \\left(R \\cdot \\sin(2\\pi N_{\\text{coils}} s)\\right) \\quad (s \\in [0, 1])"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Connecting Rod (`style: 'line'`)**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "A straight linear link between anchors."
+        }
+      ]
+    },
+    {
+      "id": "3-options-configuration-api",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Options & Configuration API"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface SpringEntityOptions extends LineOptions {\n    /** Number of full coil oscillations (Default: 8) */\n    coils?: number;\n\n    /** Amplitude / half-width of the coil in world units (Default: 0.35) */\n    radius?: number;\n\n    /** Length of straight lead-in and lead-out segments at the ends (Default: 0.4) */\n    leadLength?: number;\n\n    /** Visual style: 'coil' (zigzag), 'helix' (smooth sine), or 'line' (straight rod) */\n    style?: SpringStyle;\n\n    /** Number of sampling subdivisions per turn when using 'helix' style (Default: 8) */\n    segmentsPerCoil?: number;\n\n    /** Source entity to bind to */\n    entityA?: Entity;\n\n    /** Target entity to bind to */\n    entityB?: Entity;\n\n    /** Local anchor offset on entityA */\n    localAnchorA?: Vec2Type;\n\n    /** Local anchor offset on entityB */\n    localAnchorB?: Vec2Type;\n\n    /** Scene instance to automatically attach real-time update loop to */\n    scene?: Scene;\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Spring, Color, Vec3, Rate } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Fixed ceiling anchor\nconst ceiling = new Circle(0.3, {\n    position: [0, 4, 0],\n    fill: Color.fromHex(\"#64748b\")\n});\nscene.add(ceiling);\n\n// 2. Oscillating mass bob\nconst bob = new Circle(0.8, {\n    position: [0, -2, 0],\n    fill: Color.fromHex(\"#f59e0b\")\n});\nscene.add(bob);\n\n// 3. Dynamic physics spring binding ceiling and bob\nconst spring = new Spring({\n    entityA: ceiling,\n    entityB: bob,\n    coils: 10,\n    radius: 0.4,\n    style: \"coil\",\n    stroke: Color.WHITE,\n    stroke_width: 0.08,\n    scene: scene // Automatically registers frame update listener\n});\nscene.add(spring);\n\n// 4. Animate harmonic oscillation\nscene.always(({ time }) => {\n    bob.transform.position.y = -2.0 + Math.sin(time * 4.0) * 1.5;\n});"
+        }
+      ]
+    }
+  ]
+}

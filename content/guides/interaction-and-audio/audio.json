@@ -1,0 +1,104 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "audio",
+  "title": "Audio buses, synchronization and analysis",
+  "group": "Interaction and audio",
+  "summary": "Route audio through buses and synchronize playback, analysis and scene timing.",
+  "sections": [
+    {
+      "id": "initialize-audio-deliberately",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Initialize audio deliberately"
+        },
+        {
+          "type": "paragraph",
+          "text": "Scene.audio lazily installs AudioPlugin and returns its AudioManager. The manager owns AudioContext, decoded assets, AudioTimeline and master/BGM/SFX/voiceover gains. Browser policies may suspend audio until a user gesture; awaitUnlock or resumeContext supports that path."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "await this.audio.playBGM(\"/assets/music.mp3\", { volume: 0.35, loop: true, fadeInMs: 1000 });\nawait this.play(new Create(shape, { duration: 800, sound: \"/assets/draw.wav\" }));\n// Or trigger an explicit sound:\nawait this.audio.playSFX({ src: \"/assets/click.wav\", volume: 0.5 });"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [AudioPlugin](/api-audio#audioplugin), [AudioManager](/api-audio#audiomanager), [AudioTimeline](/api-audio#audiotimeline), [AudioLoader](/api-audio#audioloader)."
+        }
+      ]
+    },
+    {
+      "id": "timeline-and-media-clocks",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Timeline and media clocks"
+        },
+        {
+          "type": "paragraph",
+          "text": "Web Audio buffer sources are single-use. AudioTimeline recreates sources when seeking or resuming and maps scene milliseconds to AudioContext seconds. Pause, seek, reset and timeScale changes need synchronized audio state. animateTimeScale is a real-time requestAnimationFrame helper and should not be assumed to be an offline timeline animation."
+        },
+        {
+          "type": "paragraph",
+          "text": "playVoiceover supports decoded audio and ducks the BGM bus through gain changes. Store narration results in the timeline so renderOffline can mix a WAV result for export. Real-time speaker playback and offline mixing are distinct execution paths."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [BGMOptions](/api-audio#audiomanager), [VoiceoverOptions](/api-audio#audiomanager), [SoundEffectOptions](/api-animation#animoptions)."
+        }
+      ]
+    },
+    {
+      "id": "analysis-and-spatial-audio",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Analysis and spatial audio"
+        },
+        {
+          "type": "paragraph",
+          "text": "AudioAnalyzer provides frequency and waveform sampling, named bands and GPU-friendly data paths. SpatialAudioComponent and AudioListenerComponent map entity and camera positions into Web Audio spatial nodes. Choose analyzer FFT size and update rate for the visual resolution needed; reading larger arrays than the shader uses adds avoidable work."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [AudioAnalyzer](/api-audio#audioanalyzer), [AudioAnalyzerOptions](/api-audio#audioanalyzer), [AudioFrequencyBands](/api-audio#audioanalyzer), [SpatialAudioComponent](/api-audio-components#spatialaudiocomponent), [AudioListenerComponent](/api-audio-components#audiolistenercomponent)."
+        }
+      ]
+    },
+    {
+      "id": "record-and-dispose",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Record and dispose"
+        },
+        {
+          "type": "paragraph",
+          "text": "attachRecorder and getRecordingStream connect the manager’s mix to live capture. renderOffline produces a separate deterministic audio mix from timeline entries. Dispose the manager/plugin on host teardown so AudioContext, subscriptions and sources do not survive a discarded canvas."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One click schedules one short generated tone on the SFX timeline."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-audio-cue"
+        }
+      ]
+    }
+  ]
+}

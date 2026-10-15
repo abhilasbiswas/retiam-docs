@@ -1,0 +1,321 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-studio-inspector",
+  "title": "Retiam Studio Editor Inspector",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/STUDIO_INSPECTOR.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/STUDIO_INSPECTOR.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/STUDIO_INSPECTOR.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Rate](/api-animation#rate), [Color](/api-math#color), [Spring](/api-entities-primitives-2d#spring), [SVG](/api-entities-composites-svg#svg), [Poly](/api-entities-primitives-2d#poly), [Rect](/api-entities-primitives-2d#rect), [Circle](/api-entities-primitives-2d#circle), [Arc](/api-entities-primitives-2d#arc), [Triangle](/api-entities-primitives-2d#triangle), [Path](/api-entities-primitives-2d#path), [Line](/api-entities-primitives-2d#line), [Text](/api-entities-composites-text#text), [SDFText](/api-entities-composites-text#sdftext), [Font](/api-font#font), [Code](/api-entities-composites-text#code), [Transform](/api-core-transform#transform), [Uniform](/api-render-pipelines#resourcelayouts), [Delay](/api-animation#delay), [Vec2](/api-math-vector#vec2), [Vec3](/api-math-vector#vec3), [Camera](/api-camera#camera), [Tex](/api-entities-composites-text#tex), [Animation](/api-animation#animation)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The **Retiam Studio Inspector** is a real-time visual tuning and parameter control bar embedded directly inside the Monaco code editor. As your cursor moves across code in Retiam Studio, the Inspector automatically detects mathematical expressions, geometry parameters, color stops, physics curves, typography options, 2D/3D vectors, camera positions, and animation options, presenting interactive widgets for instant visual editing."
+        }
+      ]
+    },
+    {
+      "id": "supported-inspector-types-features",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "🚀 Supported Inspector Types & Features"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. 📈 Easing & Rate Curves (Rate., Rate.bezier(...))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Hover/cursor over `Rate.bezier(x1, y1, x2, y2)`, `Rate.easeIn()`, `Rate.easeOut()`, `Rate.easeInOutCubic()`, etc.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Interactive cubic-bezier curve editor with draggable $P_1$ and $P_2$ control points.",
+                "Easing preset chips (Linear, Quad InOut, Cubic, Sine, Expo, Bounce, Elastic, Back).",
+                "Real-time motion preview canvas with Slide, Scale, and Rotate animation modes."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. 🌈 Gradient & Color Stops (Color.gradient(...))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `Color.gradient([\"#00e5ff\", \"#ff0055\"], 90)` or `LinearGradient` / `RadialGradient`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Live gradient bar preview container.",
+                "Angle dial slider ($0^\\circ - 360^\\circ$).",
+                "One-click theme preset chips (Cyberpunk, Neon Pulse, Sunset Gold, Emerald Sea)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. 🌀 Spring Physics Oscillation (Rate.spring(...))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `Rate.spring({ mass: 1, stiffness: 100, damping: 10 })`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Interactive SVG spring response graph rendering live underdamped and overdamped settling curves.",
+                "Real-time sliders for `mass` ($0.1 - 10$), `stiffness` ($10 - 500$), and `damping` ($1 - 50$)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4. 🔷 Geometry & Shape Properties (Poly, Rect, Circle, Arc, Triangle)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `new Poly({ sides: 6, radius: 80, cornerRadius: 8 })`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "`sides` slider ($3 - 12$) for regular polygons.",
+                "`radius` slider ($10 - 300\\text{px}$) and `cornerRadius` smoothing slider ($0 - 50\\text{px}$).",
+                "One-click shape presets for Triangle, Square, Pentagon, and Hexagon."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5. ✏️ Path Stroke & Contour Inspector (Path)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `new Path()`, `.setStrokeCap(...)`, or `.setStrokeJoin(...)`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Stroke Line Cap buttons: `Butt`, `Round`, `Square`.",
+                "Stroke Line Join buttons: `Miter`, `Round`, `Bevel`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6. ✍️ Typography & Text Options (Text, SDFText)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `new Text(\"Title\", { fontSize: 48, fontFamily: \"Inter\" })`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Font Family selector (Inter, Roboto, Fira Code, Outfit, Montserrat, JetBrains Mono).",
+                "Font Size slider ($12\\text{px} - 120\\text{px}$).",
+                "Text Alignment button group (`Left`, `Center`, `Right`)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "7. 🔄 2D/3D Transform Gizmo (setPosition, setRotation, setScale)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `.setPosition()`, `.setRotation(angle)`, or `.setScale(s)`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Rotation angle dial slider ($0^\\circ - 360^\\circ$).",
+                "Uniform Scale multiplier slider ($0.1\\times - 5.0\\times$)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "8. ⏱️ Timeline & Sequence Tuner (stagger, Delay)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `stagger(sec)` or `Delay(sec)`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Stagger delay slider ($0\\text{s} - 2\\text{s}$).",
+                "Start delay slider ($0\\text{s} - 5\\text{s}$)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9. 🎨 Color Picker & Swatches (Color.fromHex, Color.fromRGB, Color.fromHSL)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `Color.fromHex(\"#00e5ff\")` or hex strings.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Live color swatch with HEX / RGB / HSL format switching.",
+                "Alpha transparency slider and curated color palettes."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "10. 🎯 2D/3D Vector Joystick (Vec2, Vec3)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `new Vec2(x, y)` or `new Vec3(x, y, z)`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Spatial 2D Drag Pad (joystick) for position scrubbing.",
+                "X, Y, Z numerical step controls (0.001 to 10)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "11. 🎥 3D Camera Controller (this.camera.position.set)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over camera position assignments.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Angle presets: Front (2D), Top View, Side View, Isometric 3D."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "12. 📝 LaTeX Formula Inspector (Tex, SDFText)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over `new Tex(\"\\sqrt{x}\")`.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Live KaTeX math rendering preview box and math symbol insertion palette."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "13. 🎬 Animation Options ({ duration: 1000, ratefunc: ... })"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over animation configuration objects or `.play()` calls.",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Duration scrubbing slider ($100\\text{ms} - 10000\\text{ms}$) and rate function selector."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "14. 🔢 Numeric Parameter Scrubber (Generic Numbers)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Trigger**: Cursor over any inline number (e.g. stroke width, radius, opacity).",
+            {
+              "text": "**Features**:",
+              "children": [
+                "Alt + Mouse Drag scrubbing & Mouse Wheel scrubbing directly in Monaco editor."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

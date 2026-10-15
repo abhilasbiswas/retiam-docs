@@ -1,0 +1,710 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-core-transform",
+  "title": "Transform API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transform",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Transform"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Transform.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Transform.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Transform: Represents the spatial transformation state of an [[Entity]], mapped directly to GPU-readable Float32 memory. Manages position, rotation, scaling, offsets, and timing variables (`t1`, `t2`) for animations."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Transform",
+                    "Class",
+                    "Represents the spatial transformation state of an [[Entity]], mapped directly to GPU-readable Float32 memory. Manages position, rotation, scaling, offsets, and timing variables (`t1`, `t2`) for animations."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class Transform implements TransformFunctions<Transform> {\n    static BYTELENGTH: number;\n    static F32LENGTH: number;\n    onChange?: () => void;\n    static _globalVersion: number;\n    version: number;\n    get UPDATE_FLAG(): boolean;\n    set UPDATE_FLAG(val: boolean);\n    binding: GPUBufferBinding;\n    readonly data: Float32Array;\n    readonly _matrix: Mat4;\n    readonly _offset: Vec3;\n    readonly _position: Vec3;\n    readonly _t: Float32Array;\n    readonly _t1: Float32Array;\n    readonly _t2: Float32Array;\n    readonly _bit_mask: Uint32Array;\n    constructor(data: Float32Array, copy?: boolean);\n    init(): void;\n    get offset(): Vec3;\n    set offset(offset: Vec3Type);\n    get position(): Vec3;\n    set position(p: Vec3Type);\n    get rotation(): Quaternion;\n    set rotation(q: Quaternion);\n    get t(): number;\n    set t(val: number);\n    get t1(): number;\n    set t1(t: number);\n    get t2(): number;\n    set t2(t: number);\n    get bit_mask(): number;\n    set bit_mask(bit_value: number);\n    get pad2(): number;\n    set pad2(val: number);\n    get scaling(): Vec3;\n    set scaling(s: Vec3Type | number);\n    get positionX(): number;\n    set positionX(x: number);\n    get positionY(): number;\n    set positionY(y: number);\n    get positionZ(): number;\n    set positionZ(z: number);\n    getPosition(): Vec3;\n    setPositionXYZ(x: number, y: number, z: number): Transform;\n    setRotationQuaternionXYZW(x: number, y: number, z: number, w: number): Transform;\n    setRotationXYZ(x: number, y: number, z: number): Transform;\n    setT(t: number): Transform;\n    setT1(t1: number): Transform;\n    setT2(t2: number): Transform;\n    move(p: Vec3Type): Transform;\n    shift(offset: Vec3Type): Transform;\n    shiftWorld(offset: Vec3Type): Transform;\n    setRotation(angle: Quaternion | Vec3Type | number): Transform;\n    getRotation(): Quaternion;\n    rotation_x: number;\n    rotation_y: number;\n    rotation_z: number;\n    setRotationX(angle: number, anchor?: Vec3Type): Transform;\n    setRotationY(angle: number, anchor?: Vec3Type): Transform;\n    setRotationZ(angle: number, anchor?: Vec3Type): Transform;\n    rotate(angle: Quaternion | Vec3Type | number, anchor?: Vec3Type): Transform;\n    rotateX(angle: number, anchor?: Vec3Type): Transform;\n    rotateY(angle: number, anchor?: Vec3Type): Transform;\n    rotateZ(angle: number, anchor?: Vec3Type): Transform;\n    rotateWorld(angle: Quaternion | Vec3Type | number, anchorWorld?: Vec3Type): Transform;\n    rotateWorldX(angle: number, anchorWorld?: Vec3Type): Transform;\n    rotateWorldY(angle: number, anchorWorld?: Vec3Type): Transform;\n    rotateWorldZ(angle: number, anchorWorld?: Vec3Type): Transform;\n    setScale(scale: Vec3Type | number, anchor?: Vec3Type): Transform;\n    scale(factor: Vec3Type | number, anchor?: Vec3Type): Transform;\n    scaleWorld(factor: Vec3Type | number, anchor?: Vec3Type): Transform;\n    syncOffset(newOffset: Vec3Type): Transform;\n    setPivot(anchorWorld: Vec3Type, parentMatrix?: Mat4): Transform;\n    getOffset(): Vec3;\n    getScale(): Vec3;\n    getScaleX(): number;\n    getScaleY(): number;\n    getScaleZ(): number;\n    static size(): number;\n    apply(childTransform: Transform, parentTransform: Transform): void;\n    set(transform: Transform): void;\n    copy(): Transform;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Transform` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static BYTELENGTH: number",
+                    "Transform.size()",
+                    "Total byte length of a single transform structure in memory. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static F32LENGTH: number",
+                    "this.BYTELENGTH / 4",
+                    "Total number of Float32 elements (fields) in the raw buffer slice. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onChange?: ()",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _globalVersion",
+                    "1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public version",
+                    "Transform._globalVersion++",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get UPDATE_FLAG(): boolean",
+                    "—",
+                    "Flag indicating whether the CPU-side data has changed and needs to be synchronized to the GPU. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set UPDATE_FLAG(val: boolean)",
+                    "—",
+                    "Implementation: `this._updateFlag = val; if (val) this.version = Transform._globalVersion++; if (val && this.onChange) { this.onChange(); }`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public binding: GPUBufferBinding",
+                    "—",
+                    "Buffer binding details for WebGPU alignment. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly data: Float32Array",
+                    "—",
+                    "The raw Float32 array slice containing the transform matrix and variables. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _matrix: Mat4",
+                    "—",
+                    "The underlying 4x4 matrix mapping local space to parent/world space. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _offset: Vec3",
+                    "—",
+                    "Local offset/anchor coordinate mapping. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _position: Vec3",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _t: Float32Array",
+                    "—",
+                    "General animation progress/parameter variable slice (t) accessible in GPU shaders. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _t1: Float32Array",
+                    "—",
+                    "Animation variable slice typically used for interpolations or drawing parameters (e.g., start time). [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _t2: Float32Array",
+                    "—",
+                    "Animation variable slice typically used for interpolations or drawing parameters (e.g., completion time). [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _bit_mask: Uint32Array",
+                    "—",
+                    "Bit mask field for entity categorization or state tracking. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(data: Float32Array, copy = false)",
+                    "—",
+                    "Creates a new Transform instance mapped to a shared Float32Array slice. Param: data The array slice representing this transform in memory. Param: copy If true, skip setting default identity parameters. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public init()",
+                    "—",
+                    "Initializes default values: matrix to identity, offset to zero, t1 to 0, and t2 to 1. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get offset(): Vec3",
+                    "—",
+                    "Gets or sets the local pivot offset (anchor point) of the entity. [Source line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L145)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set offset(offset: Vec3Type)",
+                    "—",
+                    "Implementation: `this._offset.value = Vec3.cast(offset); this.UPDATE_FLAG = true;`. [Source line 148](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L148)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get position(): Vec3",
+                    "—",
+                    "Gets or sets the translation (position) components of the transformation matrix. [Source line 156](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L156)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set position(p: Vec3Type)",
+                    "—",
+                    "Implementation: `this._matrix.setTranslate(p); this.UPDATE_FLAG = true;`. [Source line 157](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L157)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rotation(): Quaternion",
+                    "—",
+                    "Gets or sets the rotation component as a Quaternion. [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L165)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rotation(q: Quaternion)",
+                    "—",
+                    "Implementation: `this._matrix.setRotation(q); this.UPDATE_FLAG = true;`. [Source line 170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L170)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t(): number",
+                    "—",
+                    "General animation parameter / progress [0.0 - 1.0] accessible in GPU shaders. [Source line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L178)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t(val: number)",
+                    "—",
+                    "Implementation: `this._t[0] = val; this.UPDATE_FLAG = true;`. [Source line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L179)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t1(): number",
+                    "—",
+                    "The first animation variable (t1). [Source line 187](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L187)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t1(t: number)",
+                    "—",
+                    "Implementation: `this._t1[0] = t; this.UPDATE_FLAG = true;`. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L188)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t2(): number",
+                    "—",
+                    "The second animation variable (t2). [Source line 196](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L196)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t2(t: number)",
+                    "—",
+                    "Implementation: `this._t2[0] = t; this.UPDATE_FLAG = true;`. [Source line 197](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L197)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get bit_mask(): number",
+                    "—",
+                    "Implementation: `return this._bit_mask[0]`. [Source line 202](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L202)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set bit_mask(bit_value: number)",
+                    "—",
+                    "Implementation: `this._bit_mask[0] = bit_value;`. [Source line 203](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L203)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get pad2(): number",
+                    "—",
+                    "Secondary metadata / custom state parameter (e.g. analytical contourStartIndex). [Source line 210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L210)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set pad2(val: number)",
+                    "—",
+                    "Implementation: `this.data[23] = val;`. [Source line 211](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L211)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get scaling(): Vec3",
+                    "—",
+                    "Implementation: `return this._matrix.scaling;`. [Source line 218](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L218)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set scaling(s: Vec3Type | number)",
+                    "—",
+                    "Implementation: `this.UPDATE_FLAG = true; this._matrix.scaling = typeof s === \"number\" ? new Vec3(s, s, s) : Vec3.cast(s);`. [Source line 219](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L219)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get positionX(): number",
+                    "—",
+                    "Reads the current X coordinate without allocating a Vec3 wrapper. [Source line 226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L226)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set positionX(x: number)",
+                    "—",
+                    "Sets the X coordinate without allocating a Vec3 wrapper. [Source line 228](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L228)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get positionY(): number",
+                    "—",
+                    "Reads the current Y coordinate without allocating a Vec3 wrapper. [Source line 231](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L231)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set positionY(y: number)",
+                    "—",
+                    "Sets the Y coordinate without allocating a Vec3 wrapper. [Source line 233](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L233)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get positionZ(): number",
+                    "—",
+                    "Reads the current Z coordinate without allocating a Vec3 wrapper. [Source line 236](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L236)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set positionZ(z: number)",
+                    "—",
+                    "Sets the Z coordinate without allocating a Vec3 wrapper. [Source line 238](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L238)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPosition(): Vec3",
+                    "—",
+                    "Returns the current position as a Vec3. Equivalent to the `position` getter but in method form for API symmetry. [Source line 244](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L244)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPositionXYZ(x: number, y: number, z: number): Transform",
+                    "—",
+                    "Directly overwrites the position column in-place. Zero-allocations. [Source line 252](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L252)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationQuaternionXYZW(x: number, y: number, z: number, w: number): Transform",
+                    "—",
+                    "Directly compiles and overwrites the rotation matrix from a Quaternion. Preserves existing 3D reflections and scaling factors. Zero-allocations. [Source line 266](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L266)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationXYZ(x: number, y: number, z: number): Transform",
+                    "—",
+                    "Directly sets Euler rotations along X, Y, and Z axes (in radians). [Source line 308](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L308)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setT(t: number): Transform",
+                    "—",
+                    "Sets the general animation progress / parameter (t). Param: t The animation parameter [0.0 - 1.0]. Returns: This Transform instance. [Source line 322](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L322)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setT1(t1: number): Transform",
+                    "—",
+                    "Sets the first animation variable (t1). Param: t1 The animation start limit. Returns: This Transform instance. [Source line 334](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L334)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setT2(t2: number): Transform",
+                    "—",
+                    "Sets the second animation variable (t2). Param: t2 The animation end limit. Returns: This Transform instance. [Source line 346](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L346)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public move(p: Vec3Type): Transform",
+                    "—",
+                    "Sets the absolute translation coordinate. [Source line 355](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L355)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public shift(offset: Vec3Type): Transform",
+                    "—",
+                    "Translates (shifts) the coordinate relative to its current orientation in local space. Param: offset The distance vector to shift. Returns: This Transform instance. [Source line 367](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L367)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public shiftWorld(offset: Vec3Type): Transform",
+                    "—",
+                    "Translates (shifts) the coordinate relative to the world coordinate system. Param: offset The distance vector to shift in world space. Returns: This Transform instance. [Source line 379](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L379)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotation(angle: Quaternion | Vec3Type | number): Transform",
+                    "—",
+                    "Sets the absolute rotation of the matrix using a Quaternion, euler angles, or axis angle. Param: angle Rotation angle details. Returns: This Transform instance. [Source line 391](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L391)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getRotation(): Quaternion",
+                    "—",
+                    "Returns the current rotation as a Quaternion. Equivalent to the `rotation` getter but in method form for API symmetry. [Source line 401](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L401)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotation_x",
+                    "0",
+                    "Internal: Accumulated Euler angle (radians) used internally by {@link setRotationX}. **Do not set this field directly** — doing so will desynchronize the quaternion. Use {@link setRotationX} instead. [Source line 410](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L410)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotation_y",
+                    "0",
+                    "Internal: Accumulated Euler angle (radians) used internally by {@link setRotationY}. **Do not set this field directly** — use {@link setRotationY} instead. [Source line 415](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L415)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotation_z",
+                    "0",
+                    "Internal: Accumulated Euler angle (radians) used internally by {@link setRotationZ}. **Do not set this field directly** — use {@link setRotationZ} instead. [Source line 420](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L420)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationX(angle: number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Sets rotation around the X-axis. Param: angle Target angle in radians. Param: anchor Optional local-space anchor to rotate around. [Source line 428](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L428)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationY(angle: number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Sets rotation around the Y-axis. Param: angle Target angle in radians. Param: anchor Optional local-space anchor to rotate around. [Source line 446](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L446)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationZ(angle: number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Sets rotation around the Z-axis. Param: angle Target angle in radians. Param: anchor Optional local-space anchor to rotate around. [Source line 464](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L464)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotate(angle: Quaternion | Vec3Type | number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Applies incremental local rotation. Param: angle Incremental rotation details. [Source line 481](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L481)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateX(angle: number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Rotates the transform around its local X-axis. Param: angle Angle to rotate in radians. Param: anchor Optional local-space anchor to rotate around. [Source line 497](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L497)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateY(angle: number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Rotates the transform around its local Y-axis. Param: angle Angle to rotate in radians. Param: anchor Optional local-space anchor to rotate around. [Source line 514](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L514)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateZ(angle: number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Rotates the transform around its local Z-axis. Param: angle Angle to rotate in radians. Param: anchor Optional local-space anchor to rotate around. [Source line 531](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L531)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateWorld(angle: Quaternion | Vec3Type | number, anchorWorld?: Vec3Type): Transform",
+                    "—",
+                    "Applies incremental world rotation. Param: angle Incremental rotation details in world space. [Source line 547](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L547)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateWorldX(angle: number, anchorWorld?: Vec3Type): Transform",
+                    "—",
+                    "Applies incremental world rotation around the X-axis. Param: anchorWorld Optional world-space anchor to rotate around. [Source line 561](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L561)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateWorldY(angle: number, anchorWorld?: Vec3Type): Transform",
+                    "—",
+                    "Applies incremental world rotation around the Y-axis. Param: anchorWorld Optional world-space anchor to rotate around. [Source line 575](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L575)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateWorldZ(angle: number, anchorWorld?: Vec3Type): Transform",
+                    "—",
+                    "Applies incremental world rotation around the Z-axis. Param: anchorWorld Optional world-space anchor to rotate around. [Source line 589](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L589)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setScale(scale: Vec3Type | number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Sets absolute scale. Optionally scales around a specific local anchor point. [Source line 603](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L603)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scale(factor: Vec3Type | number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Applies incremental scaling relative to local coordinates. Optionally scales around a specific local anchor point. [Source line 614](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L614)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scaleWorld(factor: Vec3Type | number, anchor?: Vec3Type): Transform",
+                    "—",
+                    "Applies incremental scaling relative to world axes. Optionally scales around a specific world-space anchor point. [Source line 629](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L629)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncOffset(newOffset: Vec3Type): Transform",
+                    "—",
+                    "Updates the offset to a new value, and counter-translates the matrix so that the absolute world position of the geometry remains perfectly stationary. [Source line 644](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L644)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPivot(anchorWorld: Vec3Type, parentMatrix?: Mat4): Transform",
+                    "—",
+                    "Moves the local origin (offset) to the specified world coordinate, maintaining the object's exact visual position in the world. If the entity belongs to a parent hierarchy, pass the effective parent world matrix to correctly invert through all parent transformations. Param: anchorWorld The world coordinate to become the new pivot. Param: parentMatrix Optional parent effective world matrix. [Source line 665](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L665)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getOffset(): Vec3",
+                    "—",
+                    "Returns the current offset as a Vec3. Equivalent to the `offset` getter but in method form for API symmetry. [Source line 681](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L681)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScale(): Vec3",
+                    "—",
+                    "Retrieves the scaling components of the transformation matrix as a Vec3. [Source line 688](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L688)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScaleX(): number",
+                    "—",
+                    "Reads the current X scale factor. Zero-allocations. [Source line 693](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L693)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScaleY(): number",
+                    "—",
+                    "Reads the current Y scale factor. Zero-allocations. [Source line 699](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L699)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScaleZ(): number",
+                    "—",
+                    "Reads the current Z scale factor. Zero-allocations. [Source line 705](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L705)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static size(): number",
+                    "—",
+                    "Returns the size (in bytes) of a single transform data layout. [Source line 713](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L713)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(childTransform: Transform, parentTransform: Transform): void",
+                    "—",
+                    "Combines a parent transform with a child transform. Correctly incorporates the parent's local offset into the hierarchical world matrix. [Source line 729](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L729)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set(transform: Transform)",
+                    "—",
+                    "Synchronizes raw data from another Transform instance. Param: transform Source transform. [Source line 756](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L756)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public copy(): Transform",
+                    "—",
+                    "Clones this transform into a new separate memory buffer instance. [Source line 765](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L765)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Transform.bindMethods: private bindMethods()",
+                    "Body operations (including nested callbacks): assignments to `this.setT`, `this.setT1`, `this.setT2`, `this.move`, `this.shift`, `this.getScale`, `this.setScale`, `this.rotate` and other instance fields; calls to `this.setT.bind`, `this.setT1.bind`, `this.setT2.bind`, `this.move.bind`, `this.shift.bind`, `this.getScale.bind`, `this.setScale.bind`, `this.rotate.bind` and additional helpers.",
+                    "[Line 125](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts#L125)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [TransformFunctions](/api-animation#animationfunctions)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

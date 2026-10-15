@@ -1,0 +1,20 @@
+{
+  "modernize/animation_sync": {
+    "title": "Phase-lagged square motion",
+    "description": "Ten circles begin the same four-leg motion at evenly offset times; the scene uses ordinary awaited plays and leaves same-frame completion handoffs to the scheduler.",
+    "walkthrough": [
+      "run creates ten red circles, labels them E0 through E9, and starts one rotate coroutine for each. Each coroutine waits for its phase offset before beginning; the largest offset is 1.125 seconds, so the repeated square movement reads as a wave rather than a simultaneous start.",
+      "rotate moves a circle through four 40-unit corners, with each leg lasting 1,000 ms, then repeats. Consecutive await this.play calls express the sequence directly. If a leg ends partway through a render frame, the completion-boundary scheduler automatically advances the following leg through the remaining time; this scene does not calculate or receive an overshoot value.",
+      "Camera2DController makes the large square path easier to inspect. It is independent of the animation scheduler and can be removed when the example is used only as a timing test."
+    ],
+    "experiments": [
+      "Change the phase divisor from n * 0.8 to n * 2.0 and compare the tighter start wave without changing any animation duration.",
+      "Set the leg duration to a value that does not divide a typical frame interval, then compare the corner transitions at different display refresh rates."
+    ],
+    "related": [
+      "Scene.play",
+      "Scene.wait",
+      "Animation"
+    ]
+  }
+}

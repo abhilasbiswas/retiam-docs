@@ -1,0 +1,85 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "rich-media",
+  "title": "Images, video and HTML surfaces",
+  "group": "Text and media",
+  "summary": "Place images, video and HTML content in a scene and account for their loading and update behavior.",
+  "sections": [
+    {
+      "id": "media-as-geometry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Media as geometry"
+        },
+        {
+          "type": "paragraph",
+          "text": "RTImage and RTVideo expose media on Model-based 3D surfaces. MeshSprite maps texture/video data onto vector geometry with UV generation, which is useful for nonlinear deformations. VideoData manages the HTML video object and playback synchronization; SpriteFragment can sample external video textures."
+        },
+        {
+          "type": "paragraph",
+          "text": "Videos need to be ready before capture. In offline mode the engine advances or seeks the video to the scene frame time and waits for frames, rather than assuming real-time media playback is synchronized. Browser media decoding and autoplay permissions still apply."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [RTImage](/api-entities-primitives-3d#rtimage), [RTVideo](/api-entities-primitives-3d#rtvideo), [VideoData](/api-core#videodata), [MeshSprite](/api-entities-composites-geometry#meshsprite)."
+        }
+      ]
+    },
+    {
+      "id": "html-rendering-modes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "HTML rendering modes"
+        },
+        {
+          "type": "paragraph",
+          "text": "RTHTML offers supported browser-native HTML texture paths and a CSS3D DOM overlay fallback. The texture modes rely on capabilities that may be experimental in the current browser; CSS3D uses a positioned DOM surface and has different capture behavior. Iframes and interactive forms are particularly dependent on the selected path."
+        },
+        {
+          "type": "paragraph",
+          "text": "A DOM overlay that looks correct in the live page is not automatically part of a GPU framebuffer snapshot. Verify the selected mode in the actual export workflow. Pointer forwarding raycasts the 3D plane, converts to local DOM coordinates and dispatches supported interactions."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [RTHTML](/api-entities-primitives-3d#rthtml), [HTMLRenderMode](/api-entities-primitives-3d#rthtml), [RTHTMLOptions](/api-entities-primitives-3d#rthtml)."
+        }
+      ]
+    },
+    {
+      "id": "resource-lifetime",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Resource lifetime"
+        },
+        {
+          "type": "paragraph",
+          "text": "Dispose video playback, object URLs, DOM surfaces and texture resources when removing a host. Share a media source intentionally when several surfaces use it; source lifetime and entity lifetime are not necessarily the same."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One image asset is loaded and displayed at an explicit scene size."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-image"
+        }
+      ]
+    }
+  ]
+}

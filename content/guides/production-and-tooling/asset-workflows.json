@@ -1,0 +1,189 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "asset-workflows",
+  "title": "Load assets once and make exports reproducible",
+  "group": "Assets and export",
+  "summary": "Wait for fonts and media explicitly, then package their paths and dependencies for reproducible exports.",
+  "sections": [
+    {
+      "id": "asset-boundary",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Make readiness part of scene setup"
+        },
+        {
+          "type": "paragraph",
+          "text": "Fonts, SVGs, images, video and narration have different loaders, but the same rule applies: fetch/decode what the scene needs before measuring it or starting the choreography that depends on it. Put owned files in the application’s public assets or import them through its bundler. A repository-relative path used by a demo is not automatically present in an external npm project."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Asset",
+            "Ready when",
+            "Then do"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Vector font",
+                "`await FontLoader.vector(source)` resolves.",
+                "Construct Text with that parsed font; measure and arrange."
+              ]
+            },
+            {
+              "cells": [
+                "MSDF font",
+                "`await FontLoader.msdf(source, options)` resolves.",
+                "Construct SDFText with that font and the required charset."
+              ]
+            },
+            {
+              "cells": [
+                "Bitmap",
+                "Fetch and createImageBitmap resolve.",
+                "Pass the bitmap to RTImage/material, choose aspect, retain an owner."
+              ]
+            },
+            {
+              "cells": [
+                "SVG",
+                "Its loader resolves and geometry exists.",
+                "Measure paths, set style and frame."
+              ]
+            },
+            {
+              "cells": [
+                "Video",
+                "Metadata/data are available and playback policy permits it.",
+                "Choose source dimensions, synchronize playback and scene time."
+              ]
+            },
+            {
+              "cells": [
+                "Narration",
+                "The provider returns decoded audio and timing data.",
+                "Build subtitle cues and begin audio/choreography from a shared start."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "A shader binding to an unresolved URL is not a preload barrier. Await an explicit load when the first exported frame must already contain the asset. Keep setup failures visible and distinguish them from the expected Scene Reset cancellation described in [animation control](/animation-control#reset-during-play)."
+        }
+      ]
+    },
+    {
+      "id": "fonts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Load a font for the actual text"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { FontLoader, SDFText, CENTER, hex } from 'retiam';\nconst font = await FontLoader.msdf('/assets/Inter-Regular.ttf', {\n  charset: ' ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,:−',\n  fontSize: 120, distanceRange: 10, persist: false\n});\nconst title = new SDFText('Total: 42', {\n  font, fontSize: 0.7, anchor: CENTER, fill: hex('#e2e8f0')\n});\n// Add, arrange and frame after the font has resolved."
+        },
+        {
+          "type": "paragraph",
+          "text": "The scene fontSize is a world-space layout size; the MSDF generator fontSize controls atlas generation. They solve different problems. Default generated atlases cover an ASCII-oriented set, so include every glyph you actually use. For repeatable jobs, prebake a .json descriptor and matching .png atlas rather than regenerating it at every render."
+        },
+        {
+          "type": "paragraph",
+          "text": "FontCache shares loaded and in-flight resources in memory and can persist atlases to IndexedDB. Persistent cache is browser-local, not an exported asset. The current cache identity includes charset length rather than the complete charset, so equal-length different charsets can collide; prefer prebaked explicit atlases for controlled multilingual output. Clear memory/disk separately when diagnosing a cache issue. See [font implementation](/font-pipeline)."
+        }
+      ]
+    },
+    {
+      "id": "image",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Decode and preserve image aspect"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { RTImage } from 'retiam';\nconst response = await fetch('/assets/diagram.png');\nif (!response.ok) throw new Error(`Image load failed: ${response.status}`);\nconst bitmap = await createImageBitmap(await response.blob());\nconst width = 5;\nconst image = new RTImage(width, width * bitmap.height / bitmap.width, bitmap);\n// Keep bitmap ownership until the material has uploaded it; close on final cleanup."
+        },
+        {
+          "type": "paragraph",
+          "text": "This changes the quad dimensions to match the decoded image. Resizing the quad does not resample or crop the source. `RTImage.setSource` accepts the supported Material texture sources and invalidates; updateSize rebuilds the quad. Cross-origin URLs need readable responses and suitable CORS. Serve local copies for an offline job instead of relying on the author’s browser cache."
+        },
+        {
+          "type": "paragraph",
+          "text": "Video and HTML surfaces have additional browser/DOM lifetimes. Audio/video playback may require a user gesture in interactive pages. A custom static embed does not bypass those policies or include a remote streaming service. For offline output, explicitly test media synchronization, then inspect the produced video and audio rather than validating only a still frame."
+        }
+      ]
+    },
+    {
+      "id": "speech",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Separate speech generation from rendering"
+        },
+        {
+          "type": "paragraph",
+          "text": "The speech demos are integration examples: a provider supplies audio plus timing, then subtitle and scene animations consume the result. The Edge demo requires a proxy endpoint; Kokoro requires its configured runtime/model assets. Fetch or generate narration before the final render when possible, save the resulting audio/timing, and reuse it. That separates provider availability from your movie’s frame generation."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-tts-subtitles"
+        },
+        {
+          "type": "paragraph",
+          "text": "Provider endpoints and voices are deployment configuration. Do not put credentials in a public scene bundle. In a static documentation viewer, the requirements shown above the example identify missing services; a successful engine import does not create them. See [speech and subtitles](/speech-subtitles) for cue semantics."
+        }
+      ]
+    },
+    {
+      "id": "portable-output",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Check what travels with each output"
+        },
+        {
+          "type": "paragraph",
+          "text": "An MP4 contains rendered frames and its muxed audio; it does not require the Retiam engine to play. An embedded scene contains runtime code and emitted dependencies, but external asset URLs and network-backed speech still need their own deployment. The CDN version needs its module, sublibraries, metadata and assets served together. Build identities prevent examples compiled for one engine from silently importing another."
+        },
+        {
+          "type": "paragraph",
+          "text": "Before shipping an embed, inspect the output directory and test it from a fresh static server with network inspection. Before rendering a movie, record the exact scene, engine build, width/height, fps, duration, fonts, seed and input. Test with a fresh cache as well as a warm one. See [export](/export) for commands, independent bundle limitations and browser-recording options."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Snapshots, video and web embeds](/export)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Your first scene](/first-scene)"
+  ]
+}

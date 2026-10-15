@@ -1,0 +1,709 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-excalidraw-style-architecture",
+  "title": "Excalidraw Style Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/EXCALIDRAW_STYLE_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/EXCALIDRAW_STYLE_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/EXCALIDRAW_STYLE_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Excalidraw](/api-style-excalidraw#excalidraw), [Path](/api-entities-primitives-2d#path), [ExcalidrawModifier](/api-modifiers-path#excalidrawmodifier), [PathEffect](/api-material#patheffect), [HachureGenerator](/api-style-excalidraw#hachuregenerator), [VectorEntity](/api-core-vectorentity#vectorentity), [Rect](/api-entities-primitives-2d#rect), [Circle](/api-entities-primitives-2d#circle), [Arrow](/api-entities-composites-geometry#arrow), [SVG](/api-entities-composites-svg#svg), [BoilAnimation](/api-style-excalidraw#excalidrawanimation), [Animation](/api-animation#animation), [WobbleModifier](/api-modifiers-path#wobblemodifier), [Scene](/api-core-scene#scene), [Entity](/api-core-entity#entity), [Plane](/api-entities-primitives-3d#plane), [Line](/api-entities-primitives-2d#line), [Graph](/api-libs-graphs-graph#graph), [Usage](/api-utils#gpu-utils), [CustomAnimation](/api-animation#customanimation), [Create](/api-animation-creation#create), [Concurrent](/api-animation#concurrent), [Color](/api-math#color), [Shader](/api-entities-primitives-2d#shader)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The Excalidraw style gives any vector entity a hand-drawn whiteboard look: a wobbled, pen-like outline plus optional hachure-style fills. It lives in [`src/engine/style/excalidraw`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/style/excalidraw)."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  A[\"Excalidraw.apply(entity, options)\"] --> P[\"Every open or closed Path\"]\n  B[\"entity.toExcalidraw(options)\"] --> P\n  P --> G[\"Outline geometry<br/>ExcalidrawModifier: wobble, bowing and passes<br/>z = 0.00\"]\n  P --> S[\"Outline shader<br/>PathEffect.Sketch: varying pen width\"]\n  P --> F[\"Fill lines<br/>HachureGenerator: child Path stroke<br/>z = -0.01\"]\n  P --> W[\"Background wash<br/>Child Path fill<br/>z = -0.02\"]"
+        }
+      ]
+    },
+    {
+      "id": "1-pieces-api-surface",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Pieces & API Surface"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Piece",
+            "File",
+            "Role"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`Excalidraw`",
+                  "type": "text"
+                },
+                {
+                  "text": "`Excalidraw.ts`"
+                },
+                {
+                  "text": "Static facade: `apply`, `setTime`, `getTime`, `setSeed`, `boil`, `createAnim`, `startBoil`, `stopBoil`, `isBoiling`; manages per-entity option memory."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`entity.toExcalidraw(options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`Excalidraw.ts`"
+                },
+                {
+                  "text": "Fluent method on any `VectorEntity` (Rect, Circle, Path, Arrow, SVG, etc.) applying hand-drawn whiteboard styling."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`entity.startBoil()` / `stopBoil()`",
+                  "type": "text"
+                },
+                {
+                  "text": "`Excalidraw.ts`"
+                },
+                {
+                  "text": "Fluent shortcuts to start and stop continuous background line-boil."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Excalidraw.createAnim(entity, options)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`Excalidraw.ts`"
+                },
+                {
+                  "text": "Composite animation drawing shape contours and fills while simultaneously boiling lines."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`BoilAnimation` & `boilAnim`",
+                  "type": "text"
+                },
+                {
+                  "text": "`ExcalidrawAnimation.ts`"
+                },
+                {
+                  "text": "First-class `Animation` for timeline-based 12 FPS organic sketch boil."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`ExcalidrawModifier` + `EXCALIDRAW_PRESETS`",
+                  "type": "text"
+                },
+                {
+                  "text": "`modifiers/path/ExcalidrawModifier.ts`"
+                },
+                {
+                  "text": "`WobbleModifier` applying biomechanical wrist bowing, motor tremor, passes, and corner overshoot."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`HachureGenerator`",
+                  "type": "text"
+                },
+                {
+                  "text": "`HachureGenerator.ts`"
+                },
+                {
+                  "text": "Polygon clipping and scanline raycasting generating fill pattern contours."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`seedFromEntityId`",
+                  "type": "text"
+                },
+                {
+                  "text": "`Excalidraw.ts`"
+                },
+                {
+                  "text": "SplitMix32/Murmur3 finalizer hashing entity IDs into deterministic seeds."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-seed-system-determinism-seed",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Seed System & Determinism (seed)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every Excalidraw shape uses pseudo-random jitter. The seed system is controlled entirely through the `seed` option:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "seed?: number | 'auto'; // Default: 'auto'"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Auto-Seeding (seed: 'auto')"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "When set to `'auto'` (the default in `DEFAULT_EXCALIDRAW_OPTIONS`), each path deterministically derives its seed from its `entity.id` via `seedFromEntityId(path.id)` using a 32-bit SplitMix32 finalizer.",
+            "**Why it matters:** Distinct shapes in a diagram automatically look uniquely hand-drawn without requiring the user to assign unique seeds manually.",
+            "**Scene Determinism:** Entity sequence numbers (`Entity.seq_no`) are automatically reset on scene reload (`Scene.reset()` and Studio HMR), guaranteeing that shapes always produce identical jitter across browser refreshes and video render passes."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Fixed Seeding (seed: number)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "When a numeric seed is provided (e.g., `seed: 505`), the shape uses that exact seed regardless of its entity ID.",
+            "Useful when a specific artistic sketch contour or corner overshoot is desired."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Updating the Seed"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`Excalidraw.setSeed(entity, seed)`**: Re-styles the entity with a new seed while preserving all previous colors, stroke widths, and fill options.",
+            "**`entity.toExcalidraw({ seed })`**: Equivalent chainable method on any `VectorEntity`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-depth-layering-calibration",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Depth Layering & Calibration"
+        },
+        {
+          "type": "paragraph",
+          "text": "To prevent z-fighting and ensure clean visual hierarchies, Excalidraw separates the outline, hatching lines, and wash fill across calibrated z-planes:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Top Plane (`z = 0.00`) — Outline Stroke:** Crisp hand-drawn border and corners.",
+            "**Middle Plane (`z = -0.01`, `FILL_Z`) — Hatch Lines:** Hand-drawn diagonal, cross-hatch, or zigzag fill lines.",
+            "**Bottom Plane (`z = -0.02`, `WASH_Z`) — Translucent Wash:** Soft background wash fill, letting the card's backdrop or canvas show through without obscuring the hatch lines."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-line-boil-animation-system-setseed-vs-settime",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Line-Boil Animation System: setSeed vs setTime"
+        },
+        {
+          "type": "paragraph",
+          "text": "Understanding the difference between `setSeed` and `setTime` is critical for performance and animation:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Architectural Comparison"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Feature",
+            "`setSeed(entity, seed)`",
+            "`setTime(entity, time)`"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Purpose**",
+                  "type": "text"
+                },
+                {
+                  "text": "Changes the shape's static hand-drawn blueprint/ID."
+                },
+                {
+                  "text": "Drives the continuous 12 FPS line boil (wobble) over time."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Under the Hood**",
+                  "type": "text"
+                },
+                {
+                  "text": "**Full Scene Graph Rebuild:** Destroys previous child paths, re-evaluates polygon clipping in `HachureGenerator`, re-allocates new `Path` nodes, and re-binds GPU vertex buffers."
+                },
+                {
+                  "text": "**Lightweight Property Update:** Only updates `.time` on the existing `ExcalidrawModifier`s. Never destroys paths, never re-clips polygons."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Performance**",
+                  "type": "text"
+                },
+                {
+                  "text": "Heavy CPU computation (polygon intersections)."
+                },
+                {
+                  "text": "Blazing fast (0 allocations, sub-millisecond, runs at 60–120 FPS)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Usage**",
+                  "type": "text"
+                },
+                {
+                  "text": "Initial construction, or switching static variations."
+                },
+                {
+                  "text": "Inside frame loops and `this.play(...)` animations."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Built-in Boil Animation: boilAnim() / entity.boil()"
+        },
+        {
+          "type": "paragraph",
+          "text": "To animate line-boil on the timeline without writing manual `CustomAnimation` boilerplate, use the built-in animation helpers:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "import { boilAnim } from \"retiam\";\n\n// 1. Standalone line boil on an existing card:\nawait this.play(card.boil({ duration: 2000, speed: 1.0 }));\n\n// 2. Boil multiple entities simultaneously:\nawait this.play(boilAnim([card1, card2, heart], { duration: 3000, speed: 1.2 }));"
+        },
+        {
+          "type": "paragraph",
+          "text": "Inside `BoilAnimation`, time is smoothly advanced and quantized to 12 FPS (`boilFps`), matching the traditional cel animation wobble of whiteboard hand-drawn sketches."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Simultaneous Create & Boil: Excalidraw.createAnim(entity, options?)"
+        },
+        {
+          "type": "paragraph",
+          "text": "To draw shape outlines and fills while boiling sketch lines simultaneously:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "import { Excalidraw } from \"retiam\";\n\n// 1. Draws the shape while boiling lines at 12 FPS:\nawait this.play(Excalidraw.createAnim(card, { duration: 1200 }));\n\n// 2. Multi-path sketch entities (SVGs, diagrams) with organic sequential drawing:\nawait this.play(Excalidraw.createAnim(tiger, {\n    stagger: 'sequential',       // 'sequential' (one-by-one) | 'simultaneous' | number (cascade wave)\n    distribution: 'balanced',   // 'balanced' (length^0.6) | 'length' (linear) | 'equal'\n    duration: 15000,\n}));"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Excalidraw.createAnim` wraps the inner `createAnim` and `BoilAnimation` inside a parallel `Concurrent` (`lagRatio: 0.0`), isolating boiling to run continuously across the entire duration while delegating `stagger` and `distribution` to the inner path creation sequence. Geometric arc lengths are computed synchronously from path vertex contours."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Continuous Background Line-Boil (boil: true)"
+        },
+        {
+          "type": "paragraph",
+          "text": "When whiteboard diagrams should boil continuously in the background across animations and holds:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "// 1. Enable at creation time:\nconst card = new Rect(3.5, 3.5).toExcalidraw({\n    fill: 'cross-hatch',\n    fillColor: Color.fromHex(\"#93c5fd\"),\n    boil: true,      // Automatically boils continuously at boilFps (default: 12)\n    boilFps: 12,     // Optional FPS override\n});\n\n// 2. Play create animation — it draws itself while boiling:\nawait this.play(Excalidraw.createAnim(card));\n\n// 3. Holds or camera transitions — card keeps boiling indefinitely:\nawait this.wait(5000);\n\n// 4. Turn OFF boiling anytime:\ncard.stopBoil();\n// or: Excalidraw.stopBoil(card);\n// or: card.toExcalidraw({ boil: false });\n\n// 5. Turn ON again anytime:\ncard.startBoil({ fps: 12 });\n// or: Excalidraw.startBoil(card);"
+        },
+        {
+          "type": "paragraph",
+          "text": "Under the hood, continuous boiling is powered by Retiam's native `entity.always()` loop and tracked with a private `WeakMap`. It introduces zero memory leaks and automatically cancels when the entity is disposed or destroyed."
+        }
+      ]
+    },
+    {
+      "id": "5-outline-dynamics",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Outline Dynamics"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Geometry:** `ExcalidrawModifier` (subclass of `WobbleModifier`) adds tremor (`roughness`), wrist arc (`bowing`), a second overlapping pass (`passes: 2`, bowing the same direction as the first so the two strokes read as one natural retraced line), corner `overshoot`, and optional `crossCorners` for architectural boxes.",
+            "**Passes & Solid Fills:** Paths with solid fills (e.g. arrowheads) use a single pass (`passes: 1`) because two overlapping loops would cancel each other out under even-odd winding rules.",
+            "**Shader:** Integrated felt-tip [`PathEffect.Sketch`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/path_effects/SketchEffect.ts) dynamics with organic pressure variations. Closed contours use seamless circular noise to eliminate corner discontinuities; open contours (arrows, lines) apply tapering start and end pressure ramps. Pass `strokeShader: null` for a uniform-width line."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Presets"
+        },
+        {
+          "type": "paragraph",
+          "text": "Presets (`preset` option) configure hand-drawn personality:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Preset",
+            "`roughness`",
+            "`bowing`",
+            "`passes`",
+            "`overshoot`",
+            "`crossCorners`",
+            "Aesthetic"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`normal` (default)",
+                  "type": "text"
+                },
+                {
+                  "text": "0.22"
+                },
+                {
+                  "text": "0.38"
+                },
+                {
+                  "text": "2"
+                },
+                {
+                  "text": "0.12"
+                },
+                {
+                  "text": "false"
+                },
+                {
+                  "text": "Balanced, natural hand-drawn sketch."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`clean`",
+                  "type": "text"
+                },
+                {
+                  "text": "0.15"
+                },
+                {
+                  "text": "0.25"
+                },
+                {
+                  "text": "1"
+                },
+                {
+                  "text": "0.00"
+                },
+                {
+                  "text": "false"
+                },
+                {
+                  "text": "Subtle, tidy single-pass drawing."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`architect`",
+                  "type": "text"
+                },
+                {
+                  "text": "0.22"
+                },
+                {
+                  "text": "0.35"
+                },
+                {
+                  "text": "2"
+                },
+                {
+                  "text": "0.35"
+                },
+                {
+                  "text": "true"
+                },
+                {
+                  "text": "Drafting blueprint with crossing corners."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`rough`",
+                  "type": "text"
+                },
+                {
+                  "text": "0.38"
+                },
+                {
+                  "text": "0.55"
+                },
+                {
+                  "text": "2"
+                },
+                {
+                  "text": "0.18"
+                },
+                {
+                  "text": "false"
+                },
+                {
+                  "text": "Loose, energetic multi-pass scribble."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-fills-hatching-patterns",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Fills & Hatching Patterns"
+        },
+        {
+          "type": "paragraph",
+          "text": "Fills are created when `fillColor` is specified:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "`fillStyle`",
+            "Pattern Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`hachure` (default)",
+                  "type": "text"
+                },
+                {
+                  "text": "Parallel diagonal strokes at `fillAngle`, spaced by `fillGap`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`cross-hatch`",
+                  "type": "text"
+                },
+                {
+                  "text": "Two intersecting sets of angled strokes forming a diagonal mesh grid."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`grid`",
+                  "type": "text"
+                },
+                {
+                  "text": "Orthogonal horizontal (0°) and vertical (90°) perpendicular cross grid."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`zigzag`",
+                  "type": "text"
+                },
+                {
+                  "text": "Continuous back-and-forth zigzag stroke with curved boundary turns."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`scribble`",
+                  "type": "text"
+                },
+                {
+                  "text": "Expressive continuous marker scribble with organic looping Bézier turns and motor tremor."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`dots`",
+                  "type": "text"
+                },
+                {
+                  "text": "Stippled dot field; point count is capped for high rendering performance."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`sketch`",
+                  "type": "text"
+                },
+                {
+                  "text": "Dense cross-angle artist pencil shading."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`filled` / `solid`",
+                  "type": "text"
+                },
+                {
+                  "text": "Opaque solid color fill with hand-drawn edge contouring."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`none`",
+                  "type": "text"
+                },
+                {
+                  "text": "Pure outline with transparent interior."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Fills include an optional translucent background wash (`fillBackground: true`, default `alpha: 0.40`), allowing cards to have both soft tinting and crisp hatch lines. Set `fillBackground: false` for pure hand-drawn marker or grid strokes with the canvas showing through."
+        }
+      ]
+    },
+    {
+      "id": "7-memory-chaining",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Memory & Chaining"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Excalidraw.apply` remembers earlier options on a per-entity basis via a `WeakMap`. Re-styling preserves prior stroke colors, hatch styles, and widths unless explicitly overridden:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const box = new Rect(4, 2.5).toExcalidraw({\n    fillColor: Color.fromHex(\"#93c5fd\"),\n    fillStyle: 'cross-hatch'\n});\n\n// Update stroke color only; preserves blue cross-hatch fill and seed:\nbox.toExcalidraw({ strokeColor: Color.BLACK });\n\n// Update seed only; preserves all geometry and style parameters:\nExcalidraw.setSeed(box, 777);"
+        }
+      ]
+    },
+    {
+      "id": "8-complete-example-scene",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Complete Example Scene"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import {\n    Scene,\n    Color,\n    Camera2DController,\n    Rect,\n    Path,\n    Arrow,\n    createAnim,\n    boilAnim,\n} from \"retiam\";\n\nexport class ExcalidrawOverviewScene extends Scene {\n    public override async run(): Promise<void> {\n        new Camera2DController(this, this.camera, { zoom: 12 });\n        this.clearColor(Color.fromHex(\"#ffffff\"));\n\n        // 1. Hand-drawn card with cross-hatch fill\n        const card = new Rect(4.0, 4.0).toExcalidraw({\n            strokeColor: Color.fromHex(\"#141414\"),\n            strokeWidth: 0.08,\n            fillStyle: 'cross-hatch',\n            fillColor: Color.fromHex(\"#93c5fd\"),\n            fillLineColor: Color.fromHex(\"#1a73e8\"),\n            fillGap: 0.15,\n            passes: 2,\n        });\n        card.transform.position.set([-2.5, 0, 0]);\n\n        // 2. Diamond node with solid fill\n        const diamond = new Path(\"M 0 1.25 L 1.25 0 L 0 -1.25 L -1.25 0 Z\").toExcalidraw({\n            strokeColor: Color.fromHex(\"#141414\"),\n            fillStyle: 'filled',\n            fillColor: Color.fromHex(\"#fd7e14\"),\n        });\n        diamond.transform.position.set([2.5, 0, 0]);\n\n        // 3. Hand-drawn connector arrow\n        const arrow = new Arrow([-0.5, 0, 0], [1.2, 0, 0]).toExcalidraw({\n            strokeColor: Color.fromHex(\"#141414\"),\n            strokeWidth: 0.08,\n            anchorEnds: true,\n        });\n\n        // Concurrently draw and boil the card\n        await this.play(createAnim(card), card.boil({ duration: 1000 }));\n\n        // Introduce diamond and arrow\n        await this.play(createAnim(diamond), createAnim(arrow));\n\n        // Boil all shapes together for 3 seconds\n        await this.play(boilAnim([card, diamond, arrow], { duration: 3000, speed: 1.0 }));\n    }\n}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,249 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-auto-layout-vbox-hbox",
+  "title": "Auto-Layout Architecture: VBox & HBox Containers",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/AUTO_LAYOUT_VBOX_HBOX.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/AUTO_LAYOUT_VBOX_HBOX.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/AUTO_LAYOUT_VBOX_HBOX.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [VBox](/api-entities-layout#vbox), [HBox](/api-entities-layout#hbox), [Text](/api-entities-composites-text#text), [Frustum](/api-math#frustum), [Layouts](/api-libs-graphs-core#layouts), [Animation](/api-animation#animation), [Box](/api-entities-primitives-3d#box), [Write](/api-animation#write), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [AABB](/api-math#aabb), [Entity](/api-core-entity#entity), [Tex](/api-entities-composites-text#tex), [MarkupText](/api-entities-composites-text#markuptext), [Pass](/api-render-frame-graph#pass), [Camera](/api-camera#camera), [Model](/api-entities-primitives-3d#model), [Code](/api-entities-composites-text#code), [Sequential](/api-animation#sequential), [CameraModel](/api-camera#camera), [Rate](/api-animation#rate), [Mode](/api-render-frame-graph#resource)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "When generating programmatic animations—especially with LLMs or dynamic mathematical expressions—hardcoding absolute coordinates (`position.set(x, y, z)`) frequently leads to:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Collisions & Overlaps**: Text labels colliding with formulas or graphs because intrinsic glyph bounds vary across fonts and LaTeX equations.",
+            "**Frustum Clipping**: Elements placed too far apart drifting outside the camera's field of view.",
+            "**Fragile Layouts**: Changing text or formula size requires manually recomputing downstream coordinate offsets.",
+            "**Animation Sibling Pop-in**: Adding entities to a shared parent container can cause un-animated siblings to prematurely appear when animating a single child."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides **`VBox` (Vertical Box)** and **`HBox` (Horizontal Box)** with a **dual-mode architecture**:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Static Layout Operations (`VBox.arrange(...)` / `HBox.arrange(...)`)**: Pure spatial coordinate positioning without parent-child scene graph coupling. Perfect for sequential animations (`Write(title)`, then `Write(body)`).",
+            "**Scene Graph Containers (`new VBox(...)` / `new HBox(...)`)**: Rigid composite entity nodes that group children in the scene graph. Perfect for composite widgets and HUDs that move or fade as a single body."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Both modes use the exact same underlying mathematical layout engine powered by real-time bounding box metrics ([`AABB.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts))."
+        }
+      ]
+    },
+    {
+      "id": "2-core-architectural-principles",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Architectural Principles"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Zero Over-Engineering**: Clean TypeScript extending [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts), with zero third-party layout dependencies.",
+            "**Universal Compatibility**: Works with *any* Retiam entity—primitives, text, LaTeX `Tex`, `MarkupText`, 3D models, math plots, and nested clusters.",
+            {
+              "text": "**Dual Operating Modes**:",
+              "children": [
+                {
+                  "text": "**Static Helper (`arrange`)**: `VBox.arrange({ gap: 0.8, align: 'center', center: [0, 1, 0] }, title, body)`",
+                  "children": [
+                    "Entities remain top-level independent scene graph nodes (`parent === null`).",
+                    "Returns array of entities for direct destructuring or camera framing: `camera.frame(VBox.arrange(...))`"
+                  ]
+                },
+                {
+                  "text": "**Container Entity (`new VBox`)**: `const box = new VBox({ gap: 0.8 }, title, body)`",
+                  "children": [
+                    "Children are attached to `box.children`. Calling `box.relayout()` delegates directly to `VBox.arrange()`."
+                  ]
+                }
+              ]
+            },
+            "**Cluster & Multi-Column Support**: Pass entity arrays (`Entity[]`) as clusters to compose multi-column layouts without container nodes:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "`HBox.arrange({ gap: 2.0, align: 'top' }, [t1, b1], [t2, b2])`"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Camera Auto-Framing Synergy**: Integrates seamlessly with `camera.frame(entities, { padding: 0.2 })`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-mathematical-layout-model",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Mathematical Layout Model"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Vertical Layout (VBox.arrange & VBox)"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Measures bounding boxes for all items (individual entities or cluster union AABBs): $B_i = \\text{item}_i.\\text{getBoundingBox}(true)$.",
+            "Determines total height:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{totalHeight} = \\sum_{i=1}^N \\text{height}_i + \\text{gap} \\times (N - 1)"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "Resolves anchor coordinate $\\text{boxPos}$:",
+              "children": [
+                "If `options.center` is specified: $\\text{boxPos} = \\text{options.center}$.",
+                "Otherwise: defaults to the combined bounding box center of all input items."
+              ]
+            },
+            "Determines starting top position:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "math",
+          "tex": "y_{\\text{top}} = \\text{centerAfter} \\ ? \\ (\\text{boxPos.y} + \\frac{\\text{totalHeight}}{2}) : \\text{boxPos.y}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "For each item:",
+              "children": [
+                "Sets target vertical center: $y_{\\text{center}} = y_{\\text{top}} - \\frac{\\text{height}_i}{2}$",
+                {
+                  "text": "Computes target horizontal cross-axis alignment:",
+                  "children": [
+                    "`'center'`: $x_{\\text{center}} = \\text{boxPos.x}$",
+                    "`'left'`: $x_{\\text{center}} = (\\text{boxPos.x} - \\frac{W_{\\max}}{2}) + \\frac{\\text{width}_i}{2}$",
+                    "`'right'`: $x_{\\text{center}} = (\\text{boxPos.x} + \\frac{W_{\\max}}{2}) - \\frac{\\text{width}_i}{2}$"
+                  ]
+                },
+                "Applies world shift: $\\text{item}.\\text{shiftWorld}(\\Delta x, \\Delta y)$ (all entities in a cluster shift uniformly).",
+                "Advances cursor: $y_{\\text{top}} \\leftarrow y_{\\text{top}} - (\\text{height}_i + \\text{gap})$"
+              ]
+            }
+          ],
+          "start": 5
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Horizontal Layout (HBox.arrange & HBox)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Applies the dual layout along the $X$-axis from left to right with vertical cross-axis alignment (`'top'`, `'center'`, `'bottom'`)."
+        }
+      ]
+    },
+    {
+      "id": "4-api-reference-code-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. API Reference & Code Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pattern 1: Sequential Animation Choreography (Recommended)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use `arrange` so that entities remain independent, avoiding premature sibling display during sequential `this.play(...)`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, MarkupText, Write, VBox, CameraModel, Rate, hex } from 'retiam';\n\nexport default class ShowcaseScene extends Scene {\n    public async run() {\n        this.camera.model = CameraModel.ORTHOGRAPHIC;\n\n        const title = new MarkupText(\"Kinetic Energy\", { fontSize: 1.0, fill: hex(\"#38BDF8\") });\n        const body = new MarkupText(\"The energy is given by $E_k = \\\\frac{1}{2}mv^2$.\", { fontSize: 0.65 });\n\n        // 1. Spatial arrangement without container coupling\n        VBox.arrange({ gap: 0.8, align: 'center', center: [0, 0.5, 0] }, title, body);\n\n        // 2. Camera framing with array of entities\n        this.camera.frame([title, body], { padding: 0.25 });\n\n        // 3. Independent sequential playback (body does NOT appear until Write(body))\n        await this.play(new Write(title, { duration: 1200 }));\n        await this.wait(400);\n        await this.play(new Write(body, { duration: 2000 }));\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pattern 2: Multi-Column Nested Layouts without Containers"
+        },
+        {
+          "type": "paragraph",
+          "text": "Pass arrays as clusters to arrange columns side-by-side without any wrapper nodes:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Column 1 (Left)\nVBox.arrange({ gap: 0.5 }, title1, body1);\n\n// Column 2 (Right)\nVBox.arrange({ gap: 0.5 }, title2, body2);\n\n// Compose columns horizontally with top-alignment\nconst allEntities = HBox.arrange({ gap: 2.0, align: 'top' }, [title1, body1], [title2, body2]);\n\nthis.camera.frame(allEntities, { padding: 0.2 });\n\n// Animate in any customized order\nawait this.play(new Write(title1));\nawait this.play(new Write(title2));\nawait this.play(new Write(body1));\nawait this.play(new Write(body2));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pattern 3: Rigid Hierarchical Trees (Container Mode)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use `new VBox` and `new HBox` when you want a composite object to move or fade as a single unit:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const col1 = new VBox({ gap: 0.4 }, title, formula);\nconst col2 = new VBox({ gap: 0.5 }, icon1, icon2);\nconst card = new HBox({ gap: 2.0, align: 'center' }, col1, col2);\n\nthis.add(card);\n\n// Move the entire card as a single body\nawait this.play(card.anim.shift([2.0, 0, 0]));"
+        }
+      ]
+    }
+  ]
+}

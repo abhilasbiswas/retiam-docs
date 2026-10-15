@@ -1,0 +1,1005 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-libs-physics-3d-backends",
+  "title": "physics / 3d / backends API",
+  "group": "Library API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "box3dbackend",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Box3DBackend"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/3d/backends/Box3DBackend.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/3d/backends/Box3DBackend.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "box3dInstance: Cached WebAssembly Box3D module instance",
+                "box3dReadyPromise: Top-level promise for Box3D WebAssembly initialization",
+                "Box3DBackend: 3D Physics backend powered by Erin Catto's Box3D compiled to the standard single-threaded WebAssembly build (box3d-wasm/standard). Features SIMD, a fast iterative solver, and deterministic physics."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "box3dInstance",
+                    "First",
+                    "Cached WebAssembly Box3D module instance"
+                  ]
+                },
+                {
+                  "cells": [
+                    "box3dReadyPromise",
+                    "First",
+                    "Top-level promise for Box3D WebAssembly initialization"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Box3DBackend",
+                    "Class",
+                    "3D Physics backend powered by Erin Catto's Box3D compiled to the standard single-threaded WebAssembly build (box3d-wasm/standard). Features SIMD, a fast iterative solver, and deterministic physics."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare let box3dInstance: Box3DModule | null;\nexport declare const box3dReadyPromise: Promise<Box3DModule>;\nexport declare class Box3DBackend implements IPhysics3DBackend {\n    readonly name: string;\n    world: Box3DWorld;\n    scene: Scene;\n    timeStep: number;\n    maxSubSteps: number;\n    subSteps: number;\n    constructor(scene: Scene, options?: Physics3DOptions);\n    ready(): Promise<this>;\n    step(dt?: number, maxSubSteps?: number): void;\n    onCollision(callback: (event: Collision3DEvent) => void): void;\n    syncKinematicBodies(dt: number): void;\n    syncKinematicBody(comp: RigidBodyComponent, dtSeconds?: number, isPreStep?: boolean): void;\n    addRigidBody(entity: Entity, options: RigidOptions): RigidBodyComponent;\n    remove(entity: Entity): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Box3DBackend` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly name: string",
+                    "\"box3d\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public world!: Box3DWorld",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scene: Scene",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public timeStep: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxSubSteps: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public subSteps: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(scene: Scene, options?: Physics3DOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.timeStep`, `this.maxSubSteps`, `this.subSteps`, `this.world`, `this._isWorldReady`, `this._pendingQueue`; construction of `b3.World`; calls to `this.world.enableContinuous`, `fn`, `initWorld`, `box3dReadyPromise.then`; 1 explicit loop. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async ready(): Promise<this>",
+                    "—",
+                    "Resolves when the underlying Box3D WebAssembly runtime and World are fully initialized. [Source line 130](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L130)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public step(dt: number = this.timeStep, maxSubSteps: number = this.maxSubSteps): void",
+                    "—",
+                    "Steps the simulation forward by dt seconds with internal temporal sub-stepping. [Source line 140](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L140)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onCollision(callback: (event: Collision3DEvent) => void): void",
+                    "—",
+                    "Implementation: `this._collisionCallbacks.push(callback);`. [Source line 214](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L214)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncKinematicBodies(dt: number): void",
+                    "—",
+                    "Synchronizes all registered kinematic bodies with their Entity transforms, calculating linear and angular velocities to impart physical momentum to dynamic objects. [Source line 222](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L222)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncKinematicBody(comp: RigidBodyComponent, dtSeconds?: number, isPreStep: boolean = false): void",
+                    "—",
+                    "Synchronizes a specific kinematic body, updating either its physics transform & velocities (if driven by Entity transform) or updating the Entity transform (if driven by physics velocity). [Source line 232](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L232)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addRigidBody(entity: Entity, options: RigidOptions): RigidBodyComponent",
+                    "—",
+                    "Adds an entity as a physical rigid body in the Box3D simulation. [Source line 324](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L324)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(entity: Entity): void",
+                    "—",
+                    "Removes an entity's rigid body from the Box3D simulation. [Source line 587](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L587)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Destroys the Box3D world and frees WebAssembly memory resources. [Source line 599](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L599)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.gravity ?? [0, -9.81, 0]",
+                    "[Line 91](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L91)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.timeStep ?? (1 / 60)",
+                    "[Line 96](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L96)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSubSteps ?? 4",
+                    "[Line 97](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L97)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.subSteps ?? 4",
+                    "[Line 98](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L98)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.enableSleep ?? true",
+                    "[Line 103](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L103)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.enableContinuous ?? true",
+                    "[Line 104](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L104)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motion ?? options.type ?? 'dynamic'",
+                    "[Line 334](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L334)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motion ?? options.type",
+                    "[Line 334](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L334)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.linearDamping ?? 0.0",
+                    "[Line 354](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L354)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.angularDamping ?? 0.05",
+                    "[Line 355](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L355)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.lockRotation || options.fixedRotation",
+                    "[Line 356](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L356)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.ccd ?? true",
+                    "[Line 362](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L362)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.velocity || options.angularVelocity",
+                    "[Line 414](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L414)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.shape ?? 'auto'",
+                    "[Line 644](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L644)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.density ?? 1.0",
+                    "[Line 647](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L647)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.friction ?? 0.5",
+                    "[Line 648](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L648)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.restitution ?? 0.0",
+                    "[Line 649](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L649)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.isTrigger || opts.isSensor || false",
+                    "[Line 650](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L650)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.isTrigger || opts.isSensor",
+                    "[Line 650](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L650)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? sphere?.radius ?? (entity.getLocalAABB().size.x / 2)",
+                    "[Line 659](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L659)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? sphere?.radius",
+                    "[Line 659](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L659)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? (aabb.size.x / 2)",
+                    "[Line 674](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L674)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? Math.max(aabb.size.y - radius * 2, 0.01)",
+                    "[Line 675](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L675)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radiusTop ?? cyl?.radiusTop ?? opts.radius ?? 1",
+                    "[Line 690](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L690)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radiusTop ?? cyl?.radiusTop ?? opts.radius",
+                    "[Line 690](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L690)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radiusTop ?? cyl?.radiusTop",
+                    "[Line 690](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L690)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radiusBottom ?? cyl?.radiusBottom ?? opts.radius ?? 1",
+                    "[Line 691](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L691)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radiusBottom ?? cyl?.radiusBottom ?? opts.radius",
+                    "[Line 691](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L691)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radiusBottom ?? cyl?.radiusBottom",
+                    "[Line 691](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L691)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? cyl?.height ?? 2",
+                    "[Line 692](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L692)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? cyl?.height",
+                    "[Line 692](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L692)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusBottom ?? cone?.radiusBottom ?? 1",
+                    "[Line 707](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L707)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusBottom ?? cone?.radiusBottom",
+                    "[Line 707](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L707)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusBottom",
+                    "[Line 707](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L707)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? cone?.height ?? 2",
+                    "[Line 708](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L708)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? cone?.height",
+                    "[Line 708](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L708)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "initBox3D: async function initBox3D(): Promise<Box3DModule>",
+                    "Body operations (including nested callbacks): calls to `(globalThis as any).process.getBuiltinModule`, `path.resolve`, `fs.existsSync`, `fs.readFileSync`, `Box3D`; return paths including `box3dInstance`.",
+                    "[Line 34](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L34)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Box3DBackend._drainCollisionEvents: private _drainCollisionEvents(): void",
+                    "Body operations (including nested callbacks): calls to `this.world.isValid`, `this.world.getContactEvents`, `this._dispatchContact`; 2 explicit loops.",
+                    "[Line 170](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L170)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Box3DBackend._dispatchContact: private _dispatchContact(ev: any, started: boolean): void",
+                    "Body operations (including nested callbacks): calls to `this._shapeToComp.get`, `compA._dispatchCollision`, `compB._dispatchCollision`, `this._collisionCallbacks[i]`; 1 explicit loop.",
+                    "[Line 189](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L189)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Box3DBackend.extractModelAndMesh: private extractModelAndMesh(entity: Entity): { model?: Model; mesh?: WebGPUMesh }",
+                    "Body operations (including nested callbacks): calls to `entity.getComponent`; return paths including `{ model: entity.surface, mesh: entity.surface.geo?.mesh }`, `{ model: entity, mesh: entity.geo?.mesh }`, `{ mesh: modelGeo.mesh }`; 1 explicit loop.",
+                    "[Line 614](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L614)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Box3DBackend.createShapesForEntity: private createShapesForEntity( body: Box3DBody, entity: Entity, opts: RigidOptions, isStatic: boolean ): Box3DShape[]",
+                    "Body operations (including nested callbacks): calls to `this.extractModelAndMesh`, `entity.transform.getScaleX`, `entity.transform.getScaleY`, `entity.transform.getScaleZ`, `entity.getLocalAABB`, `body.createSphere`, `s.isValid`, `body.createCapsule` and additional helpers; return paths including `s && s.isValid() ? [s] : []`, `createdShapes`, `[hull]`; 3 explicit loops.",
+                    "[Line 638](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L638)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Box3DBackend.generateCylinderHullPoints: private generateCylinderHullPoints(radiusTop: number, radiusBottom: number, height: number, segments: number = 12): Box3DVec3[]",
+                    "Body operations (including nested callbacks): calls to `points.push`; return paths including `points`; 1 explicit loop.",
+                    "[Line 948](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L948)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Box3DBackend.generateConeHullPoints: private generateConeHullPoints(radius: number, height: number, segments: number = 12): Box3DVec3[]",
+                    "Body operations (including nested callbacks): calls to `points.push`; return paths including `points`; 1 explicit loop.",
+                    "[Line 961](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Box3DBackend.ts#L961)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "iphysics3dbackend",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "IPhysics3DBackend"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/3d/backends/IPhysics3DBackend.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/3d/backends/IPhysics3DBackend.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/IPhysics3DBackend.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "IPhysics3DBackend: Minimal contract for 3D physics engine backends (e.g. Rapier3D, Jolt Physics)."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "IPhysics3DBackend",
+                    "Interface",
+                    "Minimal contract for 3D physics engine backends (e.g. Rapier3D, Jolt Physics)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface IPhysics3DBackend {\n    readonly name: string;\n    step(dt: number, maxSubSteps?: number): void;\n    addRigidBody(entity: Entity, options: RigidOptions): RigidBodyComponent;\n    addSoftBody?(entity: Entity, options: SoftBodyOptions): SoftBodyComponent;\n    remove(entity: Entity): void;\n    onCollision?(callback: (event: Collision3DEvent) => void): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `IPhysics3DBackend` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "readonly name: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/IPhysics3DBackend.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "step(dt: number, maxSubSteps?: number): void;",
+                    "—",
+                    "Advances the simulation by dt seconds with optional substeps [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/IPhysics3DBackend.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "addRigidBody(entity: Entity, options: RigidOptions): RigidBodyComponent;",
+                    "—",
+                    "Adds a rigid body collider to the simulation [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/IPhysics3DBackend.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "addSoftBody?(entity: Entity, options: SoftBodyOptions): SoftBodyComponent;",
+                    "—",
+                    "Adds a deformable soft body / cloth to the simulation (if supported) [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/IPhysics3DBackend.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "remove(entity: Entity): void;",
+                    "—",
+                    "Removes an entity's physical body from the simulation [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/IPhysics3DBackend.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "onCollision?(callback: (event: Collision3DEvent) => void): void;",
+                    "—",
+                    "Subscribes to global 3D collision events [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/IPhysics3DBackend.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "destroy(): void;",
+                    "—",
+                    "Cleans up all world resources, memory, and workers [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/IPhysics3DBackend.ts#L32)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rapier3dbackend",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Rapier3DBackend"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/3d/backends/Rapier3DBackend.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/3d/backends/Rapier3DBackend.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "rapierReadyPromise: Top-level promise for Rapier WebAssembly initialization"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "rapierReadyPromise",
+                    "First",
+                    "Top-level promise for Rapier WebAssembly initialization"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Rapier3DBackend",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const rapierReadyPromise: Promise<void>;\nexport declare class Rapier3DBackend implements IPhysics3DBackend {\n    readonly name: string;\n    world: RAPIER.World;\n    scene: Scene;\n    timeStep: number;\n    maxSubSteps: number;\n    subSteps: number;\n    constructor(scene: Scene, options?: BasePhysics3DOptions);\n    ready(): Promise<this>;\n    step(dt?: number, maxSubSteps?: number): void;\n    onCollision(callback: (event: Collision3DEvent) => void): void;\n    addRigidBody(entity: Entity, options: RigidOptions): RigidBodyComponent;\n    remove(entity: Entity): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Rapier3DBackend` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly name: string",
+                    "\"rapier\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public world!: RAPIER.World",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scene: Scene",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public timeStep: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxSubSteps: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public subSteps: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(scene: Scene, options?: BasePhysics3DOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.timeStep`, `this.maxSubSteps`, `this.subSteps`, `this.world`, `this.world.timestep`, `this._eventQueue`, `this._isWorldReady` and other instance fields; construction of `RAPIER.World`, `RAPIER.EventQueue`; calls to `fn`, `initWorld`, `rapierReadyPromise.then`; 1 explicit loop. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async ready(): Promise<this>",
+                    "—",
+                    "Resolves when the underlying Rapier WebAssembly runtime and World are fully initialized. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public step(dt: number = this.timeStep, maxSubSteps: number = this.maxSubSteps): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.world.timestep`, `this._accumulator`; calls to `this.world.step`, `this._drainCollisionEvents`; 3 explicit loops. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onCollision(callback: (event: Collision3DEvent) => void): void",
+                    "—",
+                    "Implementation: `this._collisionCallbacks.push(callback);`. [Source line 147](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L147)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addRigidBody(entity: Entity, options: RigidOptions): RigidBodyComponent",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `RigidBodyComponent`; calls to `this.scene.add`, `entity.getComponent`, `this.remove`, `entity.addComponent`, `RAPIER.RigidBodyDesc.fixed`, `RAPIER.RigidBodyDesc.kinematicPositionBased`, `RAPIER.RigidBodyDesc.dynamic`, `bodyDesc.setTranslation` and additional helpers; return paths including `comp`. [Source line 151](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L151)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(entity: Entity): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `entity.getComponent`, `this.world.removeRigidBody`, `entity.removeComponent`. [Source line 239](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L239)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._pendingQueue`, `this._collisionCallbacks`, `this._eventQueue`, `this._isWorldReady`; calls to `this._eventQueue.free`, `this.world.free`. [Source line 251](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L251)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.gravity ?? [0, -9.81, 0]",
+                    "[Line 45](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L45)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.timeStep ?? (1 / 60)",
+                    "[Line 50](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L50)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSubSteps ?? 3",
+                    "[Line 51](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L51)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.subSteps ?? 4",
+                    "[Line 52](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L52)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motion ?? options.type ?? 'dynamic'",
+                    "[Line 161](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L161)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.motion ?? options.type",
+                    "[Line 161](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L161)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.ccd ?? true",
+                    "[Line 185](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L185)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.lockRotation || options.fixedRotation",
+                    "[Line 188](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L188)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.isTrigger || options.isSensor",
+                    "[Line 201](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L201)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.shape ?? 'auto'",
+                    "[Line 290](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L290)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? sphere?.radius ?? (entity.getLocalAABB().size.x / 2)",
+                    "[Line 299](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L299)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? sphere?.radius",
+                    "[Line 299](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L299)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? (aabb.size.x / 2)",
+                    "[Line 305](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L305)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? Math.max(aabb.size.y - radius * 2, 0.01)",
+                    "[Line 306](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L306)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusBottom ?? cone?.radiusBottom ?? 1",
+                    "[Line 312](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L312)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusBottom ?? cone?.radiusBottom",
+                    "[Line 312](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L312)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusBottom",
+                    "[Line 312](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L312)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? cone?.height ?? 2",
+                    "[Line 313](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L313)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? cone?.height",
+                    "[Line 313](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L313)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusTop ?? cyl?.radiusTop ?? 1",
+                    "[Line 319](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L319)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusTop ?? cyl?.radiusTop",
+                    "[Line 319](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L319)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.radius ?? opts.radiusTop",
+                    "[Line 319](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L319)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? cyl?.height ?? 2",
+                    "[Line 320](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L320)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opts.height ?? cyl?.height",
+                    "[Line 320](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L320)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Rapier3DBackend._drainCollisionEvents: private _drainCollisionEvents(): void",
+                    "Body operations (including nested callbacks): calls to `this._eventQueue.drainCollisionEvents`, `this.world.getCollider`, `col1.parent`, `col2.parent`, `compA._dispatchCollision`, `compB._dispatchCollision`, `this._collisionCallbacks[i]`; 1 explicit loop.",
+                    "[Line 120](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L120)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Rapier3DBackend.extractModelAndMesh: private extractModelAndMesh(entity: Entity): { model?: Model; mesh?: WebGPUMesh }",
+                    "Body operations (including nested callbacks): calls to `entity.getComponent`; return paths including `{ model: entity.surface, mesh: entity.surface.geo?.mesh }`, `{ model: entity, mesh: entity.geo?.mesh }`, `{ mesh: modelGeo.mesh }`; 1 explicit loop.",
+                    "[Line 265](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L265)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Rapier3DBackend.deriveColliderDesc: private deriveColliderDesc(entity: Entity, opts: RigidOptions): RAPIER.ColliderDesc | null",
+                    "Body operations (including nested callbacks): construction of `Float32Array`, `Uint32Array`; calls to `this.extractModelAndMesh`, `entity.transform.getScaleX`, `entity.transform.getScaleY`, `entity.transform.getScaleZ`, `entity.getLocalAABB`, `RAPIER.ColliderDesc.ball`, `RAPIER.ColliderDesc.capsule`, `RAPIER.ColliderDesc.cone` and additional helpers; return paths including `RAPIER.ColliderDesc.ball(Math.max(radius, 0.001))`, `RAPIER.ColliderDesc.capsule(Math.max(height / 2, 0.001), Math.max(radius, 0.001))`, `RAPIER.ColliderDesc.cone(Math.max(height / 2, 0.001), Math.max(radius, 0.001))`; 2 explicit loops.",
+                    "[Line 289](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/backends/Rapier3DBackend.ts#L289)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

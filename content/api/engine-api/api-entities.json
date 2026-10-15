@@ -1,0 +1,659 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-entities",
+  "title": "entities API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "instanced",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Instanced"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/Instanced.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/Instanced.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "InstancedOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "InstancedComputeOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "StaggeredAnimationOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Instanced",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface InstancedOptions {\n    layout?: 'standard' | 'extended';\n    activeCount?: number;\n    firstInstance?: number;\n    hitRadius?: number;\n}\nexport interface InstancedComputeOptions {\n    workgroupSize?: [\n        number,\n        number,\n        number\n    ];\n    extraResources?: Record<string, ShaderResource>;\n    autoDispatch?: boolean;\n}\nexport interface StaggeredAnimationOptions {\n    duration: number;\n    delayPerInstance?: number;\n    easing?: (t: number) => number;\n    onUpdate: (instanceIndex: number, progress: number) => void;\n    onComplete?: () => void;\n}\nexport declare class Instanced extends Entity implements IRaycastable {\n    geo: GeometryComponent;\n    fragment: FragmentComponent;\n    instanceData: Float32Array;\n    instanceBuffer: GPUBuffer;\n    instanceCount: number;\n    activeCount: number;\n    firstInstance: number;\n    isDirty: boolean;\n    readonly layout: 'standard' | 'extended';\n    readonly STRIDE: number;\n    readonly templateEntity: Entity;\n    hitRadius: number;\n    computeKernel: ComputeKernel | null;\n    computeUniformBuffer: GPUBuffer | null;\n    ensureGPUBuffer(device: GPUDevice): GPUBuffer;\n    constructor(template: Entity, count: number, options?: InstancedOptions);\n    setInstancePosition(index: number, pos: Vec3): void;\n    getInstancePosition(index: number, out?: Vec3): Vec3;\n    setInstanceScale(index: number, scale: number | Vec3): void;\n    setInstanceScale3D(index: number, scale: Vec3): void;\n    setInstanceColor(index: number, color: Color): void;\n    getInstanceColor(index: number, out?: Color): Color;\n    setInstanceRotation(index: number, rot: Quaternion): void;\n    getInstanceRotation(index: number, out?: Quaternion): Quaternion;\n    setInstanceVisible(index: number, visible: boolean): void;\n    updateInstances(): void;\n    getInstanceGPUBuffer(device?: GPUDevice): GPUBuffer;\n    compute(computeLogicOrKernel: string | ComputeKernel, options?: InstancedComputeOptions): this;\n    dispatchCompute(time?: number, dt?: number): void;\n    raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): RaycastHit | null;\n    animateStaggered(scene: Scene, options: StaggeredAnimationOptions): {\n        cancel: () => void;\n    };\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `InstancedOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "layout?: 'standard' | 'extended';",
+                    "—",
+                    "Layout mode: 'standard' (12 floats per instance) or 'extended' (16 floats per instance for non-uniform scale) [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "activeCount?: number;",
+                    "—",
+                    "Number of instances actively drawn (defaults to count) [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "firstInstance?: number;",
+                    "—",
+                    "Starting instance index offset in draw calls (defaults to 0) [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "hitRadius?: number;",
+                    "—",
+                    "Custom bounding radius for fast raycasting / picking (defaults to 1.0) [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L35)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `InstancedComputeOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "workgroupSize?: [number, number, number];",
+                    "—",
+                    "Workgroup invocation sizes [X, Y, Z] (defaults to [64, 1, 1]) [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "extraResources?: Record<string, ShaderResource>;",
+                    "—",
+                    "Optional auxiliary storage buffers, uniforms, or textures [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "autoDispatch?: boolean;",
+                    "—",
+                    "Whether to automatically dispatch the compute shader every frame (defaults to true) [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L44)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `StaggeredAnimationOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "duration: number;",
+                    "—",
+                    "Total duration in seconds for each instance's transition [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "delayPerInstance?: number;",
+                    "—",
+                    "Stagger delay between consecutive instances in seconds (default: 0.001s) [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "easing?: (t: number) => number;",
+                    "—",
+                    "Custom easing function (t in [0, 1]) [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "onUpdate: (instanceIndex: number, progress: number) => void;",
+                    "—",
+                    "Callback fired on each frame for each active instance with its interpolated progress (0 -> 1) [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "onComplete?: () => void;",
+                    "—",
+                    "Callback fired when the entire staggered sequence completes [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L57)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Instanced` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public geo: GeometryComponent",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fragment: FragmentComponent",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public instanceData: Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public instanceBuffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public instanceCount: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public activeCount: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public firstInstance: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isDirty",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly layout: 'standard' | 'extended'",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly STRIDE: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly templateEntity: Entity",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public hitRadius: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeKernel: ComputeKernel | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeUniformBuffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public ensureGPUBuffer(device: GPUDevice): GPUBuffer",
+                    "—",
+                    "Ensures that the underlying GPU instance storage buffer exists and has adequate capacity. Reallocates and invalidates compute bindings if capacity needs to expand. [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L101)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(template: Entity, count: number, options: InstancedOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.templateEntity`, `this.instanceCount`, `this.activeCount`, `this.firstInstance`, `this.layout`, `this.hitRadius`, `this.STRIDE`, `this.instanceData` and other instance fields; construction of `Float32Array`, `Error`, `TriangulatedPathGeometry`, `TriangulatedPathFragment`, `TriangulatedPathRenderer`; calls to `this.paint.set`, `this.material.set`, `this.transform.set`, `target.getComponent`, `ent.getComponent`, `findGeo`, `this.addComponent`, `this.injectGeometryInstancing` and additional helpers; return paths including `ent`, `found`, `null`; rejection paths `new Error(\"Instanced: Template Entity is missing Render/Geometry/Material components.\")`; 2 explicit loops. [Source line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L121)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstancePosition(index: number, pos: Vec3)",
+                    "—",
+                    "Implementation: `const i = index * this.STRIDE; this.instanceData[i] = pos.x; this.instanceData[i + 1] = pos.y; this.instanceData[i + 2] = pos.z; this.markDirty(index);`. [Source line 397](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L397)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getInstancePosition(index: number, out = new Vec3()): Vec3",
+                    "—",
+                    "Implementation: `const i = index * this.STRIDE; return out.set(this.instanceData[i], this.instanceData[i + 1], this.instanceData[i + 2]);`. [Source line 405](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L405)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstanceScale(index: number, scale: number | Vec3)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.instanceData[i + 3]`, `this.instanceData[i + 12]`, `this.instanceData[i + 13]`, `this.instanceData[i + 14]`; calls to `this.markDirty`. [Source line 410](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L410)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstanceScale3D(index: number, scale: Vec3)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.instanceData[i + 12]`, `this.instanceData[i + 13]`, `this.instanceData[i + 14]`, `this.instanceData[i + 3]`; calls to `this.markDirty`. [Source line 425](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L425)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstanceColor(index: number, color: Color)",
+                    "—",
+                    "Implementation: `const i = index * this.STRIDE; this.instanceData[i + 4] = color.r; this.instanceData[i + 5] = color.g; this.instanceData[i + 6] = color.b; this.instanceData[i + 7] = color.a; this.markDirty(index);`. [Source line 438](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L438)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getInstanceColor(index: number, out = new Color(0, 0, 0, 1)): Color",
+                    "—",
+                    "Implementation: `const i = index * this.STRIDE; out.r = this.instanceData[i + 4]; out.g = this.instanceData[i + 5]; out.b = this.instanceData[i + 6]; out.a = this.instanceData[i + 7]; return out;`. [Source line 447](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L447)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstanceRotation(index: number, rot: Quaternion)",
+                    "—",
+                    "Implementation: `const i = index * this.STRIDE; this.instanceData[i + 8] = rot.x; this.instanceData[i + 9] = rot.y; this.instanceData[i + 10] = rot.z; this.instanceData[i + 11] = rot.w; this.markDirty(index);`. [Source line 456](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L456)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getInstanceRotation(index: number, out = new Quaternion()): Quaternion",
+                    "—",
+                    "Implementation: `const i = index * this.STRIDE; out.x = this.instanceData[i + 8]; out.y = this.instanceData[i + 9]; out.z = this.instanceData[i + 10]; out.w = this.instanceData[i + 11]; return out;`. [Source line 465](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L465)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstanceVisible(index: number, visible: boolean)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.instanceData[i + 3]`, `this.instanceData[i + 7]`; calls to `this.markDirty`. [Source line 474](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L474)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateInstances()",
+                    "—",
+                    "Implementation: `this.isDirty = true; this.invalidate();`. [Source line 486](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L486)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getInstanceGPUBuffer(device?: GPUDevice): GPUBuffer",
+                    "—",
+                    "Implementation: `if (!this.instanceBuffer) { const dev = device || this.getScene()?.device; if (dev) { this.ensureGPUBuffer(dev); } } return this.instanceBuffer;`. [Source line 491](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L491)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public compute(\n        computeLogicOrKernel: string | ComputeKernel,\n        options?: InstancedComputeOptions\n    ): this",
+                    "—",
+                    "Attaches a WebGPU compute shader or ComputeKernel to this Instanced entity. Executes directly on the GPU instance storage buffer in VRAM with zero CPU loop overhead. Param: computeLogicOrKernel WGSL compute logic (or full compute module) or an existing ComputeKernel. Param: options Configuration options for workgroups, extra resources, or dispatch mode. [Source line 512](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L512)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dispatchCompute(time?: number, dt?: number): void",
+                    "—",
+                    "Dispatches the attached compute shader to Retiam's compute queue. Runs automatically on each frame when autoDispatch is true. Param: time Current scene time in seconds. Param: dt Frame delta time in seconds. [Source line 576](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L576)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public raycast(\n        ray: Ray,\n        localOrigin: Vec3,\n        localDir: Vec3,\n        worldMatrix: Mat4,\n        hitTolerance: number = 0.05\n    ): RaycastHit | null",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `relOrig.set`, `qInv.set`, `Instanced.rotateVector`, `instRayDir.normalize`, `templateRaycastable.raycast`, `instRayOrig.dot`, `localHit.set`, `worldMatrix.transformPoint` and additional helpers; return paths including `{ entity: this, point: new Vec3(closestWorldHit.x, closestWorldHit.y, closestWorldHit.z), distance: closestDist, instanceId: closestIndex }`, `null`; 1 explicit loop. [Source line 624](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L624)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public animateStaggered(scene: Scene, options: StaggeredAnimationOptions): { cancel: () => void }",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `performance.now`, `easing`, `options.onUpdate`, `this.updateInstances`, `options.onComplete`, `scene.always`; return paths including `{ cancel: () => { isCancelled = true; } }`; 1 explicit loop. [Source line 743](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L743)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.computeUniformBuffer`; calls to `super.destroy`, `Renderer.destroyBuffers`. [Source line 783](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L783)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.layout || 'standard'",
+                    "[Line 127](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L127)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.autoDispatch ?? true",
+                    "[Line 524](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L524)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.easing || ((t: number) => t * t * (3 - 2 * t))",
+                    "[Line 746](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L746)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Instanced.injectGeometryInstancing: private injectGeometryInstancing()",
+                    "Body operations (including nested callbacks): assignments to `this.geo.getPasses`, `this.geo.prepare`, `this.dirtyMinIndex`, `this.dirtyMaxIndex`, `this.isDirty`, `this.geo.bindBuffers`, `this.geo.getDrawCalls`; construction of `VaryingSchema`; calls to `this.geo.getPasses.bind`, `originalGetPasses`, `Res.storage`, `newPass.vertexMain .replace( /out\\.position\\s*=\\s*clip2D\\(\\s*([\\s\\S]*?)(?:\\s*,\\s*instance_index)?\\s*\\);/g, 'var _pos2d = $1; var _v3 = vec3f(_pos2d *…`, `newPass.vertexMain .replace( /out\\.position\\s*=\\s*clip2D\\(\\s*([\\s\\S]*?)(?:\\s*,\\s*instance_index)?\\s*\\);/g, 'var _pos2d = $1; var _v3 = vec3f(_pos2d *…`, `newPass.vertexMain .replace`, `newPass.vertexMain.replace`, `baseGeo.prepare.bind` and additional helpers; return paths including `newPasses`, `calls.map((c: any) => ({ ...c, instanceCount: countToDraw, firstInstance: this.firstInstance, isStroke: c.isStroke }))`; 1 explicit loop.",
+                    "[Line 206](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L206)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Instanced.injectMaterialInstancing: private injectMaterialInstancing()",
+                    "Body operations (including nested callbacks): assignments to `this.fragment.getPasses`; construction of `VaryingSchema`; calls to `this.fragment.getPasses.bind`, `originalGetPasses`, `frag.replace`, `frag.includes`; return paths including `newPasses`; 1 explicit loop.",
+                    "[Line 344](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L344)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Instanced.markDirty: private markDirty(index: number)",
+                    "Implementation: `if (index < this.dirtyMinIndex) this.dirtyMinIndex = index; if (index > this.dirtyMaxIndex) this.dirtyMaxIndex = index; this.isDirty = true;`.",
+                    "[Line 387](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L387)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Instanced.initComputeKernel: private initComputeKernel(device: GPUDevice): void",
+                    "Body operations (including nested callbacks): assignments to `this.computeUniformBuffer`, `this.computeKernel`; construction of `ComputeKernel`; calls to `this.ensureGPUBuffer`, `GPUAllocator.safeCreateBuffer`, `code.includes`, `Res.storage`, `Res.uniform`.",
+                    "[Line 534](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L534)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Instanced.rotateVector: private static rotateVector(v: Vec3, qx: number, qy: number, qz: number, qw: number, out: Vec3): Vec3",
+                    "Body operations (including nested callbacks): return paths including `out`.",
+                    "[Line 609](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L609)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"Instanced: Template Entity is missing Render/Geometry/Material components.\")"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity), [IRaycastable](/api-core#interfaces)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "subscene",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SubScene"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/SubScene.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/SubScene.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/SubScene.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SubScene",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class SubScene extends Entity {\n    nestedScene: Scene;\n    constructor(nestedScene: Scene);\n    update(t: number, dt: number): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SubScene` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public nestedScene: Scene",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 5](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/SubScene.ts#L5)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(nestedScene: Scene)",
+                    "—",
+                    "Implementation: `super(); this.nestedScene = nestedScene; this.nestedScene.init(); this.nestedScene.run(); this.LABEL = \"SubScene\";`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/SubScene.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.nestedScene.composer`, `this.nestedScene.device`, `this.nestedScene.compute`, `this.nestedScene.renderer`, `this.nestedScene.stateManager`, `this.nestedScene.invalidate`, `this.isLinked`, `this.nestedScene.compute_queue`; calls to `super.update`, `this.getScene`, `parentScene.invalidate`, `this.nestedScene.updateTime`, `this.nestedScene.update`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/SubScene.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

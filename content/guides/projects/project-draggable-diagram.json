@@ -1,0 +1,139 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "project-draggable-diagram",
+  "title": "Build a draggable diagram",
+  "group": "Projects",
+  "summary": "Build a diagram whose draggable nodes keep their connecting edges in sync.",
+  "prerequisites": [
+    "[Pointer interaction](/interaction)",
+    "[Transforms](/transforms)"
+  ],
+  "outcome": "Draggable nodes with edges that follow their positions.",
+  "sections": [
+    {
+      "id": "overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Connect nodes and keep edges attached"
+        },
+        {
+          "type": "paragraph",
+          "text": "Start with two connected nodes, add dragging, then keep the connector aligned with their boundaries. The three complete scenes show how input, node state and dependent geometry fit together."
+        }
+      ]
+    },
+    {
+      "id": "stage-1",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Start with two nodes"
+        },
+        {
+          "type": "paragraph",
+          "text": "The first version uses two `Circle` nodes, a `Line` connector and `SDFText` labels. Everything is in the same coordinate space, making positions easy to inspect."
+        },
+        {
+          "type": "paragraph",
+          "text": "Change a node’s initial position, then add a later move after the diagram is created. The connector is initialized from the nodes, but it does not keep following by itself. The next stage makes that dependency continuous."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-diagram-1"
+        }
+      ]
+    },
+    {
+      "id": "stage-2",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Let the nodes move"
+        },
+        {
+          "type": "paragraph",
+          "text": "The second version installs `InteractionManager` and enables dragging. Each drag handler receives a world position and moves its root node there."
+        },
+        {
+          "type": "paragraph",
+          "text": "A post-phase updater reads the new node positions and refreshes the connector and labels. This order avoids drawing followers from the previous animation or interaction state. Drag either node and inspect the result."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-diagram-2"
+        }
+      ]
+    },
+    {
+      "id": "stage-3",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Keep connections readable"
+        },
+        {
+          "type": "paragraph",
+          "text": "The final version clamps dragging to a useful region and shortens the connector to the node boundaries. The connector’s endpoints are calculated from the same positions as the nodes."
+        },
+        {
+          "type": "paragraph",
+          "text": "If the nodes overlap, the center-to-center fallback avoids an inverted segment. A larger graph would resolve overlap and routing as a separate layout problem. This small example keeps the constraint visible and understandable."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-diagram-3"
+        }
+      ]
+    },
+    {
+      "id": "make-it-your-own",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Use it in your own application"
+        },
+        {
+          "type": "paragraph",
+          "text": "Store node IDs and relationships in application data, then use that data to manage entities. Keep labels and edges as followers instead of copying their positions into unrelated constants."
+        },
+        {
+          "type": "paragraph",
+          "text": "For nested nodes, convert world drag positions into the parent coordinate system before assigning local translation. `Entity.worldToLocal` and `Entity.shiftWorld` explain the distinction."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Interaction](/interaction), [Layout](/layout) and [Graphs](/graphs)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Explain a moving tangent](/project-mathematical-explanation)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "difficulty": "intermediate",
+  "estimatedMinutes": 30
+}

@@ -1,0 +1,206 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-rthtml-and-rtview-rich-media-architecture",
+  "title": "Interactive 3D HTML Embedding & Video Texture Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/RTHTML_AND_RTVIEW_RICH_MEDIA_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/RTHTML_AND_RTVIEW_RICH_MEDIA_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/RTHTML_AND_RTVIEW_RICH_MEDIA_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Texture](/api-render-pipelines#resourcelayouts), [RTHTML](/api-entities-primitives-3d#rthtml), [RTVideo](/api-entities-primitives-3d#rtvideo), [VideoData](/api-core#videodata), [Input](/api-camera#camera), [Ray](/api-utils#raycaster), [Intersection](/api-entities-composites-geometry#booleanops), [SVG](/api-entities-composites-svg#svg), [Camera](/api-camera#camera), [Mode](/api-render-frame-graph#resource), [Model](/api-entities-primitives-3d#model), [HTMLRenderMode](/api-entities-primitives-3d#rthtml), [Raycaster](/api-utils#raycaster), [Flash](/api-libs-highlights-finish#flash), [OfflineRenderManager](/api-core#offlinerendermanager), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [OrbitCameraController](/api-camera#orbitcameracontroller), [Vec3](/api-math-vector#vec3)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Bridging standard Web DOM elements (interactive UI, iframes, live documentation, forms) and streaming video into a hardware-accelerated 3D WebGPU world requires hybrid rendering strategies."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`RTHTML`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/RTHTML.ts)**: A 3D model entity projecting live HTML/DOM content onto an oriented 3D plane, featuring 4 rendering modes, invisible boundary clipping, and bidirectional pointer raycast forwarding.",
+            "**[`RTVideo`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/RTVideo.ts) & [`VideoData`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VideoData.ts)**: 3D video playback surface binding HTML5 `<video>` streams to GPU samplers via `texture_external`, with frame-exact synchronization during offline headless video exports."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  I[\"User input<br/>3D ray\"] --> Q[\"Ray-to-quad UV intersection<br/>Local coordinates u, v\"]\n  Q --> D[\"Synthetic event dispatcher<br/>Embedded DOM events\"]\n  D --> V[\"Interactive display<br/>CSS3D / native Chrome\"]\n  D --> E[\"Headless video export<br/>SVG ForeignObject rasterization\"]\n  V --> C[\"Camera matrix tracking<br/>Preserves 3D perspective\"]\n  E --> P[\"2D canvas drawImage<br/>Pixel buffer to WebGPU\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-rthtml-multi-mode-architecture-rthtml-ts-src-engine-entities-primitives-3d-rthtml-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. RTHTML Multi-Mode Architecture ([RTHTML.ts](../src/engine/entities/primitives/3d/RTHTML.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `RTHTML` entity inherits from [`Model`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Model.ts) and supports four distinct execution modes:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export enum HTMLRenderMode {\n    AUTO = \"auto\",         // Dynamically selects best mode based on browser & renderer\n    NATIVE = \"native\",     // Chrome experimental copyElementImageToTexture WebGPU API\n    CSS3D = \"css3d\",       // High-fidelity DOM overlay synced to camera projection\n    RASTER = \"raster\"      // SVG ForeignObject rasterizer for video export & shadow maps\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. CSS3D Camera-Synchronized Projection"
+        },
+        {
+          "type": "paragraph",
+          "text": "In `CSS3D` mode:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "An invisible clipper container (`clipperElement`) is mounted over the canvas, restricting DOM visibility to canvas bounds.",
+            "The world-view-projection matrix of the active camera is decomposed into a CSS `matrix3d(...)` string:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{transform} = \\text{matrix3d}(m_{00}, m_{01}, \\dots, m_{33})"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The DOM element updates its 3D CSS transform each frame in exact synchronization with the camera, providing full browser-native text selection, mouse clicks, keyboard input, and interactive iframes."
+          ],
+          "start": 3
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. SVG ForeignObject Rasterization"
+        },
+        {
+          "type": "paragraph",
+          "text": "Browsers forbid WebGPU from directly reading cross-origin DOM overlays. For headless frame-by-frame 4K video exports (`retiam render`):"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The HTML DOM is serialized into an XML string.",
+            "Wrapped inside an SVG `<foreignObject>` element:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "xml",
+          "code": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1024\" height=\"768\">\n       <foreignObject width=\"100%\" height=\"100%\">\n           <!-- Serialized DOM Markup -->\n       </foreignObject>\n   </svg>"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Rasterized into an `ImageBitmap` and uploaded to the GPU texture array, ensuring embedded HTML participates in shadows, depth testing, and raytracing."
+          ],
+          "start": 3
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. 3D Pointer Raycasting to DOM Forwarding"
+        },
+        {
+          "type": "paragraph",
+          "text": "When the user clicks or moves the mouse over the 3D canvas:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The [`Raycaster`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/Raycaster.ts) calculates the barycentric intersection coordinate $(u, v) \\in [0, 1]^2$ on the quad surface.",
+            "The internal pixel target is resolved:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "x_{\\text{dom}} = u \\cdot W_{\\text{element}}, \\quad y_{\\text{dom}} = (1 - v) \\cdot H_{\\text{element}}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "A synthetic `PointerEvent` or `MouseEvent` is dispatched to `document.elementFromPoint(x, y)`, providing interactive typing and clicking directly on 3D floating monitors."
+          ],
+          "start": 3
+        }
+      ]
+    },
+    {
+      "id": "3-3d-video-surfaces-rtvideo-ts-src-engine-entities-primitives-3d-rtvideo-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. 3D Video Surfaces ([RTVideo.ts](../src/engine/entities/primitives/3d/RTVideo.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "`RTVideo` maps HTML5 `<video>` frame decoders to WebGPU textures:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Suppression of Flash-to-White**: Initializes with black emission (`emStrength: 0.0`) until `video.readyState >= 2` (HAVE_CURRENT_DATA) to prevent white frames during asynchronous loading.",
+            "**Deterministic Headless Sync**: During offline rendering ([`OfflineRenderManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts)), normal playback is paused. `RTVideo` explicitly steps the video element's time (`video.currentTime = scene.time`) and awaits the `seeked` event before encoding each video frame."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, RTHTML, RTVideo, OrbitCameraController, HTMLRenderMode, Vec3 } from \"retiam\";\n\nconst scene = new Scene({ canvas });\nnew OrbitCameraController(scene.camera, canvas);\n\n// 1. Interactive 3D DOM Terminal\nconst browser = new RTHTML(12, 8, \"https://wikipedia.org\", {\n    mode: HTMLRenderMode.CSS3D,\n    resolution: 1024\n});\nbrowser.transform.position = [-7, 0, 0];\nbrowser.transform.rotation.y = Math.PI / 6;\nscene.add(browser);\n\n// 2. 3D TV Screen with streaming video\nconst tv = new RTVideo(16, 9, \"/assets/big_buck_bunny.mp4\");\ntv.transform.position = [7, 0, 0];\nscene.add(tv);"
+        }
+      ]
+    }
+  ]
+}

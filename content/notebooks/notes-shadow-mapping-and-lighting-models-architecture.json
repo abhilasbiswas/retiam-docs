@@ -1,0 +1,240 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-shadow-mapping-and-lighting-models-architecture",
+  "title": "Shadow Mapping & Lighting Models Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SHADOW_MAPPING_AND_LIGHTING_MODELS_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SHADOW_MAPPING_AND_LIGHTING_MODELS_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SHADOW_MAPPING_AND_LIGHTING_MODELS_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Light](/api-entities-primitives-3d#light), [Pass](/api-render-frame-graph#pass), [ShadowPass](/api-render-passes#shadowpass), [Model](/api-entities-primitives-3d#model), [Scene](/api-core-scene#scene), [State](/api-core#state), [Environment](/api-entities-primitives-3d#environment), [Camera](/api-camera#camera), [Texture](/api-render-pipelines#resourcelayouts), [RenderPass](/api-render-passes#renderpass), [Pipeline](/api-render-pipelines#pipeline), [UP](/api-core#constants), [FrameGraph](/api-render-frame-graph#framegraph), [Usage](/api-utils#gpu-utils), [Box](/api-entities-primitives-3d#box), [Sphere](/api-entities-primitives-3d#sphere), [Color](/api-math#color), [Vec3](/api-math-vector#vec3)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rendering production-quality 3D mathematical scenes and scientific animations requires flexible lighting models and hardware-accelerated shadows."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam combines:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Light-Space Shadow Depth Pass ([`ShadowPass.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts))**: A dedicated depth-only rasterization pass generating a high-resolution $2048 \\times 2048$ `depth32float` shadow map from the primary light perspective.",
+            "**Cascaded PCF Filtering ([`shadows.wgsl`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/lighting/shadows.wgsl))**: Hardware comparison sampling with 9-tap Percentage-Closer Filtering (PCF) and slope-scale adaptive depth bias.",
+            "**Curated Lighting Model Library ([`src/engine/shaders/includes/lighting/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/lighting))**: Modular WGSL lighting chunks for Physically Based Rendering (PBR), Gooch technical illustration, Cel anime shading, and Clay matte shading."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  L[\"Scene lighting state<br/>Light / Environment / Camera\"] --> S[\"ShadowPass: pass 0<br/>2048×2048 depth32float texture\"]\n  S --> R[\"RenderPass<br/>Main forward rasterizer\"]\n  R --> P[\"Cook-Torrance PBR<br/>Roughness and metallic BRDF\"]\n  R --> G[\"Gooch<br/>Technical illustration: cool / warm tones\"]\n  R --> C[\"Cel<br/>Quantized toon bands\"]\n  R --> CL[\"Clay<br/>Matte studio with ambient softening\"]\n  P --> PCF[\"9-tap PCF shadows<br/>Slope-scale depth bias\"]\n  G --> PCF\n  C --> PCF\n  CL --> PCF\n  PCF --> O[\"Final render output\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-shadow-mapping-pipeline-shadowpass-ts-src-engine-render-passes-shadowpass-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Shadow Mapping Pipeline ([ShadowPass.ts](../src/engine/render/passes/ShadowPass.ts))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Light-Space Matrix Construction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The directional light position $\\mathbf{p}_{\\text{light}}$ and look-at target $\\mathbf{t}$ define an orthographic light viewing frustum:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{V}_{\\text{light}} = \\text{lookAt}(\\mathbf{p}_{\\text{light}}, \\mathbf{t}, \\text{UP})"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{P}_{\\text{light}} = \\text{ortho}(-w, w, -h, h, z_{\\text{near}}, z_{\\text{far}})"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{M}_{\\text{light}} = \\mathbf{P}_{\\text{light}} \\cdot \\mathbf{V}_{\\text{light}}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. FrameGraph Integration"
+        },
+        {
+          "type": "paragraph",
+          "text": "`ShadowPass` registers inside [`FrameGraph`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts) as a pre-pass before forward rasterization:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Declares `@create shadow_texture` with format `depth32float` and fixed dimensions $2048 \\times 2048$.",
+            "Filters scene draw calls: only models with [`CAST_SHADOW = true`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Model.ts) are rasterized.",
+            "Employs early depth-stencil test and front-face culling to suppress shadow acne without degrading silhouette precision."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Slope-Scale Adaptive Depth Bias"
+        },
+        {
+          "type": "paragraph",
+          "text": "In [`shadows.wgsl`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/lighting/shadows.wgsl), the shadow bias dynamically scales with surface slope relative to the light vector:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{bias} = \\max\\Big(0.005 \\cdot (1.0 - \\vec{n} \\cdot \\vec{l}), \\, 0.001\\Big)"
+        },
+        {
+          "type": "paragraph",
+          "text": "where $\\vec{n}$ is the normalized surface normal and $\\vec{l}$ is the light vector."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. 9-Tap Percentage-Closer Filtering (PCF)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam evaluates soft penumbras by averaging comparison samples across a $3 \\times 3$ kernel around the projected shadow coordinates:"
+        },
+        {
+          "type": "math",
+          "tex": "S(\\mathbf{p}) = \\frac{1}{9} \\sum_{u=-1}^1 \\sum_{v=-1}^1 \\text{textureSampleCompare}(\\text{shadowMap}, \\text{shadowSampler}, \\mathbf{p}_{xy} + \\vec{\\delta}_{uv}, \\mathbf{p}_z - \\text{bias})"
+        },
+        {
+          "type": "paragraph",
+          "text": "where $\\vec{\\delta}_{uv} = (u / 2048, v / 2048)$ is the texel offset."
+        }
+      ]
+    },
+    {
+      "id": "3-modular-lighting-shaders-catalogue",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Modular Lighting Shaders Catalogue"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Cook-Torrance Microfacet PBR ([pbr.wgsl](../src/engine/shaders/includes/lighting/pbr.wgsl))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Standard for photorealistic materials (roughness, metallicity, specular reflection):"
+        },
+        {
+          "type": "math",
+          "tex": "f_r(\\vec{l}, \\vec{v}) = k_d \\frac{c}{\\pi} + \\frac{D(\\vec{h}) \\cdot F(\\vec{v}, \\vec{h}) \\cdot G(\\vec{l}, \\vec{v}, \\vec{h})}{4 (\\vec{n} \\cdot \\vec{l}) (\\vec{n} \\cdot \\vec{v})}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**$D$ (GGX Normal Distribution)**: Models microfacet surface roughness.",
+            "**$F$ (Schlick Fresnel)**: Reflectance at grazing angles ($F_0 + (1 - F_0)(1 - \\vec{v}\\cdot\\vec{h})^5$).",
+            "**$G$ (Smith Geometry)**: Shadowing-masking of microfacets."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Gooch Technical Illustration ([gooch.wgsl](../src/engine/shaders/includes/lighting/gooch.wgsl))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Standard for mathematical and CAD visualizations. Blends between cool blue and warm yellow tones based on light alignment, ensuring surface orientation is readable even in shadowed regions:"
+        },
+        {
+          "type": "math",
+          "tex": "t = \\frac{1 + \\vec{n} \\cdot \\vec{l}}{2}"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{C}_{\\text{final}} = t \\cdot \\mathbf{C}_{\\text{warm}} + (1 - t) \\cdot \\mathbf{C}_{\\text{cool}} + \\mathbf{C}_{\\text{specular}}"
+        },
+        {
+          "type": "paragraph",
+          "text": "where:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{C}_{\\text{cool}} = \\mathbf{C}_{\\text{blue}} + \\alpha \\mathbf{C}_{\\text{diffuse}}, \\quad \\mathbf{C}_{\\text{warm}} = \\mathbf{C}_{\\text{yellow}} + \\beta \\mathbf{C}_{\\text{diffuse}}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Cel Toon Shading ([cel.wgsl](../src/engine/shaders/includes/lighting/cel.wgsl))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quantizes diffuse shading into sharp, discrete lighting bands using step functions:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{intensity} = \\text{floor}\\big((\\vec{n} \\cdot \\vec{l}) \\cdot N_{\\text{bands}}\\big) / N_{\\text{bands}}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Clay Matte Shading ([clay.wgsl](../src/engine/shaders/includes/lighting/clay.wgsl))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Mimics architectural clay render models with soft wrap diffuse lighting ($(\\vec{n} \\cdot \\vec{l} + w) / (1 + w)$) and contact shadow occlusion."
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Box, Sphere, Light, Color, Vec3 } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Configure directional sunlight source\nconst sun = new Light({\n    position: [10, 15, 12],\n    color: Color.fromHex(\"#ffffff\"),\n    intensity: 1.5,\n    castShadow: true\n});\nscene.add(sun);\n\n// 2. Add ground receiving shadow\nconst ground = new Box(20, 0.2, 20, {\n    position: [0, -1, 0],\n    fill: Color.fromHex(\"#334155\")\n});\nground.RECEIVE_SHADOW = true;\nground.CAST_SHADOW = false;\nscene.add(ground);\n\n// 3. Add shadow-casting subject\nconst sphere = new Sphere(1.5, {\n    position: [0, 2, 0],\n    fill: Color.fromHex(\"#38bdf8\")\n});\nsphere.CAST_SHADOW = true;\nsphere.RECEIVE_SHADOW = true;\nscene.add(sphere);"
+        }
+      ]
+    }
+  ]
+}

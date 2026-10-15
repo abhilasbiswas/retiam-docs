@@ -1,0 +1,777 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-core-material",
+  "title": "Material API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "material",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Material"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Material.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Material.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "MaterialFlags: Bitmask flags to track which material properties were explicitly set by the user. Facilitates inheritance resolution down the Scene Graph tree.",
+                "Material: Manages rendering material parameters (reflectance, roughness, metallic, normal scaling) for an [[Entity]], mapped directly to a Float32Array slice for WebGPU performance."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextureSource",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MaterialFlags",
+                    "Enum",
+                    "Bitmask flags to track which material properties were explicitly set by the user. Facilitates inheritance resolution down the Scene Graph tree."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Material",
+                    "Class",
+                    "Manages rendering material parameters (reflectance, roughness, metallic, normal scaling) for an [[Entity]], mapped directly to a Float32Array slice for WebGPU performance."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type TextureSource = string | ImageBitmap | HTMLCanvasElement | OffscreenCanvas | HTMLImageElement | HTMLVideoElement | HTMLElement | SubTexture;\nexport declare enum MaterialFlags {\n    COLOR = 1,\n    OPACITY = 2,\n    EM_COLOR = 4,\n    EM_STRENGTH = 8,\n    ROUGHNESS = 16,\n    METALLIC = 32,\n    TRANSMISSION = 64,\n    IOR = 128,\n    SPECULAR = 256,\n    ALBEDO_MAP = 512,\n    NORMAL_MAP = 1024,\n    ALBEDO_IDX = 2048,\n    NORMAL_IDX = 4096,\n    NORMAL_SCALE = 8192,\n    SHADING_STYLE = 16384,\n    STYLE_PARAMS = 32768\n}\nexport declare class Material {\n    glass: boolean;\n    static BYTELENGTH: number;\n    static F32LENGTH: number;\n    static _globalVersion: number;\n    version: number;\n    get UPDATE_FLAG(): boolean;\n    set UPDATE_FLAG(val: boolean);\n    set_mask: number;\n    binding?: GPUBufferBinding;\n    readonly data: Float32Array;\n    readonly _color: Float32Array;\n    readonly _emColor: Float32Array;\n    constructor(config?: any, copy?: boolean);\n    get color(): Float32Array;\n    set color(v: Color | number[] | Float32Array);\n    get opacity(): number;\n    set opacity(v: number);\n    get emColor(): Float32Array;\n    set emColor(v: Color | number[] | Float32Array);\n    get emStrength(): number;\n    set emStrength(v: number);\n    get roughness(): number;\n    set roughness(v: number);\n    get metallic(): number;\n    set metallic(v: number);\n    get transmission(): number;\n    set transmission(v: number);\n    get ior(): number;\n    set ior(v: number);\n    get specular(): number;\n    set specular(v: number);\n    get albedoIdx(): number;\n    set albedoIdx(v: number);\n    get normalIdx(): number;\n    set normalIdx(v: number);\n    get normalScale(): number;\n    set normalScale(v: number);\n    get albedoMap(): TextureSource | undefined;\n    set albedoMap(v: TextureSource | undefined);\n    get normalMap(): TextureSource | undefined;\n    set normalMap(v: TextureSource | undefined);\n    get smoothness(): number;\n    set smoothness(v: number);\n    get transparency(): number;\n    set transparency(v: number);\n    setColor(color: Color | number[] | Float32Array): Material;\n    setOpacity(opacity: number): Material;\n    setEmColor(color: Color | number[] | Float32Array): Material;\n    setEmStrength(v: number): Material;\n    setRoughness(v: number): Material;\n    setMetallic(v: number): Material;\n    setTransmission(v: number): Material;\n    setIor(v: number): Material;\n    setSpecular(v: number): Material;\n    setNormalScale(v: number): Material;\n    get shadingStyle(): ShadingStyle | number;\n    set shadingStyle(v: ShadingStyle | number);\n    get goochWarm(): number;\n    set goochWarm(v: number);\n    get goochCool(): number;\n    set goochCool(v: number);\n    get celBands(): number;\n    set celBands(v: number);\n    get rimStrength(): number;\n    set rimStrength(v: number);\n    get rimPower(): number;\n    set rimPower(v: number);\n    setShadingStyle(v: ShadingStyle | number): Material;\n    setGooch(warm?: number, cool?: number): Material;\n    setCel(bands?: number, rimStrength?: number): Material;\n    copy(): Material;\n    clone(): Material;\n    set(material: Material): void;\n    apply(local: Material, parent: Material): void;\n    static size(): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MaterialFlags` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "COLOR = 1 << 0",
+                    "1 << 0",
+                    "Declared contract; see the implementation linked above. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "OPACITY = 1 << 1",
+                    "1 << 1",
+                    "Declared contract; see the implementation linked above. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EM_COLOR = 1 << 2",
+                    "1 << 2",
+                    "Declared contract; see the implementation linked above. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EM_STRENGTH = 1 << 3",
+                    "1 << 3",
+                    "Declared contract; see the implementation linked above. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ROUGHNESS = 1 << 4",
+                    "1 << 4",
+                    "Declared contract; see the implementation linked above. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "METALLIC = 1 << 5",
+                    "1 << 5",
+                    "Declared contract; see the implementation linked above. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TRANSMISSION = 1 << 6",
+                    "1 << 6",
+                    "Declared contract; see the implementation linked above. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "IOR = 1 << 7",
+                    "1 << 7",
+                    "Declared contract; see the implementation linked above. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SPECULAR = 1 << 8",
+                    "1 << 8",
+                    "Declared contract; see the implementation linked above. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ALBEDO_MAP = 1 << 9",
+                    "1 << 9",
+                    "Declared contract; see the implementation linked above. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "NORMAL_MAP = 1 << 10",
+                    "1 << 10",
+                    "Declared contract; see the implementation linked above. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ALBEDO_IDX = 1 << 11",
+                    "1 << 11",
+                    "Declared contract; see the implementation linked above. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "NORMAL_IDX = 1 << 12",
+                    "1 << 12",
+                    "Declared contract; see the implementation linked above. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "NORMAL_SCALE = 1 << 13",
+                    "1 << 13",
+                    "Declared contract; see the implementation linked above. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SHADING_STYLE = 1 << 14",
+                    "1 << 14",
+                    "Declared contract; see the implementation linked above. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "STYLE_PARAMS = 1 << 15",
+                    "1 << 15",
+                    "Declared contract; see the implementation linked above. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L32)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Material` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public glass: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static BYTELENGTH: number",
+                    "96",
+                    "Total byte length of a single material memory block (96 bytes = 24 floats). [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static F32LENGTH: number",
+                    "24",
+                    "Total number of Float32 elements (fields) in the material memory slice. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static _globalVersion",
+                    "1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public version",
+                    "Material._globalVersion++",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get UPDATE_FLAG(): boolean",
+                    "—",
+                    "Flag indicating whether local material values have changed and need VRAM synchronization. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set UPDATE_FLAG(val: boolean)",
+                    "—",
+                    "Implementation: `this._updateFlag = val; if (val) this.version = Material._globalVersion++;`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set_mask: number",
+                    "0",
+                    "Bitmask tracking which fields were explicitly overridden on this instance. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public binding?: GPUBufferBinding",
+                    "—",
+                    "Bind group details mapping this material buffer. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly data: Float32Array",
+                    "—",
+                    "The raw underlying Float32 memory slice. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _color: Float32Array",
+                    "—",
+                    "Base color multiplier RGB components mapping. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _emColor: Float32Array",
+                    "—",
+                    "Emissive color RGB components mapping. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(config: any = {}, copy = false)",
+                    "—",
+                    "Creates a new Material instance. Param: config Initial properties dictionary or Float32Array slice. Param: copy If true, skip writing defaults. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get color(): Float32Array",
+                    "—",
+                    "Gets or sets the base color multiplier. [Source line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L179)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set color(v: Color | number[] | Float32Array)",
+                    "—",
+                    "Implementation: `if (v instanceof Color) v = v._rgba; this._color[0] = v[0]; this._color[1] = v[1]; this._color[2] = v[2]; this.set_mask |= MaterialFlags.COLOR; this.UPDATE_FLAG = true;`. [Source line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L180)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get opacity(): number",
+                    "—",
+                    "Gets or sets the opacity transparency level [0.0 - 1.0]. [Source line 190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L190)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set opacity(v: number)",
+                    "—",
+                    "Implementation: `this.data[3] = v; this.set_mask |= MaterialFlags.OPACITY; this.UPDATE_FLAG = true;`. [Source line 191](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L191)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get emColor(): Float32Array",
+                    "—",
+                    "Gets or sets the emissive light emission color. [Source line 200](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L200)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set emColor(v: Color | number[] | Float32Array)",
+                    "—",
+                    "Implementation: `if (v instanceof Color) v = v._rgba; this._emColor[0] = v[0]; this._emColor[1] = v[1]; this._emColor[2] = v[2]; this.set_mask |= MaterialFlags.EM_COLOR; this.UPDATE_FLAG = true;`. [Source line 201](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L201)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get emStrength(): number",
+                    "—",
+                    "Gets or sets the light emission strength. [Source line 211](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L211)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set emStrength(v: number)",
+                    "—",
+                    "Implementation: `this.data[7] = v; this.set_mask |= MaterialFlags.EM_STRENGTH; this.UPDATE_FLAG = true;`. [Source line 212](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L212)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get roughness(): number",
+                    "—",
+                    "Gets or sets the micro-surface roughness [0.0 - 1.0]. [Source line 221](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L221)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set roughness(v: number)",
+                    "—",
+                    "Implementation: `this.data[8] = v; this.set_mask |= MaterialFlags.ROUGHNESS; this.UPDATE_FLAG = true;`. [Source line 222](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L222)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get metallic(): number",
+                    "—",
+                    "Gets or sets the metallic metalness level [0.0 - 1.0]. [Source line 231](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L231)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set metallic(v: number)",
+                    "—",
+                    "Implementation: `this.data[9] = v; this.set_mask |= MaterialFlags.METALLIC; this.UPDATE_FLAG = true;`. [Source line 232](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L232)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get transmission(): number",
+                    "—",
+                    "Gets or sets the light transmission transparency level [0.0 - 1.0]. [Source line 241](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L241)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set transmission(v: number)",
+                    "—",
+                    "Implementation: `this.data[10] = v; this.set_mask |= MaterialFlags.TRANSMISSION; this.UPDATE_FLAG = true;`. [Source line 242](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L242)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get ior(): number",
+                    "—",
+                    "Gets or sets the Index of Refraction (IOR) for glass materials. [Source line 251](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L251)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set ior(v: number)",
+                    "—",
+                    "Implementation: `this.data[11] = v; this.set_mask |= MaterialFlags.IOR; this.UPDATE_FLAG = true;`. [Source line 252](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L252)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get specular(): number",
+                    "—",
+                    "Gets or sets the specular reflectivity factor [0.0 - 1.0]. [Source line 261](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L261)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set specular(v: number)",
+                    "—",
+                    "Implementation: `this.data[12] = v; this.set_mask |= MaterialFlags.SPECULAR; this.UPDATE_FLAG = true;`. [Source line 262](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L262)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get albedoIdx(): number",
+                    "—",
+                    "Index representing this material's albedo map in the textures array. [Source line 271](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L271)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set albedoIdx(v: number)",
+                    "—",
+                    "Implementation: `this.data[13] = v; this.set_mask |= MaterialFlags.ALBEDO_IDX; this.UPDATE_FLAG = true;`. [Source line 272](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L272)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get normalIdx(): number",
+                    "—",
+                    "Index representing this material's normal map in the textures array. [Source line 281](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L281)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set normalIdx(v: number)",
+                    "—",
+                    "Implementation: `this.data[14] = v; this.set_mask |= MaterialFlags.NORMAL_IDX; this.UPDATE_FLAG = true;`. [Source line 282](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L282)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get normalScale(): number",
+                    "—",
+                    "Strength scale modifier applied to the normal map vectors. [Source line 291](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L291)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set normalScale(v: number)",
+                    "—",
+                    "Implementation: `this.data[15] = v; this.set_mask |= MaterialFlags.NORMAL_SCALE; this.UPDATE_FLAG = true;`. [Source line 292](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L292)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get albedoMap(): TextureSource | undefined",
+                    "—",
+                    "Albedo texture image source. [Source line 299](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L299)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set albedoMap(v: TextureSource | undefined)",
+                    "—",
+                    "Implementation: `this._albedoMap = v; this.set_mask |= MaterialFlags.ALBEDO_MAP;`. [Source line 300](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L300)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get normalMap(): TextureSource | undefined",
+                    "—",
+                    "Normal texture image source. [Source line 306](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L306)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set normalMap(v: TextureSource | undefined)",
+                    "—",
+                    "Implementation: `this._normalMap = v; this.set_mask |= MaterialFlags.NORMAL_MAP;`. [Source line 307](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L307)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get smoothness()",
+                    "—",
+                    "Smoothness alias (1.0 - roughness). [Source line 314](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L314)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set smoothness(v)",
+                    "—",
+                    "Implementation: `this.roughness = 1.0 - v;`. [Source line 315](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L315)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get transparency()",
+                    "—",
+                    "Transparency alias (transmission). [Source line 317](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L317)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set transparency(v)",
+                    "—",
+                    "Implementation: `this.transmission = v;`. [Source line 318](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L318)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setColor(color: Color | number[] | Float32Array): Material",
+                    "—",
+                    "Sets the base color. [Source line 322](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L322)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setOpacity(opacity: number): Material",
+                    "—",
+                    "Sets the material opacity. [Source line 324](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L324)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setEmColor(color: Color | number[] | Float32Array): Material",
+                    "—",
+                    "Sets the emissive color. [Source line 326](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L326)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setEmStrength(v: number): Material",
+                    "—",
+                    "Sets the emissive strength. [Source line 328](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L328)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRoughness(v: number): Material",
+                    "—",
+                    "Sets the micro-surface roughness [0-1]. [Source line 330](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L330)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMetallic(v: number): Material",
+                    "—",
+                    "Sets the metallic level [0-1]. [Source line 332](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L332)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTransmission(v: number): Material",
+                    "—",
+                    "Sets the light transmission [0-1]. [Source line 334](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L334)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setIor(v: number): Material",
+                    "—",
+                    "Sets the index of refraction. [Source line 336](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L336)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSpecular(v: number): Material",
+                    "—",
+                    "Sets the specular reflectivity [0-1]. [Source line 338](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L338)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setNormalScale(v: number): Material",
+                    "—",
+                    "Sets the normal map scale strength. [Source line 340](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L340)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get shadingStyle(): ShadingStyle | number",
+                    "—",
+                    "Shading style override for this material (-1: inherit from RenderConfig, 0: PBR, 1: Gooch, 2: Cel, 3: Clay). [Source line 343](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L343)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set shadingStyle(v: ShadingStyle | number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.data[16]`, `this.set_mask`, `this.UPDATE_FLAG`. [Source line 351](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L351)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get goochWarm(): number",
+                    "—",
+                    "Implementation: `return this.data[17];`. [Source line 370](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L370)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set goochWarm(v: number)",
+                    "—",
+                    "Implementation: `this.data[17] = v; this.set_mask |= MaterialFlags.STYLE_PARAMS; this.UPDATE_FLAG = true;`. [Source line 371](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L371)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get goochCool(): number",
+                    "—",
+                    "Implementation: `return this.data[18];`. [Source line 373](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L373)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set goochCool(v: number)",
+                    "—",
+                    "Implementation: `this.data[18] = v; this.set_mask |= MaterialFlags.STYLE_PARAMS; this.UPDATE_FLAG = true;`. [Source line 374](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L374)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get celBands(): number",
+                    "—",
+                    "Implementation: `return this.data[17];`. [Source line 376](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L376)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set celBands(v: number)",
+                    "—",
+                    "Implementation: `this.data[17] = v; this.set_mask |= MaterialFlags.STYLE_PARAMS; this.UPDATE_FLAG = true;`. [Source line 377](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L377)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rimStrength(): number",
+                    "—",
+                    "Implementation: `return this.data[18];`. [Source line 379](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L379)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rimStrength(v: number)",
+                    "—",
+                    "Implementation: `this.data[18] = v; this.set_mask |= MaterialFlags.STYLE_PARAMS; this.UPDATE_FLAG = true;`. [Source line 380](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L380)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rimPower(): number",
+                    "—",
+                    "Implementation: `return this.data[19];`. [Source line 382](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L382)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rimPower(v: number)",
+                    "—",
+                    "Implementation: `this.data[19] = v; this.set_mask |= MaterialFlags.STYLE_PARAMS; this.UPDATE_FLAG = true;`. [Source line 383](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L383)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setShadingStyle(v: ShadingStyle | number): Material",
+                    "—",
+                    "Implementation: `this.shadingStyle = v; return this;`. [Source line 385](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L385)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setGooch(warm: number = 0.45, cool: number = 0.45): Material",
+                    "—",
+                    "Implementation: `this.shadingStyle = ShadingStyle.GOOCH; this.goochWarm = warm; this.goochCool = cool; return this;`. [Source line 386](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L386)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setCel(bands: number = 3.0, rimStrength: number = 0.6): Material",
+                    "—",
+                    "Implementation: `this.shadingStyle = ShadingStyle.CEL; this.celBands = bands; this.rimStrength = rimStrength; return this;`. [Source line 392](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L392)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public copy(): Material",
+                    "—",
+                    "Clones this material instance. [Source line 400](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L400)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clone(): Material",
+                    "—",
+                    "Implementation: `return this.copy();`. [Source line 408](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L408)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set(material: Material): void",
+                    "—",
+                    "Synchronizes all parameters from another material. [Source line 411](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L411)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(local: Material, parent: Material): void",
+                    "—",
+                    "Hierarchy resolution mapping. Inherits parent fields while overlaying local overrides. Param: local The child entity's material overrides. Param: parent The parent entity's material overrides. [Source line 426](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L426)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static size(): number",
+                    "—",
+                    "Size computation of the structure alignment in bytes. [Source line 469](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts#L469)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

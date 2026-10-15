@@ -1,0 +1,1705 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-math-noise",
+  "title": "math / noise API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "basenoise",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "BaseNoise"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/BaseNoise.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/BaseNoise.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "BaseNoise: Abstract Base class for all 1D, 2D, and 3D Noise generators. Handles PRNG permutation tables, fractal octaves (FBM, Billow, Ridged), vector sampling, divergence-free Curl noise, and domain warping."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BaseNoise",
+                    "Class",
+                    "Abstract Base class for all 1D, 2D, and 3D Noise generators. Handles PRNG permutation tables, fractal octaves (FBM, Billow, Ridged), vector sampling, divergence-free Curl noise, and domain warping."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare abstract class BaseNoise {\n    protected seed: number;\n    protected frequency: number;\n    protected amplitude: number;\n    protected scale: number;\n    protected octaves: number;\n    protected persistence: number;\n    protected lacunarity: number;\n    protected offsetX: number;\n    protected offsetY: number;\n    protected offsetZ: number;\n    protected fractalType: FractalType;\n    protected domainWarp?: DomainWarpParams;\n    protected perm: Uint8Array;\n    constructor(options?: NoiseOptions);\n    protected initPermutationTable(seed: number): void;\n    abstract sample1D(x: number): number;\n    abstract sample2D(x: number, y: number): number;\n    abstract sample3D(x: number, y: number, z: number): number;\n    sample(pos: number | Vec2 | Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ], y?: number, z?: number): number;\n    evaluate1D(x: number): number;\n    evaluate2D(x: number, y: number): number;\n    evaluate3D(x: number, y: number, z: number): number;\n    sampleFractal1D(x: number): number;\n    sampleFractal2D(x: number, y: number): number;\n    sampleFractal3D(x: number, y: number, z: number): number;\n    sampleVector2D(x: number, y: number): Vec2;\n    sampleVector3D(x: number, y: number, z: number): Vec3;\n    sampleCurl2D(x: number, y: number, eps?: number): Vec2;\n    sampleCurl3D(x: number, y: number, z: number, eps?: number): Vec3;\n    getWarped2D(x: number, y: number): [\n        number,\n        number\n    ];\n    getWarped3D(x: number, y: number, z: number): [\n        number,\n        number,\n        number\n    ];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BaseNoise` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "protected seed: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected frequency: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected amplitude: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected scale: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected octaves: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected persistence: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected lacunarity: number",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected offsetX: number",
+                    "0",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected offsetY: number",
+                    "0",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected offsetZ: number",
+                    "0",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected fractalType: FractalType",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected domainWarp?: DomainWarpParams",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected perm: Uint8Array",
+                    "new Uint8Array(512)",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options: NoiseOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.seed`, `this.frequency`, `this.amplitude`, `this.scale`, `this.octaves`, `this.persistence`, `this.lacunarity`, `this.fractalType` and other instance fields; calls to `this.initPermutationTable`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected initPermutationTable(seed: number): void",
+                    "—",
+                    "Re-initializes the 512-byte permutation table using a seeded LCG PRNG. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract sample1D(x: number): number;",
+                    "—",
+                    "Core raw 1D noise evaluation at coordinate x. Output range approx [-1, 1] or [0, 1]. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract sample2D(x: number, y: number): number;",
+                    "—",
+                    "Core raw 2D noise evaluation at coordinates (x, y). Output range approx [-1, 1] or [0, 1]. [Source line 95](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L95)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract sample3D(x: number, y: number, z: number): number;",
+                    "—",
+                    "Core raw 3D noise evaluation at coordinates (x, y, z). Output range approx [-1, 1] or [0, 1]. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample(pos: number | Vec2 | Vec3 | [number, number] | [number, number, number], y?: number, z?: number): number",
+                    "—",
+                    "Polymorphic evaluation overload. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluate1D(x: number): number",
+                    "—",
+                    "Evaluate 1D noise taking into account frequency, scale, offset, octaves, fractal & domain warping. [Source line 130](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L130)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluate2D(x: number, y: number): number",
+                    "—",
+                    "Evaluate 2D noise taking into account frequency, scale, offset, octaves, fractal & domain warping. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluate3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Evaluate 3D noise taking into account frequency, scale, offset, octaves, fractal & domain warping. [Source line 156](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L156)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sampleFractal1D(x: number): number",
+                    "—",
+                    "Fractal 1D sampling (FBM, Billow, Ridged). [Source line 177](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L177)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sampleFractal2D(x: number, y: number): number",
+                    "—",
+                    "Fractal 2D sampling (FBM, Billow, Ridged). [Source line 206](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L206)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sampleFractal3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Fractal 3D sampling (FBM, Billow, Ridged). [Source line 235](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L235)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sampleVector2D(x: number, y: number): Vec2",
+                    "—",
+                    "Samples a 2D vector field based on noise gradient derivatives or dual spatial sampling. [Source line 264](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L264)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sampleVector3D(x: number, y: number, z: number): Vec3",
+                    "—",
+                    "Samples a 3D vector field based on triple spatial sampling. [Source line 273](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L273)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sampleCurl2D(x: number, y: number, eps: number = 0.001): Vec2",
+                    "—",
+                    "Computes divergence-free 2D Curl Noise: V = (dN/dy, -dN/dx) [Source line 283](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L283)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sampleCurl3D(x: number, y: number, z: number, eps: number = 0.001): Vec3",
+                    "—",
+                    "Computes 3D Curl Noise using vector potential field: V = ∇ × F [Source line 298](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L298)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getWarped2D(x: number, y: number): [number, number]",
+                    "—",
+                    "Domain warping 2D calculation: perturbs coordinates (x, y) with secondary noise passes. [Source line 319](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L319)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getWarped3D(x: number, y: number, z: number): [number, number, number]",
+                    "—",
+                    "Domain warping 3D calculation: perturbs coordinates (x, y, z) with secondary noise passes. [Source line 333](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L333)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.seed ?? 0",
+                    "[Line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L31)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.frequency ?? 1.0",
+                    "[Line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L32)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.amplitude ?? 1.0",
+                    "[Line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L33)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.scale ?? 1.0",
+                    "[Line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L34)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.octaves ?? 1",
+                    "[Line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L35)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.persistence ?? 0.5",
+                    "[Line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L36)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.lacunarity ?? 2.0",
+                    "[Line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L37)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fractalType ?? (this.octaves > 1 ? 'fbm' : 'none')",
+                    "[Line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L38)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.offset[0] ?? 0",
+                    "[Line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L54)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.offset[1] ?? 0",
+                    "[Line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L55)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.offset[2] ?? 0",
+                    "[Line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/BaseNoise.ts#L56)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "noise",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Noise"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/Noise.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/Noise.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Noise: Main Noise factory and wrapper class. Provides unified creation and static helper methods for standard noise algorithms."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Noise",
+                    "Class",
+                    "Main Noise factory and wrapper class. Provides unified creation and static helper methods for standard noise algorithms."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class Noise extends BaseNoise {\n    constructor(options?: NoiseOptions);\n    sample1D(x: number): number;\n    sample2D(x: number, y: number): number;\n    sample3D(x: number, y: number, z: number): number;\n    evaluate1D(x: number): number;\n    evaluate2D(x: number, y: number): number;\n    evaluate3D(x: number, y: number, z: number): number;\n    static perlin(options?: NoiseOptions): PerlinNoise;\n    static simplex(options?: NoiseOptions): SimplexNoise;\n    static value(options?: NoiseOptions): ValueNoise;\n    static worley(options?: NoiseOptions): WorleyNoise;\n    static white(options?: NoiseOptions): WhiteNoise;\n    static scaler(noise: BaseNoise): NoiseScaler;\n    static fractalBrownianMotion(noise: BaseNoise, x: number, y?: number, z?: number, octaves?: number, lacunarity?: number, gain?: number): number;\n    static fbm(noise: BaseNoise, x: number, y: number, octaves?: number, lacunarity?: number, gain?: number): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Noise` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options: NoiseOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.instance`; construction of `SimplexNoise`, `ValueNoise`, `WorleyNoise`, `WhiteNoise`, `PerlinNoise`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample1D(x: number): number",
+                    "—",
+                    "Implementation: `return this.instance.sample1D(x);`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample2D(x: number, y: number): number",
+                    "—",
+                    "Implementation: `return this.instance.sample2D(x, y);`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Implementation: `return this.instance.sample3D(x, y, z);`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override evaluate1D(x: number): number",
+                    "—",
+                    "Implementation: `return this.instance.evaluate1D(x);`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override evaluate2D(x: number, y: number): number",
+                    "—",
+                    "Implementation: `return this.instance.evaluate2D(x, y);`. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override evaluate3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Implementation: `return this.instance.evaluate3D(x, y, z);`. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static perlin(options: NoiseOptions = {}): PerlinNoise",
+                    "—",
+                    "Helper static factory to create Perlin noise. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static simplex(options: NoiseOptions = {}): SimplexNoise",
+                    "—",
+                    "Helper static factory to create Simplex noise. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static value(options: NoiseOptions = {}): ValueNoise",
+                    "—",
+                    "Helper static factory to create Value noise. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static worley(options: NoiseOptions = {}): WorleyNoise",
+                    "—",
+                    "Helper static factory to create Worley cellular noise. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static white(options: NoiseOptions = {}): WhiteNoise",
+                    "—",
+                    "Helper static factory to create White noise PRNG. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static scaler(noise: BaseNoise): NoiseScaler",
+                    "—",
+                    "Wraps a noise instance into a chainable NoiseScaler. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fractalBrownianMotion(\n        noise: BaseNoise,\n        x: number,\n        y: number = 0,\n        z: number = 0,\n        octaves: number = 4,\n        lacunarity: number = 2.0,\n        gain: number = 0.5\n    ): number",
+                    "—",
+                    "Computes Fractal Brownian Motion (fBm) by layering multiple octaves of noise. Param: noise The base noise generator to use. Param: x X coordinate. Param: y Y coordinate (pass 0 for 1D noise). Param: z Z coordinate (pass 0 for 2D noise). Param: octaves Number of noise layers to stack. Higher = more detail. Default 4. Param: lacunarity Frequency multiplier per octave. Default 2.0. Param: gain Amplitude multiplier per octave (persistence). Default 0.5. Returns: Summed noise value, normalized approximately to [-1, 1]. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L110)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fbm(\n        noise: BaseNoise,\n        x: number,\n        y: number,\n        octaves?: number,\n        lacunarity?: number,\n        gain?: number\n    ): number",
+                    "—",
+                    "Convenience overload for 2D fractal Brownian motion. [Source line 137](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L137)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.type ?? 'perlin'",
+                    "[Line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/Noise.ts#L19)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "noiseparams",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "NoiseParams"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/NoiseParams.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/NoiseParams.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "NoiseType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FractalType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DistanceMetric",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "WorleyReturnType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DomainWarpParams",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "NoiseOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type NoiseType = 'perlin' | 'simplex' | 'value' | 'worley' | 'white';\nexport type FractalType = 'none' | 'fbm' | 'billow' | 'ridged';\nexport type DistanceMetric = 'euclidean' | 'manhattan' | 'chebyshev';\nexport type WorleyReturnType = 'F1' | 'F2' | 'F2minusF1' | 'cellValue';\nexport interface DomainWarpParams {\n    intensity: number;\n    frequency?: number;\n    octaves?: number;\n}\nexport interface NoiseOptions {\n    seed?: number;\n    frequency?: number;\n    amplitude?: number;\n    scale?: number;\n    octaves?: number;\n    persistence?: number;\n    lacunarity?: number;\n    offset?: number | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ] | Vec2 | Vec3;\n    type?: NoiseType;\n    fractalType?: FractalType;\n    distanceMetric?: DistanceMetric;\n    worleyReturnType?: WorleyReturnType;\n    domainWarp?: DomainWarpParams;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DomainWarpParams` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "intensity: number;",
+                    "—",
+                    "Strength/magnitude of spatial displacement. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frequency?: number;",
+                    "—",
+                    "Spatial frequency of warp field noise. Defaults to 1.0. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "octaves?: number;",
+                    "—",
+                    "Octaves for warp noise evaluation. Defaults to 2. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `NoiseOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "seed?: number;",
+                    "—",
+                    "Integer seed for PRNG permutation table generation. Defaults to 0. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frequency?: number;",
+                    "—",
+                    "Base spatial frequency scale factor. Defaults to 1.0. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "amplitude?: number;",
+                    "—",
+                    "Amplitude scalar applied to noise output. Defaults to 1.0. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scale?: number;",
+                    "—",
+                    "Overall spatial zoom multiplier (frequency = 1 / scale). Defaults to 1.0. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "octaves?: number;",
+                    "—",
+                    "Number of fractal octave layers (for FBM, Billow, Ridged). Defaults to 1. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "persistence?: number;",
+                    "—",
+                    "Persistence / gain multiplier per octave. Defaults to 0.5. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lacunarity?: number;",
+                    "—",
+                    "Lacunarity frequency multiplier per octave. Defaults to 2.0. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "offset?: number | [number, number] | [number, number, number] | Vec2 | Vec3;",
+                    "—",
+                    "Spatial coordinate offset shift. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "type?: NoiseType;",
+                    "—",
+                    "Core noise algorithm type. Defaults to 'perlin'. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fractalType?: FractalType;",
+                    "—",
+                    "Fractal composition mode. Defaults to 'none' (or 'fbm' if octaves > 1). [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "distanceMetric?: DistanceMetric;",
+                    "—",
+                    "Distance metric for Worley / Cellular noise. Defaults to 'euclidean'. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "worleyReturnType?: WorleyReturnType;",
+                    "—",
+                    "Return value mode for Worley / Cellular noise. Defaults to 'F1'. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "domainWarp?: DomainWarpParams;",
+                    "—",
+                    "Optional domain warping configuration. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseParams.ts#L59)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "noisescaler",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "NoiseScaler"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/NoiseScaler.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/NoiseScaler.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "NoiseScaler",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class NoiseScaler {\n    static remap(val: number, inMin: number, inMax: number, outMin: number, outMax: number): number;\n    static toZeroOne(val: number): number;\n    static toMinusOneOne(val: number): number;\n    static quantize(val: number, steps: number): number;\n    static clamp(val: number, min: number, max: number): number;\n    static power(val: number, exponent: number): number;\n    static threshold(val: number, cutoff: number): number;\n    constructor(noise: BaseNoise);\n    range(min: number, max: number, inMin?: number, inMax?: number): this;\n    quantizeSteps(steps: number): this;\n    curvePower(power: number): this;\n    thresholdCutoff(cutoff: number): this;\n    sample1D(x: number): number;\n    sample2D(x: number, y: number): number;\n    sample3D(x: number, y: number, z: number): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `NoiseScaler` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static remap(val: number, inMin: number, inMax: number, outMin: number, outMax: number): number",
+                    "—",
+                    "Remaps a value from an input range [inMin, inMax] to an output range [outMin, outMax]. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static toZeroOne(val: number): number",
+                    "—",
+                    "Normalizes a noise value from standard range [-1, 1] to range [0, 1]. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static toMinusOneOne(val: number): number",
+                    "—",
+                    "Normalizes a noise value from standard range [0, 1] to range [-1, 1]. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static quantize(val: number, steps: number): number",
+                    "—",
+                    "Quantizes / terraces continuous noise into discrete steps (useful for topological contour maps or pixelated bands). [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static clamp(val: number, min: number, max: number): number",
+                    "—",
+                    "Clamps a value within specified bounds [min, max]. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static power(val: number, exponent: number): number",
+                    "—",
+                    "Applies exponential power curve to sharpen or smooth features. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static threshold(val: number, cutoff: number): number",
+                    "—",
+                    "Applies step thresholding: returns 1 if val >= cutoff, else 0. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(noise: BaseNoise)",
+                    "—",
+                    "Implementation: `this.noise = noise;`. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public range(min: number, max: number, inMin: number = -1.0, inMax: number = 1.0): this",
+                    "—",
+                    "Implementation: `this.minOut = min; this.maxOut = max; this.minIn = inMin; this.maxIn = inMax; return this;`. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public quantizeSteps(steps: number): this",
+                    "—",
+                    "Implementation: `this.steps = steps; return this;`. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public curvePower(power: number): this",
+                    "—",
+                    "Implementation: `this.powerExponent = power; return this;`. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public thresholdCutoff(cutoff: number): this",
+                    "—",
+                    "Implementation: `this.cutoffThreshold = cutoff; return this;`. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample1D(x: number): number",
+                    "—",
+                    "Implementation: `let v = this.noise.evaluate1D(x); return this.process(v);`. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample2D(x: number, y: number): number",
+                    "—",
+                    "Implementation: `let v = this.noise.evaluate2D(x, y); return this.process(v);`. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L99)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Implementation: `let v = this.noise.evaluate3D(x, y, z); return this.process(v);`. [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L104)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "NoiseScaler.process: private process(val: number): number",
+                    "Body operations (including nested callbacks): calls to `NoiseScaler.power`, `NoiseScaler.remap`, `NoiseScaler.quantize`, `NoiseScaler.threshold`; return paths including `v`.",
+                    "[Line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/NoiseScaler.ts#L109)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perlinnoise",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PerlinNoise"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/PerlinNoise.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/PerlinNoise.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PerlinNoise: Implementation of Classic Improved Perlin Noise in 1D, 2D, and 3D. Uses quintic $C^2$ smoothstep interpolation ($6t^5 - 15t^4 + 10t^3$) and gradient dot products."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PerlinNoise",
+                    "Class",
+                    "Implementation of Classic Improved Perlin Noise in 1D, 2D, and 3D. Uses quintic $C^2$ smoothstep interpolation ($6t^5 - 15t^4 + 10t^3$) and gradient dot products."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PerlinNoise extends BaseNoise {\n    constructor(options?: NoiseOptions);\n    sample1D(x: number): number;\n    sample2D(x: number, y: number): number;\n    sample3D(x: number, y: number, z: number): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PerlinNoise` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options: NoiseOptions = {})",
+                    "—",
+                    "Implementation: `super({ type: 'perlin', ...options });`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample1D(x: number): number",
+                    "—",
+                    "Implementation: `const X = Math.floor(x) & 255; x -= Math.floor(x); const u = this.fade(x); const g0 = this.grad1D(this.perm[X], x); const g1 = this.grad1D(this.perm[X + 1], x - 1); return this.lerp(u, g0, g1) * 2.0;`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample2D(x: number, y: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.fade`, `this.grad2D`, `this.lerp`; return paths including `this.lerp(v, nx0, nx1)`. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.fade`, `this.grad3D`, `this.lerp`; return paths including `this.lerp(w, ny0, ny1)`. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L74)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PerlinNoise.fade: private fade(t: number): number",
+                    "Implementation: `return t * t * t * (t * (t * 6 - 15) + 10);`.",
+                    "[Line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L13)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PerlinNoise.lerp: private lerp(t: number, a: number, b: number): number",
+                    "Implementation: `return a + t * (b - a);`.",
+                    "[Line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L17)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PerlinNoise.grad1D: private grad1D(hash: number, x: number): number",
+                    "Implementation: `return (hash & 1) === 0 ? x : -x;`.",
+                    "[Line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L21)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PerlinNoise.grad2D: private grad2D(hash: number, x: number, y: number): number",
+                    "Implementation: `const h = hash & 7; const u = h < 4 ? x : y; const v = h < 4 ? y : x; return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);`.",
+                    "[Line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L25)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PerlinNoise.grad3D: private grad3D(hash: number, x: number, y: number, z: number): number",
+                    "Implementation: `const h = hash & 15; const u = h < 8 ? x : y; const v = h < 4 ? y : h === 12 || h === 14 ? x : z; return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);`.",
+                    "[Line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/PerlinNoise.ts#L32)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "simplexnoise",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SimplexNoise"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/SimplexNoise.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/SimplexNoise.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/SimplexNoise.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SimplexNoise: Implementation of Simplex Noise in 1D, 2D, and 3D. Features $O(N^2)$ scaling per dimension, isotropic circular kernels, and absence of directional grid artifacts."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SimplexNoise",
+                    "Class",
+                    "Implementation of Simplex Noise in 1D, 2D, and 3D. Features $O(N^2)$ scaling per dimension, isotropic circular kernels, and absence of directional grid artifacts."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class SimplexNoise extends BaseNoise {\n    constructor(options?: NoiseOptions);\n    sample1D(x: number): number;\n    sample2D(x: number, y: number): number;\n    sample3D(x: number, y: number, z: number): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SimplexNoise` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options: NoiseOptions = {})",
+                    "—",
+                    "Implementation: `super({ type: 'simplex', ...options });`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/SimplexNoise.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample1D(x: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `(n0 + n1) * 0.395`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/SimplexNoise.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample2D(x: number, y: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `70.0 * (n0 + n1 + n2)`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/SimplexNoise.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including `32.0 * (n0 + n1 + n2 + n3)`. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/SimplexNoise.ts#L108)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "valuenoise",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ValueNoise"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/ValueNoise.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/ValueNoise.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/ValueNoise.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ValueNoise: Implementation of Value Noise in 1D, 2D, and 3D. Interpolates pseudorandom lattice scalar values via smooth quintic $C^2$ curve."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ValueNoise",
+                    "Class",
+                    "Implementation of Value Noise in 1D, 2D, and 3D. Interpolates pseudorandom lattice scalar values via smooth quintic $C^2$ curve."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ValueNoise extends BaseNoise {\n    constructor(options?: NoiseOptions);\n    sample1D(x: number): number;\n    sample2D(x: number, y: number): number;\n    sample3D(x: number, y: number, z: number): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ValueNoise` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options: NoiseOptions = {})",
+                    "—",
+                    "Implementation: `super({ type: 'value', ...options });`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/ValueNoise.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample1D(x: number): number",
+                    "—",
+                    "Implementation: `const X = Math.floor(x) & 255; x -= Math.floor(x); const u = this.fade(x); const v0 = this.val1D(this.perm[X]); const v1 = this.val1D(this.perm[X + 1]); return this.lerp(u, v0, v1);`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/ValueNoise.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample2D(x: number, y: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.fade`, `this.val1D`, `this.lerp`; return paths including `this.lerp(v, nx0, nx1)`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/ValueNoise.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.fade`, `this.val1D`, `this.lerp`; return paths including `this.lerp(w, ny0, ny1)`. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/ValueNoise.ts#L60)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ValueNoise.fade: private fade(t: number): number",
+                    "Implementation: `return t * t * t * (t * (t * 6 - 15) + 10);`.",
+                    "[Line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/ValueNoise.ts#L13)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ValueNoise.lerp: private lerp(t: number, a: number, b: number): number",
+                    "Implementation: `return a + t * (b - a);`.",
+                    "[Line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/ValueNoise.ts#L17)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ValueNoise.val1D: private val1D(hash: number): number",
+                    "Implementation: `return (hash / 255.0) * 2.0 - 1.0;`.",
+                    "[Line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/ValueNoise.ts#L21)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "whitenoise",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "WhiteNoise"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/WhiteNoise.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/WhiteNoise.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WhiteNoise.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "WhiteNoise: Implementation of White Noise / Spatial Hash PRNG in 1D, 2D, and 3D. Computes deterministic, uncorrelated pseudorandom float values for discrete or continuous coordinates."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WhiteNoise",
+                    "Class",
+                    "Implementation of White Noise / Spatial Hash PRNG in 1D, 2D, and 3D. Computes deterministic, uncorrelated pseudorandom float values for discrete or continuous coordinates."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class WhiteNoise extends BaseNoise {\n    constructor(options?: NoiseOptions);\n    sample1D(x: number): number;\n    sample2D(x: number, y: number): number;\n    sample3D(x: number, y: number, z: number): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WhiteNoise` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options: NoiseOptions = {})",
+                    "—",
+                    "Implementation: `super({ type: 'white', ...options });`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WhiteNoise.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample1D(x: number): number",
+                    "—",
+                    "Implementation: `const xi = Math.floor(x) + this.seed * 1000; return this.hash(xi);`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WhiteNoise.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample2D(x: number, y: number): number",
+                    "—",
+                    "Implementation: `const xi = Math.floor(x); const yi = Math.floor(y); const n = xi + yi * 57 + this.seed * 1000; return this.hash(n);`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WhiteNoise.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Implementation: `const xi = Math.floor(x); const yi = Math.floor(y); const zi = Math.floor(z); const n = xi + yi * 57 + zi * 149 + this.seed * 1000; return this.hash(n);`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WhiteNoise.ts#L31)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WhiteNoise.hash: private hash(n: number): number",
+                    "Implementation: `n = (n << 13) ^ n; const res = (n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff; return (res / 1073741824.0) - 1.0;`.",
+                    "[Line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WhiteNoise.ts#L13)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worleynoise",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "WorleyNoise"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/noise/WorleyNoise.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/noise/WorleyNoise.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "WorleyNoise: Implementation of Worley (Cellular / Voronoi) Noise in 1D, 2D, and 3D. Computes distances F1 and F2 to randomly jittered feature points per cell. Supports Euclidean, Manhattan, and Chebyshev metrics."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WorleyNoise",
+                    "Class",
+                    "Implementation of Worley (Cellular / Voronoi) Noise in 1D, 2D, and 3D. Computes distances F1 and F2 to randomly jittered feature points per cell. Supports Euclidean, Manhattan, and Chebyshev metrics."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class WorleyNoise extends BaseNoise {\n    protected metric: DistanceMetric;\n    protected returnType: WorleyReturnType;\n    constructor(options?: NoiseOptions);\n    sample1D(x: number): number;\n    sample2D(x: number, y: number): number;\n    sample3D(x: number, y: number, z: number): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WorleyNoise` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "protected metric: DistanceMetric",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected returnType: WorleyReturnType",
+                    "—",
+                    "Protected extension field; its value is populated by initialization or a later operation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options: NoiseOptions = {})",
+                    "—",
+                    "Implementation: `super({ type: 'worley', ...options }); this.metric = options.distanceMetric ?? 'euclidean'; this.returnType = options.worleyReturnType ?? 'F1';`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample1D(x: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.hashPoint1D`, `this.calcDistance`, `this.formatOutput`; return paths including `this.formatOutput(F1, F2, closestCellHash)`; 1 explicit loop. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample2D(x: number, y: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.hashPoint2D`, `this.calcDistance`, `this.formatOutput`; return paths including `this.formatOutput(F1, F2, closestCellHash)`; 2 explicit loops. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sample3D(x: number, y: number, z: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.hashPoint3D`, `this.calcDistance`, `this.formatOutput`; return paths including `this.formatOutput(F1, F2, closestCellHash)`; 3 explicit loops. [Source line 116](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L116)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.distanceMetric ?? 'euclidean'",
+                    "[Line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L15)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.worleyReturnType ?? 'F1'",
+                    "[Line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L16)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WorleyNoise.calcDistance: private calcDistance(dx: number, dy: number = 0, dz: number = 0): number",
+                    "Body operations (including nested callbacks): return paths including `Math.abs(dx) + Math.abs(dy) + Math.abs(dz)`, `Math.max(Math.abs(dx), Math.abs(dy), Math.abs(dz))`, `Math.sqrt(dx * dx + dy * dy + dz * dz)`.",
+                    "[Line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L19)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "WorleyNoise.hashPoint1D: private hashPoint1D(cellX: number): number",
+                    "Implementation: `const hash = this.perm[cellX & 255]; return hash / 255.0;`.",
+                    "[Line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L31)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "WorleyNoise.hashPoint2D: private hashPoint2D(cellX: number, cellY: number): [number, number]",
+                    "Implementation: `const hx = this.perm[(cellX & 255) + this.perm[cellY & 255]]; const hy = this.perm[(cellY & 255) + this.perm[cellX & 255]]; return [hx / 255.0, hy / 255.0];`.",
+                    "[Line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L36)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "WorleyNoise.hashPoint3D: private hashPoint3D(cellX: number, cellY: number, cellZ: number): [number, number, number]",
+                    "Body operations (including nested callbacks): return paths including `[hx / 255.0, hy / 255.0, hz / 255.0]`.",
+                    "[Line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L42)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "WorleyNoise.formatOutput: private formatOutput(F1: number, F2: number, cellHash: number): number",
+                    "Implementation: `switch (this.returnType) { case 'F2': return F2; case 'F2minusF1': return F2 - F1; case 'cellValue': return (cellHash / 255.0) * 2.0 - 1.0; case 'F1': default: return F1; }`.",
+                    "[Line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise/WorleyNoise.ts#L49)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

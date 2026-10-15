@@ -1,0 +1,732 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-compute",
+  "title": "compute API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "compute",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compute"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/compute/Compute.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/compute/Compute.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ComputeType: Supported GPU compute shader operation identifiers.",
+                "ComputeCommand: GPU compute execution dispatch descriptors.",
+                "ComputeOutput: Aggregate structure representing the execution flow commands and the resulting output buffer.",
+                "PathArg: Arguments layout for generating 2D path mesh geometries.",
+                "Compute: Core WebGPU Compute manager. Hosts pipelines, executes prefix scans, tessellates 2D paths, and computes morphs."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ComputeType",
+                    "Enum",
+                    "Supported GPU compute shader operation identifiers."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ComputeCommand",
+                    "Interface",
+                    "GPU compute execution dispatch descriptors."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ComputeOutput",
+                    "Interface",
+                    "Aggregate structure representing the execution flow commands and the resulting output buffer."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PathArg",
+                    "Interface",
+                    "Arguments layout for generating 2D path mesh geometries."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Compute",
+                    "Class",
+                    "Core WebGPU Compute manager. Hosts pipelines, executes prefix scans, tessellates 2D paths, and computes morphs."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare enum ComputeType {\n    NORMALIZE = 0,\n    ARC_LENGTH = 1,\n    PREFIX_SUM = 2,\n    PREFIX_COPY = 3,\n    POLY_LINE_MESH = 4,\n    BEZIER_POINT_GEN = 5,\n    POLYGON_MESH = 6,\n    COMPUTE_LENGTH = 7,\n    COPY = 8,\n    OFFSET = 9,\n    PATH_ENCODER = 10,\n    INTERPOLATE = 11,\n    MORPH_INTERPOLATE = 12,\n    SWARM_MORPH = 13,\n    SDF_MARCHING_CUBES = 14,\n    DUAL_CONTOURING_PASS1 = 15,\n    DUAL_CONTOURING_PASS2 = 16,\n    EXTRACT_LINE3D_LEN = 17,\n    PACK_LINE3D_LEN = 18,\n    PACK_PATH_LEN = 19,\n    PATH_INTERPOLATE = 20,\n    CHAIKIN_SMOOTH = 21,\n    MAX = 22\n}\nexport interface ComputeCommand {\n    dispatch_count: number | [\n        number,\n        number,\n        number\n    ];\n    pipeline: GPUComputePipeline;\n    bind_group: GPUBindGroup;\n}\nexport interface ComputeOutput {\n    commands: ComputeCommand[];\n    output_buffer: GPUBuffer;\n}\nexport interface PathArg {\n    joint_type: JointType;\n    strokeWidth: number;\n    total_segment_count: number;\n    contour_count: number;\n    vertex_buffer: GPUBuffer;\n    output_buffer: GPUBuffer;\n    indices_buffer: GPUBuffer;\n}\nexport declare class Compute {\n    device: GPUDevice;\n    constructor(device: GPUDevice);\n    init(): void;\n    prefixSum(input_buffer: GPUBuffer, output_buffer?: GPUBuffer, block_sum?: GPUBuffer, block_sum_out?: GPUBuffer, uniform_prop?: GPUBuffer, actualCount?: number): ComputeOutput;\n    computeLine3DArcLength(vertex_buffer: GPUBuffer, total_len_buffer: GPUBuffer, actual_vertex_count?: number, lengths_buffer?: GPUBuffer, prefix_buffer?: GPUBuffer, block_sum?: GPUBuffer, block_sum_out?: GPUBuffer): ComputeOutput;\n    chaikinSmooth(raw_buffer: GPUBuffer, raw_count: number, iterations: number, bufA: GPUBuffer, bufB: GPUBuffer): {\n        commands: ComputeCommand[];\n        finalBuffer: GPUBuffer;\n        finalCount: number;\n    };\n    normalize(input_buffer: GPUBuffer, output_buffer?: GPUBuffer, total_len_buffer?: GPUBuffer, isClosed?: boolean, actual_count?: number): ComputeOutput;\n    interpolate(input_a: GPUBuffer, input_b: GPUBuffer, t: number, output_buffer?: GPUBuffer, actual_count?: number): ComputeOutput;\n    pathInterpolate(bufA: GPUBuffer, bufB: GPUBuffer, t: number, output_buffer: GPUBuffer, count: number): ComputeOutput;\n    morphInterpolate(input_a: GPUBuffer, input_b: GPUBuffer, t: number, vertexCount: number, output_buffer: GPUBuffer): ComputeOutput;\n    arcLength(arg: PathArg): ComputeOutput;\n    offset(input_buffer: GPUBuffer, output_buffer: GPUBuffer, vertex_count: number): ComputeOutput;\n    pathEncode(arg: PathArg): ComputeOutput;\n    generateBezierVertices(input_buffer: GPUBuffer, segment_count: number, output_buffer?: GPUBuffer, control_point_count?: number): ComputeOutput;\n    computeLength(input_buffer: GPUBuffer, output_buffer?: GPUBuffer, actual_vertex_count?: number): ComputeOutput;\n    generateMesh(inputBuffer: GPUBuffer, strokeWidth: number, joint_type: JointType, outputBuffer?: GPUBuffer, total_len_buffer?: GPUBuffer, isClosed?: boolean, actual_vertex_count?: number): ComputeOutput;\n    generateTriangeleMesh(input_buffer: GPUBuffer, output_buffer?: GPUBuffer, actual_vertex_count?: number): ComputeOutput;\n    copy(src: GPUBuffer, si: number, dst: GPUBuffer, di: number, count?: number): ComputeCommand;\n    concate(buffers: GPUBuffer[], output_buffer?: GPUBuffer): ComputeOutput;\n    swarmMorph(input_a: GPUBuffer, input_b: GPUBuffer, t: number, vertexCount: number, output_buffer: GPUBuffer, noiseStrength: number, noiseFreq: number, timeMs: number, trajectory: number): ComputeOutput;\n    sdfMarchingCubes(bufSdfA: GPUBuffer, bufSdfB: GPUBuffer, bufTriTable: GPUBuffer, outVertices: GPUBuffer, res: number, boundsMin: number[], cellSize: number, t: number): ComputeOutput;\n    dualContouring(bufSdfA: GPUBuffer, bufSdfB: GPUBuffer, outVertices: GPUBuffer, bufCellVerts: GPUBuffer, res: number, boundsMin: number[], cellSize: number, t: number, noiseStrength?: number): ComputeOutput;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ComputeType` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "NORMALIZE",
+                    "—",
+                    "Normalizes cumulative path length structures. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ARC_LENGTH",
+                    "—",
+                    "Extracts Bezier segment chord lengths. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PREFIX_SUM",
+                    "—",
+                    "Performs exclusive parallel scan algorithms (Pass 1 & 2). [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PREFIX_COPY",
+                    "—",
+                    "Distributes block summaries back into scanned buffers (Pass 3). [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "POLY_LINE_MESH",
+                    "—",
+                    "Builds 2D ribbon mesh coordinates. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BEZIER_POINT_GEN",
+                    "—",
+                    "Samples control points into high-density bezier paths. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "POLYGON_MESH",
+                    "—",
+                    "Builds triangular 2D filled polygon meshes. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "COMPUTE_LENGTH",
+                    "—",
+                    "Computes Euclidean distances between adjacent vertices. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "COPY",
+                    "—",
+                    "Copies byte segments from source to destination buffers. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "OFFSET",
+                    "—",
+                    "Displaces vertices along their normalized normal vectors. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PATH_ENCODER",
+                    "—",
+                    "Packs geometry command frames into GPU storage buffers. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "INTERPOLATE",
+                    "—",
+                    "Linearly interpolates two point arrays on the GPU. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MORPH_INTERPOLATE",
+                    "—",
+                    "Linearly interpolates custom structures. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SWARM_MORPH",
+                    "—",
+                    "Applies Simplex noise fields during vertex transformations. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SDF_MARCHING_CUBES",
+                    "—",
+                    "Computes iso-surface points using standard marching cubes. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DUAL_CONTOURING_PASS1",
+                    "—",
+                    "Computes Hermite features for contour reconstruction. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DUAL_CONTOURING_PASS2",
+                    "—",
+                    "Connects contour vertices into quad indices. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EXTRACT_LINE3D_LEN",
+                    "—",
+                    "Computes lengths for 3D lines. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PACK_LINE3D_LEN",
+                    "—",
+                    "Packs computed lengths into 3D line structure formats. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PACK_PATH_LEN",
+                    "—",
+                    "Packs path segment lengths. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PATH_INTERPOLATE",
+                    "—",
+                    "Interpolates keyframes on paths. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CHAIKIN_SMOOTH",
+                    "—",
+                    "Refines polyline detail using Chaikin subdivision. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MAX",
+                    "—",
+                    "Maximum enum bound check. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L80)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ComputeCommand` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "dispatch_count: number | [number, number, number];",
+                    "—",
+                    "Running invocation thread sizes [X, Y, Z]. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pipeline: GPUComputePipeline;",
+                    "—",
+                    "Compiled GPU compute pipeline layout. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bind_group: GPUBindGroup;",
+                    "—",
+                    "Bound resources configuration entries. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L92)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ComputeOutput` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "commands: ComputeCommand[],",
+                    "—",
+                    "Ordered list of execution passes. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "output_buffer: GPUBuffer",
+                    "—",
+                    "Result buffer containing processed output data. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L102)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PathArg` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "joint_type: JointType,",
+                    "—",
+                    "Mitre/Round/Bevel joint config. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L110)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeWidth: number,",
+                    "—",
+                    "Ribbon width in pixels. [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "total_segment_count: number,",
+                    "—",
+                    "Total bezier control points. [Source line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L114)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "contour_count: number,",
+                    "—",
+                    "Total sub-contours contained in the shape. [Source line 116](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L116)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertex_buffer: GPUBuffer,",
+                    "—",
+                    "GPU buffer containing base vertices. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "output_buffer: GPUBuffer,",
+                    "—",
+                    "Output buffer target. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "indices_buffer: GPUBuffer",
+                    "—",
+                    "Index buffer target. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L122)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Compute` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "device: GPUDevice",
+                    "—",
+                    "The active device instance. [Source line 138](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L138)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(device: GPUDevice)",
+                    "—",
+                    "Instantiates the Compute manager. Param: device Active GPUDevice. [Source line 146](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L146)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public init()",
+                    "—",
+                    "Resolves all WGSL shader bindings and creates pipeline layouts. [Source line 154](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L154)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prefixSum(\n        input_buffer: GPUBuffer,\n        output_buffer?: GPUBuffer,\n        block_sum?: GPUBuffer,\n        block_sum_out?: GPUBuffer,\n        uniform_prop?: GPUBuffer,\n        actualCount?: number\n    ): ComputeOutput",
+                    "—",
+                    "Executes a three-pass parallel prefix scan algorithm (Blelloch scan variant) to compute exclusive sums on an input array of values. Param: input_buffer Input buffer to scan. Param: output_buffer Scanned output buffer target. Param: block_sum Sums of thread block slices. Param: block_sum_out Exclusive scan of block summaries. Param: uniform_prop Buffer containing array dimensions. Executes a three-pass parallel prefix scan algorithm (Blelloch scan variant) to compute exclusive sums on an input array of values. Param: input_buffer Input buffer to scan. Param: output_buffer Scanned output buffer target. Param: block_sum Sums of thread block slices. Param: block_sum_out Exclusive scan of block summaries. Param: uniform_prop Buffer containing array dimensions. Param: actualCount Explicit count tracking for safety. [Source line 280](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L280)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeLine3DArcLength(\n        vertex_buffer: GPUBuffer,\n        total_len_buffer: GPUBuffer,\n        actual_vertex_count?: number,\n        lengths_buffer?: GPUBuffer,\n        prefix_buffer?: GPUBuffer,\n        block_sum?: GPUBuffer,\n        block_sum_out?: GPUBuffer\n    ): ComputeOutput",
+                    "—",
+                    "Extracts Euclidean distance deltas for adjacent 3D line vertices and writes a summed profile. Param: vertex_buffer Vertex buffer. Param: total_len_buffer Single element target output for aggregate distance. Param: actual_vertex_count Total active vertices (defaults to size limit). Param: lengths_buffer Distance array scratch. Param: prefix_buffer Summed scratch buffer. Param: block_sum Helper prefix buffer. Param: block_sum_out Helper prefix buffer. [Source line 354](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L354)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public chaikinSmooth(\n        raw_buffer: GPUBuffer,\n        raw_count: number,\n        iterations: number,\n        bufA: GPUBuffer,\n        bufB: GPUBuffer\n    ): { commands: ComputeCommand[], finalBuffer: GPUBuffer, finalCount: number }",
+                    "—",
+                    "Smooths a polyline using Chaikin's corner-cutting subdivision algorithm. Param: raw_buffer Source coordinates. Param: raw_count Total coordinates. Param: iterations Subdivision steps. Param: bufA Scratch target A. Param: bufB Scratch target B. [Source line 398](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L398)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public normalize(input_buffer: GPUBuffer, output_buffer?: GPUBuffer, total_len_buffer?: GPUBuffer, isClosed = false, actual_count?: number): ComputeOutput",
+                    "—",
+                    "Normalizes cumulative segment sums relative to the absolute length. Param: input_buffer Segment sums. Param: output_buffer Target normalization. Param: total_len_buffer Reference maximum length. Param: isClosed Set to true if the loop structure is closed. Param: actual_count Total elements in the input buffer. [Source line 439](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L439)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public interpolate(input_a: GPUBuffer, input_b: GPUBuffer, t: number, output_buffer?: GPUBuffer, actual_count?: number): ComputeOutput",
+                    "—",
+                    "Linearly interpolates coordinates in two GPU buffers over a timeline factor. Param: input_a Source buffer A. Param: input_b Source buffer B. Param: t Progress factor [0.0 to 1.0]. Param: output_buffer Output target. Param: actual_count Total elements to interpolate. [Source line 471](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L471)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pathInterpolate(bufA: GPUBuffer, bufB: GPUBuffer, t: number, output_buffer: GPUBuffer, count: number): ComputeOutput",
+                    "—",
+                    "Custom interpolation pass for paths containing command boundaries. Param: bufA Source path buffer A. Param: bufB Source path buffer B. Param: t Interpolation progress. Param: output_buffer Interpolated path output. Param: count Target vertices. [Source line 504](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L504)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public morphInterpolate(input_a: GPUBuffer, input_b: GPUBuffer, t: number, vertexCount: number, output_buffer: GPUBuffer): ComputeOutput",
+                    "—",
+                    "Interpolates arbitrary structure layouts. Param: input_a Structured buffer A. Param: input_b Structured buffer B. Param: t Progress factor. Param: vertexCount Total elements. Param: output_buffer Output target. [Source line 531](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L531)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arcLength(arg: PathArg): ComputeOutput",
+                    "—",
+                    "Extracts segment distances for multi-contour shapes. Param: arg Configuration descriptor. [Source line 554](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L554)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public offset(input_buffer: GPUBuffer, output_buffer: GPUBuffer, vertex_count: number): ComputeOutput",
+                    "—",
+                    "Extrudes/Offsets vertices relative to their normal angles. Param: input_buffer Source vertices. Param: output_buffer Offset output. Param: vertex_count Total vertices. [Source line 589](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L589)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pathEncode(arg: PathArg): ComputeOutput",
+                    "—",
+                    "Packs complex bezier stroke path properties. Param: arg Geometry parameters. [Source line 613](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L613)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public generateBezierVertices(input_buffer: GPUBuffer, segment_count: number, output_buffer?: GPUBuffer, control_point_count?: number): ComputeOutput",
+                    "—",
+                    "Subdivides control points into high-density bezier curves. Param: input_buffer Base control nodes. Param: segment_count Subdivision details. Param: output_buffer Output vertices. Param: control_point_count Number of input control points (defaults to size limit). [Source line 647](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L647)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeLength(input_buffer: GPUBuffer, output_buffer?: GPUBuffer, actual_vertex_count?: number): ComputeOutput",
+                    "—",
+                    "Resolves individual distances between sequential coordinate points. Param: input_buffer Raw path points. Param: output_buffer Length targets. Param: actual_vertex_count Total active vertices (defaults to size limit). [Source line 675](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L675)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public generateMesh(\n        inputBuffer: GPUBuffer,\n        strokeWidth: number,\n        joint_type: JointType,\n        outputBuffer?: GPUBuffer,\n        total_len_buffer?: GPUBuffer,\n        isClosed: boolean = false,\n        actual_vertex_count?: number\n    ): ComputeOutput",
+                    "—",
+                    "Generates a 2D ribbon stroke mesh configuration with joint calculations. Param: inputBuffer Coordinates array. Param: stroke_width Border thickness. Param: joint_type MITRE, ROUND, or BEVEL joint. Param: outputBuffer Output vertex structure. Param: total_len_buffer Reference output length. Param: isClosed True if path loops back to start. Param: actual_vertex_count Total active vertices (defaults to size limit). [Source line 702](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L702)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public generateTriangeleMesh(input_buffer: GPUBuffer, output_buffer?: GPUBuffer, actual_vertex_count?: number): ComputeOutput",
+                    "—",
+                    "Triangulates a simple 2D polygon path. Param: input_buffer Shape vertices. Param: output_buffer Output index maps. Param: actual_vertex_count Total active vertices (defaults to size limit). [Source line 765](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L765)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public copy(src: GPUBuffer, si: number, dst: GPUBuffer, di: number, count?: number): ComputeCommand",
+                    "—",
+                    "Submits a fast GPU memory copy pass. Param: src Source buffer. Param: si Source offset index. Param: dst Destination buffer. Param: di Destination offset index. Param: count Total float elements. [Source line 795](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L795)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public concate(buffers: GPUBuffer[], output_buffer?: GPUBuffer): ComputeOutput",
+                    "—",
+                    "Concatenates multiple GPU buffers into a single contiguous layout. Param: buffers List of buffers to merge. Param: output_buffer Target target (optional). [Source line 816](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L816)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public swarmMorph(input_a: GPUBuffer, input_b: GPUBuffer, t: number, vertexCount: number, output_buffer: GPUBuffer, noiseStrength: number, noiseFreq: number, timeMs: number, trajectory: number): ComputeOutput",
+                    "—",
+                    "Displaces vertices dynamically over a Simplex noise function. Param: input_a Base coordinates. Param: input_b Target morph coordinates. Param: t Progress factor. Param: vertexCount Total vertices. Param: output_buffer Output target. Param: noiseStrength Strength coefficient. Param: noiseFreq Frequency scalar. Param: timeMs Global clock time in milliseconds. Param: trajectory The flight path strategy index. [Source line 849](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L849)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sdfMarchingCubes(bufSdfA: GPUBuffer, bufSdfB: GPUBuffer, bufTriTable: GPUBuffer, outVertices: GPUBuffer, res: number, boundsMin: number[], cellSize: number, t: number): ComputeOutput",
+                    "—",
+                    "Extracts 3D triangulated surfaces from implicit voxel volumes via Marching Cubes. Param: bufSdfA Voxel SDF source A. Param: bufSdfB Voxel SDF source B. Param: bufTriTable Triangulation lookup table. Param: outVertices Output vertex target. Param: res Voxel grid resolution size. Param: boundsMin Bounds minimum [X, Y, Z]. Param: cellSize Dimension size of each voxel. Param: t Morph interpolate parameter. [Source line 883](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L883)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dualContouring(bufSdfA: GPUBuffer, bufSdfB: GPUBuffer, outVertices: GPUBuffer, bufCellVerts: GPUBuffer, res: number, boundsMin: number[], cellSize: number, t: number, noiseStrength: number = 0.0): ComputeOutput",
+                    "—",
+                    "Extracts quad mesh topology from voxel volumes using Dual Contouring. Param: bufSdfA Voxel SDF source A. Param: bufSdfB Voxel SDF source B. Param: outVertices Output vertices. Param: bufCellVerts Grid intersection indices. Param: res Grid resolution. Param: boundsMin Bounds min coordinates. Param: cellSize Scale dimensions. Param: t Morph interpolation param. Param: noiseStrength Noise turbulence factor. [Source line 920](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L920)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Compute.createPipelines: private createPipelines()",
+                    "Body operations (including nested callbacks): calls to `this.createComputePipeline`; 1 explicit loop.",
+                    "[Line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L188)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Compute.createPipelineLayout: private createPipelineLayout()",
+                    "Body operations (including nested callbacks): calls to `this.device.createBindGroupLayout`, `this.device.createPipelineLayout`.",
+                    "[Line 197](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L197)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Compute.createComputePipeline: private createComputePipeline(type: ComputeType, entryPoint: string = 'main')",
+                    "Body operations (including nested callbacks): calls to `Compute.shaders[type].replace`, `wgSize.toString`, `this.device.createShaderModule`, `this.device.createComputePipeline`; return paths including `null as any`, `this.device.createComputePipeline({ layout: layout, compute: { module: shader, entryPoint: entryPoint }, })`.",
+                    "[Line 230](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L230)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Compute.encode: private encode(pipeline: GPUComputePipeline, bindgroup: GPUBindGroup, count: number): ComputeCommand",
+                    "Implementation: `let workgroup_count = Math.ceil(count / work_group_size); let command: ComputeCommand = { dispatch_count: workgroup_count, pipeline: pipeline, bind_group: bindgroup }; return command;`.",
+                    "[Line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L248)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "computekernel",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ComputeKernel"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/compute/ComputeKernel.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/compute/ComputeKernel.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ComputeKernel: Represents a single configurable GPU Compute pipeline mapping. Handles lazy compilation of WGSL compute modules and binding resources."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ComputeKernel",
+                    "Class",
+                    "Represents a single configurable GPU Compute pipeline mapping. Handles lazy compilation of WGSL compute modules and binding resources."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ComputeKernel {\n    constructor(resources: Record<string, ShaderResource>, wgslCode: string, workgroupSize?: [\n        number,\n        number,\n        number\n    ]);\n    setResource(name: string, resource: ShaderResource): void;\n    dispatch(device: GPUDevice, dispatchX: number, dispatchY?: number, dispatchZ?: number): ComputeCommand;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ComputeKernel` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        resources: Record<string, ShaderResource>,\n        wgslCode: string,\n        workgroupSize?: [number, number, number]\n    )",
+                    "—",
+                    "Creates a new ComputeKernel. Param: resources Record mapping resource identifiers to their GPU descriptors. Param: wgslCode Raw WGSL shader source code. Param: workgroupSize Thread dimension bounds [X, Y, Z]. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setResource(name: string, resource: ShaderResource)",
+                    "—",
+                    "Updates a resource buffer/texture dynamically without recompiling the shader. Param: name Target resource identifier name. Param: resource New shader resource descriptor. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dispatch(\n        device: GPUDevice,\n        dispatchX: number,\n        dispatchY: number = 1,\n        dispatchZ: number = 1\n    ): ComputeCommand",
+                    "—",
+                    "Compiles (on first call), binds, and registers a WebGPU compute pass command. Param: device Active GPUDevice. Param: dispatchX Thread grid dimensions on X axis. Param: dispatchY Thread grid dimensions on Y axis. Param: dispatchZ Thread grid dimensions on Z axis. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts#L70)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

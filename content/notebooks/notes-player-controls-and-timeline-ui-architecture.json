@@ -1,0 +1,179 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-player-controls-and-timeline-ui-architecture",
+  "title": "Player Controls, Timeline Scrubber & Parameter Control Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/PLAYER_CONTROLS_AND_TIMELINE_UI_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/PLAYER_CONTROLS_AND_TIMELINE_UI_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/PLAYER_CONTROLS_AND_TIMELINE_UI_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PlayerControls](/api-control#playercontrols), [ControlPanel](/api-control#menu), [Scene](/api-core-scene#scene), [State](/api-core#state), [Rate](/api-animation#rate), [SliderControlOption](/api-control#menu), [ControlOption](/api-control#menu), [ControlPanelOptions](/api-control#menu), [Usage](/api-utils#gpu-utils), [NumberPlane](/api-entities-composites-coordinates#numberplane), [ValueTracker](/api-entities-composites-trackers#valuetrackers)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-system-rationale",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & System Rationale"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides built-in DOM controls for interactive inspection, playback choreography, and live parameter adjustment during development and scene presentation:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`PlayerControls`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts)**: A sleek, dark-mode timeline player bar mounted over the canvas that provides video player mechanics (play, pause, scrub, step, speed tuning, fullscreen, looping).",
+            "**[`ControlPanel`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts)**: A lightweight, collapsible HUD parameter tweaker for modifying numbers, scalars, vectors, and boolean toggles in real time without recompilation."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-player-controls-architecture-playercontrols-ts-src-engine-control-playercontrols-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Player Controls Architecture ([PlayerControls.ts](../src/engine/control/PlayerControls.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `PlayerControls` class attaches to a [`Scene`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts) instance and interfaces directly with the scene's timeline state machine:"
+        },
+        {
+          "type": "tree",
+          "variant": "vertical",
+          "nodes": [
+            {
+              "label": "Scene",
+              "description": "time · duration · isPaused",
+              "children": [
+                {
+                  "label": "PlayerControls",
+                  "description": "DOM transport bar; keeps playback state synchronized with the scene.",
+                  "children": [
+                    {
+                      "label": "Play / Pause",
+                      "description": "Spacebar"
+                    },
+                    {
+                      "label": "Seek slider",
+                      "description": "input / change"
+                    },
+                    {
+                      "label": "Speed selector",
+                      "description": "0.25× – 2.0×"
+                    },
+                    {
+                      "label": "Loop / Fullscreen",
+                      "description": "L / F keys"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Core Features & Interactive Capabilities"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Interactive Timeline Scrubber**: A smoothed range slider showing playback progress ($t \\in [0, T_{\\text{total}}]$). Scrubbing temporarily pauses continuous rendering and calls `scene.seekTo(targetTime)` for zero-latency frame preview.",
+            "**Granular Frame Stepping**: Left and Right navigation buttons (or arrow keys) step through time by exact frame increments ($\\Delta t = 1 / 60\\text{s}$ or configurable frame rate), allowing animators to audit sub-second transitions.",
+            "**Variable Playback Rate**: Speed control dropdown supporting multipliers ($0.25\\times, 0.5\\times, 1.0\\times, 1.5\\times, 2.0\\times$), scaling the time delta $\\Delta t$ fed to the scene composition loop.",
+            "**Loop Boundaries**: Allows looping the scene continuously between custom start and end points ($t_{\\text{start}} \\to t_{\\text{end}}$), indispensable for tuning cyclic mathematical animations.",
+            {
+              "text": "**Responsive Keyboard Shortcuts**:",
+              "children": [
+                "`Space`: Toggle Play / Pause.",
+                "`ArrowLeft` / `ArrowRight`: Step backward / forward 1 frame (or $\\pm 1\\text{s}$ when holding Shift).",
+                "`L`: Toggle infinite playback looping.",
+                "`F`: Toggle true fullscreen canvas mode with automatic aspect ratio preservation.",
+                "`Home` / `End`: Jump to scene start ($t=0$) or scene end ($t=T_{\\text{total}}$)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Architectural Initialization"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, PlayerControls } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n// ... construct animations ...\n\n// Mount player controls over the scene canvas\nconst controls = new PlayerControls(scene, {\n    autoHide: true,     // Fades out toolbar during idle cursor\n    showSpeed: true,\n    showLoop: true,\n    showStep: true\n});"
+        }
+      ]
+    },
+    {
+      "id": "3-hud-parameter-control-panel-menu-ts-src-engine-control-menu-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. HUD Parameter Control Panel ([menu.ts](../src/engine/control/menu.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `ControlPanel` provides an embeddable, draggable parameter HUD for interactive demonstrations, math experiments, and live presentations:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Control Types & Schema"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface SliderControlOption {\n    type: 'slider';\n    label: string;\n    value: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange: (value: number) => void;\n}\n\nexport type ControlOption = SliderControlOption;\n\nexport interface ControlPanelOptions {\n    title?: string;\n    parent?: HTMLElement;\n    controls: ControlOption[];\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Self-Contained Stylesheet Injection"
+        },
+        {
+          "type": "paragraph",
+          "text": "The control panel automatically generates and injects scoped CSS (`control-panel-styles`) into the `<head>` of the host document on instantiation. It features glassmorphism styling, clean modern typography, accent range sliders, collapsible minimize headers, and mobile-friendly touch targets."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, NumberPlane, ControlPanel, ValueTracker } from \"retiam\";\n\nconst scene = new Scene({ canvas });\nconst frequency = new ValueTracker(2.0);\nconst amplitude = new ValueTracker(1.0);\n\n// Interactive control panel modifying mathematical wave parameters\nconst panel = new ControlPanel({\n    title: \"Waveform Parameters\",\n    controls: [\n        {\n            type: \"slider\",\n            label: \"Frequency (Hz)\",\n            value: 2.0,\n            min: 0.1,\n            max: 10.0,\n            step: 0.1,\n            onChange: (v) => { frequency.value = v; }\n        },\n        {\n            type: \"slider\",\n            label: \"Amplitude\",\n            value: 1.0,\n            min: 0.0,\n            max: 5.0,\n            step: 0.05,\n            onChange: (v) => { amplitude.value = v; }\n        }\n    ]\n});"
+        }
+      ]
+    }
+  ]
+}

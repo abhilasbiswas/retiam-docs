@@ -1,0 +1,307 @@
+{
+  "morph_3d/morph_mat_folding": {
+    "description": "Morph one sampled sheet through flat, waved, pleated, folded and rolled shapes.",
+    "walkthrough": [
+      "All six ParametricModel targets use the same 80 by 36 sampling grid. Their functions map corresponding (u, v) coordinates to different sheet positions, giving MorphMode.NAIVE a consistent vertex correspondence.",
+      "The stage list supplies the target shape, label and color for each awaited morph. This is interpolation between modeled poses; it does not simulate cloth forces, collisions or conservation of sheet length during the transition."
+    ],
+    "experiments": [
+      "Lower the grid resolution equally for every target and compare the visible facets.",
+      "Change the accordion compression while keeping the grid dimensions unchanged."
+    ]
+  },
+  "morph_3d/morph_parametric": {
+    "description": "Interpolate a shared parameter grid between a sphere, cylinder and torus.",
+    "walkthrough": [
+      "Each surface uses 60 segments on both parameter axes and provides an analytical normal function. The same u value travels around the axis of revolution in all three shapes.",
+      "MorphMode.NAIVE interpolates corresponding vertices rather than searching for a geometric match. Matching vertex counts is necessary, and compatible parameter directions make the intermediate surface easier to understand."
+    ],
+    "experiments": [
+      "Reverse the cylinder angular parameter and compare the twisting transition.",
+      "Reduce both segment counts consistently and inspect the silhouette during a morph."
+    ]
+  },
+  "new_shader_architecture/circle_stroke": {
+    "description": "Compare a solid circle stroke with a custom dashed stroke and a moving reveal boundary.",
+    "walkthrough": [
+      "The two Circle entities overlap. The first supplies a red fill and a white outline; the second has transparent fill, a wider blue stroke and a WGSL pathEffect that suppresses alternating intervals.",
+      "The callback updates the second circle's t2 reveal value. The dash phase itself is stationary. This shader treatment changes fragment visibility rather than splitting the path into separate geometric dashes."
+    ],
+    "experiments": [
+      "Change dashCount from 12 to 6 and compare the intervals.",
+      "Remove the t2 update to view the complete dashed outline continuously."
+    ]
+  },
+  "new_shader_architecture/nested_scene": {
+    "description": "Compare an inline SubScene with recursively rendered canvas portals.",
+    "walkthrough": [
+      "BouncingBoxScene runs its own awaited animation loop. Wrapping it in SubScene mounts it as a transformed prefab in the parent scene, sharing the parent view.",
+      "The second approach starts a separate MainScene on an OffscreenCanvas and refreshes a Sprite from its pixels. A module-level count limits portal recursion to three nested starts. Pause and destroy behavior needs explicit coordination when adapting separate portal scenes to an application."
+    ],
+    "experiments": [
+      "Set count to zero to isolate the inline SubScene.",
+      "Change inlineGroup scale and compare that transform with scaling the portal Sprite."
+    ]
+  },
+  "new_shader_architecture/sdf_text": {
+    "description": "Update MSDF text content while animating its overall scale.",
+    "walkthrough": [
+      "SDFText begins with cyan fill and a thin white outline. Two awaited phases scale it up, replace the content with Pure WebGPU, and scale it down before restoring the original phrase.",
+      "The outline-width animation lines are commented out; the active effect is a scale animation with text replacement. SDFText uses distance-field glyphs, so changing the content updates text layout without requiring vector-path drawing for every character."
+    ],
+    "experiments": [
+      "Enable one commented strokeWidth assignment and compare outline animation with scaling.",
+      "Replace the second phrase with a longer one and inspect the layout after setText."
+    ]
+  },
+  "new_shader_architecture/text_test": {
+    "description": "Compare per-glyph animation and mutation for vector text, MSDF text and TeX.",
+    "walkthrough": [
+      "Vector Text starts each glyph with a zero reveal boundary and animates through a GroupAnimator. SDFText decomposes into characters for a scale-and-opacity entrance; both then demonstrate setChar, insert and delete.",
+      "Tex exposes its generated paths for a draw animation. Although the final console message mentions merging, the active final statements only recolor parents; this scene does not call a merge operation."
+    ],
+    "experiments": [
+      "Change the character index in setChar and compare which glyph changes.",
+      "Remove SDFText.decompose and inspect why the per-character setup needs decomposition."
+    ]
+  },
+  "random/test_scene": {
+    "description": "Inspect chalk path styling and a translucent SDF circle in a small comparison scene.",
+    "walkthrough": [
+      "The active source creates a stroked Rect, applies ChalkEffect through setPathEffect, and adds an SDFCircle with a red stroke.",
+      "Despite the exported class name BinarySearchScene, this file currently contains no binary-search algorithm or timeline. Use it as a compact paint-and-primitive experiment, and refer to the graph or automata guides for algorithm visualizations."
+    ],
+    "experiments": [
+      "Remove ChalkEffect and compare the rectangle's edge appearance.",
+      "Change the circle stroke alpha from 0.5 to 1 to inspect the overlap."
+    ]
+  },
+  "raymarch/raymarch": {
+    "description": "Render a time-dependent height field with contour styling using RaymarchedPlot3D.",
+    "walkthrough": [
+      "ThreeDAxes supplies coordinate ranges and physical dimensions. The WGSL equation combines two damped radial waves, grows their amplitude during startup, and uses the plot's contour options and custom color stops for shading.",
+      "The update callback rotates the plot and axes together. The surface is evaluated through raymarching rather than a CPU-generated triangle grid, so function complexity and marching quality affect GPU cost."
+    ],
+    "experiments": [
+      "Replace the equation return with sin(x) * cos(z) to isolate a simpler height field.",
+      "Change contourWidth and compare the contour bands while orbiting the camera."
+    ]
+  },
+  "raymarch/sdf_morph": {
+    "description": "Blend between a rounded cube, interlocking rings and gold droplets.",
+    "walkthrough": [
+      "Three SDFEntity3D targets contain different SDFNode trees and material settings. SDF3DTransform animates each transition in a loop, including the target transform and surface appearance.",
+      "This is distance-field interpolation, so intermediate shapes can form bridges and disappear in ways that differ from vertex morphing. The smooth-union values inside each target independently control how its components merge."
+    ],
+    "experiments": [
+      "Change the droplets' union smoothing from 0.6 to 0.1 and compare the final shape.",
+      "Use a linear rate function to compare uniform morph progress with eased progress."
+    ]
+  },
+  "raymarch/sdf_volume": {
+    "description": "Explore 16 WGSL distance fields in a rotating four-by-four grid.",
+    "walkthrough": [
+      "SDFVolume receives a bounded 3D region and a WGSL body returning the distance at p. The grid compares primitive fields, smooth union and subtraction, repetition and an onion-shell intersection.",
+      "The update callback writes scene time into state.t1, which several fields use to animate their geometry. Keep the bounds large enough to contain the field: an object extending outside its volume can be clipped even when its distance function is correct."
+    ],
+    "experiments": [
+      "Increase the animated sphere radius and compare it with the fixed volume bounds.",
+      "Change the smooth-union value in the liquid-gold example and inspect the connecting neck."
+    ]
+  },
+  "shapes_paths_2d/line_caps": {
+    "description": "Compare butt, square and round caps on equally thick rotating lines.",
+    "walkthrough": [
+      "Three Line3D entities share the same endpoints and stroke width but use different CapType values. Each is translated vertically so the endpoints can be compared side by side.",
+      "The callback assigns the same absolute Y rotation to every line. Square and round caps extend beyond the nominal endpoints, while butt caps stop at them; rotation exposes how those shapes look in perspective."
+    ],
+    "experiments": [
+      "Set the rotation to zero and compare the endpoint extension directly.",
+      "Increase stroke width while keeping the endpoints fixed."
+    ]
+  },
+  "sketch/excalidraw_cards_demo": {
+    "description": "Build three illustrated cards with native sketch contours and several fill treatments.",
+    "walkthrough": [
+      "Rect, Circle, Path and the library Diamond are converted through toExcalidraw. The source combines hachures, filled backgrounds and a hand-drawn heart, then reveals each part with Excalidraw.createAnim.",
+      "The entrance animations request 12 FPS, and some entities enable boil. Fill geometry, outline roughness and stroke appearance are separate choices; compare them before adopting the same settings for every shape."
+    ],
+    "experiments": [
+      "Use the same seed for two comparable rectangles to separate geometry changes from style changes.",
+      "Change fillGap on a hatched card and compare line density."
+    ]
+  },
+  "sketch/excalidraw_map_demo": {
+    "description": "Render the shared USA path data with native Excalidraw styling.",
+    "walkthrough": [
+      "Each state path is decoded into contours, centered and scaled, and its Y axis is flipped into scene coordinates. A deterministic seed derived from the state ID keeps its rough geometry repeatable.",
+      "The shared data supplies state colors and fill styles. All state entrances run through Concurrent; changing a style does not require duplicating the map geometry or the data file."
+    ],
+    "experiments": [
+      "Change scale and compare the map bounds with the camera view.",
+      "Give every state the same fillAngle to compare coordinated hachures with per-state directions."
+    ]
+  },
+  "sketch/rough_demo": {
+    "description": "Compare direct rough.js drawing output with the roughify wrapper in a three-card illustration.",
+    "walkthrough": [
+      "The helper converts rough.js drawing operations into Retiam paths. Card rectangles and the circle use the generator directly; the heart and diamond demonstrate roughify and its animation helpers.",
+      "The scene combines solid, hachure and cross-hatch fills. The heart enables boil. This demonstrates the optional retiam/rough library alongside ordinary Scene animation rather than requiring a separate rendering application."
+    ],
+    "experiments": [
+      "Change the generator roughness while retaining its seed and compare the edge displacement.",
+      "Disable boil on the heart to compare fixed and changing sketch geometry."
+    ]
+  },
+  "sketch/rough_map_demo": {
+    "description": "Render the shared USA map data through the optional rough.js integration.",
+    "walkthrough": [
+      "roughify receives each SVG path, deterministic state seed and its fill style. pixelScale and flipY convert the original drawing coordinates, while the parent group supplies centering.",
+      "The state shapes are independent children and enter concurrently. Compare this version with the native Excalidraw map to understand the different integration points while keeping the source map data identical."
+    ],
+    "experiments": [
+      "Change hachureGap from 4 to 8 and inspect the fill density.",
+      "Set roughness to zero and compare the outlines with the rough version."
+    ]
+  },
+  "sketch/tex_excalifont_demo": {
+    "description": "Compare built-in fonts across vector text, MSDF text and styled mathematical formulas.",
+    "walkthrough": [
+      "The first two rows use Text and SDFText with font names roboto, excalifont, virgil and fredericka. The formula rows use Tex with fontStyle default, excalifont or virgil.",
+      "Ordinary font selection and TeX font styling are different options. The scene keeps representative equations beside each other so you can inspect symbol spacing, superscripts and integral shapes before choosing a style.",
+      "Named vector fonts currently request /src/assets/fonts/ paths from the page’s origin. The documentation build supplies those files. In an external host, serve the matching fonts or load explicit font bytes; an HTML fallback can pass an HTTP success check and still fail OpenType parsing. Compare after font resolution has finished rather than judging the initial fallback face."
+    ],
+    "experiments": [
+      "Use the same phrase in each Text and SDFText column to compare glyph appearance directly.",
+      "Replace an equation in all three Tex styles and compare Greek symbols and fraction spacing."
+    ]
+  },
+  "test/api_features_test": {
+    "description": "Watch a sequence of visual integration checks for animation, grouping, math and lifecycle APIs.",
+    "walkthrough": [
+      "This is a manual integration scene presenting several API checks in sequence. Its historical header refers to 34 improvements, but watching the scene is not an automated assertion that every improvement is correct. Read each active section and identify the visible or logged behavior it exercises.",
+      "The first section grows and shrinks a circle, fades a rectangle in and out, and writes/uncreates a path. Each awaited play establishes a boundary before the next operation. The small section helper introduces and removes a heading so the same screen area can be reused.",
+      "The callback section records onStart and onComplete activity, while the wait-factory section shows a deliberate hold between visual states. Check the console as well as the canvas. A callback firing and an object appearing are related evidence, but neither alone proves every cancellation or reset case.",
+      "Further sections compare group opacity and z ordering, stepped/constant rate functions, color conversion, AABB intersection/containment and fractal noise samples. These mix mathematical queries with rendering behavior. For example, a bounding-box result should be checked numerically as well as illustrated by a box.",
+      "The later checks dispose an entity, change and reset the camera, and call Vec3.cast with valid and invalid inputs. The invalid cast is caught so its outcome can be displayed. A catch that lets the scene continue should not be mistaken for permission to suppress an unexpected application error.",
+      "Use the scene as a debugging fixture and a source of small reproducible cases. Convert an important regression into an assertion on the expected value or state, then retain a representative screenshot where visual evidence matters. Test interrupted plays and teardown independently of a successful entrance sequence."
+    ],
+    "experiments": [
+      "Change one AABB query point from inside to outside the box and compare its numeric output with the drawing.",
+      "Restart during an awaited play and inspect callback order and cancellation messages. Compare that with letting the section finish normally."
+    ]
+  },
+  "test/clone": {
+    "description": "Clone an outlined circle and animate the copy to another position.",
+    "walkthrough": [
+      "Create reveals the original circle first. clone() then produces the second entity, and its animate.move builder sends it toward the requested position.",
+      "The active file tests an entity clone, not deep cloning an entire Scene. Styling and transform independence can be inspected by changing only the copy after cloning."
+    ],
+    "experiments": [
+      "Set the copy's stroke to red and compare it with the original.",
+      "Change the move target while leaving the original position unchanged."
+    ]
+  },
+  "test/transform": {
+    "description": "Morph Cartesian axes into a polar coordinate drawing.",
+    "walkthrough": [
+      "The scene switches to an orthographic camera, draws Axes with Write, and creates a PolarAxes target. VectorTransform then interpolates the source vector geometry into that target.",
+      "The two drawings contain different path structures, making this a useful matching and contour-interpolation probe. It currently tests vector morphing rather than a nested transform hierarchy."
+    ],
+    "experiments": [
+      "Use the same stroke color on both drawings to inspect geometry independently of paint.",
+      "Change rMax and radius separately to compare numerical range with physical size."
+    ]
+  },
+  "test/transform_test": {
+    "description": "Compare unified morph dispatch with text, formula and shape matching.",
+    "walkthrough": [
+      "The first half calls Morph on vector entities, mesh models and SDF entities, allowing the dispatcher to select the corresponding implementation. The model phase uses a 40,000-particle swarm.",
+      "The second half uses TransformMatch on an anagram, a rearranged equation and two groups of shapes. Pause between sections and compare geometric correspondence with semantic or shape-based matching."
+    ],
+    "experiments": [
+      "Lower particleCount for the swarm and compare the transition density.",
+      "Change the target anagram to include unmatched characters and inspect morphUnmatched behavior."
+    ]
+  },
+  "text/text_split_demo": {
+    "description": "Separate words, lines, characters and equation paths while preserving their starting placement.",
+    "walkthrough": [
+      "The four acts use Text.splitWords, SDFText.splitLines, Text.splitChars and Tex.split. Each captures the resulting parts, animates them independently, and returns them toward their original arrangement.",
+      "Compare the placement just before and after splitting. Keeping the initial world positions stable lets decomposition introduce independent animation without a visible jump. The return animation belongs to the scene, not an automatic reassembly step."
+    ],
+    "experiments": [
+      "Increase the burst offsets to make independent character movement easier to see.",
+      "Change the paragraph line breaks and compare the groups returned by splitLines."
+    ]
+  },
+  "tweaks/buffer_relocation": {
+    "description": "Grow a spiral line while testing dynamic geometry-buffer capacity.",
+    "walkthrough": [
+      "A Line begins empty and sets geo.capacityMultiplier to 1.5. Every frame appends a Vec2, keeps at most 5,000 points and calls setVertices to upload the current polyline.",
+      "The multiplier allows extra capacity when growth requires a larger buffer. This is a buffer-reallocation probe, not a fixed-capacity particle system; point creation and shifting still perform CPU work each update."
+    ],
+    "experiments": [
+      "Change capacityMultiplier to 2 and compare the frequency of growth allocations in a profiler.",
+      "Lower the point limit to 500 and compare the visible spiral history."
+    ]
+  },
+  "tweaks/checkpoint_demo": {
+    "description": "Save named scene checkpoints after progressively more complex stages.",
+    "walkthrough": [
+      "The timeline creates a title and equation, builds axes and a parametric surface, morphs the equation, and records named saveState checkpoints at four stages. Console messages identify the save time.",
+      "An 18-second hold separates the final checkpoints. The active scene saves states but does not call a restore or seek operation; use the checkpoint API guide when adding a comparison that measures replay or restoration."
+    ],
+    "experiments": [
+      "Shorten the long hold while retaining the checkpoint names to inspect the sequence faster.",
+      "Add a small transform change before one saveState and inspect what the checkpoint captures."
+    ]
+  },
+  "tweaks/framework_test": {
+    "description": "Move the actual canvas element while an inline SubScene keeps animating.",
+    "walkthrough": [
+      "The parent mounts a cyan-circle SubScene and a red rectangle. Its update callback changes the canvas element's CSS margins continuously, reproducing layout movement that can occur in a UI framework.",
+      "This tests canvas positioning and overlay alignment. It does not repeatedly mount and unmount scenes. The documentation viewer isolates the canvas in its own frame so the experiment stays within the example area."
+    ],
+    "experiments": [
+      "Disable the margin assignments and compare canvas stability.",
+      "Change the margin amplitude from 50 to 10 to simulate a smaller layout adjustment."
+    ]
+  },
+  "tweaks/garbage_collection_test": {
+    "description": "Stress instance updates using reusable vectors, colors and typed arrays.",
+    "walkthrough": [
+      "The source creates 100,000 cube instances, preallocates position and velocity arrays, and reuses one Vec3 and one Color while applying every instance update.",
+      "updateInstances uploads the changed instance data. This is a substantial CPU and GPU workload; the demo illustrates allocation-conscious updates, but it does not itself measure leaks or prove a particular frame rate."
+    ],
+    "experiments": [
+      "Reduce COUNT to 1,000 before experimenting on a slower device.",
+      "Compare a profiler trace with a deliberately allocated new Vec3 inside the loop."
+    ],
+    "requirements": [
+      "This stress scene updates 100,000 instances every frame. Reduce COUNT in the source editor for a smaller workload."
+    ]
+  },
+  "tweaks/video_pause_test": {
+    "description": "Pause a scene after video playback and inspect texture stability during camera input.",
+    "walkthrough": [
+      "A Sprite plays the bundled nature video for three seconds, then the scene calls its own pause method. Console messages invite camera interaction after that point.",
+      "The scene can pause itself independently of the documentation toolbar state. This is a regression probe for video texture validity; restart begins the sequence again, and Resume can continue the paused scene."
+    ],
+    "experiments": [
+      "Drag inside the canvas after the source pauses the scene and watch for texture errors.",
+      "Change the three-second hold to a shorter interval to repeat the pause transition."
+    ]
+  },
+  "tweaks/world_matrix": {
+    "description": "Query a deeply nested leaf transform repeatedly while rotating its root.",
+    "walkthrough": [
+      "The source builds a chain of 1,000 Entity children, each shifted slightly, and adds a red marker at the leaf. Each update rotates the root and queries the leaf world transform 10,000 times.",
+      "The scene stresses ancestor propagation and cached transform reads. It contains no timing assertions, so use a profiler to compare performance rather than assuming the source comment's frame-rate claim applies to every device."
+    ],
+    "experiments": [
+      "Reduce DEPTH to 10 to inspect the simpler hierarchy.",
+      "Change the query count while keeping the hierarchy unchanged to isolate repeated-read cost."
+    ]
+  }
+}

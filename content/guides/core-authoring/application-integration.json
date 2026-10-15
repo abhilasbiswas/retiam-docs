@@ -1,0 +1,124 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "application-integration",
+  "title": "Retiam in a TypeScript or React application",
+  "group": "Core authoring",
+  "summary": "Mount a Retiam scene in TypeScript or React, pass application state into it, and clean up safely.",
+  "prerequisites": [
+    "[Your first scene](/first-scene)",
+    "[Scene composition](/scene-composition)"
+  ],
+  "outcome": "A mounted scene that responds to application state and releases its resources when removed.",
+  "sections": [
+    {
+      "id": "choose-the-host",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose who owns the canvas"
+        },
+        {
+          "type": "paragraph",
+          "text": "For animation video, start with the [external npm project](/installation#create-a-consumer-application). Your application imports `retiam`, supplies a canvas, and authors a `Scene`; the renderer still runs in a WebGPU browser. The render CLI opens that application and selects a scene with `?file=`. A React host is useful when the same scene is part of an interactive product, but it is not required to make a video."
+        },
+        {
+          "type": "paragraph",
+          "text": "A canvas needs a measured CSS box before startup. Give its parent a height, keep the canvas at 100% of that box, and let the composer choose its pixel resolution from the CSS size and device pixel ratio. Stretching only the CSS after rendering leaves the drawing buffer at its old size. Window resize is handled by `SceneComposer`; a panel, grid or sidebar resizing inside the window needs a container observer."
+        },
+        {
+          "type": "paragraph",
+          "text": "The [first scene](/first-scene) is the complete vanilla TypeScript path. Keep reusable scene classes outside the browser bootstrap so the same default-exported class can be selected by the CLI. CDN hosts instead resolve the same imports through an import map. An [embedded scene](/export#standalone-embeds) supplies its own host and bundle."
+        }
+      ]
+    },
+    {
+      "id": "scene-state",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Expose a small application API"
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep UI state in the host and expose deliberate scene methods. Calling a setter should update an existing entity and invalidate the scene. Recreating the scene on every slider movement reloads resources and restarts the timeline. This scene accepts values before startup and applies them once the entity exists."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, CameraModel, hex } from 'retiam';\nexport default class MeterScene extends Scene {\n  private circle?: Circle;\n  private amount = 0.5;\n  setAmount(value: number) {\n    this.amount = Math.max(0.05, Math.min(1, value));\n    this.circle?.setScale(this.amount);\n    this.invalidate();\n  }\n  async run() {\n    this.clearColor(hex('#080c14'));\n    this.camera.model = CameraModel.ORTHOGRAPHIC;\n    this.camera.orthoScale = 5;\n    this.camera.position.set([0, 0, 20]);\n    this.camera.lookAt([0, 0, 0]);\n    this.circle = new Circle(1.5, { fill: hex('#38bdf8') });\n    this.add(this.circle);\n    this.setAmount(this.amount);\n  }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use absolute setters such as `setScale` for a UI value. Repeatedly calling `scale(0.5)` would multiply the previous scale on each render. Put long choreography in `run()` and short UI commands in named methods; the host should not reach into animation queues or GPU allocator internals."
+        }
+      ]
+    },
+    {
+      "id": "react-host",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Mount, update and unmount in React"
+        },
+        {
+          "type": "paragraph",
+          "text": "Add React to the npm starter with `npm install react react-dom` and `npm install -D @types/react @types/react-dom`; enable `\"jsx\": \"react-jsx\"` in its TypeScript configuration. Save the class above in `src/MeterScene.ts`, the component below in `src/RetiamPreview.tsx`, and mount it from `src/main.tsx`. The lifecycle effect runs once per mount; the separate state effect forwards the latest amount."
+        },
+        {
+          "type": "code",
+          "language": "tsx",
+          "code": "import { useEffect, useRef, useState } from 'react';\nimport MeterScene from './MeterScene';\n\nexport function RetiamPreview({ amount }: { amount: number }) {\n  const canvasRef = useRef<HTMLCanvasElement>(null);\n  const sceneRef = useRef<MeterScene | null>(null);\n  const [error, setError] = useState<string | null>(null);\n\n  useEffect(() => {\n    const canvas = canvasRef.current!;\n    const scene = new MeterScene();\n    sceneRef.current = scene;\n    let cancelled = false, started = false, resizeFrame = 0;\n    let observer: ResizeObserver | undefined;\n    void scene.start(canvas).then(() => {\n      started = true;\n      if (cancelled) { scene.destroy(); return; }\n      observer = new ResizeObserver(() => {\n        cancelAnimationFrame(resizeFrame);\n        resizeFrame = requestAnimationFrame(() => {\n          window.dispatchEvent(new Event('resize'));\n          scene.invalidate();\n        });\n      });\n      observer.observe(canvas.parentElement!);\n    }).catch(cause => {\n      scene.destroy();\n      if (!cancelled) setError(String(cause));\n    });\n    return () => {\n      cancelled = true;\n      observer?.disconnect(); cancelAnimationFrame(resizeFrame);\n      if (sceneRef.current === scene) sceneRef.current = null;\n      if (started) scene.destroy();\n      // If initialization is pending, its continuation performs cleanup.\n    };\n  }, []);\n\n  useEffect(() => { sceneRef.current?.setAmount(amount); }, [amount]);\n  return <div style={{ height: 360, width: '100%', position: 'relative' }}>\n    <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />\n    {error && <p role=\"alert\">{error}</p>}\n  </div>;\n}"
+        },
+        {
+          "type": "code",
+          "language": "tsx",
+          "code": "import { StrictMode, useState } from 'react';\nimport { createRoot } from 'react-dom/client';\nimport { RetiamPreview } from './RetiamPreview';\nfunction App() {\n  const [amount, setAmount] = useState(0.5);\n  return <>\n    <input aria-label=\"Circle scale\" type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\"\n      value={amount} onChange={event => setAmount(Number(event.target.value))} />\n    <RetiamPreview amount={amount} />\n  </>;\n}\ncreateRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use `<div id=\"root\"></div>` and `<script type=\"module\" src=\"/src/main.tsx\"></script>` in `index.html`. StrictMode may mount, clean up and mount again in development. The cancellation flag handles initialization that finishes after cleanup; it is not a GPU initialization abort API. `Scene.start()` resolves after startup, while `run()` continues independently, so catch asset or choreography errors inside the scene too. The observer forwards container changes through the existing window resize path, updating views and render targets as well as canvas pixels."
+        }
+      ]
+    },
+    {
+      "id": "application-boundaries",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Keep browser and application lifetimes aligned"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use one owned composer per independent preview. For deliberate multi-scene composition, let the host own the `SceneComposer` and remove scenes through its API; do not destroy one child scene and expect the other scenes to survive. Pause background work with `PAUSED` when the product requires it, then invalidate after a user command. Free host listeners, observers and scene resources on unmount, including failed startup. See [lifecycle ownership](/lifecycle-resources) and [animation control](/animation-control) before adding replay or seek UI."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Lifecycle, removal and resource ownership](/lifecycle-resources)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "difficulty": "intermediate",
+  "estimatedMinutes": 30
+}

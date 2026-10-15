@@ -1,0 +1,208 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "path-pipelines",
+  "title": "How vector paths reach the GPU",
+  "group": "GPU implementation",
+  "summary": "Follow vector contours through analytical rendering, triangulation and the GPU path pipelines.",
+  "sections": [
+    {
+      "id": "one-entity-two-rendering-strategies",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "One entity, two rendering strategies"
+        },
+        {
+          "type": "paragraph",
+          "text": "Path exposes one authoring interface over analytical and triangulated geometry. Its source can be SVG path data, point arrays, predecoded quadratic contours or supported GPU buffers. The source representation, rendering representation and world transform are distinct. Moving a path changes its transform; changing its vertices rebuilds or updates geometry."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Strategy",
+            "Geometry / fragment / renderer",
+            "Main tradeoff"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "analytical",
+                "PathGeometry / PathFragment / PathRenderer",
+                "Curve-aware shading with stencil and stroke passes"
+              ]
+            },
+            {
+              "cells": [
+                "fast",
+                "TriangulatedPathGeometry / TriangulatedPathFragment / TriangulatedPathRenderer",
+                "CPU flattening and indexed triangles, eligible for mega draws"
+              ]
+            },
+            {
+              "cells": [
+                "auto",
+                "Chooses one of the above",
+                "Current source and effect options determine the route"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The current default is analytical. auto selects analytical for custom stroke/fill shaders, overlap, GPU-buffer input or explicitly supplied source contours; otherwise it selects fast. Switching methods changes component groups and invalidates retained geometry. A style effect designed for curve coordinates cannot be assumed to behave identically on a flat triangle pipeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Path](/api-entities-primitives-2d#path), [PathRenderMethod](/api-entities-primitives-2d#path), [PathGeometry](/api-components-geometry#pathgeometry), [TriangulatedPathGeometry](/api-components-geometry#triangulatedpathgeometry)."
+        }
+      ]
+    },
+    {
+      "id": "normalize-and-modify-the-source",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Normalize and modify the source"
+        },
+        {
+          "type": "paragraph",
+          "text": "SVG parsing resolves commands into geometry, including curves and arcs. Analytical contours use a starting point followed by quadratic control/end-point pairs. A contour with n quadratic segments contains 2 + 4n coordinate scalars. CPU contour boundary indices refer to points, not bytes; GPU allocator tables add their own global offsets and segment metadata."
+        },
+        {
+          "type": "paragraph",
+          "text": "Path.setVertices retains decoded source contours. When modifiers exist, the pipeline transforms copies of this source and then decodes the result into the active geometry. This prevents a dynamic modifier from repeatedly deforming an already deformed previous frame. Updating a modifier marks its parameters dirty; the pipeline can avoid unnecessary recomputation when parameters and source are stable."
+        },
+        {
+          "type": "paragraph",
+          "text": "Cubic curves and SVG arcs must be represented with the selected approximation/tessellation contract. The displayed shape can be stable at one zoom and show approximation error at another. Sampling density and tolerance should be judged at final framing, especially before a nonlinear transform or boolean reconstruction."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PathGeometryUtils](/api-utils#pathgeometryutils), [PathModifierPipeline](/api-modifiers#pathmodifierpipeline), [CurveSampleUtils](/api-utils#curvesampleutils)."
+        }
+      ]
+    },
+    {
+      "id": "analytical-fill-and-stroke",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Analytical fill and stroke"
+        },
+        {
+          "type": "paragraph",
+          "text": "PathGeometry stores contour coordinates and participates in GlobalAnalyticalAllocator allocation. The batched analytical compute path derives stroke geometry, arc-length data and clip coverage data. Allocation offsets are written into retained state so vertex pulling can address shared storage. Dirty geometry and changed allocator buffer versions require refreshed offsets or bindings."
+        },
+        {
+          "type": "paragraph",
+          "text": "PathRenderer first draws the fill stencil chain and quadratic contributions, then the fill cover. Stroke rendering has hard/edge coverage passes. It chooses the stencil reference from each active pass, allowing specialized masking to override it, and clears the relevant path stencil state afterward. The work is multi-pass; an entity count alone does not measure its draw cost."
+        },
+        {
+          "type": "paragraph",
+          "text": "Fill rule, contour winding, overlap prevention, caps, joints, dash parameters and shader effects affect the geometry/shading contract. Paint clipping bounds, a TrimModifier and Create progress describe different mechanisms; use the one that matches the intended result."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PathRenderer](/api-components-renderers#pathrenderer), [PathFragment](/api-components-fragment#pathfragment), [GlobalAnalyticalAllocator](/api-render-allocator#globalanalyticalallocator), [GlobalAnalyticalPipeline](/api-render-allocator#globalanalyticalpipeline), [Paint](/api-core-paint#paint)."
+        }
+      ]
+    },
+    {
+      "id": "fast-tessellation-and-fills",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Fast tessellation and fills"
+        },
+        {
+          "type": "paragraph",
+          "text": "PathTriangulator can parse SVG directly into polylines. Adaptive flattening recursively subdivides curves according to flatness tolerance and a depth limit; fixed flattening samples a chosen number of steps. The current flatten defaults are adaptive, tolerance 0.25, fixed segments 8 and maximum depth 5. These are world-space geometric controls, so small-world-unit tutorials often need a smaller tolerance."
+        },
+        {
+          "type": "paragraph",
+          "text": "Fill triangulation organizes contour rings and holes, then uses the selected earcut, polygon-clipping, libtess or auto route. Stroke extrusion creates triangle geometry with the chosen cap/join treatment. Output vertices and indices live in shared geometry allocations; the renderer pulls position/color data for a triangle-list pipeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "TriangulatedPathRenderer permits eligible consecutive packets to use a mega-draw pipeline. Pipeline resources, pass count, scissor/mask semantics and other compatibility conditions constrain batching. A custom stencil patch can be bypassed by a pipeline that fixes its own stencil state, so verify Mask together with the chosen fast renderer rather than assuming ordinary path rendering proves masking."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PathTriangulator](/api-utils#pathtriangulator), [FlattenOptions](/api-utils#pathtriangulator), [TriangulationOptions](/api-utils#pathtriangulator), [TriangulatedPathRenderer](/api-components-renderers#triangulatedpathrenderer), [MegaDrawBatchManager](/api-render-allocator#megadrawbatchmanager)."
+        }
+      ]
+    },
+    {
+      "id": "tune-by-the-visible-error",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Tune by the visible error"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Keep the same source and camera while comparing analytical and fast output.",
+            "Inspect holes, tight corners, cap ends, joins and self-intersections.",
+            "Decrease fast-path tolerance or raise the allowed subdivision depth only until the silhouette stabilizes.",
+            "Inspect shader effects, picking and masks separately from the basic fill.",
+            "Measure frame time and allocation cost with the actual instance count, AA settings and output resolution.",
+            "Preserve a readable reference frame when changing a flattening or reconstruction algorithm."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scenes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Change source path data first, then change only its subdivision density."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-pathscene"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-subdivision"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [GPU state, memory pools and batching](/gpu-memory)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[2D primitives and vector paths](/vector-paths)"
+  ]
+}

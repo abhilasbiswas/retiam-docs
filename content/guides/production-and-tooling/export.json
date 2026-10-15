@@ -1,0 +1,269 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "export",
+  "title": "Snapshots, video and web embeds",
+  "group": "Assets and export",
+  "summary": "Capture a frame, render an animation video, or export a scene as an independent web component.",
+  "sections": [
+    {
+      "id": "animation-video-workflow",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "From an npm scene to an animation video"
+        },
+        {
+          "type": "paragraph",
+          "text": "The main Retiam workflow is to install the engine in your own npm project, write a Scene and generate an animation video. Keep scene source and assets in that project, preview the choreography, then render at your chosen resolution and frame rate. [Installation](/installation#create-a-consumer-application) provides a complete project and browser host."
+        },
+        {
+          "type": "paragraph",
+          "text": "The CLI launches a headless browser to execute the scene and sends captured frames to FFmpeg for encoding. It serves the calling project’s index.html and passes the selected scene through the file query parameter. The host must load that scene, as the installation example does; the CLI does not create that entry for you."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Install the npm package and add your scene and browser host.",
+            "Preview locally and check geometry, framing and timing.",
+            "Render a short draft with explicit dimensions, FPS and maximum duration.",
+            "Inspect the video, then increase output quality for the final render."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "three-capture-routes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Three capture routes"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Route",
+            "Use",
+            "Dependencies"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Browser Recorder",
+                "Capture a live canvas with optional audio",
+                "Browser encoding capabilities"
+              ]
+            },
+            {
+              "cells": [
+                "OfflineRenderManager / OfflineRecorder",
+                "Frame-stepped browser pipeline and raw transport",
+                "Compatible host/coordinator"
+              ]
+            },
+            {
+              "cells": [
+                "CLI render / snapshot",
+                "Headless video and timestamped images",
+                "Vite, Puppeteer/Chrome; FFmpeg for video"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Offline stepping sets the frame interval from output FPS. That stabilizes timeline sampling but does not make network, browser media, wall-clock helpers or unseeded randomness deterministic. Preload assets and use scene-time updates for repeatable output."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Recorder](/api-recorder#recorder), [OfflineRecorder](/api-recorder#offlinerecorder), [OfflineRenderManager](/api-core#offlinerendermanager), [SnapshotManager](/api-core#snapshotmanager)."
+        }
+      ]
+    },
+    {
+      "id": "cli-preview-and-final-render",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CLI preview and final render"
+        },
+        {
+          "type": "paragraph",
+          "text": "Run these commands from the external animation project. In this checkout, the CLI also imports Vite, Puppeteer, ws and cli-progress; install the missing tools in the project. FFmpeg must be available on PATH, and the render command launches an installed Chrome browser with WebGPU enabled."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm install --save-dev vite puppeteer ws cli-progress\nnpx retiam lint scenes/MyScene.ts --json\nnpx retiam render scenes/MyScene.ts -w 1280 -h 720 -f 30 -d 4000 -o outputs/video"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam snapshot scenes/MyScene.ts --times 1.0,2.2,3.0 --json\nnpx retiam render scenes/MyScene.ts -w 1920 -h 1080 -f 60 -d 4000 -o outputs/video"
+        },
+        {
+          "type": "paragraph",
+          "text": "Render duration is milliseconds; snapshot --times is seconds. --out is an output directory, not an MP4 filename. Snapshot currently writes PNG files and does not implement a --format flag. Render output filenames contain a timestamp."
+        },
+        {
+          "type": "paragraph",
+          "text": "The four-second installation scene produces a timestamped video in outputs/video. The maximum duration also bounds scenes with loops or ongoing updates. Keep a final hold in the choreography when the last state needs reading time. Snapshot currently waits by wall-clock time after loading the page and captures the viewport; its timestamps are approximate preview checks, not deterministic offline keyframes."
+        }
+      ]
+    },
+    {
+      "id": "render-configuration",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Render configuration"
+        },
+        {
+          "type": "code",
+          "language": "javascript",
+          "code": "export default {\n  width: 1920, height: 1080, fps: 60,\n  maxDuration: 12000,\n  videoBitrate: \"20M\",\n  outputDir: \"outputs/video\",\n  outputFormat: \"mp4\",\n  raytraceEnabled: false,\n  AA: 2, sample_count: 4\n};"
+        },
+        {
+          "type": "paragraph",
+          "text": "Save as retiam.config.js in the calling project. bin/render.js falls back to config.js. Flags override supported values. The render script forwards a whitelist of RenderConfig fields; adding another setting to the file does not mean it will be forwarded."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "The CLI imports puppeteer, ws and cli-progress, but the root manifest does not declare all of those tools as dependencies. A clean install may need those explicit tools as well as a usable Chrome and FFmpeg. See the tooling reference before configuring CI."
+        }
+      ]
+    },
+    {
+      "id": "standalone-embeds",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Standalone embeds"
+        },
+        {
+          "type": "paragraph",
+          "text": "An independent embedded scene contains the exported scene and the engine code it needs. The receiving website loads the exported files and mounts a retiam-scene element; it needs no npm installation and no separate engine CDN. This delivers a running scene, while video rendering delivers an encoded video file."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam export scenes/MyScene.ts outputs/embed"
+        },
+        {
+          "type": "code",
+          "language": "html",
+          "code": "<script src=\"/embeds/myscene.js\"></script>\n<retiam-scene style=\"display:block;width:960px;height:540px\"></retiam-scene>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Export writes a lowercase scene-name IIFE bundle and registers the retiam/retiam-scene custom elements. Copy the output directory with any emitted assets to the receiving site. The bundle can run independently of a separate Retiam installation; remote asset URLs or speech services used by the scene still need to be packaged locally or supplied at runtime."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "Current exporter setup",
+          "content": "The exporter in this checkout generates src/_temp_embed_entry.ts with an import of ./engine/_core/Scene and source-tree aliases. That command currently expects the engine repository layout. External npm projects need a package-based export entry before using this CLI path; the independent runtime of the completed bundle is the intended output. This setup constraint is separate from using Retiam as an npm library for authoring and video rendering."
+        }
+      ]
+    },
+    {
+      "id": "embed-from-npm",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Build an independent embed from an npm project"
+        },
+        {
+          "type": "paragraph",
+          "text": "You can also bundle an embed directly from the external npm project in the installation guide. This route uses the package exports and Vite, so it does not depend on the repository-specific export CLI. Keep scenes/MyScene.ts from that guide and add the component entry below as src/embed.ts."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "codeFile": "playgrounds/embed-element.ts"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each element owns its canvas and scene. Disconnecting it removes the resize observer and destroys the scene; a pending startup cleans up when it settles. The observer bridges element-size changes to the composer’s current window-resize mechanism. scene-ready means startup has completed, not that the animation has reached its final frame. Errors during initialization appear inside the element; Scene.run reports later choreography failures through the engine."
+        },
+        {
+          "type": "paragraph",
+          "text": "Save the following as vite.embed.config.ts. Its ES module output includes the imported engine code, with any chunks/assets emitted by the bundler. Do not mark retiam external: doing that would require a separate runtime import."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "codeFile": "playgrounds/embed-vite.config.ts"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx vite build --config vite.embed.config.ts"
+        },
+        {
+          "type": "paragraph",
+          "text": "Copy the whole outputs/embed directory into the receiving site, for example at /embeds/my-scene/. Load the emitted module and give its element a nonzero display size:"
+        },
+        {
+          "type": "code",
+          "language": "html",
+          "code": "<script type=\"module\" src=\"/embeds/my-scene/my-scene.js\"></script>\n<my-retiam-scene style=\"display:block;width:100%;height:540px\"></my-retiam-scene>"
+        },
+        {
+          "type": "paragraph",
+          "text": "The receiving page needs WebGPU and the exported files, but does not need npm, an engine CDN or the authoring project. Serve the files over HTTP from a supported secure origin, preserving relative asset paths. Network URLs explicitly used by the scene remain dependencies; localize those assets and avoid service-backed features when a fully offline bundle is required."
+        },
+        {
+          "type": "paragraph",
+          "text": "Give a different scene bundle its own custom-element name. A browser registers a name once; loading two different bundles that both register my-retiam-scene does not create two selectable scene definitions. Test two instances, an element resize, and removal during startup before integrating the component into a client-side router."
+        }
+      ]
+    },
+    {
+      "id": "audio-replay-and-native-denoising",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Audio, replay and native denoising"
+        },
+        {
+          "type": "paragraph",
+          "text": "Input replay uses --replay with the recorded JSON. Audio is mixed and muxed through the supported timeline/capture path. Native denoising uses --raytrace --raw and requires oidnDenoise plus FFmpeg. Inspect the exported result for media alignment, subtitle placement, frame pacing and noise before publishing it."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [CLI, scripts and Studio](/tooling).",
+            "Build it step by step: [Render your first animation video](/tutorial-first-video)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Animation and asynchronous choreography](/animation)"
+  ]
+}

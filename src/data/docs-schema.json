@@ -1,0 +1,787 @@
+{
+  "$ref": "#/definitions/DocsContent",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "CalloutBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "const": "callout",
+          "type": "string"
+        },
+        "variant": {
+          "enum": [
+            "info",
+            "warning",
+            "danger",
+            "success",
+            "tip"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "variant",
+        "content"
+      ],
+      "type": "object"
+    },
+    "CodeBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "type": {
+          "const": "code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "language",
+        "code"
+      ],
+      "type": "object"
+    },
+    "ContentBlock": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/HeadingBlock"
+        },
+        {
+          "$ref": "#/definitions/ParagraphBlock"
+        },
+        {
+          "$ref": "#/definitions/CalloutBlock"
+        },
+        {
+          "$ref": "#/definitions/ListBlock"
+        },
+        {
+          "$ref": "#/definitions/TableBlock"
+        },
+        {
+          "$ref": "#/definitions/ImageBlock"
+        },
+        {
+          "$ref": "#/definitions/VideoBlock"
+        },
+        {
+          "$ref": "#/definitions/MathBlock"
+        },
+        {
+          "$ref": "#/definitions/CodeBlock"
+        },
+        {
+          "$ref": "#/definitions/TabsBlock"
+        },
+        {
+          "$ref": "#/definitions/LinkBlock"
+        },
+        {
+          "$ref": "#/definitions/PlaygroundBlock"
+        },
+        {
+          "$ref": "#/definitions/TreeBlock"
+        },
+        {
+          "$ref": "#/definitions/ExampleBlock"
+        },
+        {
+          "$ref": "#/definitions/ApiReferenceBlock"
+        },
+        {
+          "$ref": "#/definitions/DetailsBlock"
+        },
+        {
+          "$ref": "#/definitions/ClassHierarchyBlock"
+        },
+        {
+          "$ref": "#/definitions/TutorialIndexBlock"
+        }
+      ]
+    },
+    "ContentPage": {
+      "additionalProperties": false,
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/definitions/ContentSection"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ]
+        },
+        "estimatedMinutes": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "group",
+        "title",
+        "sections"
+      ],
+      "type": "object"
+    },
+    "ContentSection": {
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/definitions/ContentBlock"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "blocks"
+      ],
+      "type": "object"
+    },
+    "DocsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "cdnUrl": {
+          "type": "string"
+        },
+        "services": {
+          "additionalProperties": false,
+          "properties": {
+            "msedgeEndpoint": { "type": "string" },
+            "modelBaseUrl": { "type": "string" }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "cdnUrl"
+      ],
+      "type": "object"
+    },
+    "DocsContent": {
+      "additionalProperties": false,
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/DocsConfig"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/definitions/ContentPage"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "pages"
+      ],
+      "type": "object"
+    },
+    "HeadingBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "const": "heading",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "level",
+        "text"
+      ],
+      "type": "object"
+    },
+    "ImageBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "type": "string"
+        },
+        "alt": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string"
+        },
+        "type": {
+          "const": "image",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "width": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "url",
+        "alt"
+      ],
+      "type": "object"
+    },
+    "LinkBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "const": "link",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "url",
+        "title"
+      ],
+      "type": "object"
+    },
+    "ListBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/ListItem"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "ordered": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "list",
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "ordered",
+        "items"
+      ],
+      "type": "object"
+    },
+    "MathBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "tex": {
+          "type": "string"
+        },
+        "type": {
+          "const": "math",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "tex"
+      ],
+      "type": "object"
+    },
+    "ParagraphBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "const": "paragraph",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "text"
+      ],
+      "type": "object"
+    },
+    "PlaygroundBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "playground",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "filename",
+        "code"
+      ],
+      "type": "object"
+    },
+    "TableBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "columns": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/TableColumnDef"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/definitions/TableRow"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "table",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "columns",
+        "rows"
+      ],
+      "type": "object"
+    },
+    "TableCell": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "code",
+            "type",
+            "text"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "TableColumnDef": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "width": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label"
+      ],
+      "type": "object"
+    },
+    "TableRow": {
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/TableCell"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cells"
+      ],
+      "type": "object"
+    },
+    "TabsBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "tabs": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "blocks": {
+                "items": {
+                  "$ref": "#/definitions/ContentBlock"
+                },
+                "type": "array"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label",
+              "blocks"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "tabs",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "tabs"
+      ],
+      "type": "object"
+    },
+    "TreeBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "items": {
+            "$ref": "#/definitions/TreeNode"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "tree",
+          "type": "string"
+        },
+        "variant": {
+          "enum": [
+            "horizontal",
+            "vertical",
+            "folder"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "nodes"
+      ],
+      "type": "object"
+    },
+    "TreeNode": {
+      "additionalProperties": false,
+      "properties": {
+        "children": {
+          "items": {
+            "$ref": "#/definitions/TreeNode"
+          },
+          "type": "array"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label"
+      ],
+      "type": "object"
+    },
+    "VideoBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "type": "string"
+        },
+        "autoplay": {
+          "type": "boolean"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "controls": {
+          "type": "boolean"
+        },
+        "height": {
+          "type": "string"
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "muted": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "video",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "width": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "ExampleBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "example"
+        },
+        "example": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "example"
+      ],
+      "additionalProperties": false
+    },
+    "ApiReferenceBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "api-reference"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "DetailsBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "details"
+        },
+        "title": {
+          "type": "string"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContentBlock"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "blocks"
+      ],
+      "additionalProperties": false
+    },
+    "ListItem": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/ListItem"
+              }
+            ]
+          }
+        },
+        "ordered": {
+          "type": "boolean"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "ClassHierarchyBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "class-hierarchy"
+        },
+        "root": {
+          "type": "string"
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "type": "number",
+              "enum": [
+                1,
+                2,
+                3
+              ]
+            },
+            {
+              "type": "string",
+              "const": "all"
+            }
+          ]
+        },
+        "browse": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "root"
+      ]
+    },
+    "TutorialIndexBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "tutorial-index",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    }
+  }
+}

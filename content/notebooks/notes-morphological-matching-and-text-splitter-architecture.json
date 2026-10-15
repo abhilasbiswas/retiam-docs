@@ -1,0 +1,201 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-morphological-matching-and-text-splitter-architecture",
+  "title": "Morphological Matching Transforms & Text Token Splitting Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/MORPHOLOGICAL_MATCHING_AND_TEXT_SPLITTER_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/MORPHOLOGICAL_MATCHING_AND_TEXT_SPLITTER_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/MORPHOLOGICAL_MATCHING_AND_TEXT_SPLITTER_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Text](/api-entities-composites-text#text), [TransformMatchingTex](/api-animation-transform#transformmatchingtex), [TransformMatchingText](/api-animation-transform#transformmatchingtext), [TransformMatchingShapes](/api-animation-transform#transformmatchingshapes), [Morph](/api-animation-transform#morph), [Tex](/api-entities-composites-text#tex), [SVG](/api-entities-composites-svg#svg), [State](/api-core#state), [StateAnimation](/api-animation#stateanimation), [VectorTransform](/api-animation-transform#vectortransform), [SplitSeparator](/api-entities-composites-text#textsplitter), [VGroup](/api-entities-layout#vgroup), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [Rate](/api-animation#rate), [Color](/api-math#color), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Transforming mathematical formulas (such as simplifying $(a + b)^2 \\to a^2 + 2ab + b^2$) or transitioning complex typographic sentences requires aligning identical elements while morphing or fading altered symbols."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`TransformMatchingTex`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingTex.ts)**: AST-aware LaTeX formula transition that pairs matching mathematical symbols (variables, exponents, operators), sliding them to new coordinates and morphing altered terms.",
+            "**[`TransformMatchingText`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingText.ts)**: Word- and letter-level alignment for natural language text transitions.",
+            "**[`TransformMatchingShapes`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts)**: Bipartite matching engine pairing geometric contours between arbitrary multi-path vector shapes.",
+            "**[`TextSplitter`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts)**: Algorithmic utility decomposing text entities into character, word, regex, or custom index sub-entities while preserving spatial kerning and layout metrics."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The example matches $\\int_0^1 x^2\\,dx = \\frac{1}{3}$ with $\\int_0^1 x^3\\,dx = \\frac{1}{4}$. Shared symbols keep their identity while changed terms morph or fade."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  S[\"Source formula\"] --> SS[\"Split source symbols\"]\n  T[\"Target formula\"] --> TS[\"Split target symbols\"]\n  SS --> P[\"Symbol pairing matrix<br/>Integral, bounds, x, dx, equals and fractions\"]\n  TS --> P\n  P --> M[\"Matched terms<br/>Preserve identity and slide<br/>x² moves and morphs to x³\"]\n  P --> U[\"Unmatched terms<br/>Morph / fade<br/>1/3 changes to 1/4\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-latex-matching-mechanics-transformmatchingtex-ts-src-engine-animation-transform-transformmatchingtex-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. LaTeX Matching Mechanics ([TransformMatchingTex.ts](../src/engine/animation/transform/TransformMatchingTex.ts))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Symbol Key Extraction"
+        },
+        {
+          "type": "paragraph",
+          "text": "When matching two LaTeX entities ([`Tex`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts)):"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Both formulas are decomposed into individual glyph paths via `source.decompose()` and `target.decompose()`.",
+            "Each glyph's identity key is resolved via MathJax SVG identifiers:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const match = ent.LABEL.match(/MJX-[A-Za-z0-9-]+/);"
+        },
+        {
+          "type": "paragraph",
+          "text": "Identical symbols (e.g. variable $x$, plus sign $+$, equal sign $=$) share identical keys."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. World-Space State Reconciliation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each glyph exists inside a nested transformed coordinate hierarchy. `TransformMatchingTex` walks up the parent chain:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{S}_{\\text{world}} = \\prod_{k=0}^D \\mathbf{S}_k"
+        },
+        {
+          "type": "paragraph",
+          "text": "This enables glyphs to transition seamlessly between formulas with different font sizes, line alignments, or parent groups."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Motion Choreography"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Matched Glyphs**: An animated translation vector moves the source symbol smoothly to the target coordinates using [`StateAnimation`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/StateAnimation.ts).",
+            {
+              "text": "**Unmatched Glyphs**:",
+              "children": [
+                "If `morphUnmatched: true` (default), unmatched terms smoothly morph into the corresponding target glyph via [`VectorTransform`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts).",
+                "If `morphUnmatched: false`, old terms fade out while new terms fade in simultaneously."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-text-token-splitting-engine-textsplitter-ts-src-engine-entities-composites-text-textsplitter-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Text Token Splitting Engine ([TextSplitter.ts](../src/engine/entities/composites/text/TextSplitter.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "`TextSplitter` breaks monolithic text entities into animatable sub-entities:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Separation Strategies (SplitSeparator)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Character-Level (`separator: ''`)**: Decomposes text into individual glyph entities for typewriter, scatter, and wave animations.",
+            "**Word-Level (`separator: ' '`)**: Groups characters into words, preserving whitespace metrics.",
+            "**Regex Matches (`separator: /[A-Z]+/g`)**: Groups tokens matching arbitrary grammatical patterns.",
+            "**Explicit Ranges (`separator: [[0, 4], [5, 10]]`)**: Decomposes text into explicit user-defined substrings."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Layout Metric Preservation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each extracted child inherits exact world coordinates computed during font layout:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}_{\\text{token}} = \\mathbf{p}_{\\text{parent}} + \\begin{bmatrix} x_{\\text{offset}} \\\\ y_{\\text{offset}} \\\\ 0 \\end{bmatrix}"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `replace: true`, the original parent is detached from the scene and replaced with a [`VGroup`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts) of child tokens without any visual jump or reflow."
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Tex, Text, TransformMatchingTex, Rate, Color } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Initial algebraic formula\nconst step1 = new Tex(\"(x + 1)^2 = 0\", { fontSize: 40, fill: Color.WHITE });\nscene.add(step1);\n\nawait scene.wait(1000);\n\n// 2. Expanded algebraic formula\nconst step2 = new Tex(\"x^2 + 2x + 1 = 0\", { fontSize: 40, fill: Color.WHITE });\n\n// 3. Smooth symbol-matching formula transition\nawait scene.play(new TransformMatchingTex(step1, step2, {\n    duration: 1500,\n    rate_func: Rate.easeInOutCubic(),\n    morphUnmatched: true\n}));"
+        }
+      ]
+    }
+  ]
+}

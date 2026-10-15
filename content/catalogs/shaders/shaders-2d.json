@@ -1,0 +1,197 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "shaders-2d",
+  "title": "2d WGSL",
+  "group": "Shader reference",
+  "sections": [
+    {
+      "id": "shader-implementation-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Shader implementation contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "WGSL modules are assembled through engine imports, chunk registration and ShaderBuilder. Functions, structures and bindings below come directly from the checked-out shader files. A file can be a reusable include, an active entry point or a retained experimental/legacy variant; file presence alone does not establish that it executes in the default pipeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the corresponding geometry, fragment and pass API before changing an entry point. CPU data offsets, WGSL alignment, bindings, varying interpolation, reversed depth and workgroup sizes must continue to agree."
+        }
+      ]
+    },
+    {
+      "id": "ppll-disable",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PPLL_DISABLE.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/2d/PPLL_DISABLE.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/2d/PPLL_DISABLE.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "draw",
+                "color: vec4f, fragCoord: vec4f",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "xor",
+                "fragCoord: vec4f, mask: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "readSet",
+                "fragCoord: vec4f, mask: u32",
+                "bool"
+              ]
+            },
+            {
+              "cells": [
+                "fill",
+                "fragCoord: vec4f, mask: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "clearStencil",
+                "fragCoord: vec4f, mask: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "setStencil",
+                "fragCoord: vec4f, mask: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "testXng",
+                "fragCoord: vec4f, mask: u32, test_value: u32, new_value: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "testExchange",
+                "fragCoord: vec4f, test_value: u32, new_value: u32",
+                "void"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ssa",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SSA.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/2d/SSA.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/2d/SSA.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "vs_main",
+                "@builtin(vertex_index) vIndex: u32",
+                "@builtin(position) vec4<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "ssaa",
+                "coord: vec2f",
+                "vec4f"
+              ]
+            },
+            {
+              "cells": [
+                "bilinear",
+                "coord: vec2f",
+                "vec4f"
+              ]
+            },
+            {
+              "cells": [
+                "fs_main",
+                "@builtin(position) fragCoord: vec4<f32>",
+                "@location(0) vec4<f32>"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Resolution`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var highResTexture: texture_2d<f32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var highResSampler: sampler;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> resolution: Resolution;"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry stage annotations: fragment, vertex."
+        }
+      ]
+    }
+  ]
+}

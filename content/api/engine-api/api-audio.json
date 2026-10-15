@@ -1,0 +1,1749 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-audio",
+  "title": "audio API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audioanalyzer",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "AudioAnalyzer"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/audio/AudioAnalyzer.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/audio/AudioAnalyzer.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AudioAnalyzer: Real-time audio frequency analyzer and WebGPU texture streamer. Computes frequency spectrums, waveforms, smoothed frequency bands, and directly uploads FFT data to WebGPU textures for audio-reactive shaders and compute passes."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AudioAnalyzerOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AudioFrequencyBands",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AudioAnalyzer",
+                    "Class",
+                    "Real-time audio frequency analyzer and WebGPU texture streamer. Computes frequency spectrums, waveforms, smoothed frequency bands, and directly uploads FFT data to WebGPU textures for audio-reactive shaders and compute passes."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface AudioAnalyzerOptions {\n    fftSize?: number;\n    smoothingTimeConstant?: number;\n    minDecibels?: number;\n    maxDecibels?: number;\n}\nexport interface AudioFrequencyBands {\n    bass: number;\n    mid: number;\n    treble: number;\n    rms: number;\n}\nexport declare class AudioAnalyzer {\n    readonly node: AnalyserNode;\n    constructor(context: AudioContext, options?: AudioAnalyzerOptions);\n    get binCount(): number;\n    connectSource(source: AudioNode): this;\n    connect(destination: AudioNode): AudioNode;\n    getFrequencyData(): Uint8Array;\n    getWaveformData(): Uint8Array;\n    getFloatFrequencyData(): Float32Array;\n    getBands(): AudioFrequencyBands;\n    createSpectrumTexture(device: GPUDevice): GPUTexture;\n    updateSpectrumTexture(device: GPUDevice): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioAnalyzerOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fftSize?: number;",
+                    "—",
+                    "FFT size. Must be a power of 2 between 32 and 32768. Defaults to 512. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "smoothingTimeConstant?: number;",
+                    "—",
+                    "Smoothing time constant between 0.0 and 1.0. Defaults to 0.8. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "minDecibels?: number;",
+                    "—",
+                    "Minimum decibel value for FFT analysis range. Defaults to -100. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxDecibels?: number;",
+                    "—",
+                    "Maximum decibel value for FFT analysis range. Defaults to -30. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L13)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioFrequencyBands` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "bass: number;",
+                    "—",
+                    "Low frequency energy [20Hz - 250Hz] normalized to [0.0 - 1.0]. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "mid: number;",
+                    "—",
+                    "Mid frequency energy [250Hz - 4000Hz] normalized to [0.0 - 1.0]. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "treble: number;",
+                    "—",
+                    "High frequency energy [4000Hz - 20000Hz] normalized to [0.0 - 1.0]. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rms: number;",
+                    "—",
+                    "Root mean square / overall audio energy level [0.0 - 1.0]. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L24)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioAnalyzer` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly node: AnalyserNode",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(context: AudioContext, options: AudioAnalyzerOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.node`, `this.node.fftSize`, `this.node.smoothingTimeConstant`, `this.node.minDecibels`, `this.node.maxDecibels`, `this.frequencyData`, `this.waveformData`, `this.floatFrequencyData`; construction of `Uint8Array`, `Float32Array`; calls to `context.createAnalyser`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get binCount(): number",
+                    "—",
+                    "The number of frequency bins (half of fftSize). [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public connectSource(source: AudioNode): this",
+                    "—",
+                    "Connects an audio source node to this analyzer. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public connect(destination: AudioNode): AudioNode",
+                    "—",
+                    "Connects this analyzer output to another audio node (e.g. speakers or sub-bus). [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getFrequencyData(): Uint8Array",
+                    "—",
+                    "Reads the current normalized frequency data [0..255] for each frequency bin. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getWaveformData(): Uint8Array",
+                    "—",
+                    "Reads the current time-domain waveform data [0..255] (centered around 128). [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getFloatFrequencyData(): Float32Array",
+                    "—",
+                    "Reads decibel frequency data as floats. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBands(): AudioFrequencyBands",
+                    "—",
+                    "Computes smoothed macro frequency bands (bass, mid, treble) and overall RMS energy. Values are normalized between [0.0 - 1.0] and ideal for driving animations. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createSpectrumTexture(device: GPUDevice): GPUTexture",
+                    "—",
+                    "Allocates a 1D WebGPU texture formatted as `r8unorm` with width equal to the frequency bin count. WGSL shaders can sample this texture to render audio visualizers. Param: device The WebGPU device. [Source line 133](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L133)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateSpectrumTexture(device: GPUDevice): void",
+                    "—",
+                    "Uploads the latest FFT frequency bins to the GPU spectrum texture. Should be called in `scene.always()` or render pass update. Param: device The WebGPU device. [Source line 154](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L154)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Disposes the analyzer and GPU textures. [Source line 171](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L171)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.fftSize ?? 512",
+                    "[Line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L41)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.smoothingTimeConstant ?? 0.8",
+                    "[Line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioAnalyzer.ts#L42)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audioloader",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "AudioLoader"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/audio/AudioLoader.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/audio/AudioLoader.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioLoader.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AudioLoader: Handles fetching, decoding, and caching of audio files into [[AudioBuffer]] objects."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AudioLoader",
+                    "Class",
+                    "Handles fetching, decoding, and caching of audio files into [[AudioBuffer]] objects."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class AudioLoader {\n    constructor(context: AudioContext);\n    load(url: string): Promise<AudioBuffer>;\n    preload(urls: string[]): Promise<AudioBuffer[]>;\n    has(url: string): boolean;\n    clear(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioLoader` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(context: AudioContext)",
+                    "—",
+                    "Implementation: `this.context = context;`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioLoader.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public load(url: string): Promise<AudioBuffer>",
+                    "—",
+                    "Loads an audio file from a URL or asset path and decodes it into an AudioBuffer. Subsequent calls with the same URL return the cached Promise. Param: url The URL or local path of the audio asset. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioLoader.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async preload(urls: string[]): Promise<AudioBuffer[]>",
+                    "—",
+                    "Preloads multiple audio URLs in parallel. Param: urls List of audio URLs to preload. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioLoader.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public has(url: string): boolean",
+                    "—",
+                    "Checks if an audio file is already cached. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioLoader.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear(): void",
+                    "—",
+                    "Clears cached audio buffers to free memory. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioLoader.ts#L68)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`Failed to fetch audio file '${url}': HTTP ${response.status} ${response.statusText}`)",
+                "err"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audiomanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "AudioManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/audio/AudioManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/audio/AudioManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AudioManager: Top-level audio manager for the Retiam engine. Controls the Web Audio graph, timeline synchronization, audio bus mixing, sound effects, voiceovers, auto-ducking, and recording streams."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AudioManagerConfig",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BGMOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VoiceoverOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ToneConfig",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AudioManager",
+                    "Class",
+                    "Top-level audio manager for the Retiam engine. Controls the Web Audio graph, timeline synchronization, audio bus mixing, sound effects, voiceovers, auto-ducking, and recording streams."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface AudioManagerConfig {\n    masterVolume?: number;\n    bgmVolume?: number;\n    sfxVolume?: number;\n    voiceoverVolume?: number;\n    sampleRate?: number;\n}\nexport interface BGMOptions {\n    volume?: number;\n    loop?: boolean;\n    fadeInMs?: number;\n    pitch?: number;\n}\nexport interface VoiceoverOptions {\n    volume?: number;\n    duckingRatio?: number;\n    fadeDurationMs?: number;\n    padEndMs?: number;\n}\nexport interface ToneConfig {\n    freq: number;\n    amp?: number;\n    phase?: number;\n}\nexport declare class AudioManager {\n    readonly context: AudioContext;\n    readonly loader: AudioLoader;\n    readonly timeline: AudioTimeline;\n    readonly masterGain: GainNode;\n    readonly bgmGain: GainNode;\n    readonly sfxGain: GainNode;\n    readonly voiceoverGain: GainNode;\n    constructor(config?: AudioManagerConfig);\n    playBGM(url: string, options?: BGMOptions): Promise<string>;\n    stopBGM(fadeOutMs?: number): void;\n    playSFX(source: string | SoundEffectOptions, overrides?: {\n        volume?: number;\n        pitch?: number;\n        delay?: number;\n    }): Promise<string>;\n    playVoiceover(source: string | AudioBuffer | any, options?: VoiceoverOptions): Promise<number>;\n    renderOffline(totalDurationMs: number, sampleRate?: number): Promise<ArrayBuffer | null>;\n    get masterVolume(): number;\n    setMasterVolume(value: number): this;\n    get bgmVolume(): number;\n    setBgmVolume(value: number): this;\n    get sfxVolume(): number;\n    setSfxVolume(value: number): this;\n    get voiceoverVolume(): number;\n    setVoiceoverVolume(value: number): this;\n    get isMuted(): boolean;\n    mute(): this;\n    unmute(): this;\n    toggleMute(): boolean;\n    createAnalyzer(options?: AudioAnalyzerOptions): AudioAnalyzer;\n    get bands(): AudioFrequencyBands;\n    attachRecorder(recorder: LiveRecorder): this;\n    getRecordingStream(): MediaStream;\n    createBuffer(samples: number[] | Float32Array, sampleRate?: number): AudioBuffer;\n    createTone(tones: number | ToneConfig | ToneConfig[], durationSec?: number, decayRate?: number): AudioBuffer;\n    createWave(generator: (t: number) => number, durationSec?: number): AudioBuffer;\n    awaitUnlock(): Promise<void>;\n    resumeContext(): void;\n    update(timeMs: number, dtMs: number): void;\n    seekTo(targetTimeMs: number): void;\n    pause(): void;\n    resume(): void;\n    setTimeScale(scale: number): void;\n    reset(): void;\n    dispose(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioManagerConfig` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "masterVolume?: number;",
+                    "—",
+                    "Global master volume level between 0.0 and 1.0. Defaults to 1.0. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bgmVolume?: number;",
+                    "—",
+                    "Default background music volume (0.0 to 1.0). Defaults to 0.5. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sfxVolume?: number;",
+                    "—",
+                    "Default sound effect volume (0.0 to 1.0). Defaults to 1.0. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "voiceoverVolume?: number;",
+                    "—",
+                    "Default voiceover narration volume (0.0 to 1.0). Defaults to 1.0. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sampleRate?: number;",
+                    "—",
+                    "Sample rate for AudioContext. Defaults to browser default (usually 48000 or 44100). [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L22)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BGMOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "volume?: number;",
+                    "—",
+                    "Volume multiplier (0.0 to 1.0). Defaults to 1.0. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "loop?: boolean;",
+                    "—",
+                    "Whether to loop playback indefinitely. Defaults to true. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fadeInMs?: number;",
+                    "—",
+                    "Fade-in duration in milliseconds. Defaults to 0. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pitch?: number;",
+                    "—",
+                    "Playback rate / pitch. Defaults to 1.0. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L33)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VoiceoverOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "volume?: number;",
+                    "—",
+                    "Playback volume (0.0 to 1.0). Defaults to 1.0. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "duckingRatio?: number;",
+                    "—",
+                    "Background music volume multiplier during speech. 0.25 = 75% ducking. Defaults to 0.25. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fadeDurationMs?: number;",
+                    "—",
+                    "Fade duration for volume ducking in milliseconds. Defaults to 300ms. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "padEndMs?: number;",
+                    "—",
+                    "Additional wait padding in milliseconds after speech finishes. Defaults to 0. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L44)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ToneConfig` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "freq: number;",
+                    "—",
+                    "Frequency in Hertz (e.g. 440 for A4). [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "amp?: number;",
+                    "—",
+                    "Relative amplitude multiplier (0.0 to 1.0). Defaults to 1.0. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "phase?: number;",
+                    "—",
+                    "Phase offset in radians. Defaults to 0. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L53)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly context: AudioContext",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly loader: AudioLoader",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly timeline: AudioTimeline",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly masterGain: GainNode",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly bgmGain: GainNode",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly sfxGain: GainNode",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly voiceoverGain: GainNode",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(config: AudioManagerConfig = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.context`, `this._unlockHandler`, `this.loader`, `this.timeline`, `this.masterGain`, `this.compressor`, `this.compressor.threshold.value`, `this.compressor.knee.value` and other instance fields; construction of `Error`, `AudioContextClass`, `AudioLoader`, `AudioTimeline`; calls to `this.context.resume().catch`, `this.context.resume`, `window.addEventListener`, `this.context.createGain`, `this.context.createDynamicsCompressor`, `this.masterGain.connect`, `this.compressor.connect`, `this.context.createMediaStreamDestination` and additional helpers; rejection paths `new Error(\"[AudioManager] AudioContext is not supported in this environment.\")`. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async playBGM(url: string, options: BGMOptions = {}): Promise<string>",
+                    "—",
+                    "Plays background music (BGM) on the dedicated music bus. Automatically stops any currently playing BGM. Param: url The audio file URL. Param: options BGM options (volume, loop, pitch, fade-in). [Source line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L163)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public stopBGM(fadeOutMs?: number): void",
+                    "—",
+                    "Stops currently active background music. Param: fadeOutMs Optional fade-out duration in milliseconds. [Source line 202](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L202)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async playSFX(\n        source: string | SoundEffectOptions,\n        overrides: { volume?: number; pitch?: number; delay?: number } = {}\n    ): Promise<string>",
+                    "—",
+                    "Plays a one-shot sound effect (SFX) on the SFX bus. Param: source Audio URL or SoundEffectOptions object. Param: overrides Optional override parameters. [Source line 229](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L229)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async playVoiceover(source: string | AudioBuffer | any, options: VoiceoverOptions = {}): Promise<number>",
+                    "—",
+                    "Plays a voiceover narration track with automatic BGM volume ducking. Returns a Promise that resolves when the voiceover finishes playing. Param: source Audio URL, AudioBuffer, or TTSAudio instance. Param: options Ducking ratio and fade options. [Source line 273](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L273)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async renderOffline(totalDurationMs: number, sampleRate: number = 48000): Promise<ArrayBuffer | null>",
+                    "—",
+                    "Renders all scheduled audio clips and bus automations into a master 16-bit Stereo PCM WAV file. Uses [[OfflineAudioContext]] to render deterministically in memory faster than real-time. Param: totalDurationMs Total scene duration in milliseconds. Param: sampleRate Output audio sample rate in Hz (default: 48000). Returns: ArrayBuffer containing standard 16-bit Stereo PCM WAV audio, or null if no clips exist. [Source line 341](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L341)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get masterVolume(): number",
+                    "—",
+                    "Implementation: `return this._masterVolume;`. [Source line 463](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L463)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMasterVolume(value: number): this",
+                    "—",
+                    "Implementation: `this._masterVolume = Math.max(0, Math.min(1, value)); if (!this._isMuted) { this.masterGain.gain.setValueAtTime(this._masterVolume, this.context.currentTime); } return this;`. [Source line 464](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L464)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get bgmVolume(): number",
+                    "—",
+                    "Implementation: `return this._bgmVolume;`. [Source line 472](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L472)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBgmVolume(value: number): this",
+                    "—",
+                    "Implementation: `this._bgmVolume = Math.max(0, Math.min(1, value)); this.bgmGain.gain.setValueAtTime(this._bgmVolume, this.context.currentTime); return this;`. [Source line 473](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L473)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get sfxVolume(): number",
+                    "—",
+                    "Implementation: `return this._sfxVolume;`. [Source line 479](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L479)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSfxVolume(value: number): this",
+                    "—",
+                    "Implementation: `this._sfxVolume = Math.max(0, Math.min(1, value)); this.sfxGain.gain.setValueAtTime(this._sfxVolume, this.context.currentTime); return this;`. [Source line 480](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L480)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get voiceoverVolume(): number",
+                    "—",
+                    "Implementation: `return this._voiceoverVolume;`. [Source line 486](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L486)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVoiceoverVolume(value: number): this",
+                    "—",
+                    "Implementation: `this._voiceoverVolume = Math.max(0, Math.min(1, value)); this.voiceoverGain.gain.setValueAtTime(this._voiceoverVolume, this.context.currentTime); return this;`. [Source line 487](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L487)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isMuted(): boolean",
+                    "—",
+                    "Implementation: `return this._isMuted;`. [Source line 493](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L493)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public mute(): this",
+                    "—",
+                    "Implementation: `this._isMuted = true; this.masterGain.gain.setValueAtTime(0, this.context.currentTime); return this;`. [Source line 494](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L494)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public unmute(): this",
+                    "—",
+                    "Implementation: `this._isMuted = false; this.masterGain.gain.setValueAtTime(this._masterVolume, this.context.currentTime); return this;`. [Source line 500](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L500)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toggleMute(): boolean",
+                    "—",
+                    "Implementation: `if (this._isMuted) this.unmute(); else this.mute(); return this._isMuted;`. [Source line 506](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L506)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createAnalyzer(options?: AudioAnalyzerOptions): AudioAnalyzer",
+                    "—",
+                    "Creates an [[AudioAnalyzer]] attached to the master audio bus. [Source line 519](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L519)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get bands(): AudioFrequencyBands",
+                    "—",
+                    "Lazily initialized AudioFrequencyBands (bass, mid, treble, rms) normalized to [0.0 - 1.0]. Reads real-time energy of the master audio bus. Ideal for driving procedural animations and shaders. [Source line 530](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L530)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public attachRecorder(recorder: LiveRecorder): this",
+                    "—",
+                    "Connects an active [[LiveRecorder]] to the audio manager's recording stream destination. Param: recorder The LiveRecorder instance. [Source line 542](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L542)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getRecordingStream(): MediaStream",
+                    "—",
+                    "Exposes the recording destination MediaStream for LiveRecorder. [Source line 552](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L552)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createBuffer(\n        samples: number[] | Float32Array,\n        sampleRate: number = this.context.sampleRate\n    ): AudioBuffer",
+                    "—",
+                    "Creates an [[AudioBuffer]] directly from raw amplitude samples (floating-point numbers in the range [-1.0, 1.0]). This is the fundamental raw primitive for all digital sound synthesis. The resulting buffer can be scheduled on the timeline, looped, or mutated in real time via its channel data. Param: samples Array of amplitude values between -1.0 and 1.0. Param: sampleRate Output sample rate in Hz. Defaults to context sampleRate (usually 44100 or 48000). [Source line 568](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L568)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createTone(\n        tones: number | ToneConfig | ToneConfig[],\n        durationSec: number = 1.0,\n        decayRate: number = 0\n    ): AudioBuffer",
+                    "—",
+                    "Synthesizes an [[AudioBuffer]] by mixing one or more frequencies and amplitudes. Param: tones A single frequency (in Hz), a [[ToneConfig]] object, or an array of [[ToneConfig]] objects. Param: durationSec Duration of the generated sound in seconds. Defaults to 1.0. Param: decayRate Optional exponential decay rate for smooth fade-out (e.g. 2.0; 0 = constant volume). Defaults to 0. [Source line 593](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L593)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createWave(\n        generator: (t: number) => number,\n        durationSec: number = 1.0\n    ): AudioBuffer",
+                    "—",
+                    "Synthesizes an [[AudioBuffer]] from a continuous mathematical generator function `f(t)`. Param: generator Function taking time `t` (in seconds) and returning an amplitude value [-1.0, 1.0]. Param: durationSec Duration of the generated sound in seconds. Defaults to 1.0. [Source line 630](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L630)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async awaitUnlock(): Promise<void>",
+                    "—",
+                    "Resolves immediately if the AudioContext is already running. Otherwise, awaits the first user gesture (click/keypress) before resuming cleanly. [Source line 651](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L651)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resumeContext(): void",
+                    "—",
+                    "Resumes the AudioContext if it is in 'suspended' state (e.g. before user interaction). [Source line 671](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L671)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(timeMs: number, dtMs: number): void",
+                    "—",
+                    "Implementation: `this.currentTimeMs = timeMs; this.timeline.update(timeMs, dtMs, this.currentTimeScale);`. [Source line 681](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L681)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public seekTo(targetTimeMs: number): void",
+                    "—",
+                    "Implementation: `this.currentTimeMs = targetTimeMs; this.timeline.seekTo(targetTimeMs);`. [Source line 686](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L686)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pause(): void",
+                    "—",
+                    "Implementation: `this.timeline.pause();`. [Source line 691](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L691)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resume(): void",
+                    "—",
+                    "Implementation: `this.resumeContext(); this.timeline.resume();`. [Source line 695](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L695)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTimeScale(scale: number): void",
+                    "—",
+                    "Implementation: `this.currentTimeScale = scale; this.timeline.setTimeScale(scale);`. [Source line 700](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L700)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset(): void",
+                    "—",
+                    "Implementation: `this.currentTimeMs = 0; this._currentBgmClipId = null; this.timeline.reset();`. [Source line 705](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L705)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dispose(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._unlockHandler`; calls to `this.reset`, `analyzer.destroy`, `this._activeAnalyzers.clear`, `this.loader.clear`, `window.removeEventListener`, `this.context.close().catch`, `this.context.close`; 1 explicit loop. [Source line 711](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L711)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "config.masterVolume ?? 1.0",
+                    "[Line 146](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L146)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.bgmVolume ?? 0.5",
+                    "[Line 147](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L147)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.sfxVolume ?? 1.0",
+                    "[Line 148](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L148)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.voiceoverVolume ?? 1.0",
+                    "[Line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L149)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.volume ?? 1.0",
+                    "[Line 173](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L173)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.pitch ?? 1.0",
+                    "[Line 175](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L175)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.duckingRatio ?? 0.25",
+                    "[Line 290](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L290)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fadeDurationMs ?? 300",
+                    "[Line 291](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L291)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.padEndMs ?? 0",
+                    "[Line 293](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioManager.ts#L293)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"[AudioManager] AudioContext is not supported in this environment.\")",
+                "new Error(\"[AudioManager] Invalid voiceover source passed to playVoiceover.\")"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audioplugin",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "AudioPlugin"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/audio/AudioPlugin.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/audio/AudioPlugin.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AudioPlugin: Audio plugin for the Retiam engine. Connects the [[AudioManager]] into the Scene lifecycle, animation triggers, scrubbing/seeking, timeScale changes, and video recording."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AudioPluginOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AudioPlugin",
+                    "Class",
+                    "Audio plugin for the Retiam engine. Connects the [[AudioManager]] into the Scene lifecycle, animation triggers, scrubbing/seeking, timeScale changes, and video recording."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface AudioPluginOptions extends AudioManagerConfig {\n    autoUnlock?: boolean;\n    autoAttachRecorder?: boolean;\n    autoPauseOnHidden?: boolean;\n    autoAttachListener?: boolean;\n    preload?: string[];\n}\nexport declare class AudioPlugin implements IPlugin {\n    readonly name: string;\n    manager: AudioManager;\n    constructor(options?: AudioPluginOptions);\n    attachRecorder(recorder: LiveRecorder): void;\n    install(scene: Scene, composer?: SceneComposer): void;\n    dispose(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioPluginOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "autoUnlock?: boolean;",
+                    "—",
+                    "Whether to auto-unlock AudioContext upon the first pointerdown on canvas. Defaults to true. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "autoAttachRecorder?: boolean;",
+                    "—",
+                    "Whether to automatically wire audio into LiveRecorder when recording. Defaults to true. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "autoPauseOnHidden?: boolean;",
+                    "—",
+                    "Whether to pause audio when the browser tab is hidden and resync when visible. Defaults to true. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "autoAttachListener?: boolean;",
+                    "—",
+                    "Whether to automatically attach AudioListenerComponent to scene.camera. Defaults to true. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "preload?: string[];",
+                    "—",
+                    "Audio URLs or asset paths to preload into cache during plugin initialization. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L23)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioPlugin` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly name: string",
+                    "\"AudioPlugin\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public manager!: AudioManager",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options: AudioPluginOptions = {})",
+                    "—",
+                    "Implementation: `this.options = options;`. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public attachRecorder(recorder: LiveRecorder): void",
+                    "—",
+                    "Wires an active LiveRecorder to the AudioManager recording stream. Useful when a LiveRecorder is created dynamically after scene startup. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public install(scene: Scene, composer?: SceneComposer): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.manager`, `this._canvasUnlockListener`, `this._visibilityListener`, `this._hasAttachedListener`; construction of `AudioManager`, `AudioListenerComponent`; calls to `scene.on`, `scene.always`, `this.manager.resumeContext`, `cleanup`, `unlockEvents.forEach`, `window.removeEventListener`, `window.parent.removeEventListener`, `scene.canvas.removeEventListener` and additional helpers. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dispose(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._visibilityListener`; calls to `this.scene.off`, `this.scene.unregister`, `this._canvasUnlockListener`, `this._visibilityListener`, `this.manager.dispose`. [Source line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioPlugin.ts#L163)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [IPlugin](/api-core#iplugin)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audiotimeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "AudioTimeline"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/audio/AudioTimeline.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/audio/AudioTimeline.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AudioTimeline: Manages timeline-synchronized playback, seek adjustments, and timeScale tracking for audio clips placed on Retiam's animation timeline."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AudioBusType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VolumeAutomation",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TimelineClip",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AudioTimeline",
+                    "Class",
+                    "Manages timeline-synchronized playback, seek adjustments, and timeScale tracking for audio clips placed on Retiam's animation timeline."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type AudioBusType = 'bgm' | 'sfx' | 'voiceover' | 'master';\nexport interface VolumeAutomation {\n    bus: AudioBusType;\n    timeMs: number;\n    targetVolume: number;\n    durationMs: number;\n}\nexport interface TimelineClip {\n    id: string;\n    buffer: AudioBuffer;\n    startTimeMs: number;\n    durationMs: number;\n    loop: boolean;\n    volume: number;\n    pitch: number;\n    destinationNode: AudioNode;\n    gainNode: GainNode;\n    sourceNode: AudioBufferSourceNode | null;\n    isPlaying: boolean;\n    bus: AudioBusType;\n    stopTimeMs?: number;\n    fadeOutMs?: number;\n}\nexport declare class AudioTimeline {\n    constructor(context: AudioContext);\n    addClip(buffer: AudioBuffer, startTimeMs: number, destinationNode: AudioNode, options?: {\n        volume?: number;\n        pitch?: number;\n        loop?: boolean;\n        offsetMs?: number;\n        bus?: AudioBusType;\n    }): string;\n    removeClip(id: string): void;\n    stopBus(bus: AudioBusType, fadeOutMs?: number): void;\n    addVolumeAutomation(bus: AudioBusType, timeMs: number, targetVolume: number, durationMs?: number): void;\n    getVolumeAutomations(): VolumeAutomation[];\n    getAllClips(): TimelineClip[];\n    isEmpty(): boolean;\n    update(timeMs: number, dtMs: number, timeScale: number): void;\n    seekTo(targetTimeMs: number): void;\n    pause(): void;\n    resume(): void;\n    setTimeScale(timeScale: number): void;\n    reset(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VolumeAutomation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "bus: AudioBusType;",
+                    "—",
+                    "Required record/option field with declared type `AudioBusType`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "timeMs: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "targetVolume: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "durationMs: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L11)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TimelineClip` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "id: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "buffer: AudioBuffer;",
+                    "—",
+                    "Required record/option field with declared type `AudioBuffer`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startTimeMs: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "durationMs: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "loop: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "volume: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pitch: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "destinationNode: AudioNode;",
+                    "—",
+                    "Required record/option field with declared type `AudioNode`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "gainNode: GainNode;",
+                    "—",
+                    "Required record/option field with declared type `GainNode`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sourceNode: AudioBufferSourceNode | null;",
+                    "—",
+                    "Required record/option field with declared type `AudioBufferSourceNode | null`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isPlaying: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bus: AudioBusType;",
+                    "—",
+                    "Required record/option field with declared type `AudioBusType`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stopTimeMs?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fadeOutMs?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L28)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AudioTimeline` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(context: AudioContext)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.context`; calls to `this.context.addEventListener`, `this.seekTo`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addClip(\n        buffer: AudioBuffer,\n        startTimeMs: number,\n        destinationNode: AudioNode,\n        options: {\n            volume?: number;\n            pitch?: number;\n            loop?: boolean;\n            offsetMs?: number;\n            bus?: AudioBusType;\n        } = {}\n    ): string",
+                    "—",
+                    "Registers and immediately schedules an audio clip on the timeline. Param: buffer The decoded AudioBuffer. Param: startTimeMs Timeline timestamp in milliseconds when this clip should begin playing. Param: destinationNode Destination bus audio node (e.g. BGM or SFX bus). Param: options Playback options (volume, pitch/playbackRate, loop, offset, bus). Returns: Unique clip identifier string. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removeClip(id: string): void",
+                    "—",
+                    "Stops and removes a clip from active playback, preserving its historical record. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public stopBus(bus: AudioBusType, fadeOutMs: number = 0): void",
+                    "—",
+                    "Stops all active clips routed to a specific audio bus. [Source line 133](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L133)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addVolumeAutomation(bus: AudioBusType, timeMs: number, targetVolume: number, durationMs: number = 0): void",
+                    "—",
+                    "Records a volume automation transition on a specific audio bus. [Source line 157](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L157)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getVolumeAutomations(): VolumeAutomation[]",
+                    "—",
+                    "Returns all volume automations recorded during the scene. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getAllClips(): TimelineClip[]",
+                    "—",
+                    "Returns all scheduled clips across the lifetime of the scene. [Source line 171](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L171)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isEmpty(): boolean",
+                    "—",
+                    "Whether any clips have been scheduled on this timeline. [Source line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L178)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(timeMs: number, dtMs: number, timeScale: number): void",
+                    "—",
+                    "Steps active clips and tracks playback progress. [Source line 185](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L185)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public seekTo(targetTimeMs: number): void",
+                    "—",
+                    "Resynchronizes all clips to a newly seeked timeline position. Calculates the exact sub-buffer offset for any clip spanning the target time. Param: targetTimeMs Target timeline position in milliseconds. [Source line 218](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L218)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pause(): void",
+                    "—",
+                    "Pauses all active timeline audio sources. [Source line 232](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L232)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resume(): void",
+                    "—",
+                    "Resumes playback of any clips active at the current timeline position. [Source line 242](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L242)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTimeScale(timeScale: number): void",
+                    "—",
+                    "Updates pitch / playback rate for all running audio buffer sources. [Source line 252](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L252)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset(): void",
+                    "—",
+                    "Stops all active sources and clears the timeline. [Source line 260](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L260)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.volume ?? 1.0",
+                    "[Line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L81)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.pitch ?? 1.0",
+                    "[Line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L82)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.loop ?? false",
+                    "[Line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L83)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.bus || (destinationNode as any)?.__bus || 'sfx'",
+                    "[Line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L85)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.bus || (destinationNode as any)?.__bus",
+                    "[Line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L85)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AudioTimeline.syncClipPlayback: private syncClipPlayback(clip: TimelineClip, targetTimeMs: number): void",
+                    "Spawns a new AudioBufferSourceNode positioned accurately at the current time offset. Body operations (including nested callbacks): calls to `this.stopSource`, `this.context.createBufferSource`, `source.connect`, `clip.gainNode.gain.cancelScheduledValues`, `clip.gainNode.gain.setValueAtTime`, `clip.gainNode.gain.linearRampToValueAtTime`, `source.start`.",
+                    "[Line 274](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L274)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "AudioTimeline.stopSource: private stopSource(clip: TimelineClip, immediate: boolean = false): void",
+                    "Body operations (including nested callbacks): calls to `source.stop`, `source.disconnect`, `clip.gainNode.gain.cancelScheduledValues`, `clip.gainNode.gain.setValueAtTime`, `clip.gainNode.gain.linearRampToValueAtTime`, `setTimeout`.",
+                    "[Line 336](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L336)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "AudioTimeline.updatePlaybackRates: private updatePlaybackRates(): void",
+                    "Implementation: `for (const clip of this.clips.values()) { if (clip.sourceNode) { clip.sourceNode.playbackRate.value = Math.max(0.01, clip.pitch * this.currentTimeScale); } }`.",
+                    "[Line 371](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/AudioTimeline.ts#L371)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audioutils",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "audioUtils"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/audio/audioUtils.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/audio/audioUtils.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/audioUtils.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "encodeAudioBufferToWav: Encodes a Web Audio [[AudioBuffer]] into a standard 16-bit Stereo PCM WAV ArrayBuffer. Works seamlessly with both mono and stereo source buffers by duplicating mono across channels. Param: audioBuffer The input AudioBuffer to encode. Returns: ArrayBuffer containing standard 16-bit PCM Stereo WAV audio."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "encodeAudioBufferToWav",
+                    "Function",
+                    "Encodes a Web Audio [[AudioBuffer]] into a standard 16-bit Stereo PCM WAV ArrayBuffer. Works seamlessly with both mono and stereo source buffers by duplicating mono across channels. Param: audioBuffer The input AudioBuffer to encode. Returns: ArrayBuffer containing standard 16-bit PCM Stereo WAV audio."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare function encodeAudioBufferToWav(audioBuffer: AudioBuffer): ArrayBuffer;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "encodeAudioBufferToWav: Body operations (including nested callbacks): construction of `ArrayBuffer`, `DataView`; calls to `writeString`, `view.setUint32`, `view.setUint16`, `audioBuffer.getChannelData`, `view.setInt16`; return paths including `buffer`; 1 explicit loop."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "writeString: function writeString(view: DataView, offset: number, string: string): void",
+                    "Implementation: `for (let i = 0; i < string.length; i++) { view.setUint8(offset + i, string.charCodeAt(i)); }`.",
+                    "[Line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/audioUtils.ts#L64)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

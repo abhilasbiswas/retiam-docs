@@ -1,0 +1,182 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-value-trackers-and-gpu-buffer-recycling",
+  "title": "Value Trackers & GPU Buffer Recycling Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/VALUE_TRACKERS_AND_GPU_BUFFER_RECYCLING.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/VALUE_TRACKERS_AND_GPU_BUFFER_RECYCLING.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/VALUE_TRACKERS_AND_GPU_BUFFER_RECYCLING.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [FunctionGraph2D](/api-entities-composites-plotting#functiongraph2d), [Pipeline](/api-render-pipelines#pipeline), [ValueTracker](/api-entities-composites-trackers#valuetrackers), [Entity](/api-core-entity#entity), [Storage](/api-render-pipelines#resourcelayouts), [StateAnimation](/api-animation#stateanimation), [Rate](/api-animation#rate), [State](/api-core#state), [NumberPlane](/api-entities-composites-coordinates#numberplane), [Text](/api-entities-composites-text#text), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [Color](/api-math#color)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Mathematical animations often require continuous updates driven by moving parameters (e.g. a slider controlling curve frequency, or a dynamic tangent line moving along a graph)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Naively creating new entity instances every frame (`new FunctionGraph2D(...)`) causes severe performance bottlenecks:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Garbage Collection (GC) Stutter**: Rapid allocation and deallocation of thousands of JavaScript objects.",
+            "**VRAM Churn**: Repeated allocation of GPU vertex, index, and uniform buffers.",
+            "**Pipeline Stalls**: Repeated compilation of WebGPU pipelines and bind group creation."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam solves this through a dual-mechanism pattern:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`ValueTracker`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/ValueTrackers.ts)**: Invisible scalar entities packing animated numbers into GPU transform registers (`t1`), seamlessly integrating with the animation engine.",
+            "**[`alwaysRedraw`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/alwaysRedraw.ts)**: High-performance function wrapper incorporating the **`recycleGPUResources`** buffer-stealing algorithm, preserving existing GPU buffers and compiled pipelines across functional rebuilds."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  V[\"ValueTracker<br/>tracker.value\"] --> A[\"scene.play<br/>tracker.animateValue(10)\"]\n  A --> R[\"alwaysRedraw\"] --> E[\"Construct replacement entity\"]\n  E --> REC[\"recycleGPUResources\"]\n  REC --> G[\"Geometry buffer reuse<br/>Transfer VBO / IBO capacities\"]\n  REC --> P[\"Pipeline and bind group reuse<br/>Avoid GPU recompilation\"]\n  G --> O[\"Redrawn entity\"]\n  P --> O"
+        }
+      ]
+    },
+    {
+      "id": "2-animated-scalar-bindings-valuetrackers-ts-src-engine-entities-composites-trackers-valuetrackers-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Animated Scalar Bindings ([ValueTrackers.ts](../src/engine/entities/composites/trackers/ValueTrackers.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `ValueTracker` entity is marked `VISIBILITY = false` so it never submits render packets to the GPU:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Register Storage**: The numerical scalar is stored inside `this.transform.t1`.",
+            "**Timeline Integration**: Calling `tracker.animateValue(target, options)` creates a standard [`StateAnimation`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/StateAnimation.ts) interpolating `t1`:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const frequency = new ValueTracker(1.0);\n  await scene.play(frequency.animateValue(5.0, { duration: 2000, rate_func: Rate.easeInOut() }));"
+        }
+      ]
+    },
+    {
+      "id": "3-the-recyclegpuresources-algorithm-alwaysredraw-ts-src-engine-entities-composites-trackers-alwaysredraw-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. The recycleGPUResources Algorithm ([alwaysRedraw.ts](../src/engine/entities/composites/trackers/alwaysRedraw.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `alwaysRedraw(factoryFn)` executes each frame:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The user's factory function instantiates a fresh entity `newEnt`.",
+            "Before the previous instance `oldEnt` is destroyed, `recycleGPUResources(oldEnt, newEnt)` executes:"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. VBO/IBO Buffer Stealing"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "if (oldGeo && newGeo && oldGeo.constructor === newGeo.constructor) {\n    for (const key of Object.keys(oldGeo)) {\n        const val = oldGeo[key];\n        // Safely transfer active GPU buffers\n        if (val && typeof val === 'object' && 'destroy' in val && 'usage' in val) {\n            newGeo[key] = val;\n            oldGeo[key] = null; // Prevent oldEnt.destroy() from deallocating VRAM!\n        }\n        // Transfer allocation capacity markers\n        if (typeof val === 'number' && key.toLowerCase().includes('capacity')) {\n            newGeo[key] = val;\n        }\n    }\n    newGeo.version = oldGeo.version + 1;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Pipeline Cache Inheritance"
+        },
+        {
+          "type": "paragraph",
+          "text": "Compiling WebGPU pipelines (`device.createRenderPipeline`) is synchronous on some backends and introduces dropped frames. `recycleGPUResources` transfers:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Compiled `GPURenderPipeline` maps (`newRen.pipelines = oldRen.pipelines`).",
+            "Cached `GPUBindGroupLayout` arrays.",
+            "Pre-computed `GPUBindGroup` handles.",
+            "State version counters (`_last_geo_version`, `_last_mat_version`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Recursive Child Propagation"
+        },
+        {
+          "type": "paragraph",
+          "text": "For composite entities (e.g. [`NumberPlane`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/coordinates/NumberPlane.ts) with sub-grid lines, or [`Text`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts) with child glyphs), the recycling pass traverses child arrays in lockstep:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "if (oldEnt.children.length === newEnt.children.length) {\n    for (let i = 0; i < oldEnt.children.length; i++) {\n        recycleGPUResources(oldEnt.children[i], newEnt.children[i]);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, NumberPlane, ValueTracker, alwaysRedraw, Color } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\nconst plane = new NumberPlane();\nscene.add(plane);\n\n// 1. Reactive frequency tracker\nconst freq = new ValueTracker(1.0);\n\n// 2. High-performance reactive curve redraw\nconst wave = alwaysRedraw(() => {\n    return plane.plot((x) => Math.sin(x * freq.value), {\n        stroke: Color.fromHex(\"#38bdf8\"),\n        stroke_width: 0.08\n    });\n});\nscene.add(wave);\n\n// 3. Smoothly animate frequency from 1 Hz to 4 Hz\nawait scene.play(freq.animateValue(4.0, { duration: 2500 }));"
+        }
+      ]
+    }
+  ]
+}

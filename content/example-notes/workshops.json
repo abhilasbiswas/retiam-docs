@@ -1,0 +1,109 @@
+{
+  "labs/workshop-component": {
+    "title": "An entity with a detachable behavior",
+    "description": "Click the cyan tile to pause or resume its component.",
+    "walkthrough": [
+      "Turntable is a Component whose update receives milliseconds. It converts dt to seconds before applying a rotation measured in radians. The tile and component are created once; the enabled flag changes whether the entity invokes the update.",
+      "SceneComposer remains in continuous mode. A disabled component keeps its state and attachment; removeComponent would instead invoke cleanup. The caption uses setText only on clicks, avoiding a text geometry rebuild every frame."
+    ],
+    "experiments": [
+      "Change radiansPerSecond from 0.7 to −0.7 to reverse rotation without changing the update contract.",
+      "Remove ALWAYS_UPDATE and observe when frames stop advancing after the scene becomes idle."
+    ],
+    "related": [
+      "Component",
+      "Entity",
+      "SceneComposer",
+      "SDFText"
+    ]
+  },
+  "labs/workshop-modifier": {
+    "title": "Deform a copy of the contour",
+    "description": "The original line stays fixed while the modified curve moves. Click cyan to freeze.",
+    "walkthrough": [
+      "Each contour contains a starting point followed by quadratic control/end pairs. The callback copies those coordinates and offsets every Y by a sine of X plus phase. The muted path and the cyan path begin from the same source string.",
+      "Phase lives in the scene closure, so changing it does not increment the modifier version automatically. Calling invalidate reevaluates the chain. Freezing phase preserves both the original source and the current modified result."
+    ],
+    "experiments": [
+      "Set amplitude to 0.2 or 1.2 and compare the deviation from the muted original.",
+      "Remove bend.invalidate() from the updater and observe why changing phase alone is insufficient."
+    ],
+    "related": [
+      "CustomModifier",
+      "PathModifierBase",
+      "Path"
+    ]
+  },
+  "labs/workshop-uniforms": {
+    "title": "Write uniforms at their real offsets",
+    "description": "Click the surface to freeze the rings; edit the palette and layout in the source.",
+    "walkthrough": [
+      "UniformSchema aligns the vec2, two vec4 colors and final scalar. UniformBufferData writes fields by name using byte offsets, avoiding a dense Float32Array layout that would misalign the first color. The generated struct is supplied without a duplicate binding declaration.",
+      "The CPU updater writes elapsed seconds to a single buffer; the WGSL fragment samples distance from the center and interpolates the two colors. Numeric changes reuse the shader pipeline. BufferOwner queues the custom allocation for release when the scene is destroyed."
+    ],
+    "experiments": [
+      "Set focus to [0.25,0.7] to move the center without changing quad geometry.",
+      "Change the two colors and the factor 30.0 separately to distinguish uniform values from shader constants."
+    ],
+    "related": [
+      "Shader",
+      "UniformSchema",
+      "UniformBufferData",
+      "Renderer",
+      "Component"
+    ]
+  },
+  "labs/workshop-post-process": {
+    "title": "Read the final image in a pass",
+    "description": "The same rendered frame keeps color on the left and becomes luminance on the right.",
+    "walkthrough": [
+      "PostProcessPass reads the renderer’s final output handle and allocates a relative-size output through the graph. Scene.addPass registers the pass and its presentation output. The helper provides the fullscreen triangle and input sampling bindings.",
+      "The fragment computes luminance from RGB and uses uv.x to choose a half of the image. Alpha is retained. The amber box rotates beneath the image effect; clicking either shape reverses the scene update without recompiling the pass."
+    ],
+    "experiments": [
+      "Change uv.x > 0.5 to uv.y > 0.5 to split the comparison horizontally.",
+      "Return color directly to confirm that the effect changes the image rather than the scene materials."
+    ],
+    "related": [
+      "PostProcessPass",
+      "Pass",
+      "FrameGraph",
+      "GraphBuilder",
+      "RenderContext"
+    ]
+  },
+  "labs/workshop-animation-control": {
+    "title": "Control the scheduled animation",
+    "description": "Click the track to pause/resume, or amber to stop before completion.",
+    "walkthrough": [
+      "The scene retains the exact Animator passed to play. Its pause and resume methods control that scheduled work; asking dot.animate again would create another builder. The play promise remains pending while paused.",
+      "Stop removes the scheduled motion, resolves play and leaves the circle at its current position. The continuation changes the caption according to whether the user stopped it. Resetting the editor starts a fresh scene and restores the initial pose."
+    ],
+    "experiments": [
+      "Pause near the midpoint, wait, then resume and verify that the circle continues from the same position.",
+      "Stop before the end and compare with an uninterrupted run: the continuation runs in both cases, while the end position differs."
+    ],
+    "related": [
+      "Animator",
+      "StateAnimation",
+      "Scene"
+    ]
+  },
+  "labs/workshop-performance": {
+    "title": "Retain the objects and vary the workload",
+    "description": "Click the label to freeze motion while the compositor keeps rendering.",
+    "walkthrough": [
+      "The circles are allocated once before the updater is registered. Each frame changes their transforms rather than rebuilding their geometry/components. The distribution is deterministic, so changing count produces a reproducible comparison.",
+      "Freezing skips the CPU movement loop but leaves ALWAYS_UPDATE enabled. This separates update work from the idle-render decision. The scene contains no FPS claim: use a browser trace at the same viewport to measure the actual cost on your machine."
+    ],
+    "experiments": [
+      "Compare count = 120 with 480 after startup at the same dimensions and camera.",
+      "Profile motion enabled and frozen separately, then change only preview resolution to explore CPU and pixel costs."
+    ],
+    "related": [
+      "Circle",
+      "SceneComposer",
+      "Transform"
+    ]
+  }
+}

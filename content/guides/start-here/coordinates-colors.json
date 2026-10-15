@@ -1,0 +1,156 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "coordinates-colors",
+  "title": "Coordinates, units and colors",
+  "group": "Start here",
+  "summary": "Understand the spaces, units and color conventions that determine where objects appear and how they are painted.",
+  "sections": [
+    {
+      "id": "local-world-and-screen-space",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Local, world and screen space"
+        },
+        {
+          "type": "paragraph",
+          "text": "Geometry is defined in local coordinates. An entity’s transform maps it to its parent; accumulated matrices map it into world space. The camera’s view and projection matrices map world coordinates to the rendered viewport. Canvas pixel dimensions set raster resolution, not entity dimensions."
+        },
+        {
+          "type": "paragraph",
+          "text": "There is no universal requirement that a Retiam scene use either pixel-sized or tiny coordinates. Existing demos use different scales, and several text defaults are large. Choose a consistent world scale and frame the content. The tutorials here use small world coordinates with an explicit orthographic camera."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Value",
+            "Convention",
+            "Important exception"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Scene.time, Scene.dt, duration, delay, wait",
+                "milliseconds",
+                "Physics step APIs and some controller/runner helpers use seconds"
+              ]
+            },
+            {
+              "cells": [
+                "Rotation, mathematical trig functions",
+                "radians",
+                "Read source signatures for degree-specific helpers"
+              ]
+            },
+            {
+              "cells": [
+                "Dimensions, stroke width, font size",
+                "world or local geometry units",
+                "Use the camera to map them to pixels"
+              ]
+            },
+            {
+              "cells": [
+                "Color channels",
+                "normalized floats, including alpha",
+                "Hex strings are accepted by ColorLike APIs"
+              ]
+            },
+            {
+              "cells": [
+                "Normalized animation progress",
+                "usually 0 to 1",
+                "Easing can overshoot or return to the starting state"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "build-colors",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Build colors"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use `hex(\"#RRGGBB\", alpha)` for the shorthand helper. For embedded alpha in #RGBA or #RRGGBBAA, use `Color.fromHex()`; the shorthand helper extracts only the low 24 RGB bits and receives alpha as its second argument. Entity options use ColorLike for many paint fields, while some material and library fields explicitly require Color. Preserve the parameter’s declared type instead of assuming every color option accepts every representation."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const cyan = hex(\"#38BDF8\");\nconst translucent = new Color(0.2, 0.7, 1.0, 0.35);\nconst circle = new Circle(1, { fill: cyan, opacity: 0.8 });\ncircle.paint.stroke = hex(\"#F8FAFC\");\ncircle.paint.strokeWidth = 0.05;"
+        },
+        {
+          "type": "paragraph",
+          "text": "Color alpha and paint opacity can both influence the final alpha. A color with zero alpha is different from omitting a fill setting that would allow a constructor default to apply. Use `Color.NONE` when you intend no fill."
+        }
+      ]
+    },
+    {
+      "id": "coordinate-mappings",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Coordinate mappings"
+        },
+        {
+          "type": "paragraph",
+          "text": "Plot coordinates are an additional layer. `axes.c2p(x, y)` converts a mathematical coordinate through the axis ranges and physical dimensions into a Vec3; `p2c` reverses the mapping. Place dots, annotations and data using that mapping so changing the axis range does not silently invalidate their positions."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Vec2](/api-math-vector#vec2), [Vec3](/api-math-vector#vec3), [Mat4](/api-math-vector#mat4), [Quaternion](/api-math-vector#quaternion), [Color](/api-math#color), [CoordinateSystem](/api-entities-composites-coordinates#coordinatesystem), [Camera](/api-camera#camera)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore the implementation in a scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Change a local coordinate and inspect the world result under a rotated parent. Then change only alpha to compare placement with color/opacity interpretation."
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-camera"
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-paint"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Entities, components and ownership](/entities)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ]
+}

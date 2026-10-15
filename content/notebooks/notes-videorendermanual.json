@@ -1,0 +1,328 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-videorendermanual",
+  "title": "Retiam Headless Video Rendering Pipeline: Architectural & Implementation Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/VideoRenderManual.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/VideoRenderManual.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/VideoRenderManual.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Pipeline](/api-render-pipelines#pipeline), [Scene](/api-core-scene#scene), [Sphere](/api-entities-primitives-3d#sphere), [Color](/api-math#color), [Renderer](/api-render#renderer)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a detailed overview of the headless, offline video rendering pipeline implemented for **Retiam**, a WebGPU-powered animation engine. It outlines the architectural design, configuration options, usage patterns, and industrial use cases."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Traditional web rendering loops rely on `requestAnimationFrame` and real-world system clocks (`performance.now()`). While this works for interactive, real-time web applications, it introduces non-determinism during offline video export. Variable CPU/GPU loads cause frame drops, stuttering, and inconsistent rendering results."
+        },
+        {
+          "type": "paragraph",
+          "text": "The Retiam offline rendering pipeline completely decouples simulation time from wall-clock time, ensuring frame-perfect, deterministic video generation."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  CLI[\"Node.js: render.js CLI\"] -->|Spawn| F[\"FFmpeg subprocess\"]\n  CLI -->|Programmatic boot| V[\"Vite server<br/>Automatic port\"]\n  V --> P[\"Puppeteer<br/>Headless Chrome\"]\n  P -->|Navigate| C[\"WebGPU canvas\"]\n  V -->|HTTP / JavaScript| C\n  C -->|JSON + binary frames over WebSocket: port 5001| F"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Pipeline Steps:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Programmatic Dev Server (Vite)**: The Node.js execution engine (`render.js`) starts a local, programmatic Vite server. If the default port (`5173`) is occupied, it automatically shifts to the next available port, preventing conflicts.",
+            "**Headless Browser (Puppeteer)**: The script launches a headless instance of Chromium with flags enabled for unsafe WebGPU configurations (`--enable-unsafe-webgpu`). It navigates to the compiled local URL while passing render variables via query parameters (e.g., `?offline=true&width=1920&height=1080&fps=60`).",
+            "**Deterministic Canvas Stepper (Browser)**: The engine detects the `offline=true` parameter. It cancels the standard `requestAnimationFrame` loop, locks `renderring = true`, and runs an explicit step loop. Time advances by a fixed interval (`1000 / FPS`) per frame.",
+            "**WebSocket Coordination & Backpressure**: For every frame, the browser converts the WebGPU canvas into an image blob and transmits it to Node.js over a local WebSocket. The browser halts execution and waits for a WebSocket acknowledgment (`\"ack\"`) from Node.js before rendering the next frame. This prevents browser memory exhaustion.",
+            "**Muxing (FFmpeg)**: Node.js receives the binary frame and writes it directly to the writable standard input (`stdin`) of an active FFmpeg subprocess. When the animation queue is empty, the browser signals a `\"finish\"` event, closing the FFmpeg pipe and writing the final MP4 or WebM video file."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-key-technical-implementations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Key Technical Implementations"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Deterministic Raytracing Accumulation"
+        },
+        {
+          "type": "paragraph",
+          "text": "When Raytracing is enabled, WebGPU requires multiple render passes over multiple sub-frames (accumulation) to denoise the output. During offline rendering, Retiam freezes the simulation clock, sets motion indicators to false, and loops the WebGPU `capture` routine for `rtMaxAccumulation` iterations before extracting the frame. The resulting frame is fully accumulated, denoised, and exported before the simulation clock progresses to the next step."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Automatic Port Resolution"
+        },
+        {
+          "type": "paragraph",
+          "text": "To avoid port conflicts (e.g., if a developer is actively running a live workspace via `npm run dev`), the programmatic Vite server scans for an open port and binds to it dynamically:"
+        },
+        {
+          "type": "code",
+          "language": "javascript",
+          "code": "const viteServer = await createServer({\n    server: { port: config.devServerPort, strictPort: false }\n});\nawait viteServer.listen();\nconst address = viteServer.httpServer.address();\nconst actualPort = address.port; // Dynamically passed to Puppeteer"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Dynamic Module Loading"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `main.ts` file acts as a workspace bootstrapper. Instead of hardcoding which scene is executed, the CLI passes the file path as a URL query parameter (e.g., `?file=src/AnotherScene.ts`). The bootstrapper performs a dynamic import using native ES module features:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const module = await import(/* @vite-ignore */ '/' + fileParam);"
+        },
+        {
+          "type": "paragraph",
+          "text": "Vite intercepts this dynamic request and compiles the TypeScript file on the fly."
+        }
+      ]
+    },
+    {
+      "id": "3-configuration-guide",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Configuration Guide"
+        },
+        {
+          "type": "paragraph",
+          "text": "Users configure their rendering variables using `ratiam.config.js` placed in their project root."
+        },
+        {
+          "type": "code",
+          "language": "javascript",
+          "code": "// ratiam.config.js\nexport default {\n    // Frame rate of the output video\n    fps: 60,\n\n    // Dimensions of the output video\n    width: 1920,\n    height: 1080,\n\n    // Bitrate for the video encoder (e.g., '20M' for high-quality H.264)\n    videoBitrate: '20M',\n\n    // Video container format ('mp4' or 'webm')\n    outputFormat: 'mp4',\n\n    // Directory where the final output video is stored\n    outputDir: './outputs',\n\n    // Hard ceiling for video length in milliseconds. \n    // If set to 0, the renderer auto-detects when all animations finish.\n    maxDuration: 0,\n\n    // Local port assigned to the WebSocket coordination server\n    wsPort: 5001,\n\n    // The preferred base port for starting the Vite compiler\n    devServerPort: 5173\n};"
+        }
+      ]
+    },
+    {
+      "id": "4-setup-instructions",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Setup Instructions"
+        },
+        {
+          "type": "paragraph",
+          "text": "To implement and run the new rendering pipeline, configure your files as shown in the steps below."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Step 1: Dependencies"
+        },
+        {
+          "type": "paragraph",
+          "text": "Ensure your project contains the necessary dependencies. Update your `package.json` to map the executable and add NPM scripts:"
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"name\": \"retiem\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"main\": \"./index.ts\",\n  \"bin\": {\n    \"retiem\": \"./render.js\"\n  },\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"tsc && vite build\",\n    \"render\": \"node render.js\"\n  },\n  \"devDependencies\": {\n    \"cli-progress\": \"^3.12.0\",\n    \"puppeteer\": \"^25.1.0\",\n    \"typescript\": \"^5.0.0\",\n    \"vite\": \"^5.0.0\",\n    \"ws\": \"^8.18.0\"\n  }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Run `npm install` to download and configure the packages."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Step 2: Grant File Executable Rights (Unix/macOS)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Your `render.js` file needs shell executable rights. Run the following command in your project terminal:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "chmod +x render.js"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Step 3: Link Locally (To Test npx)"
+        },
+        {
+          "type": "paragraph",
+          "text": "To test the global execution command locally without publishing to the public registry, register a link:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm link"
+        },
+        {
+          "type": "paragraph",
+          "text": "This maps the `retiem` binary locally, allowing you to use `npx retiem` from any terminal window."
+        }
+      ]
+    },
+    {
+      "id": "5-writing-a-custom-scene",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Writing a Custom Scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "When creating a new animation, you do not need to write bootstrap code or call `document.getElementById`. Simply write a clean class extending `Scene` and export it as `default`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// src/MyScene.ts\nimport { Scene } from \"./engine/_core/Scene\";\nimport { Sphere } from \"./engine/entities/primitives/3d/Sphere\";\nimport { Color } from \"./engine/math/Color\";\n\nexport default class MyScene extends Scene {\n    public async run() {\n        // Build and style a 3D Sphere\n        const sphere = new Sphere(6, 64, 64);\n        sphere.material.color = new Color(0.1, 0.6, 1.0, 1.0);\n        sphere.material.emColor = new Color(0.0, 0.4, 1.0, 1.0);\n        sphere.material.emStrength = 1.0;\n        this.add(sphere);\n\n        // Keep the camera slightly shifted\n        this.camera.position.set([0, 10, 40]);\n\n        // Keep rotation active\n        this.always(() => {\n            sphere.transform.rotateWorldY(this.dt * 0.001);\n            this.invalidate();\n        });\n\n        // Run the scene for 4 seconds, then auto-exit\n        await this.wait(4000);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "6-running-the-renderer",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Running the Renderer"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Standard Execution"
+        },
+        {
+          "type": "paragraph",
+          "text": "To render the scene using the settings defined inside `ratiam.config.js`:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiem src/MyScene.ts"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Executing with Overrides"
+        },
+        {
+          "type": "paragraph",
+          "text": "To temporarily override configurations (e.g., generating a quick, lower-resolution preview):"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiem src/MyScene.ts -w 1280 -h 720 -f 30"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Arguments and Options Reference:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "  `[target_file]`: The path to the TypeScript scene file to run (optional, defaults to `main.ts`).",
+            "  `-w` / `--width [px]`: Overrides output resolution width.",
+            "  `-h` / `--height [px]`: Overrides output resolution height.",
+            "  `-f` / `--fps [rate]`: Overrides output frame rate.",
+            "  `-d` / `--duration [ms]`: Overrides max recording duration."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7-possible-use-cases",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Possible Use Cases"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Automated Media Generation (CI/CD Pipelines)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because the pipeline runs headlessly and deterministically in headless environments, it can be integrated into CI/CD pipelines (e.g., GitHub Actions) to regenerate documentation assets, math visualizers, or UI promotional videos automatically whenever code changes are pushed to a repository."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Cloud Render Farms"
+        },
+        {
+          "type": "paragraph",
+          "text": "For complex scenes or high-resolution raytracing, rendering locally can be slow. Since the pipeline is triggered via a CLI wrapper, you can deploy your project to a cloud container (e.g., Docker running on AWS or Google Cloud). The container can spin up Node.js, run Chromium with WebGPU headless flags, compile the scene, and render the output using the cloud instance's resources."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Generative Data Visualization"
+        },
+        {
+          "type": "paragraph",
+          "text": "For research papers, scientific displays, or financial data visualizations, you can feed a JSON dataset to the engine. The CLI can render deterministic, high-fidelity 3D graphs, streamlines, vector fields, or math animations on-the-fly and output customized, polished video files for presentations."
+        }
+      ]
+    }
+  ]
+}

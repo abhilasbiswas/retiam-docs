@@ -1,0 +1,106 @@
+{
+  "features/create_anim_3d": {
+    "description": "Reveal the wireframe and fill of a sampled saddle surface.",
+    "walkthrough": [
+      "The source samples z = x² − y² into vertex and index arrays, computes smooth shading, and wraps the mesh in MathShape3D. The geometry already exists before Create3D begins.",
+      "The scene updater gently rotates the surface throughout the reveal. This helps distinguish the construction animation from a camera move and makes hidden portions of the wireframe easier to inspect."
+    ],
+    "experiments": [
+      "Disable the rotation updater and replay Create3D. Then increase sampling resolution to compare mesh density without changing reveal duration."
+    ]
+  },
+  "features/create_anim": {
+    "description": "Reveal grouped shapes and a plotted function with the same animation idea.",
+    "walkthrough": [
+      "A circle and a builder-generated square become children of VGroup. Arranging and shifting the group places both shapes before Create draws them. The group’s hierarchy carries the shared transform.",
+      "The second part constructs axes and a sine graph, then awaits Write and Create separately. Drawing a graph follows its existing contour; the reveal animation does not evaluate a new mathematical function on each frame."
+    ],
+    "experiments": [
+      "Replace the sine callback with x => x * x / 4 and replay. Compare the changed geometry with the unchanged reveal timing."
+    ]
+  },
+  "features/dynamic_implicit_plot": {
+    "description": "Compare an explicit parabola with a GPU-evaluated implicit curve while axis ranges change.",
+    "walkthrough": [
+      "FunctionGraph2D evaluates y from x over a limited domain. ImplicitCurve2DGPU instead receives WGSL describing a relation in x and y; the active return in this file describes a unit circle, despite the variable and source comment calling it a heart.",
+      "The updater changes the axes’ ranges. That alters the mapping from mathematical coordinates to displayed positions, so apparent motion can come from coordinate changes rather than a different curve equation."
+    ],
+    "experiments": [
+      "Replace the implicit return with x*x + y*y - 4. and compare the radius with the original. Keep the axis ranges fixed while judging that equation change."
+    ]
+  },
+  "features/dynamic_vector_field_2d": {
+    "description": "Separate a changing vector field from changing coordinate ranges.",
+    "walkthrough": [
+      "A callback returns the two components of a time-varying swirling field. VectorField2D samples those directions through the supplied Axes; the mathematical coordinates determine what the arrows mean.",
+      "The updater also changes axis ranges and invalidates the scene. A moving field and a shifting coordinate window can look similar, so freeze one before investigating the other."
+    ],
+    "experiments": [
+      "Keep setXRange and setYRange fixed, then change only the field callback. Restore the range updates afterward and compare the source of the apparent motion."
+    ]
+  },
+  "features/feature_create": {
+    "description": "Move an integration bound and rebuild the shaded region beneath a curve.",
+    "walkthrough": [
+      "The quadratic and axes remain the reference. ValueTracker stores each integration bound; alwaysRedraw constructs the current partial graph, arrow and numerical label from those values.",
+      "The initial static area is revealed and removed before the dynamic version takes over. Moving the upper tracker changes the interval rather than the curve equation."
+    ],
+    "experiments": [
+      "Change the upper bound’s target from 7 to 4, keeping the quadratic unchanged. Watch the arrow, label and shaded region agree."
+    ]
+  },
+  "interaction/interaction_complex": {
+    "description": "Pick morphing models, dense meshes, paths, text and instances.",
+    "walkthrough": [
+      "The scene builds several geometry types and casts a camera ray through the pointer against its entities. The reported hit determines which object receives feedback.",
+      "Instances need instanceId-specific updates; vector glyphs and model materials use their own appearance APIs. The morph continues changing geometry while picking remains active."
+    ],
+    "experiments": [
+      "Select an individual instance and then a text glyph. Compare the hit information and the different update paths."
+    ]
+  },
+  "interaction/interactive_scene": {
+    "description": "Drag and hover over two-dimensional and spatial objects.",
+    "walkthrough": [
+      "InteractionManager coordinates entity events for models, vector primitives, SVG paths and typography. Each object registers callbacks suited to its paint or material.",
+      "Scripted rotation skips actively dragged models. This prevents an updater from fighting the drag interaction, while camera controls continue to affect the viewpoint."
+    ],
+    "experiments": [
+      "Disable scripted rotation and drag the same sphere. Compare object movement with dragging empty space to move the camera."
+    ]
+  },
+  "physics/physics_irregular_shapes": {
+    "description": "Drop generated rocks and crystals onto stepped ramps.",
+    "walkthrough": [
+      "Physics3D supplies gravity [0, -18, 0], while static platforms form a stepped route into the basin. Orbit the camera before spawning more bodies to see which surfaces are ramps and which retain the falling objects. Continuous scene updates keep the simulation advancing after construction finishes.",
+      "createRandomIrregularShape perturbs mesh vertices and gives each object an asymmetric profile. Flat shading emphasizes its facets. The visible mesh is the rendering representation; the rigid-body component is the collision and motion representation. Inspect the Physics3D shape options rather than assuming every visible concavity becomes a collision surface.",
+      "spawnShapeAt constructs the visible object, registers its dynamic body and retains the pair in a JavaScript array. Mass, friction, restitution and initial velocity belong to that body. Changing a material’s roughness affects light, while changing friction affects contact; similar words describe different systems.",
+      "The initial group falls onto the platforms. A pointer callback spawns another object above the selected world point, with a minimum spawn height. Picking supplies a world-space location, so camera projection matters when deciding where a click should put a new body.",
+      "The updater walks the retained array backwards and removes bodies that fall below y = -30, removing their scene entities as well. Reverse traversal avoids skipping a neighbor after an array splice. Keep physics registration, scene registration and any separately owned mesh resources coordinated when adapting this cleanup.",
+      "Randomized shape construction makes repeated runs differ. For a repeatable animation video, seed the random inputs and use a controlled simulation clock, then test contact behavior at the export step size. Matching one screenshot does not establish that a long collision sequence will replay identically."
+    ],
+    "experiments": [
+      "Keep restitution fixed and change only friction on the dynamic bodies. Compare sliding distance on the same ramp.",
+      "Seed the shape/position random inputs and export a short fixed-duration drop twice. Compare a contact frame as well as the initial frame."
+    ]
+  },
+  "test/line": {
+    "description": "Compare join styles, rigid transforms and raw vertex updates.",
+    "walkthrough": [
+      "Similar zigzag lines expose miter, round and bevel corners. A rotating star demonstrates transform changes, while a separate line streams raw coordinates.",
+      "setRawVertices changes the contour itself; rotation leaves its local vertex arrangement intact. This makes the two update paths easy to distinguish."
+    ],
+    "experiments": [
+      "Disable star rotation and animate one star vertex instead. Compare changed local geometry with the original rigid motion."
+    ]
+  },
+  "fourier/FourierTransform": {
+    "description": "Supporting Fourier calculations used by the reconstruction scenes. Read this module alongside the epicycle demo to connect the coefficient calculation with the rotating vectors."
+  },
+  "fourier/index": {
+    "description": "The Fourier library’s export surface. This module collects helpers and scene building blocks; it is imported by runnable demos rather than started as a scene."
+  },
+  "sketch/usa_map_data": {
+    "description": "Supporting SVG path data for the map examples. The data defines the outlines; the map scene supplies paint, layout and sketch styling."
+  }
+}

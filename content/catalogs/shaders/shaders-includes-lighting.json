@@ -1,0 +1,202 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "shaders-includes-lighting",
+  "title": "includes/lighting WGSL",
+  "group": "Shader reference",
+  "sections": [
+    {
+      "id": "shader-implementation-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Shader implementation contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "WGSL modules are assembled through engine imports, chunk registration and ShaderBuilder. Functions, structures and bindings below come directly from the checked-out shader files. A file can be a reusable include, an active entry point or a retained experimental/legacy variant; file presence alone does not establish that it executes in the default pipeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the corresponding geometry, fragment and pass API before changing an entry point. CPU data offsets, WGSL alignment, bindings, varying interpolation, reversed depth and workgroup sizes must continue to agree."
+        }
+      ]
+    },
+    {
+      "id": "cel",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "cel.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/lighting/cel.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/lighting/cel.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "evaluateCel",
+                "N: vec3f, L_dir: vec3f, H_dir: vec3f, NdotV: f32, albedoColor: vec3f, bands: f32, rimStrength: f32, rimPowerParam: f32, emissive: vec3f, shadow: f32",
+                "vec3f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "clay",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "clay.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/lighting/clay.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/lighting/clay.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "evaluateClay",
+                "N: vec3f, L_dir: vec3f, albedoColor: vec3f, emissive: vec3f, shadow: f32",
+                "vec3f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gooch",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "gooch.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/lighting/gooch.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/lighting/gooch.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "evaluateGooch",
+                "N: vec3f, L_dir: vec3f, H_dir: vec3f, albedoColor: vec3f, warmWeight: f32, coolWeight: f32, emissive: vec3f, shadow: f32",
+                "vec3f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pbr",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "pbr.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/lighting/pbr.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/lighting/pbr.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "evaluatePBR",
+                "diffuseGI: vec3f, diffuse_dir: vec3f, specularGI: vec3f, spec_dir: vec3f, emissive: vec3f, shadow: f32",
+                "vec3f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shadows",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "shadows.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/lighting/shadows.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/lighting/shadows.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "interleavedGradientNoise",
+                "fragCoord: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "getShadowRotation",
+                "screenPos: vec2f",
+                "mat2x2f"
+              ]
+            },
+            {
+              "cells": [
+                "sampleShadowPCF",
+                "shadowMap: texture_depth_2d, shadowSampler: sampler_comparison, shadowUV: vec2f, compareDepth: f32, texelSize: vec2f, screenPos: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "sampleShadowPCSS",
+                "shadowMap: texture_depth_2d, shadowSampler: sampler_comparison, shadowUV: vec2f, compareDepth: f32, texelSize: vec2f, lightSize: f32, screenPos: vec2f",
+                "f32"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

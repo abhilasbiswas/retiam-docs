@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "sketch",
+  "title": "Excalidraw and rough drawing",
+  "group": "Geometry and styling",
+  "summary": "Give vector geometry a rough drawing style while retaining its normal entity and animation behavior.",
+  "sections": [
+    {
+      "id": "built-in-excalidraw-style",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Built-in Excalidraw style"
+        },
+        {
+          "type": "paragraph",
+          "text": "VectorEntity.toExcalidraw applies a hand-drawn outline with optional hachure or solid fill. The core implementation uses ExcalidrawModifier, seeded randomness, fill pattern generation and the Excalidraw style manager. Presets coordinate roughness and bowing, while explicit options control color, gap, angle, thickness and line boiling."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-sketchscene"
+        }
+      ]
+    },
+    {
+      "id": "seeds-and-line-boiling",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Seeds and line boiling"
+        },
+        {
+          "type": "paragraph",
+          "text": "An automatic seed derives from entity identity. A fixed numeric seed keeps a specific contour reproducible even when object creation order changes. Scene reset also resets entity sequence numbers. Boiling varies the perturbation over time at a chosen frequency; distinguish its visual cadence from display FPS."
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep seeds, entity creation order and time sampling stable for offline reproducibility. Randomness driven by Math.random or Date.now in custom updates bypasses those controls."
+        }
+      ]
+    },
+    {
+      "id": "roughjs-integration",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RoughJS integration"
+        },
+        {
+          "type": "paragraph",
+          "text": "retiam/rough is an optional adapter around RoughJS. RoughModifier converts RoughJS drawing commands into the engine’s contour system; RoughShape and roughify add higher-level styling and reveal helpers. The package manifest lists roughjs as an optional peer dependency. Choose core Excalidraw for its native engine integration, or the rough library when RoughJS-specific output is required."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Excalidraw](/api-style-excalidraw#excalidraw), [ExcalidrawOptions](/api-style-excalidraw#excalidrawtypes), [ExcalidrawModifier](/api-modifiers-path#excalidrawmodifier), [RoughModifier](/api-libs-rough#roughmodifier), [RoughShape](/api-libs-rough#roughshape)."
+        }
+      ]
+    }
+  ]
+}

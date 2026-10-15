@@ -1,0 +1,345 @@
+{
+  "labs/pg-firstscene": {
+    "title": "A circle\u2019s first journey",
+    "description": "A small scene has a complete beginning and end: reveal a circle, move it across the frame, hold, then fade it away.",
+    "walkthrough": [
+      "The circle is positioned before it is added. `Create` reveals that existing geometry rather than constructing another object.",
+      "The awaited `Scene.play` calls form a sequence. The movement uses `Rate.easeInOutCubic`, so the circle eases into and out of its travel before the final `FadeOut`."
+    ],
+    "experiments": [
+      "Change the movement duration from 1600 to 800 and compare the pace.",
+      "Replace the easing with `Rate.linear()` and look at the beginning and end of the move."
+    ],
+    "related": [
+      "Scene.play",
+      "Create",
+      "FadeOut",
+      "Rate.easeInOutCubic"
+    ]
+  },
+  "labs/pg-sequencescene": {
+    "title": "Together, then one at a time",
+    "description": "The two shapes are revealed together, then take turns moving toward the center. This makes scheduling visible.",
+    "walkthrough": [
+      "`Concurrent` gives the two creation animations one shared starting point. Both can finish before the next awaited play call begins.",
+      "`Sequential` runs the circle\u2019s `CustomAnimation` before the rectangle\u2019s. Each callback assigns a position from normalized progress rather than adding an offset every frame."
+    ],
+    "experiments": [
+      "Swap the two animations inside `Sequential` and predict which shape moves first.",
+      "Replace `Sequential` with `Concurrent` and compare their arrival times."
+    ],
+    "related": [
+      "Concurrent",
+      "Sequential",
+      "CustomAnimation"
+    ]
+  },
+  "labs/pg-hierarchyscene": {
+    "title": "Rotate a family of shapes",
+    "description": "A circle and rectangle stay opposite one another while their parent turns through a quarter rotation.",
+    "walkthrough": [
+      "The plain `Entity` is a structural parent. `Entity.add` attaches both children, and the scene then adds that parent.",
+      "Animating the parent transforms the entire subtree. The children keep their own local positions, so the shared rotation changes their world positions."
+    ],
+    "experiments": [
+      "Change the angle from `Math.PI / 2` to `Math.PI` and watch both children orbit.",
+      "Move one child farther from the parent before playback and compare its longer path."
+    ],
+    "related": [
+      "Entity.add",
+      "Entity.animate",
+      "Entity.rotate"
+    ]
+  },
+  "labs/pg-layoutscene": {
+    "title": "Let the bounds do the placing",
+    "description": "A title, circle and rectangle form a vertical stack without hand-written positions for each object.",
+    "walkthrough": [
+      "`VBox.arrange` measures the supplied entities and uses a gap to place them around a chosen center. It leaves them independently owned by the scene.",
+      "`Camera.frame` fits the combined bounds. The three awaited animations then reveal the items in reading order."
+    ],
+    "experiments": [
+      "Increase the gap from 0.5 to 1 and observe how the camera fit responds.",
+      "Make the rectangle wider and compare the stack\u2019s alignment and framing."
+    ],
+    "related": [
+      "VBox.arrange",
+      "Camera.frame",
+      "SDFText"
+    ]
+  },
+  "labs/pg-pathscene": {
+    "title": "One path, two bends",
+    "description": "A quadratic path first bends upward, then replaces its geometry with a downward bend.",
+    "walkthrough": [
+      "The SVG-style path string contains a move and a quadratic segment. An analytical path renderer draws its outline with no fill.",
+      "After `Create` finishes and the scene waits, `Path.setVertices` replaces the path data. `Scene.invalidate` requests the redraw. This is a geometry change, rather than an animation between the two curves."
+    ],
+    "experiments": [
+      "Change the control point from 4 to 1 and compare how far the curve bows.",
+      "Give the path a fill and inspect the region implied by its open contour."
+    ],
+    "related": [
+      "Path",
+      "Path.setVertices",
+      "Create"
+    ]
+  },
+  "labs/pg-booleanscene": {
+    "title": "Make the overlap into geometry",
+    "description": "Two translucent circles reveal a green intersection that can be styled as its own shape.",
+    "walkthrough": [
+      "The input circles overlap because their centers are closer than two radii. `Intersection` computes the region they share.",
+      "The result receives its own fill, stroke and z-index, then fades into view. Its appearance is independent of the translucent input styling."
+    ],
+    "experiments": [
+      "Move the circles farther apart and inspect the smaller intersection.",
+      "Try `Union` or `Difference` in place of `Intersection` and predict the region before running it."
+    ],
+    "related": [
+      "Intersection",
+      "Union",
+      "Difference"
+    ]
+  },
+  "labs/pg-modifierscene": {
+    "title": "Reveal a path through a modifier",
+    "description": "The visible portion of a curve grows as the trim endpoint advances.",
+    "walkthrough": [
+      "`TrimModifier` is attached when the path is constructed. Its start remains zero while its end initially exposes only one tenth of the path.",
+      "`CustomAnimation` maps progress to `trim.end`, ending at one. The modifier changes which portion is emitted without replacing the original path string."
+    ],
+    "experiments": [
+      "Hold the start at 0.25 and watch the reveal begin farther along the path.",
+      "Animate start and end together to make a short segment travel along the curve."
+    ],
+    "related": [
+      "TrimModifier",
+      "CustomAnimation",
+      "Path"
+    ]
+  },
+  "labs/pg-sketchscene": {
+    "title": "A reproducible hand-drawn card",
+    "description": "A rectangle becomes a rough outlined card with hatching inside it.",
+    "walkthrough": [
+      "`VectorEntity.toExcalidraw` applies the clean preset with explicit stroke and fill settings. The seed makes the procedural strokes repeatable.",
+      "The scene adds the styled entity and reveals it with `Create`. The original rectangle dimensions still provide its placement and framing."
+    ],
+    "experiments": [
+      "Change seed 42 and compare the different stroke irregularities.",
+      "Change fillStyle from hachure to another supported style and inspect the interior."
+    ],
+    "related": [
+      "VectorEntity.toExcalidraw",
+      "ExcalidrawOptions",
+      "Create"
+    ]
+  },
+  "labs/pg-formulascene": {
+    "title": "Write a mathematical expression",
+    "description": "Euler\u2019s identity becomes scene geometry that can be framed and revealed like other entities.",
+    "walkthrough": [
+      "`Tex` receives the LaTeX string and typography options. `Camera.frame` uses its resulting bounds to choose a comfortable view.",
+      "`Write` reveals the expression across its constituent geometry. The final wait leaves time to read it."
+    ],
+    "experiments": [
+      "Replace the expression with a fraction or summation and compare the new bounds.",
+      "Increase the writing duration and pause to inspect the order of the reveal."
+    ],
+    "related": [
+      "Tex",
+      "Camera.frame",
+      "Write"
+    ]
+  },
+  "labs/pg-maskscene": {
+    "title": "Move the picture inside the letters",
+    "description": "A generated striped image rotates behind a fixed GPU text-shaped mask.",
+    "walkthrough": [
+      "The helper canvas supplies a bitmap without a network image. `Sprite` gives that bitmap a size in the scene.",
+      "`Mask` combines the text boundary and the sprite. The animation rotates only the content, so the letters stay in place while the visible stripes move inside them."
+    ],
+    "experiments": [
+      "Replace GPU with another short label and observe the new boundary.",
+      "Change the stripe count while preserving the same mask to separate image detail from mask geometry."
+    ],
+    "related": [
+      "Mask",
+      "Sprite",
+      "SDFText"
+    ]
+  },
+  "labs/pg-modelscene": {
+    "title": "Watch a box turn in perspective",
+    "description": "The box\u2019s orientation changes while the camera stays at an oblique angle.",
+    "walkthrough": [
+      "`Box` supplies the mesh and material settings. The camera switches to perspective, sets a 45-degree field of view in radians, and looks at the box.",
+      "The animator makes a full Y-axis turn with linear easing. A fixed camera makes the changing faces and shading easy to compare."
+    ],
+    "experiments": [
+      "Use orthographic projection to compare how depth affects the silhouette.",
+      "Change roughness and inspect the faces as the object rotates."
+    ],
+    "related": [
+      "Box",
+      "Camera",
+      "Rate.linear"
+    ]
+  },
+  "labs/pg-camerascene": {
+    "title": "Move the observer, keep the subject",
+    "description": "A camera movement changes the view of a stationary box.",
+    "walkthrough": [
+      "The scene places the camera above and to one side of the subject, then uses `Camera.lookAt` to establish the starting view.",
+      "`CameraMove` animates the camera position over 2500 milliseconds. The box remains the same entity throughout the movement."
+    ],
+    "experiments": [
+      "Choose a farther destination and compare the apparent size at the end.",
+      "Change the camera field of view before playback and compare the same movement."
+    ],
+    "related": [
+      "CameraMove",
+      "Camera.lookAt",
+      "Camera.fov"
+    ]
+  },
+  "labs/pg-orbitscene": {
+    "title": "Orbit around a visible center",
+    "description": "The amber dot marks the center while a cyan circle makes one complete orbit around it.",
+    "walkthrough": [
+      "The actor begins three scene units away from the center. `OrbitAnimation` receives both entities, so the center supplies the orbital reference.",
+      "The angle is a full turn in radians, and linear easing keeps progress evenly distributed through the 3500-millisecond duration."
+    ],
+    "experiments": [
+      "Move the actor farther from the center and compare its path radius.",
+      "Use a half turn or a different rate function to change the journey."
+    ],
+    "related": [
+      "OrbitAnimation",
+      "Rate.linear",
+      "Dot"
+    ]
+  },
+  "labs/pg-interactionscene": {
+    "title": "A shape responds to the pointer",
+    "description": "Drag the dot, hover over it, then click it to compare three kinds of input-driven change.",
+    "walkthrough": [
+      "`Entity.setDraggable` lets the interaction system move the dot. Separate pointer-over and pointer-out handlers switch its fill color.",
+      "The click handler multiplies the current scale by 1.08. Repeated clicks therefore keep growing the dot, unlike a slider that assigns an absolute scale."
+    ],
+    "experiments": [
+      "Click several times and compare the cumulative growth.",
+      "Replace the click\u2019s `scale` with `setScale` to make repeated clicks select one fixed size."
+    ],
+    "related": [
+      "Entity.setDraggable",
+      "Entity.setEvent",
+      "Entity.setScale"
+    ]
+  },
+  "labs/pg-updatescene": {
+    "title": "An updater draws a continuous path",
+    "description": "The dot follows an ellipse computed from scene time.",
+    "walkthrough": [
+      "`Scene.always` runs the callback as time advances. The conversion from milliseconds to seconds makes the trigonometric expression easier to reason about.",
+      "Every update assigns coordinates from cosine and sine. The X amplitude is three and the Y amplitude is two, so the path is an ellipse rather than a circle."
+    ],
+    "experiments": [
+      "Make both amplitudes equal and watch the path become circular.",
+      "Multiply seconds by two to double the angular speed without changing the path."
+    ],
+    "related": [
+      "Scene.always",
+      "Entity.move",
+      "SceneComposer.ALWAYS_UPDATE"
+    ]
+  },
+  "labs/pg-trackerscene": {
+    "title": "Animate the input, redraw the result",
+    "description": "A sine wave gains more oscillations as its frequency tracker changes from one to three.",
+    "walkthrough": [
+      "The graph function reads `ValueTracker.value` whenever it is sampled. Animating the tracker changes the mathematical input rather than animating individual vertices.",
+      "The update-phase callback calls `FunctionGraph2D.updateGraph`, so the geometry is regenerated from the current frequency as the animation progresses."
+    ],
+    "experiments": [
+      "Change the tracker destination to 0.5 and compare the longer wavelength.",
+      "Remove the graph updater, rerun, and notice that changing a value alone does not resample the existing path."
+    ],
+    "related": [
+      "ValueTracker",
+      "ValueTracker.animateValue",
+      "FunctionGraph2D.updateGraph"
+    ]
+  },
+  "labs/pg-plotscene": {
+    "title": "Data coordinates meet scene coordinates",
+    "description": "A sine graph and a highlighted point share the same axes.",
+    "walkthrough": [
+      "`Axes` defines numeric ranges and a physical width and height. The axes convert mathematical coordinates into scene positions.",
+      "`FunctionGraph2D` samples sine against those axes, while `Axes.getDot` places a marker at the corresponding mathematical point. `Create` then reveals the graph."
+    ],
+    "experiments": [
+      "Change xRange while keeping width fixed and compare the horizontal scale.",
+      "Move the dot to another sine coordinate and check that it stays on the curve."
+    ],
+    "related": [
+      "Axes",
+      "Axes.getDot",
+      "FunctionGraph2D"
+    ]
+  },
+  "labs/pg-sdfscene": {
+    "title": "Cut a volume with a distance field",
+    "description": "A box-shaped subtraction carves into a sphere, and a rotating view reveals the resulting volume.",
+    "walkthrough": [
+      "`SDFSphere.subtract` combines two signed distance fields. This describes the boundary mathematically rather than building a boolean triangle mesh.",
+      "`SDFEntity3D` renders the combined field. A perspective camera and a half-turn animation reveal the cut from several angles."
+    ],
+    "experiments": [
+      "Change the box dimensions and compare the opening.",
+      "Replace subtract with union or intersection to explore different field combinations."
+    ],
+    "related": [
+      "SDFSphere",
+      "SDFBox",
+      "SDFNode.subtract",
+      "SDFEntity3D"
+    ]
+  },
+  "labs/pg-morphscene": {
+    "title": "Turn one silhouette into another",
+    "description": "A cyan circle changes into an amber square over one eased transition.",
+    "walkthrough": [
+      "Only the circle is added initially. `Morph` receives the source and the target entity, using both to define the geometric and styling transition.",
+      "The cubic easing changes how quickly the shape travels through the intermediate states. The final hold makes the target shape easy to compare with the starting circle."
+    ],
+    "experiments": [
+      "Use a triangle or another path as the target and inspect the intermediate contour.",
+      "Slow the duration and pause halfway to see how point correspondence affects the transition."
+    ],
+    "related": [
+      "Morph",
+      "Circle",
+      "Rect",
+      "Rate.easeInOutCubic"
+    ]
+  },
+  "labs/pg-instancedscene": {
+    "title": "Many shapes share one template",
+    "description": "An eight-by-eight field of alternating circles rotates as one instanced entity.",
+    "walkthrough": [
+      "`Instanced` uses a circle as its geometry template. Per-instance positions and colors supply the differences between the 64 copies.",
+      "`updateInstances` commits those values before the field is added. Animating the field\u2019s transform then moves every instance together without creating 64 scene entities."
+    ],
+    "experiments": [
+      "Change the per-instance colors while keeping the template unchanged.",
+      "Increase the instance count and adjust the grid loops together; inspect how the shared geometry scales to a larger field."
+    ],
+    "related": [
+      "Instanced",
+      "Instanced.setInstancePosition",
+      "Instanced.updateInstances"
+    ]
+  }
+}

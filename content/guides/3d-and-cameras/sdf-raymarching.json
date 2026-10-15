@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "sdf-raymarching",
+  "title": "SDF trees and GPU raymarching",
+  "group": "3D and cameras",
+  "summary": "Build signed distance geometry with composition operations and render it through raymarching.",
+  "sections": [
+    {
+      "id": "distance-functions-and-csg",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Distance functions and CSG"
+        },
+        {
+          "type": "paragraph",
+          "text": "An SDFNode describes a distance-field expression and conservative bounds. Primitive nodes include sphere, box, cylinder, torus, capsule and octahedron. Node methods build union, subtraction, intersection, translation, scaling, rotation, repetition, mirror, rounding, shelling, twist and morph compositions. compile emits WGSL for a supplied position variable."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-sdfscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [SDFNode](/api-entities-sdf#sdfnode), [SDFEntity3D](/api-entities-sdf#sdfentity3d), [SDFVolume](/api-entities-primitives-3d#sdfvolume), [SDFMorph3D](/api-entities-sdf#sdfmorph3d)."
+        }
+      ]
+    },
+    {
+      "id": "bounds-and-step-safety",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Bounds and step safety"
+        },
+        {
+          "type": "paragraph",
+          "text": "SDFEntity3D wraps a root node and a bounding volume. Bounds must enclose the complete deformed field; twist, repetition and blends can expand the visible shape. Incorrect bounds can clip a mathematically valid surface before marching starts. Domain distortion may also weaken the conservative distance estimate and require more careful step limits."
+        },
+        {
+          "type": "paragraph",
+          "text": "RaymarchedPlot3D is the current exported class name, although its source filename is RaymarchPlot3D.ts. It evaluates an equation expressed in the supported WGSL contract. Do not pass an arbitrary JavaScript callback unless the class explicitly supports that representation."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [RaymarchedPlot3D](/api-entities-composites-plotting#raymarchplot3d), [RaymarchPlot3DOptions](/api-entities-composites-plotting#raymarchplot3d), [SDFFragment](/api-components-fragment#sdffragment)."
+        }
+      ]
+    },
+    {
+      "id": "raymarching-versus-path-tracing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Raymarching versus path tracing"
+        },
+        {
+          "type": "paragraph",
+          "text": "Raymarching finds surfaces by repeated distance evaluation. Monte Carlo path tracing follows light paths through a geometry acceleration structure. A raymarched SDF does not automatically participate in every mesh/BVH path. Validate the particular entity and pipeline flags when combining the two techniques."
+        }
+      ]
+    }
+  ]
+}

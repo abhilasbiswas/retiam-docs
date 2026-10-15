@@ -1,0 +1,156 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-architecture",
+  "title": "Retiam Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [Renderer](/api-render#renderer), [Camera](/api-camera#camera), [Entity](/api-core-entity#entity), [Shapes](/api-render-pipelines#pipeline), [Circle](/api-entities-primitives-2d#circle), [SVG](/api-entities-composites-svg#svg), [Text](/api-entities-composites-text#text), [Animation](/api-animation#animation), [Animator](/api-animation#animator), [Create](/api-animation-creation#create), [FadeIn](/api-animation#fadein), [Group](/api-core#group), [Compute](/api-compute#compute), [Pipeline](/api-render-pipelines#pipeline), [Path](/api-entities-primitives-2d#path), [Recorder](/api-recorder#recorder)."
+        }
+      ]
+    },
+    {
+      "id": "overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam is a high-performance, WebGPU-powered animation engine designed for creating programmatic, mathematical, and cinematic animations. It draws inspiration from Manim but leverages the power of modern GPUs via WebGPU for real-time rendering and complex compute tasks."
+        }
+      ]
+    },
+    {
+      "id": "core-components",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Core Components"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. Scene & Render Loop"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Scene` class is the central coordinator. It manages the `Renderer`, `Camera`, and the collection of `Entity` objects."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Renderer**: Handles WebGPU device initialization, pipeline management, and the frame loop.",
+            "**Camera**: Manages projections and view matrices."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. Entity System"
+        },
+        {
+          "type": "paragraph",
+          "text": "Everything rendered in Retiam is an `Entity`."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Base Entity**: Provides transform (position, rotation, scale) and visibility state.",
+            "**2D Entities**: Shapes (Circle, Square), Paths (SVG), Text (SDF and Canvas-based), and Math (LaTeX via KaTeX/MathJax).",
+            "**3D Entities**: Geometry3D components."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. Animation System"
+        },
+        {
+          "type": "paragraph",
+          "text": "Animations are handled by `Animator` and `Animation` classes."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Atomic Animations**: Basic property transitions (e.g., `Create`, `FadeIn`, `MoveTo`).",
+            "**Group Animations**: Sequencing and parallel execution of multiple animations.",
+            "**Timeline**: Manages the playback state and time-based progression."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4. Compute Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam uses WebGPU compute shaders for heavy lifting, such as:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Path tessellation.",
+            "Large-scale particle systems.",
+            "Physics simulations."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5. Recorder"
+        },
+        {
+          "type": "paragraph",
+          "text": "The engine includes a robust recording system that can export animations to high-quality video formats (MP4, WebM) using `mp4-muxer` and `webm-muxer`."
+        }
+      ]
+    },
+    {
+      "id": "technology-stack",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Technology Stack"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Language**: TypeScript",
+            "**Graphics API**: WebGPU",
+            "**Build Tool**: Vite",
+            "**Math/Layout**: KaTeX, MathJax, Earcut (for triangulation)",
+            "**Video Export**: WebCodecs, FFmpeg (optional/server-based)"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "camera_anim/camera_anim": {
+    "description": "Move, aim, orbit and dolly-zoom around a rotating arrangement of shapes.",
+    "walkthrough": [
+      "The objects keep rotating through a scene updater while awaited camera animations change the viewpoint. Watch the satellite first: CameraLookAt changes the viewing direction without moving that subject.",
+      "CameraOrbit then changes the viewpoint around the core. CameraDollyZoom varies field of view and camera distance together, keeping the focal subject comparable in size while the surrounding depth changes. The orbit controller is installed after the scripted sequence."
+    ],
+    "experiments": [
+      "Change the narrow dolly-zoom target from 10 to 25 degrees, keeping the same core target. Compare the background pillars before and after the move."
+    ]
+  },
+  "camera_anim/fix_to_camera": {
+    "description": "Follow orbiting planets while their labels continue facing the camera.",
+    "walkthrough": [
+      "Each planet and its label are siblings inside a system entity. The orbital pivot moves that system, while the spin updater rotates only the planet mesh. The label therefore follows the orbit without inheriting the planet’s spin.",
+      "alwaysFaceCamera makes the label a billboard in world space. It is not a fixed screen overlay: orbiting the camera still changes the label’s position in the image. TracePath records the systems’ moving positions."
+    ],
+    "experiments": [
+      "Temporarily attach a label as a child of its planet instead of the system, then rotate the planet. Compare inherited rotation with billboard orientation."
+    ]
+  },
+  "charts/chart_gallery_demo": {
+    "description": "Compare bar, donut and area charts, then watch a bar dataset change.",
+    "walkthrough": [
+      "The three charts own different visual encodings: bar height represents revenue, donut angle represents workload share, and the area chart follows throughput samples. The surrounding rectangles and titles are scene entities rather than chart data.",
+      "animateIn introduces the charts together. A later animateData call changes the bars after a pause, so you can follow existing categories rather than interpreting a replacement screenshot. Camera2DController lets you inspect this large composition."
+    ],
+    "experiments": [
+      "Change one value in the second bar dataset, leaving its label unchanged. Watch which bar moves and whether the chart rescales its value axis."
+    ]
+  },
+  "compute_shaders/custom_shader": {
+    "description": "Animate a fragment shader with a typed uniform buffer.",
+    "walkthrough": [
+      "Shader draws a rectangle whose fragment logic computes color for each pixel. The palette helper is supplied as userFunctions; despite this file’s compute-shaders folder, the main visible effect is fragment shading.",
+      "UniformSchema describes the time and resolution fields, and UniformBufferData packs their CPU values before queue.writeBuffer uploads them. The updater advances time and rotates the shader entity independently of its pixel pattern."
+    ],
+    "experiments": [
+      "Stop updating the time uniform while keeping the rotation. The rectangle should continue turning while the pattern freezes."
+    ]
+  },
+  "compute_shaders/game_of_life": {
+    "description": "Evolve a cellular automaton in two GPU storage buffers.",
+    "walkthrough": [
+      "The initial random grid is uploaded once. A compute dispatch reads one grid and writes the next; the ping value selects which buffer is the source on the following step. A Shader turns cell values into the displayed image.",
+      "The initial compute pass prepares data before rendering starts. The default 4096-by-4096 grid is substantial: reduce both dimensions together when investigating the rules or running on a smaller GPU."
+    ],
+    "experiments": [
+      "Set GRID_WIDTH and GRID_HEIGHT to 256 and start with a small deterministic pattern instead of random cells. Follow its evolution before increasing the grid size."
+    ]
+  },
+  "compute_shaders/gpu_perlin_marching_squares_3d": {
+    "description": "Compare a noise texture, a contour texture and a separately generated extruded mesh.",
+    "walkthrough": [
+      "Two compute passes produce the noise image and marching-squares contours in render targets. The sprites expose those intermediate textures so you can inspect the data rather than only its final presentation.",
+      "The center mesh is rebuilt by a CPU helper that evaluates its own height samples. It is not a triangle mesh extracted from the GPU contour texture. Their shared time parameter makes the three panels comparable while their implementations remain separate."
+    ],
+    "experiments": [
+      "Change isoThreshold in the GPU parameter upload and compare the contour panel with the center mesh. Then change the CPU helper’s threshold to see the distinction."
+    ]
+  },
+  "compute_shaders/instance_gpu": {
+    "description": "Use compute kernels to update instances of a mesh, a circle and a custom shader.",
+    "walkthrough": [
+      "Each Instanced group shares one base entity across many instance records. The compute kernels write those records through getInstanceGPUBuffer rather than creating a separate JavaScript entity for every visible item.",
+      "prepare allocates the instance storage before the kernels bind it. A small time buffer is updated each frame, and dispatch workgroup counts cover the instance count. The mesh, vector and shader groups demonstrate the same instance mechanism with different renderers."
+    ],
+    "experiments": [
+      "Reduce instanceCount to a few dozen and change the position calculation in one kernel. Confirm only that group changes before testing a larger count."
+    ]
+  },
+  "compute_shaders/interactive_shader": {
+    "description": "Move the pointer to change a shader’s inputs.",
+    "walkthrough": [
+      "The shader’s WGSL helpers compute the visual pattern, while UniformSchema describes resolution, time and mouse coordinates. The pointer handler converts browser coordinates into shader-space offsets before uploading the buffer.",
+      "The scene updater maintains animation independently of pointer events. Because the conversion uses the canvas bounds, resizing the preview changes the input mapping; raw clientX and clientY would not describe the same point after a resize."
+    ],
+    "experiments": [
+      "Replace the uploaded mouse offset with [0, 0]. Compare the centered response with pointer-driven motion, then restore the bounds-based conversion."
+    ]
+  },
+  "compute_shaders/intermediate_render_compute_demo": {
+    "description": "Capture a moving brush, process its texture and display the result on a rotating screen.",
+    "walkthrough": [
+      "RenderTarget captures the brush into a persistent offscreen image. A compute kernel samples that intermediate texture and writes a separate ComputeStorageTexture, which the screen Sprite uses as its image.",
+      "The brush motion, texture processing and TV transform are distinct updates. Changing the casing rotation does not change the painted image; changing the compute shader affects the image without rebuilding the casing mesh."
+    ],
+    "experiments": [
+      "Skip the compute output and show the captured texture directly in the Sprite. Compare the unprocessed brush trail with the processed version."
+    ]
+  },
+  "compute_shaders/n_body": {
+    "description": "Watch CPU-integrated gravitational bodies leave motion trails.",
+    "walkthrough": [
+      "Each body stores a circle, mass and velocity. The scene updater calculates pairwise forces, changes velocity and then advances position. This source performs those calculations in JavaScript despite its compute-shaders directory.",
+      "TracePath samples each circle’s movement. The integration step clamps elapsed time, so a long frame does not produce an arbitrarily large jump. This is a demonstration integrator, not a guarantee of long-term energy conservation."
+    ],
+    "experiments": [
+      "Start with two bodies and lower the timestep multiplier. Compare orbit stability and trail shape before increasing the body count."
+    ]
+  },
+  "compute_shaders/shader_uniforms": {
+    "description": "Pack and upload the data that a fragment shader reads.",
+    "walkthrough": [
+      "The WGSL struct defines the buffer layout. The CPU uses a larger Float32Array allocation to respect field offsets and alignment, then binds that GPU buffer to the Shader entity.",
+      "The updater changes the packed values and calls queue.writeBuffer. A JavaScript array assignment alone would leave the shader reading its previous GPU contents. Keep CPU indices and WGSL field alignment consistent when adding a field."
+    ],
+    "experiments": [
+      "Comment out queue.writeBuffer while leaving the array assignments active. The displayed pattern should stop responding to the new CPU values."
+    ]
+  },
+  "features/arrow_demo": {
+    "description": "Compare arrow tips, curved shafts and live endpoint tracking in two and three dimensions.",
+    "walkthrough": [
+      "The initial arrows differ in their shaft and head options. setT reveals the existing arrows; it does not change the underlying endpoint definitions. The two-dimensional group is introduced before the spatial group.",
+      "A separate tracking arrow calls putStartAndEndOn as the target sphere moves. That update keeps both the shaft and tip connected to the target, whereas moving the arrow entity alone would move the whole arrow rigidly."
+    ],
+    "experiments": [
+      "Hold the target sphere still and change one arrow-head option. Then restore its motion and compare styling changes with endpoint updates."
+    ]
+  },
+  "features/audio_demo": {
+    "description": "Connect generated sound, timeline clips and an on-screen spectrum.",
+    "walkthrough": [
+      "AudioPlugin supplies the audio context and timeline integration. The source synthesizes audio buffers, registers clips and attaches an AudioListenerComponent to the camera. The analyzer provides frequency values for the equalizer bars.",
+      "The circle animation and timed sounds share the scene timeline, while the bars read analyzed audio during updates. Browser audio activation may require a click inside the preview before sound is audible."
+    ],
+    "experiments": [
+      "Change one synthesized tone’s frequency and listen after activating the preview. Compare the spectrum bars while keeping the circle animation unchanged."
+    ]
+  },
+  "features/box_layout_demo": {
+    "description": "Arrange a heading, shapes and equations using nested bounding-box layouts.",
+    "walkthrough": [
+      "VBox groups each column vertically, then HBox places the columns beside one another. A final VBox combines that row with the header. The layout therefore follows content bounds instead of a collection of unrelated position constants.",
+      "Camera.frame fits the completed hierarchy before the reveal sequence. Write introduces typography, while Create introduces geometry. Changing a formula’s width can affect the layout even when every gap remains unchanged."
+    ],
+    "experiments": [
+      "Replace one equation with a longer expression and rebuild the scene. Inspect column alignment and camera framing before adjusting the gaps."
+    ]
+  },
+  "features/camera2d_demo": {
+    "description": "Follow a moving target with camera bounds, lookahead and a deadzone.",
+    "walkthrough": [
+      "The controller is given a bounded world and a player target. The decorative grid makes camera movement visible, while the figure-eight trajectory supplies changes in direction that reveal how following responds.",
+      "A deadzone permits some target motion without moving the camera. Lookahead, shake, bounds and zoom shortcuts affect the observer rather than the player’s path. Click the preview before using its keyboard shortcuts."
+    ],
+    "experiments": [
+      "Set the follow deadzone width and height to zero. Compare how often the background moves while keeping the target trajectory unchanged."
+    ]
+  },
+  "features/dynamic_synth_demo": {
+    "description": "Generate tone buffers and connect their samples to visible motion.",
+    "walkthrough": [
+      "AudioPlugin plays procedurally generated samples. The source builds a sample array and visual bars, then updates the samples and bar heights from time-dependent wave calculations. No prerecorded music file is needed for this experiment.",
+      "The orb’s awaited scale animations supply a separate visual rhythm. Audio activation and sample modulation are different concerns: a running canvas can remain silent until the browser permits audio playback."
+    ],
+    "experiments": [
+      "Activate audio in the preview, then change one harmonic frequency. Compare the resulting sound and sample-driven bars without changing the orb’s scale sequence."
+    ]
+  },
+  "features/feature_calculus": {
+    "description": "Move from a Riemann approximation to area shading, a tangent and coordinate projections.",
+    "walkthrough": [
+      "The NumberPlane plots a quadratic, then builds midpoint rectangles over the chosen interval. Those rectangles show sampled heights and finite widths. Their fade into an area entity changes the representation rather than proving that the discrete sum is exact.",
+      "The tangent and projection lines refer to a selected point on the same curve. c2p converts mathematical coordinates into scene coordinates, keeping the point and its auxiliary geometry aligned with the axes."
+    ],
+    "experiments": [
+      "Reduce dx in getRiemannRectangles and compare the approximation with the filled area. Move the tangent’s x value while leaving the integration interval unchanged."
+    ]
+  },
+  "features/feature_complex_plane": {
+    "description": "Deform a complex grid and its trajectory through the same mapping.",
+    "walkthrough": [
+      "ComplexPlane gives the real and imaginary coordinates a visible grid. The trajectory combines two complex rotations, so its shape differs from a single circle before any deformation occurs.",
+      "A conformal field defines the mapping and HomotopyAnimation applies it to both plane and curve. Deforming only the curve would hide how the surrounding coordinates changed."
+    ],
+    "experiments": [
+      "Lower the coefficient 0.25 in the conformal expression. Compare how far the grid and trajectory bend away from their undeformed positions."
+    ]
+  }
+}

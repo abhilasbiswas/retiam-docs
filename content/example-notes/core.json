@@ -1,0 +1,80 @@
+{
+  "core/always_options_demo": {
+    "walkthrough": [
+      "run creates three groups of illustrations and a DOM control panel. The orbital system updates its satellite through an entity task. A scene pre tracker samples before that entity moves, and a post tracker samples afterward, making the one-frame ordering difference visible.",
+      "The rate rings use different update intervals. Each callback receives accumulated dt when it actually runs, so a lower callback frequency can still integrate the same elapsed time if the formula uses dt. Moving by a fixed amount per callback would instead slow the motion with fewer ticks.",
+      "The lifecycle group demonstrates task handles, conditional execution, delay and bounded repetition. Pausing a handle retains it for resume; unregistering removes its work. Returning false or using an abort condition ends the owned task rather than silently leaving another updater running.",
+      "Telemetry is updated at 100 ms intervals to reduce DOM work while the visual scene can advance more often. The first callback argument is absolute time, the second is dt; a misleading variable name cannot change that calling convention.",
+      "When porting the scene, own the control panel, controller and native subscriptions together and reset its counters/AbortController on replay. Continuous frame scheduling is a separate composer decision from registering tasks, so verify idle behavior instead of relying on a task callback to run before a frame has been requested."
+    ],
+    "experiments": [
+      "Increase satelliteSpeed and compare the pre/post tracker positions; the ordering difference should grow with per-frame movement.",
+      "Change a ring interval from 100 to 500 ms while retaining dt-based integration; compare cadence and elapsed-angle correctness.",
+      "Pause, resume and unregister one handle in sequence, then inspect which transitions retain its state."
+    ],
+    "related": [
+      "Scene.always",
+      "Entity.always",
+      "AlwaysOptions",
+      "AlwaysHandle",
+      "AlwaysContext"
+    ],
+    "description": "Three systems compare update phases, throttled dt accumulation and task lifecycle controls."
+  },
+  "core/fps_play_options_demo": {
+    "walkthrough": [
+      "Start with the orbiting dot in each of the four lanes. Every lane completes a 2,400 ms cycle, but its CustomAnimation callback is sampled differently: the default lane uses normal updates, the next uses fps: 24, the third applies fps: 12, and the fourth uses interval: 150 ms. These choices affect animation updates; they do not change the browser display refresh rate or the requested video frame rate.",
+      "runAnimationCycle first resets the actors and telemetry, then creates four animations and passes them to one Scene.play call. Their normalized progress drives a full circle and a vertical slider motion. The shared linear rate function makes the stepping easier to compare than an accelerating easing curve would.",
+      "The examples deliberately use several option entry points. The 24 fps value is supplied to the constructor; the 12 fps value is applied with Animation.applyOptions. The interval lane supplies its option in construction and applies it again. When adapting this example, choose one entry point so the source of a setting stays clear.",
+      "The counters count callback executions, not GPU frames. An always callback keeps rendering active, while a separate 80 ms updater refreshes the DOM telemetry. A smooth camera or UI can therefore coexist with an intentionally stepped object. The default lane label says 60 FPS, but the actual live update cadence depends on the host.",
+      "The isPlaying guard prevents two cycles from being launched at once, and finally clears it even if play rejects during reset. Some rotations use a fixed angle per callback, unlike the orbit positions computed from progress; changing sampling changes their accumulated rotation. Prefer a progress-based orientation when you need identical endpoints at several sampling rates."
+    ],
+    "experiments": [
+      "Change only duration from 2400 to 4800. The stepped lanes should take twice as long, while their sampling intervals remain unchanged.",
+      "Replace the 12 fps lane’s incremental rotateZ call with a rotation calculated from progress. Compare its final orientation with the 24 fps lane after several replays."
+    ],
+    "related": [
+      "AnimOptions",
+      "PlayOptions",
+      "Scene.play",
+      "Rate"
+    ]
+  },
+  "interaction/interactive_bezier": {
+    "walkthrough": [
+      "Five control points define a degree-four Bézier curve. The thin polygon reveals the inputs; the wider cyan stroke shows the curve produced from them.",
+      "Each handle combines a ring, a dot and an `InteractionComponent`. Hover and drag callbacks update the appearance, while dragging also changes the shared point array.",
+      "The curve and control polygon are rebuilt from the updated points, then the scene invalidates its frame. Updating the displayed handles alone would leave the actual curve unchanged."
+    ],
+    "experiments": [
+      "Drag an interior control point across the others and compare the curve with the control polygon.",
+      "Drag an endpoint, then inspect how its role differs from an interior point.",
+      "Change the curve’s segment count in the source and inspect a tight bend."
+    ],
+    "related": [
+      "Bezier",
+      "Bezier.setPoints",
+      "InteractionComponent",
+      "Line.setVertices",
+      "Camera2DController"
+    ]
+  },
+  "physics/physics2d_rapier": {
+    "walkthrough": [
+      "`Physics2D` installs a Rapier-backed world with downward gravity. The floor and walls are static bodies; the circles are dynamic bodies that the simulation moves.",
+      "The dynamic body options choose restitution, friction and continuous collision detection. The visible circles have varying sizes, so the same contact settings produce a mixture of collisions.",
+      "The scene requests continuous updates. Gravity and collisions need simulation steps even when there is no queued animation."
+    ],
+    "experiments": [
+      "Set restitution closer to zero, then restart and compare how quickly the motion settles.",
+      "Change gravity without changing the initial positions. Watch the time to the first collision.",
+      "Reduce the number of circles to inspect individual contacts before testing a dense scene."
+    ],
+    "related": [
+      "Physics2D",
+      "Physics2D.add",
+      "Circle",
+      "AlwaysOptions"
+    ]
+  }
+}

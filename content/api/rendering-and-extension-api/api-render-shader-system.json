@@ -1,0 +1,940 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-render-shader-system",
+  "title": "render / shader_system API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chunkregistry",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ChunkRegistry"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/ChunkRegistry.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/ChunkRegistry.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ChunkRegistry.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ChunkRegistry",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ChunkRegistry {\n    static include(pattern: string): void;\n    static register(name: string, wgsl: string): void;\n    static get(name: string): string;\n    static clear(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ChunkRegistry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static include(pattern: string): void",
+                    "—",
+                    "Includes .wgsl files into the active registry based on the path pattern. Supported patterns: 1. Specific file: `include(\"math\")` or `include(\"math/sdf\")` 2. Folder only: `include(\"math/*\")` 3. Folder & subfolders: `include(\"math/**\")` 4. All chunks anywhere: `include(\"**\")` [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ChunkRegistry.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static register(name: string, wgsl: string): void",
+                    "—",
+                    "Registers a WGSL snippet to be included in other shaders. [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ChunkRegistry.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static get(name: string): string",
+                    "—",
+                    "Retrieves a chunk by name. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ChunkRegistry.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static clear(): void",
+                    "—",
+                    "Clears all actively registered chunks. [Source line 124](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ChunkRegistry.ts#L124)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`[ChunkRegistry] Chunk not found in active registry: \"${name}\". Did you forget to include it?`)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "domains",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Domains"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/Domains.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/Domains.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/Domains.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ShaderDomain",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Domains",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ShaderDomain {\n    name: string;\n    template: string;\n}\nexport declare const Domains: {\n    CUSTOM_UNLIT: ShaderDomain;\n    COMMON_2D: ShaderDomain;\n    TRIANGULATED_PATH_MEGADRAW: ShaderDomain;\n    STENCIL_OPS: ShaderDomain;\n    PATH_STROKE: ShaderDomain;\n    MODEL3D: ShaderDomain;\n};"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ShaderDomain` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "name: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/Domains.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "template: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/Domains.ts#L7)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pipelinecache",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PipelineCache"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/PipelineCache.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/PipelineCache.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RenderStateConfig",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PipelineCache",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface RenderStateConfig {\n    sampleCount: number;\n    vertex_entry?: string;\n    fragment_entry?: string;\n    topology?: GPUPrimitiveTopology;\n    cullMode?: GPUCullMode;\n    depthStencil?: GPUDepthStencilState;\n    blend?: GPUBlendState;\n    writeMask?: GPUColorWriteFlags;\n    atoc?: boolean;\n}\nexport declare class PipelineCache {\n    static getPipeline(device: GPUDevice, wgslSource: string, vertexLayouts: GPUVertexBufferLayout[], bindGroupLayouts: (GPUBindGroupLayout | null)[], config: RenderStateConfig): GPURenderPipeline;\n    static getComputePipeline(device: GPUDevice, wgslSource: string, bindGroupLayouts: GPUBindGroupLayout[]): GPUComputePipeline;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RenderStateConfig` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "sampleCount: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertex_entry?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fragment_entry?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "topology?: GPUPrimitiveTopology;",
+                    "—",
+                    "Optional record/option field with declared type `GPUPrimitiveTopology`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cullMode?: GPUCullMode;",
+                    "—",
+                    "Optional record/option field with declared type `GPUCullMode`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "depthStencil?: GPUDepthStencilState;",
+                    "—",
+                    "Optional record/option field with declared type `GPUDepthStencilState`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "blend?: GPUBlendState;",
+                    "—",
+                    "Optional record/option field with declared type `GPUBlendState`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "writeMask?: GPUColorWriteFlags;",
+                    "—",
+                    "Optional record/option field with declared type `GPUColorWriteFlags`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "atoc?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PipelineCache` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static getPipeline(\n        device: GPUDevice,\n        wgslSource: string,\n        vertexLayouts: GPUVertexBufferLayout[],\n        bindGroupLayouts: (GPUBindGroupLayout | null)[],\n        config: RenderStateConfig\n    ): GPURenderPipeline",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.cyrb53`, `this.cache.has`, `this.cache.get`, `device.createShaderModule`, `device.createPipelineLayout`, `device.createRenderPipeline`, `navigator.gpu?.getPreferredCanvasFormat`, `this.cache.set`; return paths including `this.cache.get(hashKey)!`, `pipeline`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getComputePipeline(\n        device: GPUDevice,\n        wgslSource: string,\n        bindGroupLayouts: GPUBindGroupLayout[]\n    ): GPUComputePipeline",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.cyrb53`, `this.computeCache.has`, `this.computeCache.get`, `device.createShaderModule`, `device.createPipelineLayout`, `device.createComputePipeline`, `this.computeCache.set`; return paths including `this.computeCache.get(hashKey)!`, `pipeline`. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L108)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "config.topology || 'triangle-list'",
+                    "[Line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L33)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.cullMode || 'none'",
+                    "[Line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L34)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.sampleCount || 1",
+                    "[Line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L35)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.atoc || false",
+                    "[Line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L36)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.depthStencil || StencilState.default",
+                    "[Line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L38)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.blend || { color: { operation: 'add', srcFactor: 'one', dstFactor: 'one-minus-src-alpha' }, alpha: { operation: 'add', srcFactor: 'one', dstFactor: 'one-minus-src-alpha' } }",
+                    "[Line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L41)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.vertex_entry || 'vs'",
+                    "[Line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L79)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.fragment_entry || 'fs'",
+                    "[Line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L84)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PipelineCache.cyrb53: private static cyrb53(str: string, seed = 0): string",
+                    "Body operations (including nested callbacks): calls to `str.charCodeAt`, `(4294967296 * (2097151 & h2) + (h1 >>> 0)).toString`; return paths including `(4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16)`; 1 explicit loop.",
+                    "[Line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts#L144)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shaderbuilder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ShaderBuilder"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/ShaderBuilder.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/ShaderBuilder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ResourceBinding",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ShaderBuilder",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ResourceBinding {\n    name: string;\n    wgslType: string;\n    layoutEntry: GPUBindGroupLayoutEntry;\n    schema?: UniformSchema;\n}\nexport declare class ShaderBuilder {\n    vertexSchema?: VertexSchema;\n    instanceSchema?: VertexSchema;\n    varyingSchema?: VaryingSchema;\n    computeLogic: string;\n    workgroupSize: [\n        number,\n        number,\n        number\n    ];\n    vertexLogic: string;\n    fragmentLogic: string;\n    injections: Map<string, string>;\n    includes: Set<string>;\n    headers: string[];\n    defines: Record<string, boolean | number | string>;\n    customResources: ResourceBinding[];\n    wgsl: string;\n    setVertexSchema(schema: VertexSchema): void;\n    setVertexSchema(attributes: Record<string, DataType>): void;\n    setInstanceSchema(schema: VertexSchema): void;\n    setInstanceSchema(attributes: Record<string, DataType>): void;\n    setVaryingSchema(schema: VaryingSchema): void;\n    setVaryingSchema(attributes: Record<string, DataType | VaryingMemberConfig>): void;\n    setComputeMain(code: string, workgroupSize?: [\n        number,\n        number,\n        number\n    ]): void;\n    setVertexMain(code: string): void;\n    setFragmentMain(code: string): void;\n    inject(slot: string, code: string): void;\n    include(chunkName: string): void;\n    addHeader(code: string): void;\n    define(key: string, value: boolean | number | string): void;\n    addUniformStruct(name: string, schema: UniformSchema, visibility?: GPUShaderStageFlags): void;\n    addTexture(name: string, sampleType?: GPUTextureSampleType, viewDimension?: GPUTextureViewDimension, visibility?: GPUShaderStageFlags): void;\n    addSampler(name: string, type?: GPUSamplerBindingType, visibility?: GPUShaderStageFlags): void;\n    addStorageBuffer(name: string, wgslType: string, access?: 'read' | 'read_write', visibility?: GPUShaderStageFlags): void;\n    addUniformBuffer(name: string, wgslType: string, visibility?: GPUShaderStageFlags): void;\n    addExternalTexture(name: string, visibility?: GPUShaderStageFlags): void;\n    addStorageTexture(name: string, format?: GPUTextureFormat, access?: 'write' | 'read' | 'read_write', viewDimension?: GPUTextureViewDimension, visibility?: GPUShaderStageFlags): void;\n    getWGSLShader(template: string): string;\n    getVertexLayout(): GPUVertexBufferLayout[];\n    getBindGroupLayoutEntries(): GPUBindGroupLayoutEntry[];\n    getBindGroupLayout(device: GPUDevice, label?: string): GPUBindGroupLayout | null;\n    getPipeline(device: GPUDevice, template: string, render_state: RenderStateConfig): GPURenderPipeline;\n    compile(template: string): string;\n    compileCompute(template?: string): string;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ResourceBinding` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "name: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "wgslType: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "layoutEntry: GPUBindGroupLayoutEntry;",
+                    "—",
+                    "Required record/option field with declared type `GPUBindGroupLayoutEntry`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "schema?: UniformSchema;",
+                    "—",
+                    "Optional record/option field with declared type `UniformSchema`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L17)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ShaderBuilder` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public vertexSchema?: VertexSchema",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public instanceSchema?: VertexSchema",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public varyingSchema?: VaryingSchema",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeLogic: string",
+                    "''",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public workgroupSize: [number, number, number]",
+                    "[64, 1, 1]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertexLogic: string",
+                    "''",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fragmentLogic: string",
+                    "''",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public injections",
+                    "new Map<string, string>()",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public includes",
+                    "new Set<string>()",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public headers: string[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public defines: Record<string, boolean | number | string>",
+                    "{}",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customResources: ResourceBinding[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public wgsl: string",
+                    "''",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertexSchema(schema: VertexSchema): void;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertexSchema(attributes: Record<string, DataType>): void;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertexSchema(schema: VertexSchema | Record<string, DataType>): void",
+                    "—",
+                    "Implementation: `if (schema instanceof VertexSchema) { this.vertexSchema = schema; } else { this.vertexSchema = new VertexSchema(schema, 'vertex'); }`. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstanceSchema(schema: VertexSchema): void;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstanceSchema(attributes: Record<string, DataType>): void;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setInstanceSchema(schema: VertexSchema | Record<string, DataType>): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.instanceSchema`; construction of `VertexSchema`. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVaryingSchema(schema: VaryingSchema): void;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVaryingSchema(attributes: Record<string, DataType | VaryingMemberConfig>): void;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVaryingSchema(schema: VaryingSchema | Record<string, DataType | VaryingMemberConfig>)",
+                    "—",
+                    "Implementation: `if (schema instanceof VaryingSchema) { this.varyingSchema = schema; } else { this.varyingSchema = new VaryingSchema(schema); }`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setComputeMain(code: string, workgroupSize: [number, number, number] = [64, 1, 1])",
+                    "—",
+                    "Implementation: `this.computeLogic = code; this.workgroupSize = workgroupSize;`. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVertexMain(code: string)",
+                    "—",
+                    "Implementation: `this.vertexLogic = code;`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFragmentMain(code: string)",
+                    "—",
+                    "Implementation: `this.fragmentLogic = code;`. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public inject(slot: string, code: string)",
+                    "—",
+                    "Implementation: `this.injections.set(slot, this.injections.has(slot) ? this.injections.get(slot) + '\\n' + code : code);`. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public include(chunkName: string)",
+                    "—",
+                    "Implementation: `this.includes.add(chunkName);`. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addHeader(code: string)",
+                    "—",
+                    "Implementation: `this.headers.push(code);`. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public define(key: string, value: boolean | number | string)",
+                    "—",
+                    "Implementation: `this.defines[key] = value;`. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addUniformStruct(name: string, schema: UniformSchema, visibility: GPUShaderStageFlags = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customResources.push`. [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addTexture(name: string, sampleType: GPUTextureSampleType = 'float', viewDimension: GPUTextureViewDimension = '2d', visibility: GPUShaderStageFlags = GPUShaderStage.FRAGMENT)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customResources.push`. [Source line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L114)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addSampler(name: string, type: GPUSamplerBindingType = 'filtering', visibility: GPUShaderStageFlags = GPUShaderStage.FRAGMENT)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customResources.push`. [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addStorageBuffer(name: string, wgslType: string, access: 'read' | 'read_write' = 'read', visibility: GPUShaderStageFlags = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customResources.push`. [Source line 132](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L132)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addUniformBuffer(name: string, wgslType: string, visibility: GPUShaderStageFlags = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT)",
+                    "—",
+                    "Implementation: `const bindingIndex = this.customResources.length; this.customResources.push({ name, wgslType, layoutEntry: { binding: bindingIndex, visibility, buffer: { type: 'uniform' } } });`. [Source line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L144)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addExternalTexture(name: string, visibility: GPUShaderStageFlags = GPUShaderStage.FRAGMENT)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customResources.push`. [Source line 152](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L152)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addStorageTexture(\n        name: string,\n        format: GPUTextureFormat = 'rgba8unorm',\n        access: 'write' | 'read' | 'read_write' = 'write',\n        viewDimension: GPUTextureViewDimension = '2d',\n        visibility: GPUShaderStageFlags = GPUShaderStage.COMPUTE\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customResources.push`. [Source line 161](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L161)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getWGSLShader(template: string): string",
+                    "—",
+                    "Implementation: `this.wgsl = this.compile(template); return this.wgsl;`. [Source line 189](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L189)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getVertexLayout(): GPUVertexBufferLayout[]",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `vertexLayouts.push`; return paths including `vertexLayouts`. [Source line 194](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L194)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBindGroupLayoutEntries(): GPUBindGroupLayoutEntry[]",
+                    "—",
+                    "Implementation: `return this.customResources.map(res => res.layoutEntry);`. [Source line 201](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L201)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBindGroupLayout(device: GPUDevice, label: string = \"Builder_Layout\"): GPUBindGroupLayout | null",
+                    "—",
+                    "Implementation: `const entries = this.getBindGroupLayoutEntries(); if (entries.length === 0) return null; return device.createBindGroupLayout({ label, entries });`. [Source line 205](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L205)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPipeline(device: GPUDevice, template: string, render_state: RenderStateConfig): GPURenderPipeline",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.getWGSLShader`, `this.getVertexLayout`, `this.getBindGroupLayout`, `bindGroupLayouts.push`, `PipelineCache.getPipeline`; return paths including `pipeline`. [Source line 211](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L211)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public compile(template: string): string",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.wgsl`; construction of `Set`, `RegExp`; calls to `printedStructs.has`, `res.schema.generateWGSL`, `printedStructs.add`, `this.define`, `wgsl.replace`, `this.resolveIncludes`, `this.evaluateMacros`, `this.interpolateVariables`; return paths including `wgsl`; 4 explicit loops. [Source line 236](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L236)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public compileCompute(template: string = \"\"): string",
+                    "—",
+                    "Compiles a Compute Shader. Maps resources to @group(0). Param: template Optional template string. If empty, a default @compute shell is created. [Source line 305](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L305)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ShaderBuilder.resolveIncludes: private resolveIncludes(source: string, visited = new Set<string>()): string",
+                    "Body operations (including nested callbacks): construction of `Error`; calls to `source.replace`, `visited.has`, `ChunkRegistry.get`, `visited.add`, `this.resolveIncludes`, `visited.delete`; return paths including `resolvedChunk`; rejection paths a template-literal expression (see source), a template-literal expression (see source).",
+                    "[Line 375](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L375)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ShaderBuilder.evaluateMacros: private evaluateMacros(source: string): string",
+                    "Body operations (including nested callbacks): calls to `source.split`, `line.trim`, `trimmed.startsWith`, `this.evalCond`, `trimmed.substring(4).trim`, `trimmed.substring`, `stack.push`, `trimmed.substring(6).trim` and additional helpers; return paths including `output.join('\\n')`; 1 explicit loop.",
+                    "[Line 394](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L394)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ShaderBuilder.interpolateVariables: private interpolateVariables(source: string): string",
+                    "Implementation: `return source.replace(/\\$\\{([^}]+)\\}/g, (match, key) => { const trimmedKey = key.trim(); if (this.defines[trimmedKey] !== undefined) { return String(this.defines[trimmedKey]); } return match; });`.",
+                    "[Line 433](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L433)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ShaderBuilder.evalCond: private evalCond(condition: string): boolean",
+                    "Body operations (including nested callbacks): calls to `condition.startsWith`, `condition.substring(1).trim`, `condition.substring`, `value.trim`; return paths including `negate ? !isTruthy : isTruthy`.",
+                    "[Line 444](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts#L444)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`Circular dependency: \"${chunkName}\"`)",
+                "new Error(`Chunk not found: \"${chunkName}\"`)"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

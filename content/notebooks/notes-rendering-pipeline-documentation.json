@@ -1,0 +1,351 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-rendering-pipeline-documentation",
+  "title": "Retiam WebGPU Rendering Pipeline Documentation",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/rendering_pipeline_documentation.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/rendering_pipeline_documentation.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/rendering_pipeline_documentation.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Pipeline](/api-render-pipelines#pipeline), [FrameGraph](/api-render-frame-graph#framegraph), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Queue](/api-utils#utility), [Entity](/api-core-entity#entity), [State](/api-core#state), [Frustum](/api-math#frustum), [RenderPass](/api-render-passes#renderpass), [Pass](/api-render-frame-graph#pass), [Point](/api-math-vector#point), [Plane](/api-entities-primitives-3d#plane), [StencilState](/api-render-pipelines#pipelinedescriptors), [ModelFragment](/api-components-fragment#modelfragment), [ModelGeometry](/api-components-geometry#modelgeometry), [AABB](/api-math#aabb), [RenderView](/api-camera#renderview), [RenderConfig](/api-render#renderconfig), [Box](/api-entities-primitives-3d#box), [PipelineCache](/api-render-shader-system#pipelinecache), [RenderStateCache](/api-render#renderstatecache)."
+        }
+      ]
+    },
+    {
+      "id": "1-architecture-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architecture Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam is built on a high-performance **WebGPU FrameGraph** rendering architecture. It supports 2D vector graphics (triangulated paths, SDFs, brushes) and full 3D PBR rasterization & cinematic raytracing in a single unified scene graph."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    A[\"Scene Composer (Scene Graph Traversal)\"] --> B[\"Render Queue Packets (Entity + State + Geometry + Fragment)\"]\n    B --> C[\"Frustum Culling (Skip Off-Screen Entities)\"]\n    C --> D[\"Render Queue Depth Sort (Early-Z Front-to-Back)\"]\n    D --> E[\"RenderPass (Geometry & PBR Fragment Shading)\"]\n    E --> F[\"Shadow Pass (9-Tap PCF Depth24/32)\"]\n    E --> G[\"PPLL OIT / Standard Raster Compositor\"]\n    G --> H[\"Resolve / Super-Sampling (SSAA / MSAA)\"]\n    H --> I[\"Canvas Presentation\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-depth-buffering-reversed-z-system",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Depth Buffering: Reversed-Z System"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam implements **Reversed-Z Floating-Point Depth Buffering**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Near Plane**: Mapped to $1.0$",
+            "**Far Plane**: Mapped to $0.0$",
+            "**Clear Value**: `depthClearValue: 0.0`",
+            "**Compare Function**: `depthCompare: 'greater-equal'`"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Why Reversed-Z?"
+        },
+        {
+          "type": "paragraph",
+          "text": "In traditional $[0 \\rightarrow 1]$ depth buffers, half of the entire precision is wasted in the first 1% of the distance near the camera. In Reversed-Z, floating-point mantissa bits naturally match perspective division ($1/w$), providing **$100\\times$ more depth precision** across massive draw distances and eliminating non-coplanar Z-fighting."
+        }
+      ]
+    },
+    {
+      "id": "3-transparency-depth-writing-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Transparency & Depth Writing Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "In WebGPU, `depthWriteEnabled` is an immutable, baked property of the pipeline state."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Pipeline State",
+            "`depthWriteEnabled`",
+            "`depthCompare`",
+            "Used For"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "[`StencilState.stencil_3d`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L112)",
+                  "type": "text"
+                },
+                {
+                  "text": "`true`"
+                },
+                {
+                  "text": "`'greater-equal'`"
+                },
+                {
+                  "text": "Opaque models (Spheres, solid walls, boxes, pegs)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`StencilState.stencil_3d_transparent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/PipeLineDescriptors.ts#L118)",
+                  "type": "text"
+                },
+                {
+                  "text": "`false`"
+                },
+                {
+                  "text": "`'greater-equal'`"
+                },
+                {
+                  "text": "Transparent geometry (Glass panels, transmissive gems)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Dynamic Selection ([ModelFragment.ts](../src/engine/components/fragment/ModelFragment.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "[`ModelFragment.prepare()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/fragment/ModelFragment.ts#L15-L34) inspects the entity's material opacity and transmission:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "If `opacity < 0.99` or `transmission > 0.01`, it automatically selects `stencil_3d_transparent`.",
+            "**Result**: Transparent surfaces depth-test against solid walls, but **never write depth**, preventing objects behind them from being culled."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-true-physical-3d-clip-space-projection",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. True Physical 3D Clip Space Projection"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "[ModelGeometry.ts](../src/engine/components/geometry/ModelGeometry.ts#L127-L136)"
+        },
+        {
+          "type": "paragraph",
+          "text": "3D models compute exact physical clip space positions directly from the 4x4 camera View-Projection matrix without 2D tree traversal depth biases:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let localPos = vec4f(input.position, 1.0) + state.offset; \nlet worldPosVec4 = state.matrix * localPos;\n\nout.worldPos = worldPosVec4.xyz;\nout.normal = (state.matrix * vec4f(input.normal, 0.0)).xyz;\nout.position = view.view_projection * worldPosVec4; \nout.lightSpacePos = view.light_matrix * worldPosVec4;\nout.uv = input.uv;"
+        }
+      ]
+    },
+    {
+      "id": "5-frustum-culling-system",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Frustum Culling System"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam features a zero-allocation, 6-plane frustum culling subsystem that eliminates off-screen draw calls and shading load."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n    A[\"View-Projection Matrix\"] --> B[\"Frustum.setFromMatrix()\\n(Extracts 6 Planes: Left, Right, Top, Bottom, Near, Far)\"]\n    B --> C[\"RenderPass Packet Loop\"]\n    C --> D{\"intersectsAABB(entityWorldBox)?\"}\n    D -- Yes --> E[\"Submit WebGPU Draw Call\"]\n    D -- No --> F[\"Instant Skip (0 GPU Cost)\"]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Files:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**[`Frustum.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts)**: Fast plane extraction from WebGPU $[0, 1]$ clip space and positive-vertex AABB intersection testing ($<5\\text{ ns}$ per entity, 0 memory allocations).",
+            "**[`RenderView.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L65-L85)**: Maintains active `view.frustum` updated automatically with camera movement.",
+            "**[`RenderPass.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RenderPass.ts#L305-L318)**: Skips draw calls for culled objects."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Configuration:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "// Global scene toggle (RenderConfig.ts)\nscene.renderConfig.frustumCulling = true; // or false\n\n// Per-entity override (Entity.ts)\nconst skybox = new Box(1000, 1000, 1000, { frustumCull: false });"
+        }
+      ]
+    },
+    {
+      "id": "6-pipeline-caching-state-deduplication",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Pipeline Caching & State Deduplication"
+        },
+        {
+          "type": "paragraph",
+          "text": "To maximize frame rates across thousands of draw calls per frame:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**[`PipelineCache.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/PipelineCache.ts)**:",
+              "children": [
+                "Shaders are compiled **once** at startup.",
+                "Cached pipelines are looked up via `cyrb53` hash of the WGSL code + render state descriptor."
+              ]
+            },
+            {
+              "text": "**[`RenderStateCache.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/RenderStateCache.ts)**:",
+              "children": [
+                "Tracks the active GPU pipeline, vertex buffers, and index buffers on the `GPURenderPassEncoder`.",
+                "Bypasses redundant driver calls if the same pipeline or buffer is already bound."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7-physically-based-shading-pbr-lighting",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Physically-Based Shading (PBR) & Lighting"
+        },
+        {
+          "type": "paragraph",
+          "text": "The 3D model fragment shader implements industry-standard Cook-Torrance microfacet specular and Lambertian diffuse shading:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**NDF**: GGX / Trowbridge-Reitz normal distribution function.",
+            "**Geometry**: Smith's geometry shadowing-masking function.",
+            "**Fresnel**: Schlick's approximation with IOR / metallic blending.",
+            "**Shadows**: 9-tap Percentage-Closer Filtering (PCF) with normal-dependent adaptive bias.",
+            "**Tonemapping**: ACES Film Curve with $2.2$ gamma conversion."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-anti-aliasing-aa-modes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Anti-Aliasing (AA) Modes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Configured via [`RenderConfig.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/RenderConfig.ts):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Setting",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`scene.renderConfig.AA_Function`",
+                  "type": "text"
+                },
+                {
+                  "text": "`AA_Method.SSAA`"
+                },
+                {
+                  "text": "Super-Sampling Anti-Aliasing (renders at higher internal target resolution)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`scene.renderConfig.AA`",
+                  "type": "text"
+                },
+                {
+                  "text": "`2`"
+                },
+                {
+                  "text": "SSAA resolution scale multiplier ($2\\times$ = 4× pixel area). Set to `1` for native resolution."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`scene.renderConfig.sample_count`",
+                  "type": "text"
+                },
+                {
+                  "text": "`4`"
+                },
+                {
+                  "text": "Hardware Multi-Sample Anti-Aliasing (4× MSAA)."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

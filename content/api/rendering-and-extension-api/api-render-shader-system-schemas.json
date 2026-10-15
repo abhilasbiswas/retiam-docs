@@ -1,0 +1,747 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-render-shader-system-schemas",
+  "title": "render / shader_system / schemas API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "schemas",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Schemas"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/schemas/Schemas.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/schemas/Schemas.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/Schemas.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "path_stroke_varying",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const path_stroke_varying: VaryingSchema;"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shadertypes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ShaderTypes"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/schemas/ShaderTypes.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/schemas/ShaderTypes.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "DataType",
+                    "Enum",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Std140Layout",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VertexFormatMap",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ResourceDeclaration",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ShaderResource",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Res",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare enum DataType {\n    f32 = \"f32\",\n    i32 = \"i32\",\n    u32 = \"u32\",\n    vec2f = \"vec2<f32>\",\n    vec3f = \"vec3<f32>\",\n    vec4f = \"vec4<f32>\",\n    mat3x3f = \"mat3x3<f32>\",\n    mat4x4f = \"mat4x4<f32>\"\n}\nexport declare const Std140Layout: Record<DataType, [\n    number,\n    number\n]>;\nexport declare const VertexFormatMap: Record<DataType, GPUVertexFormat>;\nexport type ResourceDeclaration = {\n    type: 'storage';\n    wgslType: string;\n    access?: 'read' | 'read_write';\n    visibility?: GPUShaderStageFlags;\n} | {\n    type: 'texture';\n    sampleType?: GPUTextureSampleType;\n    viewDimension?: GPUTextureViewDimension;\n    visibility?: GPUShaderStageFlags;\n} | {\n    type: 'storage_texture';\n    format?: GPUTextureFormat;\n    access?: 'write' | 'read' | 'read_write';\n    viewDimension?: GPUTextureViewDimension;\n    visibility?: GPUShaderStageFlags;\n} | {\n    type: 'external_texture';\n    visibility?: GPUShaderStageFlags;\n} | {\n    type: 'sampler';\n    samplerType?: GPUSamplerBindingType;\n    visibility?: GPUShaderStageFlags;\n} | {\n    type: 'uniform';\n    wgslType: string;\n    visibility?: GPUShaderStageFlags;\n};\nexport interface ShaderResource {\n    declaration: ResourceDeclaration;\n    resource: GPUBindingResource;\n}\nexport declare const Res: {\n    buffer: (wgslType: string, buffer: GPUBuffer, access?: 'read' | 'read_write', visibility?: GPUShaderStageFlags) => ShaderResource;\n    storage: (wgslType: string, buffer: GPUBuffer, access?: 'read' | 'read_write', visibility?: GPUShaderStageFlags) => ShaderResource;\n    texture: (view: GPUTextureView, sampleType?: GPUTextureSampleType, viewDimension?: GPUTextureViewDimension, visibility?: GPUShaderStageFlags) => ShaderResource;\n    storageTexture: (view: GPUTextureView, format?: GPUTextureFormat, access?: 'write' | 'read' | 'read_write', viewDimension?: GPUTextureViewDimension, visibility?: GPUShaderStageFlags) => ShaderResource;\n    externalTexture: (texture: GPUExternalTexture, visibility?: GPUShaderStageFlags) => ShaderResource;\n    uniform: (wgslType: string, buffer: GPUBuffer, visibility?: GPUShaderStageFlags) => ShaderResource;\n    sampler: (sampler: GPUSampler, samplerType?: GPUSamplerBindingType, visibility?: GPUShaderStageFlags) => ShaderResource;\n};"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DataType` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "f32 = 'f32'",
+                    "'f32'",
+                    "Declared contract; see the implementation linked above. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "i32 = 'i32'",
+                    "'i32'",
+                    "Declared contract; see the implementation linked above. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "u32 = 'u32'",
+                    "'u32'",
+                    "Declared contract; see the implementation linked above. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vec2f = 'vec2<f32>'",
+                    "'vec2<f32>'",
+                    "Declared contract; see the implementation linked above. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vec3f = 'vec3<f32>'",
+                    "'vec3<f32>'",
+                    "Declared contract; see the implementation linked above. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vec4f = 'vec4<f32>'",
+                    "'vec4<f32>'",
+                    "Declared contract; see the implementation linked above. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "mat3x3f = 'mat3x3<f32>'",
+                    "'mat3x3<f32>'",
+                    "Declared contract; see the implementation linked above. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "mat4x4f = 'mat4x4<f32>'",
+                    "'mat4x4<f32>'",
+                    "Declared contract; see the implementation linked above. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L13)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ShaderResource` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "declaration: ResourceDeclaration;",
+                    "—",
+                    "Required record/option field with declared type `ResourceDeclaration`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "resource: GPUBindingResource;",
+                    "—",
+                    "Required record/option field with declared type `GPUBindingResource`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L49)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "uniformschema",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "UniformSchema"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/schemas/UniformSchema.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/schemas/UniformSchema.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "UniformBufferData: Enhanced buffer wrapper supporting dot-notation nested queries."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "UniformMember",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "UniformSchema",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "UniformBufferData",
+                    "Class",
+                    "Enhanced buffer wrapper supporting dot-notation nested queries."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface UniformMember {\n    name: string;\n    type: DataType | UniformSchema;\n}\nexport declare class UniformSchema {\n    readonly structName: string;\n    readonly members: UniformMember[];\n    readonly offsets: Map<string, number>;\n    readonly byteSize: number;\n    readonly baseAlignment: number;\n    constructor(structName: string, layout: Record<string, DataType | UniformSchema>);\n    generateWGSL(group: number, binding: number, isRoot?: boolean): string;\n    getFlatOffset(path: string): number;\n}\nexport declare class UniformBufferData {\n    readonly schema: UniformSchema;\n    readonly buffer: ArrayBuffer;\n    readonly f32View: Float32Array;\n    constructor(schema: UniformSchema);\n    set(path: string, value: number | number[] | Float32Array): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `UniformMember` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "name: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "type: DataType | UniformSchema;",
+                    "—",
+                    "Required record/option field with declared type `DataType | UniformSchema`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L9)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `UniformSchema` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly structName: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly members: UniformMember[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly offsets",
+                    "new Map<string, number>()",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly byteSize: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly baseAlignment: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(structName: string, layout: Record<string, DataType | UniformSchema>)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.structName`, `this.baseAlignment`, `this.byteSize`; calls to `this.members.push`, `this.offsets.set`; 1 explicit loop. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public generateWGSL(group: number, binding: number, isRoot = true): string",
+                    "—",
+                    "Generates recursive WGSL declarations for this struct and its children. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getFlatOffset(path: string): number",
+                    "—",
+                    "Recursively retrieves the flat byte offset of a nested field. Example query: \"light.position\" [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L90)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `UniformBufferData` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly schema: UniformSchema",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L114)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly buffer: ArrayBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L115)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly f32View: Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 116](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L116)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(schema: UniformSchema)",
+                    "—",
+                    "Implementation: `this.schema = schema; this.buffer = new ArrayBuffer(schema.byteSize); this.f32View = new Float32Array(this.buffer);`. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set(path: string, value: number | number[] | Float32Array)",
+                    "—",
+                    "Set uniform data using dot-notation. Example: buffer.set(\"light.color\", [1, 1, 0]); [Source line 128](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/UniformSchema.ts#L128)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`Unknown field \"${first}\" in ${this.structName}`)",
+                "new Error(`Field \"${first}\" is not a nested struct, cannot resolve path \"${path}\"`)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "varyingschema",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "VaryingSchema"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/schemas/VaryingSchema.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/schemas/VaryingSchema.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VaryingSchema.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VaryingMemberConfig",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VaryingSchema",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface VaryingMemberConfig {\n    type: DataType;\n    interpolation?: 'flat' | 'linear' | 'perspective' | string;\n}\nexport declare class VaryingSchema {\n    readonly wgslStruct: string;\n    readonly structName: string;\n    readonly members: Record<string, DataType | VaryingMemberConfig>;\n    constructor(members?: Record<string, DataType | VaryingMemberConfig>);\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VaryingMemberConfig` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "type: DataType;",
+                    "—",
+                    "Required record/option field with declared type `DataType`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VaryingSchema.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "interpolation?: 'flat' | 'linear' | 'perspective' | string;",
+                    "—",
+                    "Custom WGSL interpolation. Examples: 'flat', 'linear', 'linear, centroid', 'perspective, sample' [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VaryingSchema.ts#L14)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VaryingSchema` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly wgslStruct: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VaryingSchema.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly structName: string",
+                    "\"Varyings\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VaryingSchema.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly members: Record<string, DataType | VaryingMemberConfig>",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VaryingSchema.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(members: Record<string, DataType | VaryingMemberConfig> = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.members`, `this.wgslStruct`; 1 explicit loop. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VaryingSchema.ts#L23)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vertexschema",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "VertexSchema"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/shader_system/schemas/VertexSchema.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/shader_system/schemas/VertexSchema.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VertexSchema.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VertexSchema",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class VertexSchema {\n    readonly wgslStruct: string;\n    readonly layout: GPUVertexBufferLayout;\n    readonly structName: string;\n    readonly nextLocation: number;\n    attributes: Record<string, DataType>;\n    constructor(attributes: Record<string, DataType>, stepMode?: GPUVertexStepMode, startingLocation?: number);\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VertexSchema` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly wgslStruct: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VertexSchema.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly layout: GPUVertexBufferLayout",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VertexSchema.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly structName: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VertexSchema.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly nextLocation: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VertexSchema.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public attributes: Record<string, DataType>",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VertexSchema.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        attributes: Record<string, DataType>,\n        stepMode: GPUVertexStepMode = 'vertex',\n        startingLocation: number = 0\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.attributes`, `this.structName`, `this.wgslStruct`, `this.nextLocation`, `this.layout`; construction of `Error`; calls to `gpuAttributes.push`; rejection paths a template-literal expression (see source); 1 explicit loop. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/VertexSchema.ts#L14)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`[VertexSchema] Type ${type} cannot be a vertex attribute.`)"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

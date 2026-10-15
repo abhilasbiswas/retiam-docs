@@ -1,0 +1,112 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "automata-walkthrough",
+  "title": "Build and explain a finite automaton",
+  "group": "Libraries",
+  "summary": "Build a finite automaton from its graph and animate input processing one transition at a time.",
+  "sections": [
+    {
+      "id": "separate-the-machine-from-its-presentation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Separate the machine from its presentation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Automaton extends Graph: visible states and transitions share the graph’s nodes, edges, layout and theme. It also owns startStateId, a set of accepting IDs and a transition table. addState records start/accepting flags and creates a GraphNode. addTransition records symbols in the table and creates or updates the corresponding GraphEdge."
+        },
+        {
+          "type": "paragraph",
+          "text": "If several symbols connect the same pair of states, their edge label is merged. Self-loops default to a loop angle of π/2. A comma-separated string is parsed as several transition symbols. The execution path reads one JavaScript string index at a time, so a multi-character label is not automatically a multi-character input token."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Automaton](/api-libs-graphs-automata#automaton), [StateOptions](/api-libs-graphs-automata#automaton), [GraphNode](/api-libs-graphs-core#graphnode), [GraphEdge](/api-libs-graphs-core#graphedge)."
+        }
+      ]
+    },
+    {
+      "id": "a-machine-for-an-even-number-of-ones",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "A machine for an even number of ones"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Automaton, AutomatonRunner, Tape } from \"retiam/graphs\";\nconst machine = new Automaton();\nmachine.addState(\"even\", { isStart: true, isAccepting: true, label: \"even\" });\nmachine.addState(\"odd\", { label: \"odd\" });\nmachine.addTransition(\"even\", \"even\", \"0\");\nmachine.addTransition(\"odd\", \"odd\", \"0\");\nmachine.addTransition(\"even\", \"odd\", \"1\");\nmachine.addTransition(\"odd\", \"even\", \"1\");\nmachine.getNode(\"even\")!.move([-2, 0, 0]);\nmachine.getNode(\"odd\")!.move([2, 0, 0]);\nthis.add(machine);\nconst result = machine.trace(\"1010\"); // accepted: true\nconsole.log(result.states, result.steps, result.accepted);\nconst tape = new Tape({ symbols: \"1010\" }).move([0, -2.5, 0]);\nconst runner = new AutomatonRunner(machine, tape);\nthis.add(tape, runner);\nawait runner.run(this, \"1010\", 0.65);"
+        },
+        {
+          "type": "paragraph",
+          "text": "The two ones toggle even → odd → even; zero preserves the state. The empty string is accepted because the start state is accepting. A symbol without a transition rejects at the current state. Build and inspect the trace before animating it so a visual effect cannot conceal a missing transition."
+        }
+      ]
+    },
+    {
+      "id": "trace-semantics-and-limits",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Trace semantics and limits"
+        },
+        {
+          "type": "paragraph",
+          "text": "trace requires a start state. For each input character it selects getTransition(current, symbol), finds the visible edge, appends a TransitionStep and records the new state. Missing transitions produce an early rejected result. Missing corresponding edges throw because the logical machine and visible graph are inconsistent. After all characters, acceptance is membership in acceptingStateIds."
+        },
+        {
+          "type": "paragraph",
+          "text": "The table can store multiple target IDs, but getTransition chooses targets[0]. The current trace therefore follows one deterministic route; it does not execute an NFA frontier, epsilon closure or a branching search. If that is the lesson, implement and visualize the state-set simulation explicitly instead of assuming that adding multiple outgoing targets enables NFA execution."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [TransitionStep](/api-libs-graphs-automata#automaton), [SimulationResult](/api-libs-graphs-automata#automaton), [Automaton](/api-libs-graphs-automata#automaton)."
+        }
+      ]
+    },
+    {
+      "id": "runner-tape-and-timing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Runner, tape and timing"
+        },
+        {
+          "type": "paragraph",
+          "text": "AutomatonRunner receives the machine and a Tape, and creates acceptance/rejection badges. Add the tape to the scene separately. run rejects a reentrant run, resets highlights and tape symbols, obtains the trace, then animates the active cell, head motion, flow edge, visited state and next-state pulse. It shows the appropriate verdict at the end. Its stepDuration defaults to 0.65 seconds, and helper animations convert their own duration inputs; this parameter is distinct from Scene.play duration in milliseconds."
+        },
+        {
+          "type": "paragraph",
+          "text": "Tape is a visualization of symbols and head position, not a general Turing-machine execution engine. Freeze the same machine/input when explaining a run, and keep the printed trace with exported frames. GraphNode pulse and GraphEdge flow helpers are temporary visual changes; they do not update the transition table."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [AutomatonRunner](/api-libs-graphs-automata#automatonrunner), [Tape](/api-libs-graphs-automata#tape), [TapeOptions](/api-libs-graphs-automata#tape)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Two states and four transitions encode one deterministic rule."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-automaton"
+        }
+      ]
+    }
+  ]
+}

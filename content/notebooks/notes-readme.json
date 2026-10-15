@@ -1,0 +1,307 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-readme",
+  "title": "Retiam Engine Implementation Documentation",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/README.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/README.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/README.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Pipeline](/api-render-pipelines#pipeline), [Shader](/api-entities-primitives-2d#shader), [Animation](/api-animation#animation), [Code](/api-entities-composites-text#code), [TTS](/api-libs-tts-core#ttsclient), [SceneComposer](/api-core-scenecomposer#scenecomposer), [Entity](/api-core-entity#entity), [State](/api-core#state), [SubScene](/api-entities#subscene), [ValueTracker](/api-entities-composites-trackers#valuetrackers), [Component](/api-core#component), [UP](/api-core#constants), [DOWN](/api-core#constants), [LEFT](/api-core#constants), [RIGHT](/api-core#constants), [IPlugin](/api-core#iplugin), [FrameGraph](/api-render-frame-graph#framegraph), [Mask](/api-entities-layout#mask), [ZoomView](/api-entities-layout#zoomview), [FeedbackZoomView](/api-entities-layout#feedbackzoomview), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [GlobalGeometryAllocator](/api-render-allocator#globalgeometryallocator)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "Welcome to the **Retiam Technical Implementation Documentation**. Retiam is a high-performance, WebGPU-native cinematic and mathematical graphics engine engineered for educational animations (Manim/3Blue1Brown style), scientific simulations, and production 4K video exports."
+        },
+        {
+          "type": "paragraph",
+          "text": "This directory contains in-depth architectural specifications, mathematical formulations, GPU memory layout schemas, and implementation guides for all engine subsystems."
+        }
+      ]
+    },
+    {
+      "id": "architectural-map-domain-directory",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "🗺️ Architectural Map & Domain Directory"
+        },
+        {
+          "type": "tree",
+          "variant": "vertical",
+          "nodes": [
+            {
+              "label": "Retiam engine architecture",
+              "description": "Notebook topics.",
+              "children": [
+                {
+                  "label": "Core and scene graph",
+                  "description": "SCENE_GRAPH · ALWAYS_UPDATE · TRANSFORM_ANCHOR · PLUGIN_SYSTEM"
+                },
+                {
+                  "label": "WebGPU pipeline",
+                  "description": "FRAME_GRAPH · RAYTRACING · PPLL_OIT · LAYERING_UI · CAMERA_MULTI_VIEW"
+                },
+                {
+                  "label": "Allocators and memory",
+                  "description": "GLOBAL_ALLOCATOR · FIRST_INSTANCE · FAST_PATH_LOD · PERFORMANCE"
+                },
+                {
+                  "label": "Shader system",
+                  "description": "SHADER_SYSTEM · COMPUTE_KERNEL · ANALYTICAL_PATH"
+                },
+                {
+                  "label": "Animation suite",
+                  "description": "ANIMATION_CATALOGUE · TRACK_BUILDER · HIGHLIGHT · SEQUENTIAL / CONCURRENT"
+                },
+                {
+                  "label": "Geometry and 3D",
+                  "description": "SHAPES_LIBRARY · 3D_PRIMITIVES · 3D_MORPHING · SUBDIVISION · POLY_USAGE · DOT_AND_GLOW"
+                },
+                {
+                  "label": "Coordinates and math",
+                  "description": "COORDINATE_SYSTEM · SPATIAL_HOMOTOPY · MATH_FIELDS_NOISE"
+                },
+                {
+                  "label": "Typography and code",
+                  "description": "FONT_SYSTEM · TEXT_LATEX_CODE · AUTO_LAYOUT · ARRANGE_INSTANCED"
+                },
+                {
+                  "label": "Physics systems",
+                  "description": "PHYSICS_3D · PHYSICS_2D"
+                },
+                {
+                  "label": "Export, audio and TTS",
+                  "description": "RENDER_AND_EXPORT · AUDIO_SYSTEM · TTS_KOKORO_WEBGPU · INTERACTION_RECORDER · STUDIO_INSPECTOR"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "documentation-index",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "📚 Documentation Index"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. System Core & Scene Graph"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`SCENE_COMPOSER_ARCHITECTURE_AND_API.md`](/notes-scene-composer-architecture-and-api): Top-level WebGPU orchestrator ([`SceneComposer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts)), composition stack, multi-scene layer management, idle-smart loop scheduling, and zero-GC traversal.",
+            "[`SCENE_GRAPH_ARCHITECTURE.md`](/notes-scene-graph-architecture): Foundational node hierarchy ([`Entity.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)), composition loop ([`SceneComposer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts)), and 256-byte aligned GPU state memory blocks ([`State.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts)).",
+            "[`ALWAYS_UPDATE_SYSTEM_AND_OPTIONS_ARCHITECTURE.md`](/notes-always-update-system-and-options-architecture): Continuous reactive tracking and options deduplication.",
+            "[`SUBSCENE_COMPOSITION_AND_GPU_RESOURCE_BRIDGING.md`](/notes-subscene-composition-and-gpu-resource-bridging): SubScene nesting, scene graph embedding, and GPU device/queue bridging.",
+            "[`VALUE_TRACKERS_AND_GPU_BUFFER_RECYCLING.md`](/notes-value-trackers-and-gpu-buffer-recycling): Invisible ValueTracker animated registers and the `alwaysRedraw` zero-allocation GPU buffer stealing algorithm (`recycleGPUResources`).",
+            "[`ENTITY_SYSTEM.md`](/notes-entity-system): Component model lifecycle, geometry/fragment/renderer abstractions.",
+            "[`TRANSFORM_ANCHOR_AND_PIVOT_ARCHITECTURE.md`](/notes-transform-anchor-and-pivot-architecture): Directional anchors (`UP`, `DOWN`, `LEFT`, `RIGHT`), alignment helpers (`nextTo`, `alignTo`), and rotation pivots.",
+            "[`PLUGIN_SYSTEM_ARCHITECTURE.md`](/notes-plugin-system-architecture): Plugin architecture ([`IPlugin.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts)) for modular engine extensions.",
+            "[`retiam_architecture_review.md`](/notes-retiam-architecture-review): Full architectural review, design choices, and system invariants.",
+            "[`IMPLEMENTATION_SUMMARY.md`](/notes-implementation-summary): Consolidated implementation milestones and feature catalogue."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. WebGPU Rendering Pipeline & FrameGraph"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`FRAME_GRAPH_ARCHITECTURE_AND_EXTENSIBILITY.md`](/notes-frame-graph-architecture-and-extensibility): Declarative Directed Acyclic Graph (DAG) render graph, automatic pass culling, and transient texture aliasing.",
+            "[`SHADOW_MAPPING_AND_LIGHTING_MODELS_ARCHITECTURE.md`](/notes-shadow-mapping-and-lighting-models-architecture): 2048x2048 `depth32float` light-space shadow maps, 9-tap PCF soft filtering, slope-scale adaptive bias, and PBR/Gooch/Cel/Clay lighting models.",
+            "[`POST_PROCESSING_BLUR_AND_AA_PIPELINE_ARCHITECTURE.md`](/notes-post-processing-blur-and-aa-pipeline-architecture): 2-pass separable Gaussian blur (5-tap bilinear sampling), SSAA anti-aliasing resolve, dynamic WGSL post-process passes, and temporal frame feedback.",
+            "[`STENCIL_MASKING_AND_ZOOM_VIEW_ARCHITECTURE.md`](/notes-stencil-masking-and-zoom-view-architecture): 8-bit hardware stencil masking (`Mask`), inverted hole punching, and picture-in-picture callouts (`ZoomView` vs. `FeedbackZoomView`).",
+            "[`RAYTRACING_AND_DENOISING_ARCHITECTURE.md`](/notes-raytracing-and-denoising-architecture): Hardware-accelerated Monte Carlo path tracer, TLAS/BLAS construction ([`BVHBuilder.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts)), dynamic mesh refitting, Multiple Importance Sampling (MIS), and Intel Open Image Denoise (OIDN).",
+            "[`PPLL_OIT_ARCHITECTURE.md`](/notes-ppll-oit-architecture): Order-Independent Transparency via Per-Pixel Linked Lists (A-Buffer & K-Buffer) for overlapping mathematical surfaces.",
+            "[`rendering_pipeline_documentation.md`](/notes-rendering-pipeline-documentation): Forward and deferred rasterization passes, depth/stencil handling, and MSAA.",
+            "[`RENDER_TARGET_ARCHITECTURE_AND_API.md`](/notes-render-target-architecture-and-api): Multi-target framebuffers, G-Buffers, compute storage textures, and ping-pong buffers.",
+            "[`LAYERING_AND_UI_ARCHITECTURE.md`](/notes-layering-and-ui-architecture): 32-bit layer masks, orthographic UI overlay passes, and depth-cleared render views.",
+            "[`CAMERA_AND_MULTI_VIEW_ARCHITECTURE.md`](/notes-camera-and-multi-view-architecture): Perspective/orthographic projection models, automated bounding-box framing (`frameAnimated`), arcball orbit controls, and multi-view split-screen support.",
+            "[`camera.md`](/notes-camera) & [`camera2d.md`](/notes-camera2d): Supplementary notes on camera matrices and 2D pan/zoom controls."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. GPU Memory Allocators & Batching"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`GLOBAL_ALLOCATOR_AND_MEGADRAW_ARCHITECTURE.md`](/notes-global-allocator-and-megadraw-architecture): Unified memory pooling: 256-byte state slabs ([`GlobalStateAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts)), shared VBO/IBO pools ([`GlobalGeometryAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts)), and Programmable Mega-Draw storage-pulling batches ([`MegaDrawBatchManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts)).",
+            "[`FIRST_INSTANCE_BIT_PACKING_ARCHITECTURE.md`](/notes-first-instance-bit-packing-architecture): 32-bit `firstInstance` encoding schema packing stroke flags, mega-draw flags, state indices, and local contour offsets.",
+            "[`FAST_PATH_AND_ADAPTIVE_LOD.md`](/notes-fast-path-and-adaptive-lod): Screen-space adaptive level of detail and GPU-accelerated fast paths.",
+            "[`PERFORMANCE_OPTIMIZATIONS.md`](/notes-performance-optimizations): Benchmarks, zero-allocation memory mirrors, and dirty range coalescing algorithms."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4. Dynamic Shader System & Compute"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`SHADER_SYSTEM_AND_WGSL_PIPELINE_ARCHITECTURE.md`](/notes-shader-system-and-wgsl-pipeline-architecture): Dynamic WGSL shader composition ([`ShaderBuilder.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ShaderBuilder.ts)), chunk library ([`ChunkRegistry.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ChunkRegistry.ts)), macro preprocessor, automated AST reflection ([`WGSLReflector.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/pipelines/WGSLReflector.ts)), and pipeline cache.",
+            "[`COMPUTE_AND_COMPUTE_KERNEL_ARCHITECTURE.md`](/notes-compute-and-compute-kernel-architecture): WebGPU compute pipelines, workgroup partitioning, and custom GPGPU algorithms.",
+            "[`ANALYTICAL_PATH_ARCHITECTURE.md`](/notes-analytical-path-architecture): Exact Signed Distance Field stroke extrusion and analytical Bézier evaluation on GPU.",
+            "[`BINDLESS_VARYING_STATE_ARCHITECTURE.md`](/notes-bindless-varying-state-architecture): Bindless state propagation across render stages."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5. 2D/3D Geometry, Curves & Volumetric SDFs"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`EXCALIDRAW_STYLE_ARCHITECTURE.md`](/notes-excalidraw-style-architecture): Complete architecture of the Excalidraw hand-drawn whiteboard system, including deterministic SplitMix32 auto-seeding (`seed: 'auto'`), calibrated depth layering (outline, hachure lines, wash fill), continuous 12 FPS line-boil animation engine (`boilAnim`, `entity.boil`), `setSeed` vs `setTime` execution models, and scanline hachure generator.",
+            "[`SHAPES_AND_GEOMETRY_LIBRARY_ARCHITECTURE.md`](/notes-shapes-and-geometry-library-architecture): Dedicated 2D vector and 3D procedural shape library (`retiam/shapes`): 16 parametric 2D shapes (filleted stars, squircles, $C^1$ Bézier hearts, involute gears, compound annuli, spirals, waveforms, structural profiles) and 15 procedural 3D meshes (Platonic solids with planar normals, parallel transport tubes, helix coils, torus knots, capsules, ellipsoids, frustums, wedges).",
+            "[`SVG_SYSTEM_AND_PATH_EQUALIZATION_ARCHITECTURE.md`](/notes-svg-system-and-path-equalization-architecture): Complete SVG AST parsing, CSS cascade resolution, `<defs>`/`<use>` instancing, and `PathEqualizer` topological contour balancing.",
+            "[`BOOLEAN_CSG_AND_POLYGON_CLIPPING_ARCHITECTURE.md`](/notes-boolean-csg-and-polygon-clipping-architecture): 2D Constructive Solid Geometry (Union, Intersection, Difference, XOR) on vector entities via Martinez-Rueda-Feito polygon clipping and curve reconstruction.",
+            "[`MATHEMATICAL_ANNOTATIONS_ARROWS_AND_BRACES_ARCHITECTURE.md`](/notes-mathematical-annotations-arrows-and-braces-architecture): Configurable vector arrows (10 tip styles, independent start/end heads), mathematical curly braces with cusp label alignment, and subdivided pixel grids.",
+            "[`SPLINE_CURVES_AND_EVALUATION_ARCHITECTURE.md`](/notes-spline-curves-and-evaluation-architecture): Multi-method curve evaluation (Catmull-Rom, B-Spline via de Boor, $C^2$ Natural Cubic Splines, Hermite) with zero-allocation GPU updates.",
+            "[`SPRING_PHYSICS_AND_DYNAMIC_BINDING_ARCHITECTURE.md`](/notes-spring-physics-and-dynamic-binding-architecture): 2D dynamic physics springs (zigzag coil, smooth helix, rod) with real-time entity dynamic binding and automated elongation.",
+            "[`OBJ_LOADER_AND_3D_MODEL_PIPELINE_ARCHITECTURE.md`](/notes-obj-loader-and-3d-model-pipeline-architecture): Wavefront OBJ/MTL model loading, PBR material mapping, group partitioning, and smooth vs. flat topology calculation.",
+            "[`MATH_SHAPE_3D_AND_TRACE_PATH_ARCHITECTURE.md`](/notes-math-shape-3d-and-trace-path-architecture): Iconic Manim-style semi-translucent 3D shapes with glass transmission and extruded edge wireframes, plus real-time motion ribbon tracing via GPU Chaikin smoothing.",
+            "[`3D_PRIMITIVES_AND_VOLUMETRIC_SDF_ARCHITECTURE.md`](/notes-3d-primitives-and-volumetric-sdf-architecture): Explicit 3D meshes (`Box`, `Sphere`, `Cylinder`, `Torus`, `Model`, `ParametricModel`, `Terrain3D`) and Volumetric Raymarching with smooth Constructive Solid Geometry (CSG) AST ([`SDFNode.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/sdf/SDFNode.ts)).",
+            "[`3D_MORPHING_MANIM_SHADING_AND_VERTEX_KINEMATICS.md`](/notes-3d-morphing-manim-shading-and-vertex-kinematics): Dual contouring, swarm processors, and Manim-style lighting models.",
+            "[`PATH_MODIFIER_ARCHITECTURE_AND_EXTENSIBILITY.md`](/notes-path-modifier-architecture-and-extensibility): Non-destructive geometric path modifier pipeline ([`IPathModifier.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/IPathModifier.ts)), reactive WebGPU cache invalidation, built-in catalog (Trim, Resample, Wiggle, RoundCorners, Offset, ZigZag, Dash, Reverse, PuckerBloat, Twist, Smooth), and functional/OOP custom modifier extensibility.",
+            "[`SUBDIVISION_AND_PATH_GEOMETRY_ARCHITECTURE.md`](/notes-subdivision-and-path-geometry-architecture): Chaikin curve subdivision, arc-length sampling, and path triangulation.",
+            "[`POLY_ARCHITECTURE_AND_USAGE.md`](/notes-poly-architecture-and-usage): Polygon primitives, vertex indices, and 2D mesh manipulation.",
+            "[`DOT_AND_GLOW_ARCHITECTURE.md`](/notes-dot-and-glow-architecture): Point primitives (`Dot`, `AnnotationDot`, `GlowDot`, `LabeledDot`) and GPU shader-driven continuous/stepped glow.",
+            "[`EFFECTS.md`](/notes-effects): Fill and path effects pipeline."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6. Mathematical Coordinates, Plotting & Fields"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`COORDINATE_SYSTEM_AND_PLOTTING_ARCHITECTURE.md`](/notes-coordinate-system-and-plotting-architecture): Mathematical coordinate spaces (`Axes`, `NumberPlane`, `ComplexPlane`, `PolarAxes`, `ThreeDAxes`), parametric function plotting, and calculus visualizations (derivatives, tangents, Riemann sums).",
+            "[`RAYMARCHED_3D_SURFACES_AND_STREAMLINES_ARCHITECTURE.md`](/notes-raymarched-3d-surfaces-and-streamlines-architecture): GPU raymarched bivariate mathematical surfaces (6 styles, 4 color modes), Runge-Kutta 2D streamlines, and compute Marching Squares.",
+            "[`SPATIAL_DEFORMATION_AND_HOMOTOPY_ARCHITECTURE.md`](/notes-spatial-deformation-and-homotopy-architecture): Non-linear space deformations and continuous homotopy animations ($H(x, y, t) = (1-t)f(x, y) + t g(x, y)$).",
+            "[`MATHEMATICAL_FOUNDATIONS_FIELDS_AND_NOISE.md`](/notes-mathematical-foundations-fields-and-noise): Discrete Fourier Transform (DFT) rotating epicycles ([`FourierTransform.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts)), spatial vector fields, conformal mapping, and procedural noise (`Perlin`, `Simplex`, `Worley`, `fBm`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "7. Typography, LaTeX & Auto-Layout"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`FONT_SYSTEM_ARCHITECTURE.md`](/notes-font-system-architecture): In-browser WebAssembly MSDF & Vector font engine ([`FontLoader.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts)), Brotli WOFF2 decompression ([`FontResolver.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts)), two-tier cache (Memory + IndexedDB) ([`FontCache.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontCache.ts)), contour winding sanitization ([`MSDFGenerator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/MSDFGenerator.ts)), and bit-exact WebGPU distance-field sampling.",
+            "[`TEXT_LATEX_AND_CODE_ARCHITECTURE.md`](/notes-text-latex-and-code-architecture): Multi-Channel Signed Distance Field (MSDF) text rendering ([`SDFText.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts)), MathJax LaTeX equation compilation ([`Tex.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts)), and PrismJS syntax-highlighted code blocks ([`Code.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts)).",
+            "[`MORPHOLOGICAL_MATCHING_AND_TEXT_SPLITTER_ARCHITECTURE.md`](/notes-morphological-matching-and-text-splitter-architecture): LaTeX formula transitions (`TransformMatchingTex`), word/letter transitions (`TransformMatchingText`), and character/word layout token splitting (`TextSplitter`).",
+            "[`TEXTURE_ATLAS_AND_SPRITE_ANIMATION_ARCHITECTURE.md`](/notes-texture-atlas-and-sprite-animation-architecture): TexturePacker manifest ingestion, SubTexture UV bounds, and zero-allocation sprite animations.",
+            "[`RTHTML_AND_RTVIEW_RICH_MEDIA_ARCHITECTURE.md`](/notes-rthtml-and-rtview-rich-media-architecture): Interactive 3D DOM embedding (CSS3D, Chrome Native, SVG ForeignObject headless capture) with raycast click forwarding, and 3D video playback.",
+            "[`AUTO_LAYOUT_VBOX_HBOX.md`](/notes-auto-layout-vbox-hbox): Declarative auto-layout containers ([`VBox.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VBox.ts), [`HBox.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/HBox.ts)) with responsive padding and gaps.",
+            "[`ARRANGE_AND_INSTANCED_COMPUTE_ARCHITECTURE.md`](/notes-arrange-and-instanced-compute-architecture): Dynamic geometric arrangement algorithms and compute-driven instancing.",
+            "[`INSTANCED_ARCHITECTURE_AND_USAGE.md`](/notes-instanced-architecture-and-usage): Hardware instancing via GPU storage buffers."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "8. Animation Catalogue & Choreography"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`ANIMATION_CATALOGUE_AND_MOTION_SYSTEM.md`](/notes-animation-catalogue-and-motion-system): Complete catalogue of 34 creation animations (`Create`, `Write`, `FadeIn`, `BloomIn`, `ScatterAssemble`, `WipeIn`), motion paths, transforms, camera moves, and easing curves ([`Rate.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Rate.ts)).",
+            "[`SEQUENTIAL_AND_CONCURRENT_ANIMATION_ARCHITECTURE.md`](/notes-sequential-and-concurrent-animation-architecture): Serial & concurrent composite orchestration ([`Sequential.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts), [`Concurrent.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts)), composite tree hierarchies, frame-accurate overshoot handoff, proportional duration scaling, and reusable motion subclassing.",
+            "[`CINEMATIC_BLUR_AND_FOCUS_ANIMATIONS.md`](/notes-cinematic-blur-and-focus-animations): Optical rack-focus entrances (`BlurIn`), defocus exits (`BlurOut`), pulses (`BlurPulse`), and polymorphic target resolution (`BlurTarget`).",
+            "[`TRACK_BUILDER_AND_ANIMATION_ARCHITECTURE.md`](/notes-track-builder-and-animation-architecture): Fluent multi-track animation builder for non-linear timelines.",
+            "[`HIGHLIGHT_ANIMATION_ARCHITECTURE.md`](/notes-highlight-animation-architecture): Attention-steering highlights, halos, and focus rings."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "9. Physics Engines"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`PHYSICS2D_SYSTEM_DOCUMENTATION.md`](/notes-physics2d-system-documentation): 2D rigid body dynamics, colliders, and joints via Rapier2D.",
+            "[`physics_system_documentation.md`](/notes-physics-system-documentation): 3D rigid body dynamics, gravity, and kinematics via Rapier3D."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "10. Video Export, Audio & Tooling"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`INTERACTIVE_EVENT_SYSTEM_AND_RAYCASTING_ARCHITECTURE.md`](/notes-interactive-event-system-and-raycasting-architecture): WebGPU screen-to-world raycasting (Slab AABB, Möller–Trumbore triangles, quad testing), event dispatching, and 3D drag plane projections.",
+            "[`PLAYER_CONTROLS_AND_TIMELINE_UI_ARCHITECTURE.md`](/notes-player-controls-and-timeline-ui-architecture): Canvas transport controls, timeline scrubber, frame stepper, speed selector, and floating HUD parameter control panels (`menu.ts`).",
+            "[`RETIAM_STUDIO_ARCHITECTURE.md`](/notes-retiam-studio-architecture): Browser-native IDE architecture: Monaco editor integration, TypeScript language server, live WebGPU preview host, AST-aware parameter inspectors, and export panels.",
+            "[`OFFLINE_RENDER_MANAGER_AND_SNAPSHOT_ARCHITECTURE.md`](/notes-offline-render-manager-and-snapshot-architecture): Deterministic frame-by-frame stepping (`scene.step()`), 256-byte aligned WebGPU pixel buffer readbacks, WebSocket video streaming, and high-resolution snapshot capture.",
+            "[`CLI_COMMANDS_AND_TOOLING_REFERENCE.md`](/notes-cli-commands-and-tooling-reference): Comprehensive reference guide for all Retiam CLI commands (`render`, `snapshot`, `scaffold`, `lint`, `export`) including options, internal mechanics, and `--json` automation API.",
+            "[`render_and_export_manual.md`](/notes-render-and-export-manual) & [`VideoRenderManual.md`](/notes-videorendermanual): Headless frame-by-frame 4K MP4/WebM video export via WebSocket pixel streaming and ffmpeg.",
+            "[`AUDIO_SYSTEM_ARCHITECTURE_AND_API.md`](/notes-audio-system-architecture-and-api): Web Audio integration, FFT spectrum analysis, beat tracking, and timeline cue points.",
+            "[`TTS_SYSTEM_AND_KOKORO_WEBGPU_ARCHITECTURE.md`](/notes-tts-system-and-kokoro-webgpu-architecture): WebGPU-accelerated Text-To-Speech engine powered by local Kokoro-82M weights, 28 studio voices, 100% offline asset caching, zero-copy PCM conversion, automated BGM ducking, SDF closed-caption subtitles, and timeline choreography.",
+            "[`SUBTITLES_ARCHITECTURE_AND_CUSTOMIZATION.md`](/notes-subtitles-architecture-and-customization): Complete architecture, geometry reflow, corner radius fillet mechanics, curated design presets, and styling API for the hardware-accelerated `Subtitles` closed-captioning component.",
+            "[`interaction_recorder.md`](/notes-interaction-recorder): Low-level DOM input virtualization for recording interactive sessions and replaying them deterministically in headless renders.",
+            "[`STUDIO_INSPECTOR.md`](/notes-studio-inspector): Interactive studio UI, scene graph inspector, property tweaker, and performance telemetry.",
+            "[`COMMIT_BY_COMMIT_FEATURES.md`](/notes-commit-by-commit-features): Chronological changelog detailing the architectural evolution of the engine."
+          ]
+        }
+      ]
+    }
+  ]
+}

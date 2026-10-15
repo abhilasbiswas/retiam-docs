@@ -1,0 +1,189 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-offline-render-manager-and-snapshot-architecture",
+  "title": "Deterministic Offline Rendering & Snapshot Pipeline Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/OFFLINE_RENDER_MANAGER_AND_SNAPSHOT_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/OFFLINE_RENDER_MANAGER_AND_SNAPSHOT_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/OFFLINE_RENDER_MANAGER_AND_SNAPSHOT_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Pipeline](/api-render-pipelines#pipeline), [OfflineRenderManager](/api-core#offlinerendermanager), [SnapshotManager](/api-core#snapshotmanager), [OfflineRecorder](/api-recorder#offlinerecorder), [Recorder](/api-recorder#recorder), [Pass](/api-render-frame-graph#pass), [RTVideo](/api-entities-primitives-3d#rtvideo)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exporting broadcast-quality 4K 60 FPS videos and high-resolution mathematical publication snapshots requires a rendering pipeline independent of wall-clock hardware limitations."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides three distinct capture systems:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`OfflineRenderManager`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts)**: Deterministic frame-by-frame stepping engine that freezes real-time playback, advances time by exact discrete intervals ($\\Delta t = 1 / \\text{FPS}$), reads back GPU framebuffers with 256-byte alignment, and streams raw frames to an external encoder.",
+            "**[`SnapshotManager`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SnapshotManager.ts)**: Single-frame high-resolution image capture engine (PNG, WebP, JPEG).",
+            "**[`OfflineRecorder`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts) & [`Recorder`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts)**: Headless WebSocket client streaming raw audio and RGBA/float pixels to the local Node.js FFmpeg CLI process, alongside client-side WebCodecs canvas recording with [`Recorder`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts)."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  M[\"OfflineRenderManager\"] --> T[\"Discrete time stepping<br/>scene.step at 1/60 second\"]\n  M --> R[\"WebGPU readback<br/>copyTextureToBuffer\"]\n  R --> A[\"256-byte row alignment\"] --> MAP[\"stagingBuffer.mapAsync\"]\n  T --> O[\"OfflineRecorder<br/>WebSocket pixel streaming\"]\n  MAP --> O\n  O --> N[\"Local Node.js server\"] --> F[\"FFmpeg<br/>H.264 / ProRes / VP9 encoding\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-deterministic-stepping-mechanics-offlinerendermanager-ts-src-engine-core-offlinerendermanager-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Deterministic Stepping Mechanics ([OfflineRenderManager.ts](../src/engine/core/OfflineRenderManager.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Real-time rendering relies on `requestAnimationFrame`, where variable CPU/GPU load produces dropped frames and variable $\\Delta t$. During offline rendering, Retiam disables wall-clock execution:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Discrete Clock Stepping**: Time advances strictly by $1 / F$ seconds per step:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "t_{k+1} = t_k + \\frac{1}{F}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Synchronous Asset Decoding**: Video entities ([`RTVideo`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/RTVideo.ts)) seek to $t_{k+1}$ and await the HTML5 `seeked` event before the frame renders.",
+            "**Asynchronous Readback Lock**: The simulation halts execution until the GPU signals that the current frame's pixel memory has been transferred into system RAM."
+          ],
+          "start": 2
+        }
+      ]
+    },
+    {
+      "id": "3-webgpu-memory-readback-row-alignment",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. WebGPU Memory Readback & Row Alignment"
+        },
+        {
+          "type": "paragraph",
+          "text": "WebGPU requires texture buffer copy operations to satisfy strict memory layout constraints:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Row Pitch Alignment**: Every row of pixels written to a `GPUBuffer` must be a multiple of **256 bytes**:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{bytesPerPixel} = 4 \\quad (\\text{RGBA8 / BGRA8})"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{unalignedBytesPerRow} = W \\cdot 4"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{bytesPerRow} = \\left\\lceil \\frac{W \\cdot 4}{256} \\right\\rceil \\cdot 256"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Staging Buffer Lifecycle"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Allocate GPU staging buffer with MAP_READ capability\nconst stagingBuffer = device.createBuffer({\n    size: bytesPerRow * height,\n    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ\n});\n\n// 2. Encode GPU texture copy\ncommandEncoder.copyTextureToBuffer(\n    { texture: canvasTexture },\n    { buffer: stagingBuffer, bytesPerRow, rowsPerImage: height },\n    { width, height, depthOrArrayLayers: 1 }\n);\ndevice.queue.submit([commandEncoder.finish()]);\n\n// 3. Map buffer asynchronously to CPU memory\nawait stagingBuffer.mapAsync(GPUMapMode.READ);\nconst mappedArray = new Uint8Array(stagingBuffer.getMappedRange());\n\n// 4. Strip padding bytes if unalignedBytesPerRow !== bytesPerRow\nconst tightPixels = removeRowPadding(mappedArray, width, height, bytesPerRow);\n\n// 5. Send to encoder and release VRAM\nstagingBuffer.unmap();\nstagingBuffer.destroy();"
+        }
+      ]
+    },
+    {
+      "id": "4-snapshot-pipeline-snapshotmanager-ts-src-engine-core-snapshotmanager-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Snapshot Pipeline ([SnapshotManager.ts](../src/engine/core/SnapshotManager.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `SnapshotManager` captures high-resolution stills for research publications and video thumbnails:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Offscreen Resolution Scaling**: Can render frames at arbitrary target resolutions (e.g. $7680 \\times 4320$ 8K) independently of the physical display monitor.",
+            "**Canvas Export API**:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Capture current scene as lossless PNG\n  await snapshotManager.capture({\n      format: \"image/png\",\n      filename: \"quantum_state.png\",\n      download: true\n  });"
+        }
+      ]
+    },
+    {
+      "id": "5-cli-tooling-integration",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. CLI & Tooling Integration"
+        },
+        {
+          "type": "paragraph",
+          "text": "The offline render architecture powers all CLI commands documented in [`CLI_COMMANDS_AND_TOOLING_REFERENCE.md`](/notes-cli-commands-and-tooling-reference):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`retiam render <scene> --output video.mp4 --res 4k --fps 60`**: Spawns a headless Puppeteer/Chrome browser instance with `--enable-unsafe-webgpu`, attaches `OfflineRenderManager`, and pipes frames into `ffmpeg`.",
+            "**`retiam snapshot <scene> -t 5.2 -o thumbnail.png`**: Fast-forwards to time $t=5.2\\text{s}$, captures a single frame via `SnapshotManager`, and exits."
+          ]
+        }
+      ]
+    }
+  ]
+}

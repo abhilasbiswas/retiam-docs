@@ -1,0 +1,647 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-libs-tts-providers",
+  "title": "tts / providers API",
+  "group": "Library API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ittsprovider",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ITTSProvider"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/tts/providers/ITTSProvider.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/tts/providers/ITTSProvider.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/ITTSProvider.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/tts`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ITTSProvider: Interface contract for pluggable text-to-speech engine providers."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ITTSProvider",
+                    "Interface",
+                    "Interface contract for pluggable text-to-speech engine providers."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ITTSProvider {\n    readonly name: string;\n    readonly isReady: boolean;\n    init(config?: TTSConfig): Promise<void>;\n    synthesize(text: string, options?: TTSGenerateOptions): Promise<TTSAudioResult>;\n    stream(text: string, options?: TTSGenerateOptions): AsyncGenerator<TTSStreamChunk>;\n    getVoices(): VoiceInfo[];\n    dispose(): Promise<void>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ITTSProvider` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "readonly name: string;",
+                    "—",
+                    "Distinct provider identifier (e.g. \"kokoro-webgpu\"). [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/ITTSProvider.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "readonly isReady: boolean;",
+                    "—",
+                    "Indicates whether the underlying neural model and session are loaded and ready. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/ITTSProvider.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "init(config?: TTSConfig): Promise<void>;",
+                    "—",
+                    "Initializes neural weights, ONNX Runtime session, and execution provider. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/ITTSProvider.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "synthesize(text: string, options?: TTSGenerateOptions): Promise<TTSAudioResult>;",
+                    "—",
+                    "Synthesizes text to speech audio. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/ITTSProvider.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stream(text: string, options?: TTSGenerateOptions): AsyncGenerator<TTSStreamChunk>;",
+                    "—",
+                    "Progressively streams synthesized audio sentence by sentence or token chunk. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/ITTSProvider.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getVoices(): VoiceInfo[];",
+                    "—",
+                    "Returns the list of supported voices for this provider. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/ITTSProvider.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dispose(): Promise<void>;",
+                    "—",
+                    "Frees WebGPU buffers and tears down the model session. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/ITTSProvider.ts#L40)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kokorowebgpuprovider",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "KokoroWebGPUProvider"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/tts/providers/KokoroWebGPUProvider.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/tts/providers/KokoroWebGPUProvider.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/tts`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "KokoroWebGPUProvider: High-performance WebGPU-native TTS provider utilizing the Kokoro 82M model. Configured by default to load 100% locally from the project's `public/models/kokoro/` assets with zero remote network requests, automatic WebGPU device selection, and WASM SIMD fallback."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "KokoroWebGPUProvider",
+                    "Class",
+                    "High-performance WebGPU-native TTS provider utilizing the Kokoro 82M model. Configured by default to load 100% locally from the project's `public/models/kokoro/` assets with zero remote network requests, automatic WebGPU device selection, and WASM SIMD fallback."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class KokoroWebGPUProvider implements ITTSProvider {\n    readonly name: string;\n    constructor(config?: TTSConfig);\n    get isReady(): boolean;\n    get activeDevice(): \"webgpu\" | \"wasm\" | \"cpu\";\n    static isWebGPUSupported(): Promise<boolean>;\n    ensureVoiceCached(voice: string): Promise<void>;\n    init(configOverrides?: TTSConfig): Promise<void>;\n    synthesize(text: string, options?: TTSGenerateOptions): Promise<TTSAudioResult>;\n    stream(text: string, options?: TTSGenerateOptions): AsyncGenerator<TTSStreamChunk>;\n    getVoices(): VoiceInfo[];\n    clearCache(): void;\n    dispose(): Promise<void>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `KokoroWebGPUProvider` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly name: string",
+                    "\"kokoro-webgpu\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(config: TTSConfig = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._config`, `this._cache`; construction of `TTSCache`; calls to `this._configureLocalEnvironment`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isReady(): boolean",
+                    "—",
+                    "Whether the Kokoro neural network and tokenizer are loaded into memory and ready for inference. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get activeDevice(): \"webgpu\" | \"wasm\" | \"cpu\"",
+                    "—",
+                    "Currently active execution device (\"webgpu\", \"wasm\", or \"cpu\"). [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async isWebGPUSupported(): Promise<boolean>",
+                    "—",
+                    "Probes hardware capabilities to determine whether WebGPU is available in this environment. [Source line 105](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L105)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async ensureVoiceCached(voice: string): Promise<void>",
+                    "—",
+                    "Pre-seeds the browser's Cache API with local voice style vector files from `/models/kokoro/voices/` so that kokoro-js never makes external network requests to Hugging Face. [Source line 121](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L121)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async init(configOverrides?: TTSConfig): Promise<void>",
+                    "—",
+                    "Initializes the Kokoro 82M model with WebGPU acceleration using local model files. [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async synthesize(text: string, options: TTSGenerateOptions = {}): Promise<TTSAudioResult>",
+                    "—",
+                    "Synthesizes text into high-fidelity speech audio. [Source line 230](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L230)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async *stream(text: string, options: TTSGenerateOptions = {}): AsyncGenerator<TTSStreamChunk>",
+                    "—",
+                    "Streams synthesized speech sentence by sentence. [Source line 292](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L292)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getVoices(): VoiceInfo[]",
+                    "—",
+                    "Returns the full catalog of 28 Kokoro voices. [Source line 336](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L336)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearCache(): void",
+                    "—",
+                    "Clears cached audio utterances. [Source line 343](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L343)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async dispose(): Promise<void>",
+                    "—",
+                    "Disposes model session and releases cache resources. [Source line 350](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L350)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "config.modelId ?? \"kokoro\"",
+                    "[Line 47](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L47)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.device ?? \"auto\"",
+                    "[Line 49](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L49)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.dtype ?? \"fp32\"",
+                    "[Line 50](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L50)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.maxCacheSize ?? 128",
+                    "[Line 52](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L52)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.allowRemoteFallback ?? false",
+                    "[Line 53](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L53)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.voice ?? DEFAULT_VOICE",
+                    "[Line 237](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L237)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.speed ?? 1.0",
+                    "[Line 238](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L238)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "KokoroWebGPUProvider._configureLocalEnvironment: private _configureLocalEnvironment(): void",
+                    "Configures Transformers.js to strictly prefer local models in public/models/kokoro. Body operations (including nested callbacks): calls to `(globalThis as any).require`, `path.resolve`, `fs.existsSync`.",
+                    "[Line 64](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L64)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "KokoroWebGPUProvider._resolveDevice: private async _resolveDevice(requested: TTSDevice): Promise<\"webgpu\" | \"wasm\" | \"cpu\">",
+                    "Body operations (including nested callbacks): calls to `KokoroWebGPUProvider.isWebGPUSupported`; return paths including `\"webgpu\"`, `\"wasm\"`, `\"cpu\"`.",
+                    "[Line 359](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L359)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "KokoroWebGPUProvider._reportProgress: private _reportProgress(progress: TTSProgress): void",
+                    "Implementation: `this._config.progressCallback?.(progress);`.",
+                    "[Line 377](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L377)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "KokoroWebGPUProvider._handleHuggingFaceProgress: private _handleHuggingFaceProgress(item: any): void",
+                    "Body operations (including nested callbacks): calls to `this._reportProgress`, `(fraction * 100).toFixed`.",
+                    "[Line 381](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/KokoroWebGPUProvider.ts#L381)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`[KokoroWebGPUProvider] Both WebGPU and WASM fallback failed: ${fallbackErr}`)",
+                "err"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "msedgettsprovider",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MsEdgeTTSProvider"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/tts/providers/MsEdgeTTSProvider.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/tts/providers/MsEdgeTTSProvider.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/tts`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "MsEdgeTTSProvider: High-performance, studio-quality Text-To-Speech provider utilizing Microsoft Edge's neural voice infrastructure (Azure Speech Read Aloud service). Features: - 320+ neural voices across 70+ languages and dialects with natural prosody. - Zero model weight download overhead (runs instantly without loading gigabyte neural weights). - Full support for word boundary metadata for precision closed-caption timing. - Direct in-process execution in Node.js (CLI video rendering, scripts, unit tests). - Seamless client proxying in browser development environments via Vite server middleware."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MsEdgeTTSProvider",
+                    "Class",
+                    "High-performance, studio-quality Text-To-Speech provider utilizing Microsoft Edge's neural voice infrastructure (Azure Speech Read Aloud service). Features: - 320+ neural voices across 70+ languages and dialects with natural prosody. - Zero model weight download overhead (runs instantly without loading gigabyte neural weights). - Full support for word boundary metadata for precision closed-caption timing. - Direct in-process execution in Node.js (CLI video rendering, scripts, unit tests). - Seamless client proxying in browser development environments via Vite server middleware."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class MsEdgeTTSProvider implements ITTSProvider {\n    readonly name: string;\n    constructor(config?: TTSConfig);\n    get isReady(): boolean;\n    init(_config?: TTSConfig): Promise<void>;\n    synthesize(text: string, options?: TTSGenerateOptions): Promise<TTSAudioResult>;\n    stream(text: string, options?: TTSGenerateOptions): AsyncGenerator<TTSStreamChunk>;\n    getVoices(): VoiceInfo[];\n    fetchVoices(): Promise<VoiceInfo[]>;\n    clearCache(): void;\n    dispose(): Promise<void>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MsEdgeTTSProvider` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly name: string",
+                    "\"msedge-tts\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(config: TTSConfig = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._isBrowser`, `this._config`, `this._cache`; construction of `TTSCache`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isReady(): boolean",
+                    "—",
+                    "Microsoft Edge TTS is cloud-hosted and always ready immediately without local weight loading. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async init(_config?: TTSConfig): Promise<void>",
+                    "—",
+                    "Initializes provider configuration. No weight downloading required. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async synthesize(text: string, options: TTSGenerateOptions = {}): Promise<TTSAudioResult>",
+                    "—",
+                    "Synthesizes text into high-fidelity speech audio using Microsoft Edge neural voices. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async *stream(text: string, options: TTSGenerateOptions = {}): AsyncGenerator<TTSStreamChunk>",
+                    "—",
+                    "Progressively streams synthesized speech sentence by sentence. [Source line 328](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L328)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getVoices(): VoiceInfo[]",
+                    "—",
+                    "Returns curated Microsoft Edge neural voices immediately. [Source line 373](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L373)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async fetchVoices(): Promise<VoiceInfo[]>",
+                    "—",
+                    "Fetches the complete live catalog of all 320+ Microsoft Edge neural voices. [Source line 380](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L380)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearCache(): void",
+                    "—",
+                    "Clears cached utterances. [Source line 401](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L401)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async dispose(): Promise<void>",
+                    "—",
+                    "Disposes resources and releases cache. [Source line 408](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L408)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "config.maxCacheSize ?? 128",
+                    "[Line 50](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L50)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.msedgeEndpoint || \"/api/tts/msedge\"",
+                    "[Line 51](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L51)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.voice || DEFAULT_MSEDGE_VOICE",
+                    "[Line 82](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L82)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.speed ?? 1.0",
+                    "[Line 83](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L83)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.splitPattern || /([.!?;]+(?:\\s+|$))/g",
+                    "[Line 333](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L333)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MsEdgeTTSProvider._synthesizeNode: private async _synthesizeNode( text: string, voice: string, speed: number, options: TTSGenerateOptions ): Promise<TTSAudioResult>",
+                    "Node.js execution: directly calls the msedge-tts package in-process. Body operations (including nested callbacks): construction of `MsEdgeTTS`, `Promise`, `Uint8Array`, `TTSAudio`, `Float32Array`; calls to `import`, `tts.setMetadata`, `parseFloat`, `isNaN`, `options.volume.includes`, `options.volume.startsWith`, `tts.toStream`, `metadataStream.on` and additional helpers; long return expressions shown in the linked implementation; 1 explicit loop.",
+                    "[Line 124](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L124)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MsEdgeTTSProvider._synthesizeBrowser: private async _synthesizeBrowser( text: string, voice: string, speed: number, options: TTSGenerateOptions ): Promise<TTSAudioResult>",
+                    "Browser execution: invokes the Vite development server proxy endpoint. Body operations (including nested callbacks): construction of `Error`, `Float32Array`, `AudioContextClass`, `Uint8Array`, `TTSAudio`; calls to `fetch`, `res.headers.get`, `decodeURIComponent`, `res.arrayBuffer`, `parseFloat`, `ctx.decodeAudioData`, `arrayBuf.slice`, `decoded.getChannelData` and additional helpers; return paths including `new TTSAudio({ text, rawBuffer: arrayBuf, mimeType: \"audio/mpeg\", samples, sampleRate, duration: durationMs / 1000, durationMs, voice, speed, wordBou…`; rejection paths a template-literal expression (see source).",
+                    "[Line 233](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/providers/MsEdgeTTSProvider.ts#L233)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`[MsEdgeTTSProvider] Synthesis failed: HTTP ${res.status} ${res.statusText}`)"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,482 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-fast-path-and-adaptive-lod",
+  "title": "Fast Path Triangulation & Adaptive Viewport LOD Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/FAST_PATH_AND_ADAPTIVE_LOD.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/FAST_PATH_AND_ADAPTIVE_LOD.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/FAST_PATH_AND_ADAPTIVE_LOD.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Path](/api-entities-primitives-2d#path), [Pipeline](/api-render-pipelines#pipeline), [Mode](/api-render-frame-graph#resource), [Compute](/api-compute#compute), [Shader](/api-entities-primitives-2d#shader), [GlobalAnalyticalAllocator](/api-render-allocator#globalanalyticalallocator), [GlobalGeometryAllocator](/api-render-allocator#globalgeometryallocator), [Line](/api-entities-primitives-2d#line), [Vec2](/api-math-vector#vec2), [SVG](/api-entities-composites-svg#svg), [Fill](/api-core#fill), [Camera](/api-camera#camera), [Entity](/api-core-entity#entity), [Code](/api-entities-composites-text#code), [CurveType](/api-entities-primitives-2d-curves#curveevaluator), [Spline](/api-entities-primitives-2d#spline), [Vec3](/api-math-vector#vec3), [VectorEntity](/api-core-vectorentity#vectorentity), [Text](/api-entities-composites-text#text)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a comprehensive technical overview of the **Fast Path Triangulation Pipeline**, **Intermediate Quadratic Decomposition**, and **Dynamic Viewport-Adaptive Pixel-Space Level of Detail (LOD)** in Retiam."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-rendering-strategies",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Rendering Strategies"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides dual rendering strategies for 2D/3D vector paths and composite SVGs:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Feature",
+            "`analytical` Mode",
+            "`fast` Mode"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Pipeline**",
+                  "type": "text"
+                },
+                {
+                  "text": "Analytical Signed Distance Fields (SDF) + multi-pass stencil chains"
+                },
+                {
+                  "text": "CPU Triangulation (Earcut / Polygon-Clipping) + GPU Stroke Compute"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Shader Execution**",
+                  "type": "text"
+                },
+                {
+                  "text": "Per-pixel cubic & quadratic raymarching"
+                },
+                {
+                  "text": "Standard triangle rasterization with uber-shader instance switching"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Sub-Allocation**",
+                  "type": "text"
+                },
+                {
+                  "text": "`GlobalAnalyticalAllocator` (points, contours, arc-lengths)"
+                },
+                {
+                  "text": "`GlobalGeometryAllocator` (contiguous sub-allocated vertex/index slices)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Primary Use Case**",
+                  "type": "text"
+                },
+                {
+                  "text": "Infinite zoom precision, custom procedural fragment shaders, complex boolean clipping"
+                },
+                {
+                  "text": "High-density SVGs (e.g. 50,000+ subpaths), real-time procedural animations, high-framerate rendering"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Adaptive LOD**",
+                  "type": "text"
+                },
+                {
+                  "text": "Naturally continuous via GPU fragment raymarching"
+                },
+                {
+                  "text": "Dynamic in-place re-tessellation via Hysteresis-governed screen-space error"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-decomposition-architecture-intermediate-quadratic-vs-direct-line",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Decomposition Architecture: Intermediate Quadratic vs. Direct Line"
+        },
+        {
+          "type": "paragraph",
+          "text": "When rendering vector paths in `fast` mode, curves must be flattened into linear polylines (`Vec2[][]`) before triangulation. Retiam employs an **Intermediate Quadratic Contour Representation** (`rawContours: number[][]`)."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n    A[\"SVG Path String ('d')\"] -->|\"One-Time Decode (C -> Q, A -> Q)\"| B[\"Flat Numeric Buffers (rawContours: number[][])\"]\n    B -->|\"flattenContours(rawContours, tolerance)\"| C[\"Linear Polylines (Vec2[][])\"]\n    C --> D[\"Fill Triangulation (Earcut / Martinez-Rueda)\"]\n    C --> E[\"GPU Stroke Extrusion Compute\"]\n    \n    subgraph \"Continuous Viewport LOD Loop\"\n        F[\"Camera Zoom / Movement\"] -->|\"Check Hysteresis Window\"| G{\"Current Pixel Error Drifts Outside Bounds?\"}\n        G -->|\"Yes (6.0x faster)\"| B\n        G -->|\"No\"| H[\"Retain Active Geometry (0 buffer rebuilds)\"]\n    end"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Why Intermediate Quadratic is 6.0x Faster than Direct Decomposition"
+        },
+        {
+          "type": "paragraph",
+          "text": "In benchmarks across complex scenes (`paris-30k.svg` containing 50,620 subpaths):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Operation",
+            "Direct `pathToPolylines` (from SVG String)",
+            "Intermediate Quadratic (`rawContours` $\\to$ `flattenContours`)",
+            "Speedup"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Re-Tessellation on Camera Zoom / LOD**",
+                  "type": "text"
+                },
+                {
+                  "text": "**635.98 ms**"
+                },
+                {
+                  "text": "**105.40 ms**"
+                },
+                {
+                  "text": "**6.0x faster** ⚡"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Flattening from Cached Numbers**",
+                  "type": "text"
+                },
+                {
+                  "text": "N/A (re-parses string)"
+                },
+                {
+                  "text": "**40.08 ms**"
+                },
+                {
+                  "text": "**15.8x faster** ⚡"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Key Technical Reasons:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Elimination of Repeated String & AST Parsing**:",
+              "children": [
+                "Direct decomposition must execute regex tokenization (`parsePath`), absolute normalization (`absolutize`), and arc matrix transformations on every frame or zoom event.",
+                "The intermediate representation parses the string **only once** into contiguous primitive `number[]` arrays (`[x0, y0, cx, cy, x1, y1, ...]`)."
+              ]
+            },
+            {
+              "text": "**Reduced Arithmetic Complexity of de Casteljau Recursion**:",
+              "children": [
+                "Cubic Bézier curves ($C$) have 4 control points, requiring **6 intermediate point evaluations** per recursion step ($P_{01}, P_{12}, P_{23}, P_{012}, P_{123}, P_{0123}$) and deeper recursion trees.",
+                "Quadratic Bézier curves ($Q$) have 3 control points, requiring only **3 intermediate point evaluations** ($P_{01}, P_{12}, P_{012}$) and simple scalar midpoint distance checks ($\\text{dist}^2 = \\frac{1}{4}((P_1.x - \\text{mid}.x)^2 + (P_1.y - \\text{mid}.y)^2)$)."
+              ]
+            },
+            {
+              "text": "**Zero Heap Allocation & GC Stability**:",
+              "children": [
+                "`rawContours` stores primitive numbers contiguously, preventing the allocation of millions of transient `Vec2` instances on the JavaScript heap."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-screen-space-pixel-tolerance-dynamic-adaptive-lod",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Screen-Space Pixel Tolerance & Dynamic Adaptive LOD"
+        },
+        {
+          "type": "paragraph",
+          "text": "Geometric `tolerance` is defined in local model units. Retiam converts target screen-pixel tolerances into equivalent local tolerances based on camera optics and world transformations."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.1 Mathematical Derivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Let:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "$T_{\\text{pixel}}$ = Target allowable screen-space curve deviation in pixels (e.g. $1.0\\text{ px}$)",
+            "$H_{\\text{viewport}}$ = Viewport / canvas height in pixels",
+            "$S_{\\text{world}}$ = Entity hierarchical world scale ($\\frac{\\text{scale}_x + \\text{scale}_y}{2}$)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "For Perspective Cameras:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given camera field of view $\\theta$ (in radians), camera world position $\\mathbf{C}$, entity world position $\\mathbf{E}$, and forward unit vector $\\mathbf{F}$:"
+        },
+        {
+          "type": "math",
+          "tex": "d = |(\\mathbf{E} - \\mathbf{C}) \\cdot \\mathbf{F}|"
+        },
+        {
+          "type": "math",
+          "tex": "H_{\\text{frustum}} = 2 \\cdot d \\cdot \\tan\\left(\\frac{\\theta}{2}\\right)"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Pixels Per World Unit} = \\frac{H_{\\text{viewport}}}{H_{\\text{frustum}}}"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Pixels Per Local Unit} = \\text{Pixels Per World Unit} \\times S_{\\text{world}}"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Local Tolerance} = \\frac{T_{\\text{pixel}}}{\\text{Pixels Per Local Unit}}"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "For Orthographic Cameras:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given camera orthographic scale $H_{\\text{ortho}}$:"
+        },
+        {
+          "type": "math",
+          "tex": "H_{\\text{frustum}} = H_{\\text{ortho}}"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Local Tolerance} = \\frac{T_{\\text{pixel}}}{\\left(\\frac{H_{\\text{viewport}}}{H_{\\text{ortho}}}\\right) \\times S_{\\text{world}}}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.2 Ratio-Safe Hysteresis Window"
+        },
+        {
+          "type": "paragraph",
+          "text": "To prevent constant re-tessellation (\"jitter\" / buffer thrashing) while smoothly animating or slightly adjusting the camera, Retiam evaluates a hysteresis window with a ratio-safe lower bound:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Let:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "$T_{\\text{target}} = \\text{adaptivePixelTolerance}$ (e.g. $1.0\\text{ px}$)",
+            "$\\Delta T = \\text{adaptiveToleranceMargin}$ (defaults to $0.5 \\times T_{\\text{target}}$)",
+            "$\\text{currentPixelError} = \\text{activeTolerance}_{\\text{local}} \\times \\text{Pixels Per Local Unit}$"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Upper Limit} = T_{\\text{target}} + \\Delta T"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Lower Limit} = \\begin{cases} T_{\\text{target}} - \\Delta T & \\text{if } \\Delta T < T_{\\text{target}} \\\\ \\frac{T_{\\text{target}}}{1 + \\frac{\\Delta T}{T_{\\text{target}}}} & \\text{if } \\Delta T \\ge T_{\\text{target}} \\end{cases}"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const needsRetessellation = currentPixelError > upperLimit || currentPixelError < lowerLimit;\n\nif (needsRetessellation) {\n    const targetLocalTol = Math.max(\n        this.minTolerance,\n        Math.min(this.maxTolerance, target / (pixelsPerLocalUnit || 1.0))\n    );\n    this.tolerance = targetLocalTol;\n    this.isDirty = true;\n    if (this.onTessellationChange) {\n        this.onTessellationChange(this.tolerance);\n    }\n}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Zoom In ($\\text{error} > \\text{Upper Limit}$)**: Automatically refines mesh resolution, adding subdivisions to maintain sub-pixel curve smoothness.",
+            "**Zoom Out ($\\text{error} < \\text{Lower Limit}$)**: Automatically simplifies mesh resolution, decreasing vertex counts to save GPU memory and vertex shader work.",
+            "**Inside Window ($\\text{Lower Limit} \\le \\text{error} \\le \\text{Upper Limit}$)**: **Zero work** — existing vertex/index allocations remain untouched."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-multi-contour-glyph-counter-hole-triangulation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Multi-Contour & Glyph Counter (Hole) Triangulation"
+        },
+        {
+          "type": "paragraph",
+          "text": "For complex compound shapes and typography glyphs (e.g. inner counters in letters 'R', 'e', 'd', 'B', 'a'):"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Polygon-Clipping Martinez-Rueda Solver**:",
+              "children": [
+                "Resolves overlapping and self-intersecting loops with even-odd or non-zero winding fill rules via `polygon-clipping`."
+              ]
+            },
+            {
+              "text": "**Earcut Fallback with Interior Chord Test Points**:",
+              "children": [
+                "When using direct ear clipping, hole detection identifies inner rings using polygon-in-polygon centroid and interior-chord test points."
+              ]
+            },
+            {
+              "text": "**Ring Sanitation**:",
+              "children": [
+                "Duplicate closing vertices on outer rings and hole boundaries are stripped prior to earcut indexing, preventing degenerate zero-area triangles."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-api-reference-code-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. API Reference & Code Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.1 Declarative Options on Path and SVG"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Path, SVG, CurveType, Spline, Vec3 } from 'retiam';\n\n// 1. Static Path with Fast GPU Triangulation\nconst path = new Path(\"M 10 80 Q 95 10 180 80\", {\n    method: \"fast\",\n    tessellation: \"adaptive\",\n    tolerance: 0.25,\n    extruder: \"gpu\"\n});\n\n// 2. High-Density SVG with Dynamic Viewport-Adaptive Pixel LOD\nconst map = new SVG(svgData, {\n    method: \"fast\",\n    adaptivePixelTolerance: 1.0,    // Target max 1.0px curve error on screen\n    adaptiveToleranceMargin: 0.5,   // Re-tessellate only when error drifts outside [0.5px, 1.5px]\n    minTolerance: 0.0001,           // Local clamp floor for deep zooms\n    maxTolerance: 5.0               // Local clamp ceiling for wide zoom-outs\n});\n\n// 3. Procedural Animated Spline with Adaptive LOD\nconst spline = new Spline(controlPoints, {\n    method: \"fast\",\n    type: CurveType.BSpline,\n    maxSegments: 64,\n    adaptivePixelTolerance: 0.75,\n    adaptiveToleranceMargin: 0.25\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.2 Fluent Viewport Methods on VectorEntity"
+        },
+        {
+          "type": "paragraph",
+          "text": "All vector entities (`Path`, `SVG`, `Spline`, `Text`, `Shape`) inherit viewport tolerance methods:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// A. One-Time Static Screen-Space Application\n// Calculates the equivalent local tolerance at current camera position and updates geometry once.\ntiger.applyPixelTolerance(0.5);\n\n// B. Enable Dynamic Camera-Tracking Adaptive LOD\n// Continuously monitors camera zoom and updates mesh resolution automatically.\ntiger.setAdaptivePixelTolerance(1.0, 0.5, { minTolerance: 0.0001, maxTolerance: 10.0 });\n\n// C. Disable Dynamic Camera Tracking\n// Freezes the geometry at its current tessellation resolution.\ntiger.disableAdaptivePixelTolerance();\n\n// D. Pure Math Query\n// Computes what local tolerance corresponds to a target screen pixel error.\nconst localTol = tiger.computeLocalTolerance(1.0);"
+        }
+      ]
+    },
+    {
+      "id": "6-verification-test-suite",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Verification & Test Suite"
+        },
+        {
+          "type": "paragraph",
+          "text": "The adaptive tolerance and fast path pipeline are covered by automated unit tests:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "[`test/pixel_tolerance_test.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/test/pixel_tolerance_test.ts):",
+              "children": [
+                "Perspective camera distance scaling ($10\\times$ distance $= 10\\times$ tolerance change).",
+                "Entity transform hierarchical scaling ($2\\times$ scale $= 2\\times$ tolerance change).",
+                "Orthographic projection conversions.",
+                "Hysteresis window stability during small camera translations.",
+                "Automatic mesh refinement on zoom-in and simplification on zoom-out.",
+                "`Spline` procedural continuous LOD dynamic re-evaluation."
+              ]
+            },
+            {
+              "text": "[`test/path_components_test.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/test/path_components_test.ts):",
+              "children": [
+                "Fast vs. Analytical mode selection.",
+                "Uber-shader instance batching (`firstInstance` 0 for fill, 1 for stroke).",
+                "Multi-contour disjoint polygons and hole triangulation."
+              ]
+            },
+            {
+              "text": "[`test/triangulated_path_test.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/test/triangulated_path_test.ts):",
+              "children": [
+                "In-place buffer update and memory compaction in `GlobalGeometryAllocator`."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

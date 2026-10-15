@@ -1,0 +1,281 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-entities-primitives-2d-sdf",
+  "title": "entities / primitives / 2d / sdf API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdfcircle",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SDFCircle"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/primitives/2d/sdf/SDFCircle.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/primitives/2d/sdf/SDFCircle.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SDFCircleOptions: Configuration options for the analytical [[SDFCircle]] entity.",
+                "SDFCircle: An analytical 2D Signed Distance Field (SDF) circle entity powered by [[SDF2D]]. Evaluates the mathematical distance equation directly in the fragment shader with sub-pixel analytical anti-aliasing (`sdAa`), full stroke support, and zero CPU mesh tessellation."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SDFCircleOptions",
+                    "Interface",
+                    "Configuration options for the analytical [[SDFCircle]] entity."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SDFCircle",
+                    "Class",
+                    "An analytical 2D Signed Distance Field (SDF) circle entity powered by [[SDF2D]]. Evaluates the mathematical distance equation directly in the fragment shader with sub-pixel analytical anti-aliasing (`sdAa`), full stroke support, and zero CPU mesh tessellation."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface SDFCircleOptions extends SDF2DOptions {\n    radius?: number;\n}\nexport declare class SDFCircle extends SDF2D implements IRaycastable {\n    constructor(radius?: number, options?: SDFCircleOptions);\n    constructor(options?: SDFCircleOptions);\n    get radius(): number;\n    set radius(r: number);\n    setRadius(r: number): this;\n    get circumference(): number;\n    getTotalLength(): number;\n    setStrokeWidth(width: number): this;\n    setStroke(strokeWidth: number, color?: Color): this;\n    update(time: number, dt: number): void;\n    getLocalAABB(): AABB;\n    raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): RaycastHit | null;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SDFCircleOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Radius of the circle in local world units. Default: 10 [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SDFCircle` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public constructor(radius?: number, options?: SDFCircleOptions);",
+                    "—",
+                    "Creates an analytical SDF Circle with a specified radius and styling options. Param: radius Radius of the circle in local units. Param: options Styling and material options (fill, stroke, opacity). [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(options?: SDFCircleOptions);",
+                    "—",
+                    "Creates an analytical SDF Circle with optional configuration options. Param: options Configuration options including radius, fill, and stroke. Param: options.radius Radius in local units. Default: 10 [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(arg1?: number | SDFCircleOptions, arg2?: SDFCircleOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._radius`; calls to `this.syncBounds`. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get radius(): number",
+                    "—",
+                    "Implementation: `return this._radius;`. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set radius(r: number)",
+                    "—",
+                    "Implementation: `this.setRadius(r);`. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRadius(r: number): this",
+                    "—",
+                    "Implementation: `const clamped = Math.max(0, r); if (this._radius === clamped) return this; this._radius = clamped; this.syncBounds(); return this;`. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get circumference(): number",
+                    "—",
+                    "Implementation: `return Math.PI * (this._radius * 2);`. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L110)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getTotalLength(): number",
+                    "—",
+                    "Implementation: `return this.circumference;`. [Source line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L114)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override setStrokeWidth(width: number): this",
+                    "—",
+                    "Implementation: `super.setStrokeWidth(width); this.syncBounds(); return this;`. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override setStroke(strokeWidth: number, color?: Color): this",
+                    "—",
+                    "Implementation: `super.setStroke(strokeWidth, color); this.syncBounds(); return this;`. [Source line 126](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L126)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override update(time: number, dt: number): void",
+                    "—",
+                    "Implementation: `super.update(time, dt); if (this.paint.strokeWidth !== this._lastStrokeWidth) { this.syncBounds(); }`. [Source line 132](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L132)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override getLocalAABB(): AABB",
+                    "—",
+                    "Implementation: `const aabb = new AABB(); const sw = (this.paint.strokeWidth || 0) * 0.5; const r = this._radius + sw; return aabb.expandByPoint(new Vec3(-r, -r, 0)).expandByPoint(new Vec3(r, r, 0));`. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance: number = 0.05): RaycastHit | null",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `Raycaster.rayPlaneIntersect`, `worldMatrix.transformPoint`, `localHit.add`, `worldHit.sub(ray.origin).length`, `worldHit.sub`; return paths including `null`, `{ entity: this, point: worldHit, distance }`. [Source line 148](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L148)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.radius ?? 10",
+                    "[Line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L59)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strokeWidth ?? 0",
+                    "[Line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L61)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SDFCircle.syncBounds: private syncBounds(): void",
+                    "Synchronizes quad dimensions and uniform parameters so outer stroke and sub-pixel anti-aliasing are never clipped by the quad boundary. Body operations (including nested callbacks): assignments to `this._lastStrokeWidth`, `this.width`, `this.height`; calls to `this.updateSize`, `this.setParams`.",
+                    "[Line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/sdf/SDFCircle.ts#L78)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [SDF2DOptions](/api-entities-primitives-2d#sdf2d), [SDF2D](/api-entities-primitives-2d#sdf2d), [IRaycastable](/api-core#interfaces)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,812 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-libs-tts-components",
+  "title": "tts / components API",
+  "group": "Library API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "subtitles",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Subtitles"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/tts/components/Subtitles.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/tts/components/Subtitles.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/tts`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Subtitles: Cinematic Subtitles and Closed-Captions entity for Retiam scenes. Features crisp SDF typography, mathematically undistorted circular corner fillets, curated design presets (obsidian, pill, minimal, broadcast, neon, glass, light), and fine-grained runtime style options."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SubtitlePreset",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SubtitlesOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SUBTITLE_PRESETS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Subtitles",
+                    "Class",
+                    "Cinematic Subtitles and Closed-Captions entity for Retiam scenes. Features crisp SDF typography, mathematically undistorted circular corner fillets, curated design presets (obsidian, pill, minimal, broadcast, neon, glass, light), and fine-grained runtime style options."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type SubtitlePreset = \"obsidian\" | \"pill\" | \"minimal\" | \"broadcast\" | \"neon\" | \"glass\" | \"light\";\nexport interface SubtitlesOptions {\n    preset?: SubtitlePreset;\n    fontSize?: number;\n    textColor?: Color | string;\n    textOpacity?: number;\n    backdropColor?: Color | string;\n    backdropOpacity?: number;\n    strokeColor?: Color | string;\n    strokeWidth?: number;\n    showBorder?: boolean;\n    cornerRadius?: number | [\n        number,\n        number,\n        number,\n        number\n    ];\n    pillShape?: boolean;\n    showBackdrop?: boolean;\n    padding?: [\n        number,\n        number\n    ] | number;\n    maxWidth?: number;\n    maxLineChars?: number;\n    lineHeight?: number;\n    bottomOffset?: number;\n    zIndex?: number;\n}\nexport declare const SUBTITLE_PRESETS: Record<SubtitlePreset, Partial<SubtitlesOptions>>;\nexport declare class Subtitles extends VGroup {\n    constructor(options?: SubtitlesOptions);\n    get textEntity(): SDFText;\n    get backdrop(): Rect | null;\n    applyOptions(options?: SubtitlesOptions): this;\n    setPreset(name: SubtitlePreset): this;\n    setCornerRadius(radius: number | [\n        number,\n        number,\n        number,\n        number\n    ]): this;\n    setPillShape(enabled?: boolean): this;\n    setPadding(horizontal: number, vertical?: number): this;\n    setBackdropColor(color: Color | string, opacity?: number): this;\n    setStroke(width: number, color?: Color | string): this;\n    setStroke(color: Color | string, width?: number): this;\n    setStrokeColor(color: Color | string): this;\n    setStrokeWidth(strokeWidth: number): this;\n    setTextColor(color: Color | string, opacity?: number): this;\n    setFontSize(size: number): this;\n    setBackdropStyle(fillColor: Color | string, strokeColor?: Color | string, strokeWidth?: number, cornerRadius?: number | [\n        number,\n        number,\n        number,\n        number\n    ]): this;\n    setTextStyle(textColor: Color | string, fontSize?: number): this;\n    setMaxLineChars(chars: number): this;\n    setMaxWidth(width: number): this;\n    setBottomOffset(y: number): this;\n    showText(text: string, durationMs?: number): this;\n    syncWithAudio(result: TTSAudioResult): this;\n    clear(): this;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SubtitlesOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "preset?: SubtitlePreset;",
+                    "—",
+                    "Preset design configuration. Overrides unset options with curated theme defaults. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fontSize?: number;",
+                    "—",
+                    "Font size in Retiam world units. Defaults to 0.38. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "textColor?: Color | string;",
+                    "—",
+                    "Text color (Color instance or hex string). Defaults to #F8FAFC (high-contrast white). [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "textOpacity?: number;",
+                    "—",
+                    "Text opacity [0.0 - 1.0]. Defaults to 1.0. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "backdropColor?: Color | string;",
+                    "—",
+                    "Background pill fill color (Color instance or hex string). Defaults to translucent dark obsidian #060913. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "backdropOpacity?: number;",
+                    "—",
+                    "Background pill fill opacity [0.0 - 1.0]. Defaults to 0.85. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeColor?: Color | string;",
+                    "—",
+                    "Stroke border color around backdrop pill. Defaults to translucent slate/cyan. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeWidth?: number;",
+                    "—",
+                    "Stroke border width in world units. Defaults to 0.02. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "showBorder?: boolean;",
+                    "—",
+                    "Whether to render a stroke border around the backdrop pill. Defaults to true. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cornerRadius?: number | [number, number, number, number];",
+                    "—",
+                    "Corner radius for the backdrop pill. Uniform circular radius number, or [topLeft, topRight, bottomRight, bottomLeft]. Defaults to 0.22 world units. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pillShape?: boolean;",
+                    "—",
+                    "Whether to format the backdrop pill as a full stadium pill (semicircular ends). When true, cornerRadius is automatically computed as `height / 2`. Defaults to false. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "showBackdrop?: boolean;",
+                    "—",
+                    "Whether to render a backdrop pill behind text. Defaults to true. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "padding?: [number, number] | number;",
+                    "—",
+                    "Inner padding [horizontal, vertical] or uniform number around text inside backdrop. Defaults to [0.55, 0.26]. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxWidth?: number;",
+                    "—",
+                    "Maximum world-unit width before constraining line wrap. Defaults to 15.0. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxLineChars?: number;",
+                    "—",
+                    "Maximum character count per line before automatic word-wrapping. Defaults to 65. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lineHeight?: number;",
+                    "—",
+                    "Multiplier for vertical line-height spacing on multi-line text. Defaults to 1.35. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bottomOffset?: number;",
+                    "—",
+                    "Bottom margin coordinate offset (Y position in scene). Defaults to -5.0. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zIndex?: number;",
+                    "—",
+                    "Z-index depth for rendering on top of scene graphics. Defaults to 999. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L61)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Subtitles` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options: SubtitlesOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._textEntity`, `this._textEntity.paint.z_index`, `this._backdrop`, `this._backdrop.paint.fill`, `this._backdrop.paint.stroke`, `this._backdrop.paint.strokeWidth`, `this._backdrop.paint.z_index`, `this._backdrop.paint.opacity` and other instance fields; construction of `SDFText`, `Rect`; calls to `this.add`, `this.applyOptions`, `this.transform.position.set`. [Source line 204](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L204)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get textEntity(): SDFText",
+                    "—",
+                    "Access the underlying SDFText entity for advanced low-level styling [Source line 238](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L238)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get backdrop(): Rect | null",
+                    "—",
+                    "Access the underlying backdrop Rect entity [Source line 243](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L243)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyOptions(options: SubtitlesOptions = {}): this",
+                    "—",
+                    "Applies a complete configuration options object or partial updates. [Source line 250](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L250)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPreset(name: SubtitlePreset): this",
+                    "—",
+                    "Set an aesthetic preset theme [Source line 334](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L334)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setCornerRadius(radius: number | [number, number, number, number]): this",
+                    "—",
+                    "Set the corner radius of the backdrop pill without distortion [Source line 339](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L339)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPillShape(enabled: boolean = true): this",
+                    "—",
+                    "Enable or disable stadium pill shape (semicircular ends where cornerRadius = height / 2) [Source line 349](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L349)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPadding(horizontal: number, vertical: number = horizontal): this",
+                    "—",
+                    "Set the inner horizontal and vertical padding around the subtitle text [Source line 358](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L358)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBackdropColor(color: Color | string, opacity?: number): this",
+                    "—",
+                    "Configure backdrop fill color and opacity [Source line 367](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L367)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override setStroke(width: number, color?: Color | string): this;",
+                    "—",
+                    "Configure border stroke styling for the backdrop pill [Source line 383](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L383)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStroke(color: Color | string, width?: number): this;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 384](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L384)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override setStroke(\n        widthOrColor: number | Color | string,\n        colorOrWidth?: Color | string | number\n    ): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._strokeWidth`, `this._showBorder`, `this._strokeColor`, `this._backdrop.paint.stroke`, `this._backdrop.paint.strokeWidth`; calls to `resolveColor`, `this._backdrop.invalidate`; return paths including `this`. [Source line 385](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L385)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override setStrokeColor(color: Color | string): this",
+                    "—",
+                    "Set backdrop border stroke color [Source line 411](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L411)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override setStrokeWidth(strokeWidth: number): this",
+                    "—",
+                    "Set backdrop border stroke width [Source line 421](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L421)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTextColor(color: Color | string, opacity: number = 1.0): this",
+                    "—",
+                    "Configure subtitle typography (font color and world unit font size) [Source line 432](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L432)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFontSize(size: number): this",
+                    "—",
+                    "Set subtitle font size in world units [Source line 442](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L442)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBackdropStyle(\n        fillColor: Color | string,\n        strokeColor?: Color | string,\n        strokeWidth?: number,\n        cornerRadius?: number | [number, number, number, number]\n    ): this",
+                    "—",
+                    "Configure backdrop visual styling (colors, stroke border, corner radius) [Source line 454](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L454)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTextStyle(textColor: Color | string, fontSize?: number): this",
+                    "—",
+                    "Configure subtitle typography [Source line 486](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L486)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMaxLineChars(chars: number): this",
+                    "—",
+                    "Set maximum characters per line before word-wrapping occurs [Source line 504](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L504)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMaxWidth(width: number): this",
+                    "—",
+                    "Set maximum bounding box width in world units [Source line 510](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L510)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBottomOffset(y: number): this",
+                    "—",
+                    "Positions the subtitles at the bottom center with a custom Y world coordinate [Source line 516](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L516)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public showText(text: string, durationMs?: number): this",
+                    "—",
+                    "Displays a subtitle sentence, formatting lines with word-wrapping and reflowing the backdrop pill with true circular corner arcs. [Source line 593](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L593)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncWithAudio(result: TTSAudioResult): this",
+                    "—",
+                    "Synchronizes this subtitle banner with a [[TTSAudioResult]], displaying the spoken text for the duration of the utterance and clearing on finish. [Source line 641](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L641)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear(): this",
+                    "—",
+                    "Immediately clears and hides the subtitle banner. [Source line 648](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L648)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.zIndex ?? 999",
+                    "[Line 207](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L207)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.bottomOffset ?? -5.0",
+                    "[Line 233](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L233)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "resolveColor: function resolveColor(val: Color | string | undefined, fallback: Color): Color",
+                    "Implementation: `if (!val) return fallback; if (typeof val === \"string\") return hex(val); return val;`.",
+                    "[Line 171](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L171)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Subtitles._getEffectiveCornerRadius: private _getEffectiveCornerRadius(w: number, h: number): number | [number, number, number, number]",
+                    "Computes safe corner radius: clamped so circular arcs never self-intersect, or computes stadium capsule radius when pillShape is enabled. Body operations (including nested callbacks): return paths including `maxR`, `Math.max(0, Math.min(this._cornerRadius, maxR))`, `Math.min(0.22, maxR)`.",
+                    "[Line 525](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L525)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Subtitles._updateBackdropDimensions: private _updateBackdropDimensions(wrappedText: string): void",
+                    "Internal geometry reflow: updates backdrop width & height using genuine Rect geometry regeneration (Rect.sync()) to preserve pristine, circular corner arcs. Body operations (including nested callbacks): assignments to `this._backdrop.paint.opacity`, `this._backdrop.width`, `this._backdrop.height`, `this._backdrop.cornerRadius`, `this._backdrop.paint.fill`, `this._backdrop.paint.stroke`, `this._backdrop.paint.strokeWidth`; calls to `wrappedText.trim`, `this._backdrop.invalidate`, `this._textEntity.getGroupLocalAABB`, `aabb.isEmpty`, `wrappedText.split`, `lines.map`, `this._getEffectiveCornerRadius`, `this._backdrop.transform.setScale`.",
+                    "[Line 548](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/Subtitles.ts#L548)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VGroup](/api-entities-layout#vgroup)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ttsnarrationcomponent",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TTSNarrationComponent"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/tts/components/TTSNarrationComponent.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/tts/components/TTSNarrationComponent.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/tts`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "TTSNarrationComponent: Retiam ECS Component that empowers any visual Entity with voice narration capabilities. Features automatic speech synthesis with Kokoro-82M (WebGPU) or Microsoft Edge Neural TTS, voiceover ducking, and synchronized micro-interaction visual pulses while speaking."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TTSNarrationOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TTSNarrationComponent",
+                    "Class",
+                    "Retiam ECS Component that empowers any visual Entity with voice narration capabilities. Features automatic speech synthesis with Kokoro-82M (WebGPU) or Microsoft Edge Neural TTS, voiceover ducking, and synchronized micro-interaction visual pulses while speaking."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TTSNarrationOptions {\n    provider?: \"kokoro\" | \"msedge\";\n    voice?: KokoroVoiceId | MsEdgeVoiceId | string;\n    speed?: number;\n    animateSpeaking?: boolean;\n    pulseAmplitude?: number;\n    pulseFrequency?: number;\n    onSpeechStart?: (text: string, result: TTSAudioResult) => void;\n    onSpeechEnd?: (text: string) => void;\n}\nexport declare class TTSNarrationComponent extends Component {\n    provider?: \"kokoro\" | \"msedge\";\n    voice: string;\n    speed: number;\n    animateSpeaking: boolean;\n    pulseAmplitude: number;\n    pulseFrequency: number;\n    onSpeechStart?: (text: string, result: TTSAudioResult) => void;\n    onSpeechEnd?: (text: string) => void;\n    constructor(options?: TTSNarrationOptions);\n    onInit(): void;\n    get isSpeaking(): boolean;\n    speak(text: string, overrides?: TTSGenerateOptions & TTSPlaybackOptions): Promise<{\n        audio: TTSAudioResult;\n        durationMs: number;\n    }>;\n    update(t: number, dt: number): void;\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TTSNarrationOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "provider?: \"kokoro\" | \"msedge\";",
+                    "—",
+                    "Preferred TTS engine provider (\"kokoro\" or \"msedge\"). [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "voice?: KokoroVoiceId | MsEdgeVoiceId | string;",
+                    "—",
+                    "Preferred voice ID for this entity (e.g. \"af_heart\" or \"en-US-JennyNeural\"). [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "speed?: number;",
+                    "—",
+                    "Default speaking rate. Defaults to 1.0. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "animateSpeaking?: boolean;",
+                    "—",
+                    "Whether to visually pulse the entity's scale during speech. Defaults to true. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pulseAmplitude?: number;",
+                    "—",
+                    "Scale pulse amplitude during speech (e.g. 0.06 = ±6% pulse). Defaults to 0.05. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pulseFrequency?: number;",
+                    "—",
+                    "Pulse oscillation frequency in Hz. Defaults to 4.0. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "onSpeechStart?: (text: string, result: TTSAudioResult) => void;",
+                    "—",
+                    "Callback fired when speech begins. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "onSpeechEnd?: (text: string) => void;",
+                    "—",
+                    "Callback fired when speech concludes. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L25)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TTSNarrationComponent` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public provider?: \"kokoro\" | \"msedge\"",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public voice: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public speed: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public animateSpeaking: boolean",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pulseAmplitude: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pulseFrequency: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onSpeechStart?: (text: string, result: TTSAudioResult)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onSpeechEnd?: (text: string)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options: TTSNarrationOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.provider`, `this.voice`, `this.speed`, `this.animateSpeaking`, `this.pulseAmplitude`, `this.pulseFrequency`, `this.onSpeechStart`, `this.onSpeechEnd`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onInit(): void",
+                    "—",
+                    "Implementation: `if (this.entity?.transform) { const currentScale = this.entity.transform.getScale(); this._baseScaleX = currentScale.x; this._baseScaleY = currentScale.y; this._baseScaleZ = currentScale.z; }`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isSpeaking(): boolean",
+                    "—",
+                    "Whether this entity is currently speaking an active narration track. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async speak(\n        text: string,\n        overrides: TTSGenerateOptions & TTSPlaybackOptions = {}\n    ): Promise<{ audio: TTSAudioResult; durationMs: number }>",
+                    "—",
+                    "Synthesizes and speaks text from this entity with synchronized timeline auto-ducking. Param: text The sentence to speak. Param: overrides Voice and playback option overrides. Returns: Synthesized [[TTSAudioResult]] and total speech duration in milliseconds. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.entity.version`; calls to `this.entity.transform.setScale`. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `this._isSpeaking = false; this._restoreBaseScale();`. [Source line 141](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L141)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.voice ?? (options.provider === \"msedge\" ? \"en-US-JennyNeural\" : \"af_heart\")",
+                    "[Line 52](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L52)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.speed ?? 1.0",
+                    "[Line 53](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L53)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.pulseAmplitude ?? 0.05",
+                    "[Line 55](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L55)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.pulseFrequency ?? 4.0",
+                    "[Line 56](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L56)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TTSNarrationComponent._restoreBaseScale: private _restoreBaseScale(): void",
+                    "Implementation: `if (this.entity?.transform) { this.entity.transform.setScale([ this._baseScaleX, this._baseScaleY, this._baseScaleZ ]); this.entity.version++; }`.",
+                    "[Line 130](https://github.com/abhilasbiswas/Retiam/blob/main/libs/tts/components/TTSNarrationComponent.ts#L130)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Component](/api-core#component)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

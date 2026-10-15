@@ -1,0 +1,53 @@
+{
+  "name": "retiam-docs",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/build-runtime.mjs && vite",
+    "build": "node scripts/verify-content.mjs && node scripts/build-runtime.mjs && tsc -b && vite build",
+    "lint": "oxlint src scripts vite.config.ts",
+    "preview": "vite preview",
+    "verify:content": "node scripts/verify-content.mjs",
+    "build:content": "node scripts/build-content.mjs",
+    "build:runtime": "node scripts/build-runtime.mjs",
+    "test:content": "node --test scripts/content.test.mjs",
+    "test:scenes": "node --test scripts/scenes.test.mjs",
+    "test:consumer": "node --test scripts/consumer.test.mjs",
+    "test:deployment": "node --test scripts/deployment.test.mjs scripts/runtime.test.mjs scripts/standalone.test.mjs",
+    "check:deployment": "node scripts/check-deployment.mjs",
+    "check:cdn": "node scripts/check-cdn.mjs",
+    "gen:schema": "npx -y ts-json-schema-generator --no-type-check --path src/types.ts --type DocsContent --out src/data/docs-schema.json && node scripts/build-content.mjs --schema-only",
+    "test": "npm run test:content && npm run test:deployment && npm run test:scenes && npm run test:consumer",
+    "reference:import": "node scripts/import-reference.mjs"
+  },
+  "dependencies": {
+    "framer-motion": "^13.0.0",
+    "fuse.js": "^7.5.0",
+    "katex": "^0.18.1",
+    "mermaid": "^12.1.0",
+    "prismjs": "^1.30.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.8",
+    "@types/node": "^24.13.3",
+    "@types/prismjs": "^1.26.6",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "oxlint": "^1.75.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0",
+    "@webgpu/types": "^0.1.31",
+    "esbuild": "^0.28.2",
+    "puppeteer": "^21.11.0",
+    "retiam": "file:vendor/retiam-1.0.0.tgz",
+    "roughjs": "^4.6.6"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

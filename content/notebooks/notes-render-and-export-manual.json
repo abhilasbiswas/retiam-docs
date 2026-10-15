@@ -1,0 +1,563 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-render-and-export-manual",
+  "title": "Retiam Engine — Complete Developer & Usage Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/render_and_export_manual.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/render_and_export_manual.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/render_and_export_manual.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [Text](/api-entities-composites-text#text), [Tex](/api-entities-composites-text#tex), [Axes](/api-entities-composites-coordinates#axes), [Animation](/api-animation#animation), [Camera](/api-camera#camera), [Entity](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity), [Graph](/api-libs-graphs-graph#graph), [State](/api-core#state), [Paint](/api-core-paint#paint), [Transform](/api-core-transform#transform), [Material](/api-core-material#material), [Animator](/api-animation#animator), [Circle](/api-entities-primitives-2d#circle), [Rect](/api-entities-primitives-2d#rect), [Color](/api-math#color), [Create](/api-animation-creation#create), [Morph](/api-animation-transform#morph), [Rate](/api-animation#rate), [RIGHT](/api-core#constants), [UP](/api-core#constants), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "**Retiam** is a WebGPU-powered 2D/3D mathematical animation and rendering engine inspired by Manim. Built natively with TypeScript, WGSL compute shaders, order-independent transparency (OIT), and hardware-accelerated path tracing, Retiam allows you to create high-fidelity technical animations, 3D visualizations, interactive graphics, and videos."
+        }
+      ]
+    },
+    {
+      "id": "table-of-contents",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Table of Contents"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "Retiam Engine — Complete Developer \\& Usage Guide",
+              "children": [
+                "[Table of Contents](#table-of-contents)",
+                {
+                  "text": "[1. Getting Started](#1-getting-started)",
+                  "children": [
+                    "Prerequisites",
+                    "Installation"
+                  ]
+                },
+                "2. Core Architecture \\& Concepts",
+                "[3. Creating Your First Scene](#3-creating-your-first-scene)",
+                {
+                  "text": "4. 2D Vector Primitives \\& Layout",
+                  "children": [
+                    "Primitives",
+                    "Manim-Style Declarative Layout API",
+                    "Boolean Shape Operations (CSG)"
+                  ]
+                },
+                "5. Typography: Text, SDF, \\& LaTeX (`Tex`)",
+                {
+                  "text": "6. Mathematical Plotting \\& Coordinates",
+                  "children": [
+                    "2D Axes \\& Functions",
+                    "3D Axes \\& Surfaces"
+                  ]
+                },
+                {
+                  "text": "7. 3D Models \\& SDF Volumetrics",
+                  "children": [
+                    "3D Primitives \\& OBJ Loading",
+                    "SDF Constructive Solid Geometry (CSG)"
+                  ]
+                },
+                {
+                  "text": "[8. The Animation Engine](#8-the-animation-engine)",
+                  "children": [
+                    "Common Animations",
+                    "Morphing API",
+                    "Sequencing \\& Grouping"
+                  ]
+                },
+                {
+                  "text": "9. Camera Systems \\& Lighting",
+                  "children": [
+                    "Camera Controllers",
+                    "Camera Cinematic Animations"
+                  ]
+                },
+                {
+                  "text": "10. Interactivity \\& Physics",
+                  "children": [
+                    "Pointer Events \\& Dragging"
+                  ]
+                },
+                {
+                  "text": "11. CLI Commands: Video Rendering \\& Web Export",
+                  "children": [
+                    "Command Structure",
+                    "1. Video Rendering (`render`)",
+                    {
+                      "text": "2. Standalone Web Export (`export`)",
+                      "children": [
+                        "How to Embed on Any Website:"
+                      ]
+                    }
+                  ]
+                },
+                "[License](#license)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-getting-started",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Getting Started"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Prerequisites"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Node.js** v18+ ",
+            "A WebGPU-supported browser (Chrome, Edge, Safari 18+, Brave, or Firefox Nightly)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Installation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Clone your project repository and install dependencies:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm install"
+        },
+        {
+          "type": "paragraph",
+          "text": "Start the local development server with hot-module reloading:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm run dev"
+        },
+        {
+          "type": "paragraph",
+          "text": "Open `http://localhost:5173` in your WebGPU-enabled browser."
+        }
+      ]
+    },
+    {
+      "id": "2-core-architecture-concepts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Architecture & Concepts"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam is built around a few foundational building blocks:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`Scene`**: The orchestrator. Manages the WebGPU render loop, timeline execution, camera viewports, and animation dispatch queues.",
+            "**`Entity` / `VectorEntity`**: The base node in the Scene Graph hierarchy. All shapes, 3D models, camera, and groups inherit from `Entity`.",
+            {
+              "text": "**`State`**: Contiguous Float32 memory mapped directly to WebGPU uniform buffers containing three sub-blocks:",
+              "children": [
+                "`Paint`: 2D styling (fill color, stroke color, stroke width, opacity, line caps/joints).",
+                "`Transform`: Spatial location (4x4 matrix, position, rotation quaternion, scale, offset pivot).",
+                "`Material`: 3D PBR attributes (color, roughness, metallic, emissive, transmission, IOR)."
+              ]
+            },
+            "**`Animator` (`entity.animate`)**: Fluent chainable API for scheduling state transitions over time."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-creating-your-first-scene",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Creating Your First Scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "To build a scene, extend the base `Scene` class and override its `async run()` method:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// src/scenes/FirstScene.ts\nimport { Scene, Circle, Rect, Color, Create, Morph, Rate, RIGHT, UP } from \"retiam\";\n\nexport class FirstScene extends Scene {\n    public async run() {\n        // Set background color\n        this.clearColor(new Color(0.05, 0.05, 0.1, 1.0));\n\n        // Create a 2D Circle Primitive\n        const circle = new Circle(2.0);\n        circle.paint.fill = new Color(0.0, 0.8, 1.0, 1.0);\n        circle.paint.stroke = Color.WHITE;\n        circle.paint.stroke_width = 0.08;\n\n        // Animate creation\n        await this.play(new Create(circle, { duration: 1500, rate_func: Rate.easeOutCubic() }));\n\n        // Shift position using declarative layout\n        await this.play(circle.animate.shift(RIGHT.scale(3)));\n\n        // Create a Square\n        const square = new Rect(3.5, 3.5);\n        square.paint.fill = new Color(1.0, 0.2, 0.5, 1.0);\n\n        // Morph the Circle into a Square\n        await this.play(Morph(circle, square, { duration: 2000 }));\n\n        // Pause for 1 second\n        await this.wait(1000);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-2d-vector-primitives-layout",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. 2D Vector Primitives & Layout"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam features a GPU-accelerated vector tessellation pipeline that produces crisp anti-aliased curves at any zoom level."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Primitives"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Circle, Rect, Triangle, Poly, Line, Path, Arc, Elipse, Builder } from \"retiam\";\n\n// Basic Shapes\nconst circle = new Circle(1.5);\nconst rect = new Rect(4.0, 2.0);\nconst triangle = new Triangle([0, 1], [-1, -1], [1, -1]);\nconst ellipse = new Elipse(4.0, 2.0);\nconst arc = new Arc(3.0, 3.0, 0, Math.PI); // Partial circular arc\n\n// SVG Path String\nconst svgPath = new Path(\"M -2 -2 L 2 -2 L 0 2 Z\");\n\n// Programmatic Path Builder\nconst builder = new Builder();\nbuilder.moveTo(-2, 0)\n       .bezierCurveTo(-1, 2, 1, 2, 2, 0)\n       .lineTo(0, -2)\n       .closePath();\nconst customPath = builder.build();"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Manim-Style Declarative Layout API"
+        },
+        {
+          "type": "paragraph",
+          "text": "Position entities relative to coordinates or other entities using spatial anchors (`UP`, `DOWN`, `LEFT`, `RIGHT`, `ORIGIN`, `CENTER`, `UL`, `UR`, `DL`, `DR`):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { RIGHT, UP, LEFT, DOWN, VGroup } from \"retiam\";\n\n// Move to absolute world coordinates\nshapeA.moveTo([2, 3, 0]);\n\n// Place shapeB to the right of shapeA with a 0.5 unit buffer gap\nshapeB.nextTo(shapeA, RIGHT, 0.5);\n\n// Align the top edge of shapeC to shapeA\nshapeC.alignTo(shapeA, UP);\n\n// Center an entity at origin [0,0,0]\nshapeD.center();\n\n// Group & auto-arrange multiple shapes in a row or grid\nconst group = new VGroup(shapeA, shapeB, shapeC);\ngroup.arrange(RIGHT, 0.4);       // Line arrangement\ngroup.arrangeInGrid(2, 2, 0.5);  // 2x2 Grid arrangement"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Boolean Shape Operations (CSG)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Combine 2D vector shapes using 2D boolean clipping:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Union, Difference, Intersection, Exclusion } from \"retiam\";\n\nconst circle = new Circle(2.0);\nconst rect = new Rect(3.0, 3.0);\n\nconst cutShape = new Difference(circle, rect); // Subtracts rect from circle\nconst combined = new Union(circle, rect);      // Merges outlines"
+        }
+      ]
+    },
+    {
+      "id": "5-typography-text-sdf-latex-tex",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Typography: Text, SDF, & LaTeX (Tex)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides three distinct text rendering systems tailored for different performance and visual needs:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { SDFText, Tex, Text, Color } from \"retiam\";\n\n// 1. SDFText (MSDF GPU-Accelerated Text) — Best for game HUDs, titles, and UI\nconst sdfText = new SDFText(\"WebGPU Rendering\", { fontSize: 0.6 });\nsdfText.paint.fill = Color.WHITE;\n\n// 2. Tex (MathJax LaTeX Equations) — Best for scientific & mathematical formulas\nconst equation = new Tex(\"E = mc^2\", { fontSize: 0.8 });\nequation.paint.fill = new Color(0.0, 1.0, 0.6, 1.0);\n\n// 3. Text (Vector Bezier Curves) — Best for stroke tracing & Write() animations\nconst vectorText = new Text(\"Hello Retiam\", { fontSize: 48, split: true });"
+        }
+      ]
+    },
+    {
+      "id": "6-mathematical-plotting-coordinates",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Mathematical Plotting & Coordinates"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam includes built-in coordinate systems and functional plotters that automatically synchronize visuals when axis ranges shift."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2D Axes & Functions"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Axes, FunctionGraph2D, ParametricCurve2D, ImplicitCurve2D, Streamlines2D, VectorField2D } from \"retiam\";\n\n// 1. Create Axes\nconst axes = new Axes({\n    xRange: [-5, 5, 1],\n    yRange: [-3, 3, 1],\n    width: 10,\n    height: 6,\n    showGrid: true,\n    dynamicGrid: true\n});\n\n// 2. Plot Function f(x) = sin(x)\nconst graph = new FunctionGraph2D(axes, (x) => Math.sin(x), {\n    stroke: new Color(0.0, 0.8, 1.0, 1.0),\n    stroke_width: 0.08\n});\n\n// 3. Plot Parametric Curve\nconst heart = new ParametricCurve2D(\n    (t) => 16 * Math.pow(Math.sin(t), 3) * 0.1,\n    (t) => (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * 0.1,\n    axes,\n    { tRange: [0, Math.PI * 2] }\n);\n\n// 4. Vector Field\nconst field = new VectorField2D(axes, (x, y) => [-y, x]);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3D Axes & Surfaces"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { ThreeDAxes, SurfaceGraph3D, ParametricSurface3D, ImplicitSurface3D, SurfaceViewStyle } from \"retiam\";\n\nconst axes3d = new ThreeDAxes({\n    xRange: [-3, 3, 1],\n    yRange: [-3, 3, 1],\n    zRange: [-3, 3, 1],\n    showGrid: true\n});\n\n// Heightmap Surface f(x,z) = cos(x) * sin(z)\nconst surface = new SurfaceGraph3D(axes3d, (x, z) => Math.cos(x) * Math.sin(z), {\n    viewStyle: SurfaceViewStyle.HEATMAP\n});"
+        }
+      ]
+    },
+    {
+      "id": "7-3d-models-sdf-volumetrics",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. 3D Models & SDF Volumetrics"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam offers full 3D rendering with PBR shading, OBJ loading, and GPU Signed Distance Field (SDF) raymarching."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3D Primitives & OBJ Loading"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Box, Sphere, Cylinder, Cone, Torus, OBJLoader, Color } from \"retiam\";\n\nconst box = new Box(2, 2, 2);\nbox.material.color = new Color(0.9, 0.2, 0.2, 1.0).rgba;\nbox.material.roughness = 0.2;\nbox.material.metallic = 0.8;\n\n// Load external .obj mesh\nconst model = await OBJLoader.load(\"models/character.obj\");"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "SDF Constructive Solid Geometry (CSG)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Render implicit volumetric shapes using WGSL sphere tracing:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { SDFEntity3D, SDFSphere, SDFBox } from \"retiam\";\n\n// Construct CSG AST: Sphere subtracted from a Box with smooth blending\nconst boxNode = new SDFBox(2, 2, 2);\nconst sphereNode = new SDFSphere(1.4);\nconst csgTree = boxNode.subtract(sphereNode, 0.2); // Smooth K = 0.2\n\nconst sdfEntity = new SDFEntity3D(csgTree);"
+        }
+      ]
+    },
+    {
+      "id": "8-the-animation-engine",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. The Animation Engine"
+        },
+        {
+          "type": "paragraph",
+          "text": "All animations are scheduled using `await this.play(...)`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Common Animations"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Create, Write, FadeIn, GrowFromCenter, Circumscribe, Flash } from \"retiam\";\n\nawait this.play(new Create(shape, { duration: 1500 }));\nawait this.play(new Write(textEntity, { lagRatio: 0.05 }));\nawait this.play(new FadeIn(entity, { duration: 1000 }));\nawait this.play(new GrowFromCenter(shape));\nawait this.play(new Circumscribe(targetEntity)); // Draws highlighting box\nawait this.play(new Flash(pointCoordinates));    // Burst of radial lines"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Morphing API"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Morph(...)` automatically selects the appropriate morph strategy based on entity types:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Morph, TransformMatch, MorphMode } from \"retiam\";\n\n// 1. 2D Vector Morph (Equalizes Bezier control points)\nawait this.play(Morph(circle, square, { duration: 2000 }));\n\n// 2. Intelligent Symbol/Character Matching Morph\nawait this.play(TransformMatch(texEquation1, texEquation2));\n\n// 3. 3D Mesh Particle Swarm Morph\nawait this.play(Morph(modelA, modelB, { \n    mode: MorphMode.SWARM,\n    particleCount: 30000,\n    noiseStrength: 4.0 \n}));\n\n// 4. 3D Volumetric SDF Morph\nawait this.play(Morph(sdfEntityA, sdfEntityB, { duration: 3000 }));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Sequential & Concurrent"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Sequential, Concurrent, Rate } from \"retiam\";\n\n// Run in parallel with staggering lag\nawait this.play(new Concurrent([animA, animB], { lagRatio: 0.2 }));\n\n// Run sequentially in series\nawait this.play(new Sequential([animA, animB]));"
+        }
+      ]
+    },
+    {
+      "id": "9-camera-systems-lighting",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "9. Camera Systems & Lighting"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Camera Controllers"
+        },
+        {
+          "type": "paragraph",
+          "text": "Attach camera controls to enable interactive navigation:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { CameraController, OrbitCameraController, Vec3 } from \"retiam\";\n\n// Standard WASD + Mouse Flight Controls\nnew CameraController(this, this.camera);\n\n// Orbit Camera centered around [0,0,0]\nnew OrbitCameraController(this, this.camera, new Vec3(0, 0, 0), 25.0);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Camera Cinematic Animations"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { CameraOrbit, CameraMove, CameraLookAt } from \"retiam\";\n\n// Orbit camera around a target point\nawait this.play(new CameraOrbit(this.camera, targetEntity, Math.PI, { duration: 3000 }));\n\n// Smoothly transition camera position & field of view\nawait this.play(new CameraMove(this.camera, {\n    position: [0, 10, 30],\n    pitch: -0.3,\n    fov: 60 * Math.PI / 180\n}));"
+        }
+      ]
+    },
+    {
+      "id": "10-interactivity-physics",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "10. Interactivity & Physics"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pointer Events & Dragging"
+        },
+        {
+          "type": "paragraph",
+          "text": "Make any entity interactable with built-in raycasting:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "circle.setEvent(\"pointerdown\", (e, hit) => {\n    console.log(\"Clicked at world point:\", hit.point);\n});\n\n// Enable 3D plane dragging\ncircle.setDraggable(true);"
+        }
+      ]
+    },
+    {
+      "id": "11-cli-commands-video-rendering-web-export",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "11. CLI Commands: Video Rendering & Web Export"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides command-line tools to render your scenes directly to MP4 videos or compile standalone Web Component scripts for website embedding."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Command Structure"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam <subcommand> [file] [flags]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. Video Rendering (render)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Headlessly renders your scene frame-by-frame via Puppeteer and streams raw frames into FFmpeg to output an MP4 video."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# Render default main.ts\nnpx retiam render src/main.ts\n\n# Render at 4K 60fps with a 10 second maximum duration\nnpx retiam render src/scenes/MyScene.ts -w 3840 -h 2160 -f 60 -d 10000\n\n# Enable Hardware Path Tracing with Raytracing\nnpx retiam render src/scenes/3DScene.ts --raytrace"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. Standalone Web Export (export)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Compiles any scene into a lightweight, self-contained JavaScript bundle (`dist-embed/<scenename>.js`) that defines the `<retiam>` HTML element tag."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# Export scene to dist-embed/myscene.js\nnpx retiam export src/scenes/MyScene.ts"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "How to Embed on Any Website:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Simply include the generated script and place the custom element in your HTML:"
+        },
+        {
+          "type": "code",
+          "language": "html",
+          "code": "<!DOCTYPE html>\n<html>\n<head>\n    <!-- 1. Include the single standalone script -->\n    <script src=\"./dist-embed/myscene.js\"></script>\n</head>\n<body>\n    <h1>Embedded WebGPU Animation</h1>\n\n    <!-- 2. Place the component anywhere in HTML -->\n    <div style=\"width: 800px; height: 450px;\">\n        <retiam></retiam>\n    </div>\n</body>\n</html>"
+        }
+      ]
+    },
+    {
+      "id": "license",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "License"
+        },
+        {
+          "type": "paragraph",
+          "text": "Copyright © 2026 Abhilas Biswas. Released under the ISC License."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,737 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-scene-composer-architecture-and-api",
+  "title": "SceneComposer Architecture, Multi-Scene Orchestration & Public API Reference",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SCENE_COMPOSER_ARCHITECTURE_AND_API.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SCENE_COMPOSER_ARCHITECTURE_AND_API.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SCENE_COMPOSER_ARCHITECTURE_AND_API.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [SceneComposer](/api-core-scenecomposer#scenecomposer), [Scene](/api-core-scene#scene), [Renderer](/api-render#renderer), [FrameGraph](/api-render-frame-graph#framegraph), [TextureManager](/api-core#texturemanager), [Camera](/api-camera#camera), [Queue](/api-utils#utility), [StateDataManager](/api-core#statedatamanager), [RenderCommand](/api-core#sceneinterface), [ComputeCommand](/api-compute#compute), [Compute](/api-compute#compute), [GlobalGeometryAllocator](/api-render-allocator#globalgeometryallocator), [GlobalAnalyticalAllocator](/api-render-allocator#globalanalyticalallocator), [UIManager](/api-core#uimanager), [OfflineRenderManager](/api-core#offlinerendermanager), [PlayerControls](/api-control#playercontrols), [InputRecorder](/api-control#inputrecorder), [AlwaysRegistry](/api-core-always#always), [RenderView](/api-camera#renderview), [RenderConfig](/api-render#renderconfig), [InteractionManager](/api-control#interactionmanager), [UIConfig](/api-core#uimanager), [Animation](/api-animation#animation), [Playable](/api-core-scene#scene)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`SceneComposer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts) is the top-level composition coordinator and master hardware orchestrator of the Retiam WebGPU engine. It owns the WebGPU execution context, manages the target canvas, coordinates the render loop, and aggregates multiple independent [`Scene`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts) instances into a unified, depth-sorted output—analogous to a master Composition in Adobe After Effects."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam strictly separates **hardware ownership and composition orchestration** from **timeline scripting and animation logic**:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  C[\"SceneComposer<br/>Device, canvas, renderer, FrameGraph<br/>Allocators, TextureManager and loop\"] -->|Owns and orchestrates| A[\"Scene A: main 3D / math<br/>Local entities, timeline and animation queue\"]\n  C -->|Owns and orchestrates| B[\"Scene B: HUD / UI overlay<br/>Local entities, orthographic camera and animation queue\"]\n  A -->|traverse| S[\"StateDataManager<br/>256-byte slabs at group 2\"]\n  B -->|traverse| S\n  S -->|RenderCommand and ComputeCommand arrays| R[\"Renderer<br/>FrameGraph passes to GPU command buffer\"]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Architectural Tenets:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Single Source of Truth for GPU Hardware**: All WebGPU objects (`GPUDevice`, `GPUCanvasContext`, `Renderer`, `Compute`, `StateDataManager`, `GlobalGeometryAllocator`, `GlobalAnalyticalAllocator`) are owned exclusively by `SceneComposer`. Individual `Scene` instances only hold non-owning back-references injected at attachment time.",
+            "**Multi-Scene Layering & Composition**: Scenes in the composer stack are ordered by $Z$-index (`sceneEntries`). Each scene can possess its own camera, projection parameters, clear color, and global opacity (`ALPHA`), enabling multi-layered rendering (e.g. 3D simulation with an orthographic HUD overlay, split-screen cameras, or crossfading transitions).",
+            "**Idle-Smart On-Demand Rendering**: Rather than running an unconstrained 60/144 FPS game loop when the screen is static, `SceneComposer` renders only when visual state is dirty, saving battery and CPU/GPU cycles.",
+            "**Zero Minor GC Allocations During Traversal**: Pre-allocates object pools for intermediate transforms (`statePool`), render descriptors (`renderCommandPool`), and scissor clipping boxes (`aabbPool`).",
+            "**Headless & Offline Auto-Routing**: Automatically inspects URL query parameters (`?offline=true`, `?renderConfig=...`) and environment features to switch seamlessly between real-time browser preview and headless WebSocket frame-streaming to FFmpeg."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-core-subsystems-delegates",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Subsystems & Delegates"
+        },
+        {
+          "type": "paragraph",
+          "text": "`SceneComposer` coordinates multiple specialized subsystem managers:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Subsystem / Delegate",
+            "Source File",
+            "Responsibility"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`TextureManager`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`TextureManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/TextureManager.ts)"
+                },
+                {
+                  "text": "Manages GPU texture arrays, binds dynamic video elements, watches dirty texture states, and handles asynchronous texture atlas uploads."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`UIManager`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`UIManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts)"
+                },
+                {
+                  "text": "Configures orthographic UI camera passes, manages persistent canvas draw regions, and clears depth for screen-space overlays."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`OfflineRenderManager`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`OfflineRenderManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/OfflineRenderManager.ts)"
+                },
+                {
+                  "text": "Coordinates deterministic frame-by-frame renders, reads back GPU canvas buffers, and streams raw frames over WebSockets to an offline recorder."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`PlayerControls`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`PlayerControls.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts)"
+                },
+                {
+                  "text": "Interactive floating UI player for scrubbing, pausing, speed adjustment, and live parameter tweaking in browser previews."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`InputRecorder`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`InputRecorder.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts)"
+                },
+                {
+                  "text": "Records and replays pointer and keyboard events deterministically for interactive session capture."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`AlwaysRegistry`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`Always.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts)"
+                },
+                {
+                  "text": "Schedules per-frame update tasks, interval-throttled callbacks, and conditional loops across `pre`, `update`, and `post` phases."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`GlobalGeometryAllocator`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`GlobalGeometryAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts)"
+                },
+                {
+                  "text": "Consolidates dynamic entity vertices and indices into monolithic GPU buffers to minimize draw call overhead."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`GlobalAnalyticalAllocator`**",
+                  "type": "text"
+                },
+                {
+                  "text": "[`GlobalAnalyticalAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts)"
+                },
+                {
+                  "text": "Allocates GPU analytical curve storage for infinite-resolution Bézier evaluation in fragment shaders."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-complete-public-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Complete Public API Reference"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Lifecycle & Hardware Setup"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "init(canvas: HTMLCanvasElement | OffscreenCanvas): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Initializes WebGPU hardware resources:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Creates the [`Renderer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/Renderer.ts) and requests a `GPUDevice`.",
+            "Configures the canvas `GPUCanvasContext` with `alphaMode: \"premultiplied\"`.",
+            "Preloads font caches via `SceneComposer.staticInit(device)`.",
+            "Instantiates the default [`RenderView`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts) and default `Camera`.",
+            "Detects URL parameters to switch to offline mode or apply locked `RenderConfig` overrides.",
+            "Attaches the responsive window resize listener (HTMLCanvasElement only)."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const composer = new SceneComposer();\nawait composer.init(document.getElementById(\"webgpu-canvas\") as HTMLCanvasElement);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "setCanvas(canvas: HTMLCanvasElement | OffscreenCanvas): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Configures or re-targets the WebGPU canvas context and updates canvas pixel dimensions to account for `window.devicePixelRatio`."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "setRenderer(renderer: Renderer): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Assigns the renderer instance, extracts `renderer.device`, and initializes `Compute` and `StateDataManager`."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "staticInit(device: GPUDevice): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Loads and caches core engine fonts (`Roboto` MSDF and vector assets) into GPU memory."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "reset(): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Stops playback, increments the internal generation `runId`, rejects running animation promises with `\"Scene Reset\"`, clears render queues and `always()` tasks, resets all attached scenes, and flushes GPU destruction queues."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "restart(): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Calls `reset()`, restarts the render loop, and re-invokes `scene.run()` on all attached scenes."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "destroy(): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Completely disposes of the composer:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Halts the `requestAnimationFrame` loop.",
+            "Destroys entities across all registered scenes.",
+            "Disposes `PlayerControls`, `InputRecorder`, and installed plugins.",
+            "Releases the GPU uniform view buffer (`this.view_buffer.destroy()`).",
+            "Removes window resize listeners to prevent memory leaks during hot-module replacement (HMR)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Scene Stack & Composition Management"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "add(scene: Scene, options?: { zIndex?: number }): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Attaches a [`Scene`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts) to the composition stack:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Sets `scene.composer = this`.",
+            "Injects hardware handles: `device`, `compute`, `renderer`, `stateManager`.",
+            "Synchronizes scene-level `RenderConfig` overrides.",
+            "Allocates or links a `RenderView` and `Camera`.",
+            "Attaches an [`InteractionManager`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts) to handle pointer events and raycasting.",
+            "Sorts `sceneEntries` ascending by `zIndex`.",
+            "Flags `TEXTURES_DIRTY = true` and invalidates the frame."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "composer.add(backgroundScene, { zIndex: 0 });\ncomposer.add(hudOverlayScene, { zIndex: 10 });"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "remove(scene: Scene): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Removes a scene from the composition stack, destroys its `InteractionManager`, and breaks the composer back-reference (`scene.composer = null`)."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "get scenes(): Scene[]"
+        },
+        {
+          "type": "paragraph",
+          "text": "Returns an array of all scenes currently in the composer stack."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Camera & Multi-View Management"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "createView(width: number, height: number): RenderView"
+        },
+        {
+          "type": "paragraph",
+          "text": "Allocates a new [`RenderView`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts) containing an independent camera, viewport dimensions, and uniform state layout. Automatically sets `VIEWS_DIRTY = true`."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "setupUICamera(config?: UIConfig): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Configures a dedicated orthographic camera view for UI entities. Automatically invoked when any entity with `isUI = true` is added to a registered scene."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "updateViewData(device: GPUDevice): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Synchronizes camera matrices, projection matrices, time, and resolution across all active views and writes them to the consolidated `view_buffer` uniform storage `@group(0)`."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "getViews(): RenderView[]"
+        },
+        {
+          "type": "paragraph",
+          "text": "Returns all active render views for the current frame."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Render Loop & Invalidation Engine"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "start(): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Launches the render pipeline: delegates to `startOfflineRender()` if `OFFLINE_RENDER` is active, or `startRenderLoop()` for live browser execution."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "startRenderLoop(): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Drives the continuous `requestAnimationFrame` render cycle. Performs per-frame timing steps, executes update callbacks, builds render queues, uploads 256-byte state blocks to the GPU, and submits commands to `renderer.render()`."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "isFrameUpdate(): boolean"
+        },
+        {
+          "type": "paragraph",
+          "text": "Evaluates whether a new frame must be rendered. Returns `true` if:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Any registered scene has active animations in its queue (`scene.hasActiveAnimations()`).",
+            "Composer-level animation queue is active (`this.anim_queue.length > 0`).",
+            "`ALWAYS_UPDATE` is `true` (continuous simulation mode).",
+            "`TEXTURES_DIRTY` or `VIDEO_DIRTY` is set.",
+            "Raytracing accumulation is active and has not reached `rtMaxAccumulation`.",
+            "Explicit invalidation was requested (`FRAME_UPDATE_COUNT > 0`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "invalidate(): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Wakes the render loop to draw at least one frame. Safe to call repeatedly; handles both running loops and paused static canvases."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "continue(): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Schedules 10 consecutive frames of updates and restarts the render loop (useful after user interactions or seeking)."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "ALWAYSUPDATE: boolean"
+        },
+        {
+          "type": "paragraph",
+          "text": "Single source of truth for continuous rendering. When `true`, the engine bypasses idle culling, ticking every frame unconditionally (required for physics simulations, particle systems, or continuous line-boil animations). `Scene.ALWAYS_UPDATE` delegates directly to this property."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. Timing, Seeking & Playback Control"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "pause(): void / resume(): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Freezes or resumes execution across all registered scenes, halts/resumes HTML video textures, and toggles the render loop."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "seekTo(targetTimeMs: number): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Seeks all scenes simultaneously to a specific timeline timestamp:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Sets `ALWAYS_UPDATE = true` during the seek to guarantee every intermediate step renders.",
+            "Calls `scene.seekTo(targetTimeMs)` on each scene, utilizing snapshot checkpoints where available.",
+            "Restores prior `ALWAYS_UPDATE` and paused states upon completion.",
+            "Synchronizes composer time and notifies `PlayerControls`."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "updateTime(dt?: number): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Computes the current delta time multiplied by `timeScale` and advances `this.time`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "F. Composer-Level Animation & Scheduling"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "play(target: Playable | Playable[], options?: PlayOptions): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Plays composer-level animations (e.g. crossfading scenes, sweeping camera matrices across multiple views). The promise resolves when the requested animations complete; the frame scheduler handles same-frame continuation handoffs internally."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Crossfade Scene A out while fading Scene B in:\nawait composer.play([\n    sceneA.fadeTo(0.0, 1000),\n    sceneB.fadeTo(1.0, 1000)\n]);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "wait(ms: number = 1000): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Pauses composer progression for the specified millisecond duration."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "always(callback: (time, dt, ctx) => any, options?: AlwaysOptions): AlwaysHandle"
+        },
+        {
+          "type": "paragraph",
+          "text": "Registers a composer-level update callback in the [`AlwaysRegistry`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Always.ts) (defaults to the `'update'` phase). Ideal for inspector tools, HUD overlays, and engine telemetry."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "G. Render Passes & Plugin Architecture"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "use(plugin: IPlugin): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Installs an [`IPlugin`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/IPlugin.ts) onto the composer, invoking `plugin.install(undefined, this)` and automatically registering any custom render passes into the `FrameGraph`."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "removePlugin(name: string): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Disposes of an installed plugin and removes its associated passes from the renderer."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "addPass(pass: Pass): void / removePass(pass: Pass): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Directly injects or removes a custom rendering pass from the pipeline."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "enableFrameFeedback(): FrameFeedbackFeature"
+        },
+        {
+          "type": "paragraph",
+          "text": "Enables temporal feedback textures for persistence, motion trails, and visual echoes."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "H. Offline Video Export"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "startOfflineRender(canvas, fps = 60, maxDurationMs = 0, wsUrl = \"ws://localhost:5001\"): Promise<void>"
+        },
+        {
+          "type": "paragraph",
+          "text": "Initializes headless video capture:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Connects to the local FFmpeg streaming server via [`OfflineRecorder`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts).",
+            "Pre-compiles shaders and denoiser models.",
+            "Executes the deterministic frame loop: steps exact time intervals (`1000 / fps`), renders the frame, copies the GPU texture to an aligned staging buffer, and streams raw RGBA bytes over WebSockets."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-zero-gc-traversal-render-queue-building",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Zero-GC Traversal & Render Queue Building"
+        },
+        {
+          "type": "paragraph",
+          "text": "The core execution method [`buildRenderQueues()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L975-L1006) coordinates the transformation of abstract scene graphs into hardware draw commands:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    A[\"buildRenderQueues()\"] --> B[\"Reset stateManager & Command Pools\"]\n    B --> C[\"For each Scene in sceneEntries (sorted by zIndex)\"]\n    C --> D[\"Apply scene.ALPHA to baseState\"]\n    D --> E[\"Merge scene.compute_queue into composer.compute_queue\"]\n    E --> F[\"For each root entity in scene.entities: traverse(entity)\"]\n    \n    F --> G{\"entity.VISIBILITY && opacity > 0?\"}\n    G -->|\"No\"| H[\"Cull Subtree\"]\n    G -->|\"Yes\"| I{\"Has RendererComponent?\"}\n    \n    I -->|\"Yes\"| J[\"Acquire pooled RenderCommand & allocateDirect State\"]\n    I -->|\"No\"| K[\"Acquire pooled State from statePool\"]\n    \n    J --> L[\"worldState.apply(entity.state, parentState)\"]\n    K --> L\n    \n    L --> M[\"Auto-increment monotonic Z-Index: z_index += 0.0002\"]\n    M --> N[\"Intersect entity.scissorClipRect with parent AABB\"]\n    N --> O[\"renderer.prepare(composer, geo, frag, worldState)\"]\n    O --> P[\"Push cmd to render_queue\"]\n    P --> Q[\"Recurse on entity.children\"]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Traversal Invariants:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Monotonic Auto $Z$-Index**: If an entity does not specify `_zIndexExplicit = true`, traversal automatically increments `this.z_index += this.delta` (0.0002). This ensures that visual drawing order naturally matches scene graph insertion order without z-fighting.",
+            "**Scissor Box Intersection**: If an entity or any ancestor defines `scissorClipRect`, bounding boxes are computed and intersected in screen space. All child entities inherit the clipped scissor region automatically.",
+            "**Nested Scene Traversal**: If an entity is a [`SubScene`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/SubScene.ts) (`'nestedScene' in entity`), traversal seamlessly recurses into `nestedScene.entities` using the current `worldState`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-usage-patterns-best-practices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Usage Patterns & Best Practices"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pattern 1: Standalone Scene Launch (Developer Convenience)"
+        },
+        {
+          "type": "paragraph",
+          "text": "When creating simple scenes, developers don't need to manually instantiate `SceneComposer`. Calling `scene.start(canvas)` automatically bootstraps a composer behind the scenes:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Create } from \"retiam\";\n\nclass MyAnimation extends Scene {\n    async run() {\n        const circle = new Circle(2);\n        this.add(circle);\n        await this.play(new Create(circle));\n    }\n}\n\n// Automatically creates a SceneComposer, binds the canvas, and starts playback:\nconst scene = new MyAnimation();\nawait scene.start(document.getElementById(\"canvas\") as HTMLCanvasElement);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pattern 2: Multi-Scene Layering (3D Domain + UI Overlay)"
+        },
+        {
+          "type": "paragraph",
+          "text": "For complex applications with decoupled user interfaces:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { SceneComposer, Scene, SDFText, Box, Light, hex } from \"retiam\";\n\nconst composer = new SceneComposer();\nawait composer.init(canvas);\n\n// Layer 1: 3D Mathematical Scene\nconst worldScene = new Scene();\nworldScene.add(new Box(2, 2, 2));\nworldScene.add(new Light({ position: [5, 10, 8] }));\ncomposer.add(worldScene, { zIndex: 0 });\n\n// Layer 2: 2D Screen-Space HUD Overlay\nconst uiScene = new Scene();\nconst title = new SDFText(\"FPS: 60\", { fontSize: 0.35 }).setAsUI();\ntitle.transform.position.set([-4, 3, 0]);\nuiScene.add(title);\ncomposer.add(uiScene, { zIndex: 10 });\n\n// Start combined loop\ncomposer.start();\nworldScene.run();"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pattern 3: Transitioning Between Scenes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Using composer-level animations to crossfade between two distinct presentation scenes:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Transition from Scene A to Scene B:\nsceneB.ALPHA = 0;\ncomposer.add(sceneB, { zIndex: 1 });\n\nawait composer.play([\n    sceneA.fadeTo(0.0, 1200),\n    sceneB.fadeTo(1.0, 1200)\n]);\n\ncomposer.remove(sceneA);"
+        }
+      ]
+    },
+    {
+      "id": "6-critical-invariants-gotchas",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Critical Invariants & Gotchas"
+        },
+        {
+          "type": "callout",
+          "variant": "warning",
+          "content": "**1. WebGPU Destruction Order during Vite HMR**: Never destroy entity GPU buffers while the composer's render loop is active. Doing so triggers the fatal WebGPU error: `[Invalid Buffer] Buffer used in submit while destroyed.` Always call `composer.destroy()` or `scene.destroy()`, which stops the `requestAnimationFrame` loop **before** freeing buffer pools."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "**2. `ALWAYS_UPDATE` is Owned by the Composer**: Scenes do not own independent render loops. If a scene requires continuous frame updates (for physics, particle simulations, or continuous 12 FPS line boil), set `this.ALWAYS_UPDATE = true` inside the scene, which delegates directly to `this.composer.ALWAYS_UPDATE`."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "**3. OffscreenCanvas in Web Workers**: When using `OffscreenCanvas` inside a Web Worker, `window` does not exist. `SceneComposer` automatically skips DOM resize listeners and device pixel ratio lookups when an `OffscreenCanvas` is passed to `init()`."
+        }
+      ]
+    }
+  ]
+}

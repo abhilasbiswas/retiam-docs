@@ -1,0 +1,238 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-cinematic-blur-and-focus-animations",
+  "title": "Cinematic Blur & Depth-of-Field Focus Animations Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/CINEMATIC_BLUR_AND_FOCUS_ANIMATIONS.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/CINEMATIC_BLUR_AND_FOCUS_ANIMATIONS.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/CINEMATIC_BLUR_AND_FOCUS_ANIMATIONS.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Field](/api-math-fields#standardfields), [BlurTarget](/api-animation#blurtarget), [RenderTarget](/api-render#rendertarget), [BlurPass](/api-render-passes#blurpass), [Sprite](/api-entities-primitives-2d#sprite), [Entity](/api-core-entity#entity), [Animation](/api-animation#animation), [BlurIn](/api-animation#blurin), [BlurOut](/api-animation#blurout), [BlurPulse](/api-animation#blurpulse), [BlurTo](/api-animation#blurto), [FadeOut](/api-animation#fadeout), [ResolvedBlurTarget](/api-animation#blurtarget), [BlurInOptions](/api-animation#blurin), [AnimOptions](/api-animation#animoptions), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [Text](/api-entities-composites-text#text), [Color](/api-math#color), [Rate](/api-animation#rate), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Cinematic visual storytelling frequently relies on **rack focus** (pulling focus between foreground and background), defocus transitions, and atmospheric blur pulses to direct audience attention."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a dedicated blur animation suite:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`BlurTarget`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/BlurTarget.ts)**: Polymorphic target resolver that unifies blur manipulation across [`RenderTarget`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/RenderTarget.ts), [`BlurPass`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts), [`Sprite`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Sprite.ts), and [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) instances.",
+            {
+              "text": "**Animation Catalogue**:",
+              "children": [
+                "**[`BlurIn`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/BlurIn.ts)**: Cinematic rack-focus entrance (defocus $\\to$ razor-sharp clarity).",
+                "**[`BlurOut`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/BlurOut.ts)**: Defocus exit transition (sharp $\\to$ heavily blurred).",
+                "**[`BlurPulse`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/BlurPulse.ts)**: Temporary defocus pulse for emphasis or dreamlike state transitions.",
+                "**[`BlurTo`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/BlurTo.ts)**: Smooth interpolation between arbitrary blur radii."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "BlurTarget resolver",
+              "description": "RenderTarget · BlurPass · Sprite · Entity; normalizes getBlur / setBlur.",
+              "children": [
+                {
+                  "label": "BlurIn",
+                  "description": "Defocus → sharp; optional push-in"
+                },
+                {
+                  "label": "BlurOut",
+                  "description": "Sharp → defocus; optional FadeOut"
+                },
+                {
+                  "label": "BlurPulse",
+                  "description": "Sharp → blur → sharp emphasis"
+                },
+                {
+                  "label": "BlurTo",
+                  "description": "Arbitrary start and end radii"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-polymorphic-target-resolution-blurtarget-ts-src-engine-animation-blurtarget-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Polymorphic Target Resolution ([BlurTarget.ts](../src/engine/animation/BlurTarget.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Different engine subsystems manage blur through different properties. `resolveBlurTarget()` standardizes this access into a uniform `ResolvedBlurTarget` interface:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Target Object Type",
+            "Target Property Inspected",
+            "Internal Mutation"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**[`RenderTarget`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/RenderTarget.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "`target.blur`"
+                },
+                {
+                  "text": "Mutates render target post-processing blur radius"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`Sprite`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Sprite.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "`sprite.source.blur` or `sprite.blur`"
+                },
+                {
+                  "text": "Adjusts underlying texture blur filter"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`BlurPass`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "`pass.radius`"
+                },
+                {
+                  "text": "Dynamically updates 2-pass Gaussian blur kernel"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "`entity.blur`"
+                },
+                {
+                  "text": "Mutates entity material blur state"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Custom Object**",
+                  "type": "text"
+                },
+                {
+                  "text": "`{ blur: number }` or `{ radius: number }`"
+                },
+                {
+                  "text": "Directly mutates numeric property"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-cinematic-entrance-blurin-blurin-ts-src-engine-animation-blurin-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Cinematic Entrance: BlurIn ([BlurIn.ts](../src/engine/animation/BlurIn.ts))"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface BlurInOptions extends AnimOptions {\n    /** Starting defocus radius in texels (Default: 24) */\n    startRadius?: number;\n\n    /** Target focal radius in texels (Default: 0 - completely sharp) */\n    endRadius?: number;\n\n    /** Whether to simultaneously fade in opacity from 0 to 1 (Default: false) */\n    fadeIn?: boolean;\n\n    /** Starting scale multiplier for subtle cinematic camera push-in (Default: 1.0) */\n    startScale?: number;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Motion Mechanics"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Immediate Initial Defocus**: The target's blur radius is clamped to `startRadius` on construction, preventing a single sharp frame from rendering prior to the start of the animation.",
+            "**Coordinated Focus Pull & Push-In**: Over duration $T$, blur radius interpolates:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "r(t) = \\text{startRadius} + \\big(\\text{endRadius} - \\text{startRadius}\\big) \\cdot \\alpha(t)"
+        },
+        {
+          "type": "paragraph",
+          "text": "where $\\alpha(t) = \\text{rate\\_func}(t / T)$. If `startScale` is provided (e.g. $0.94$), the entity smoothly scales up to $1.0$, mimicking optical camera lens breathing."
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, RenderTarget, BlurIn, BlurOut, Text, Color, Rate } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Offscreen RenderTarget containing presentation graphics\nconst target = new RenderTarget(scene, { width: 1280, height: 720 });\nconst title = new Text(\"QUANTUM COMPUTING\", { fontSize: 64, fill: Color.WHITE });\ntarget.scene.add(title);\nscene.add(target.sprite);\n\n// 2. Cinematic rack-focus entrance with camera breathing\nawait scene.play(new BlurIn(target, {\n    startRadius: 36,\n    endRadius: 0,\n    fadeIn: true,\n    startScale: 0.95,\n    duration: 1400,\n    rate_func: Rate.easeOutCubic()\n}));\n\nawait scene.wait(1000);\n\n// 3. Defocus exit\nawait scene.play(new BlurOut(target, {\n    startRadius: 0,\n    endRadius: 40,\n    fadeOut: true,\n    duration: 900\n}));"
+        }
+      ]
+    }
+  ]
+}

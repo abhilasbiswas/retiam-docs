@@ -1,0 +1,320 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-recorder",
+  "title": "recorder API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "offlinerecorder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "OfflineRecorder"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/recorder/OfflineRecorder.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/recorder/OfflineRecorder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "OfflineRecorder",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class OfflineRecorder {\n    constructor(url: string);\n    connect(): Promise<void>;\n    requestInputReplay(timeMs: number): Promise<void>;\n    sendFrame(data: Blob | ArrayBuffer, timeMs: number, frameType?: string, isFloat?: boolean): Promise<void>;\n    sendAudio(wavData: ArrayBuffer, durationMs: number): Promise<void>;\n    finish(): Promise<void>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `OfflineRecorder` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(url: string)",
+                    "—",
+                    "Implementation: `this.url = url;`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public connect(): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.ws`, `this.ws.binaryType`, `this.ws.onopen`, `this.isReady`, `this.ws.onerror`; construction of `Promise`, `WebSocket`; calls to `resolve`, `reject`; long return expressions shown in the linked implementation. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async requestInputReplay(timeMs: number): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.ws.onmessage`; construction of `Promise`; calls to `resolve`, `this.ws.send`; return paths including `new Promise((resolve) => { this.ws.onmessage = (msg) => { if (msg.data === \"replay_done\") resolve(); }; this.ws.send(JSON.stringify({ type: 'request_…`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async sendFrame(data: Blob | ArrayBuffer, timeMs: number, frameType: string = 'color', isFloat: boolean = false): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.ws.onmessage`; construction of `Promise`, `FileReader`; calls to `resolve`, `this.ws.send`, `handleBinary`, `reader.readAsArrayBuffer`; long return expressions shown in the linked implementation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async sendAudio(wavData: ArrayBuffer, durationMs: number): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.ws.onmessage`; construction of `Promise`; calls to `resolve`, `this.ws.send`; long return expressions shown in the linked implementation. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async finish(): Promise<void>",
+                    "—",
+                    "Implementation: `if (!this.isReady) return; this.ws.send(JSON.stringify({ type: \"finish\" }));`. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/OfflineRecorder.ts#L56)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recorder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Recorder"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/recorder/Recorder.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/recorder/Recorder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Recorder: Modern, client-side WebGPU canvas recorder. Powered by WebCodecs APIs (VideoEncoder, AudioEncoder, VideoFrame) and in-browser MP4/WebM muxing (mp4-muxer / webm-muxer). Captures canvas output directly in browser memory without requiring an external server."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RecordingFormat",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RecorderOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Recorder",
+                    "Class",
+                    "Modern, client-side WebGPU canvas recorder. Powered by WebCodecs APIs (VideoEncoder, AudioEncoder, VideoFrame) and in-browser MP4/WebM muxing (mp4-muxer / webm-muxer). Captures canvas output directly in browser memory without requiring an external server."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type RecordingFormat = 'mp4' | 'webm';\nexport interface RecorderOptions {\n    format?: RecordingFormat;\n    bitrate?: number;\n    audioSource?: MediaStream | {\n        stream: MediaStream;\n    };\n}\nexport declare class Recorder {\n    constructor(canvas: HTMLCanvasElement | OffscreenCanvas, options?: RecorderOptions | RecordingFormat);\n    attachAudioSource(source: MediaStream | {\n        stream: MediaStream;\n    }): this;\n    start(): Promise<void>;\n    captureFrame: (t?: number) => void;\n    stop(download?: boolean): Promise<Blob | undefined>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RecorderOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "format?: RecordingFormat;",
+                    "—",
+                    "Output video container format ('mp4' or 'webm'). Defaults to 'mp4'. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bitrate?: number;",
+                    "—",
+                    "Optional target video bitrate in bits per second. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "audioSource?: MediaStream | { stream: MediaStream };",
+                    "—",
+                    "Optional synchronized audio stream or destination node. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L12)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Recorder` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(canvas: HTMLCanvasElement | OffscreenCanvas, options: RecorderOptions | RecordingFormat = 'mp4')",
+                    "—",
+                    "Creates a new Recorder. Param: canvas The target canvas to record. Param: options Recording format string ('mp4' | 'webm') or configuration options object. Defaults to 'mp4'. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public attachAudioSource(source: MediaStream | { stream: MediaStream }): this",
+                    "—",
+                    "Attaches an audio source (MediaStream or MediaStreamAudioDestinationNode) to encode audio synchronized with video into the exported MP4 or WebM file. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async start()",
+                    "—",
+                    "Configures the VideoEncoder and starts the recording session. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public captureFrame",
+                    "Structured initializer; see source line 219.",
+                    "Grabs the current canvas buffer, wraps it as a VideoFrame, and submits it to the video encoder. Param: t Optional timeline timestamp in milliseconds. Defaults to elapsed session time. [Source line 219](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L219)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async stop(download: boolean = true): Promise<Blob | undefined>",
+                    "—",
+                    "Flushes the video encoder, finalizes the muxer, and returns the recorded video Blob. Param: download Whether to trigger an automatic browser file download. Defaults to true. Returns: The final video Blob or undefined if no frames were captured. [Source line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L248)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.format || 'mp4'",
+                    "[Line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts#L45)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

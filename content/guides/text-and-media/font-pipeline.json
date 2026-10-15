@@ -1,0 +1,180 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "font-pipeline",
+  "title": "Font loading, atlases and glyph geometry",
+  "group": "Text and media",
+  "summary": "Follow font loading, glyph generation and atlas caching to diagnose text readiness and missing characters.",
+  "sections": [
+    {
+      "id": "choose-the-representation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose the representation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Text and SDFText share placement and paint concepts but build different geometry. Text parses OpenType outlines and creates Path geometry, making letters available to curve effects, path sampling and geometric transforms. SDFText maps glyph rectangles onto an MSDF atlas, so a readable label does not require triangulating every letter outline. Tex obtains formula layout and builds a hierarchy of mathematical symbols; it is not an arbitrary HTML equation overlay."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Requirement",
+            "Representation",
+            "Reason"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Labels, counters and many small captions",
+                "SDFText",
+                "Atlas sampling keeps glyph geometry compact"
+              ]
+            },
+            {
+              "cells": [
+                "Handwriting, outline deformation, curve effects",
+                "Text",
+                "Actual vector contours are available"
+              ]
+            },
+            {
+              "cells": [
+                "Typeset mathematical structure",
+                "Tex",
+                "Formula layout gives symbol-level geometry"
+              ]
+            },
+            {
+              "cells": [
+                "Imported pre-baked atlas",
+                "Font.get / FontLoader.msdf",
+                "BMFont descriptor and PNG already exist"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Text](/api-entities-composites-text#text), [SDFText](/api-entities-composites-text#sdftext), [Tex](/api-entities-composites-text#tex), [SDFChar](/api-entities-composites-text#sdftext), [Font](/api-font#font)."
+        }
+      ]
+    },
+    {
+      "id": "resolve-a-font-source",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Resolve a font source"
+        },
+        {
+          "type": "paragraph",
+          "text": "FontSource accepts a string, ArrayBuffer, Uint8Array or Blob. FontResolver turns it into binary data and an identity. Strings can name a built-in face, describe a remote font, or refer to a supported asset path. Bundler-resolved font assets are preferable when the application must load predictably without a third-party font service."
+        },
+        {
+          "type": "paragraph",
+          "text": "FontLoader.vector resolves the bytes, checks the vector cache, imports opentype.js and parses an ArrayBuffer. FontLoader.msdf recognizes a .json descriptor as the pre-baked path; otherwise it resolves bytes and generates an atlas. Font.get loads a JSON descriptor and bitmap, builds character/kerning maps and establishes Font.default when no default exists."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [FontSource](/api-font#types), [FontResolver](/api-font#fontresolver), [FontLoader](/api-font#fontloader), [FontCache](/api-font#fontcache)."
+        }
+      ]
+    },
+    {
+      "id": "generate-and-upload-an-msdf-atlas",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Generate and upload an MSDF atlas"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Initialize one MSDF client with a bundler-provided worker URL and msdfgen WASM URL. The initialization promise is shared.",
+            "Generate the glyph atlas in the worker using the requested font bytes, charset, generation size, field range, texture size and overlap fix.",
+            "Inspect padded glyph corners using the median RGB distance value. If at least three corners appear inside, invert that glyph’s RGB distance values. This is a heuristic repair for inverted decorative outlines.",
+            "Build a BMFont-compatible descriptor containing atlas rectangles, advances, offsets, Unicode IDs, font metrics and distance-field metadata.",
+            "Create an ImageBitmap with premultiplyAlpha and colorSpaceConversion set to none, preserving the numerical distance values.",
+            "Create the rgba8unorm texture and copy the bitmap into it. The shader samples the distance field rather than interpreting the atlas as a finished picture of the letters."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "MSDFOptions defaults are fontSize 120, distanceRange 10, ASCII 32–126, textureSize [2048, 2048], fixOverlaps true and persistence false. Generation fontSize controls atlas quality; the entity’s fontSize controls layout in world units. They do not have to be the same number."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [MSDFGenerator](/api-font#msdfgenerator), [MSDFOptions](/api-font#types), [TextGeometry](/api-components-geometry#textgeometry), [TextFragment](/api-components-fragment#textfragment)."
+        }
+      ]
+    },
+    {
+      "id": "preload-before-measuring",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Preload before measuring"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const font = await FontLoader.msdf(\"roboto\", {\n  charset: \" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\",\n  fontSize: 120, distanceRange: 10, persist: false\n});\nconst caption = new SDFText(\"Geometry before pixels\", {\n  font, fontSize: 0.8, anchor: CENTER, fill: hex(\"#E2E8F0\")\n});\nthis.add(caption);\nthis.camera.frame(caption, { padding: 0.3 });"
+        },
+        {
+          "type": "paragraph",
+          "text": "String-font entity constructors can render with a fallback and rebuild asynchronously when the requested font resolves. A later rebuild can change bounds, anchors, line width and child entities. For a stable capture or measured layout, await the FontLoader call and supply the actual Font/OpenType object. A DOM FontFace being ready does not itself initialize Retiam’s glyph geometry."
+        },
+        {
+          "type": "paragraph",
+          "text": "SDFText initially supports merged glyph geometry and can decompose for per-character animations. Text also merges paths until operations need individual glyphs. Decomposition, split and rebuild are structural changes; retain a text entity when updating its value and avoid keeping stale references to children that a rebuild destroys."
+        }
+      ]
+    },
+    {
+      "id": "understand-caches-and-character-coverage",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Understand caches and character coverage"
+        },
+        {
+          "type": "paragraph",
+          "text": "FontCache separates memory caches, shared in-flight promises and optional IndexedDB records. FontLoader.defaultPersist is false. A cache hit avoids repeated atlas generation; persistence adds a PNG/descriptor record for future sessions. An in-flight promise is cleared after completion or failure so a rejected generation does not permanently occupy that slot."
+        },
+        {
+          "type": "paragraph",
+          "text": "The current MSDF key includes source identity, generation fontSize, distanceRange, charset length, overlap setting and a version suffix. It does not include the actual charset characters or textureSize. Two different same-length charsets can collide, and a texture-size change can reuse an existing atlas. Keep one stable charset/atlas configuration for a source in a session, or clear the caches deliberately when changing it. Include every glyph the scene needs; default ASCII does not establish complete Unicode or complex-script shaping support."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [FontLoader](/api-font#fontloader), [FontCache](/api-font#fontcache), [FontChar](/api-font#types), [Kerning](/api-font#types)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One TTF source generates one MSDF atlas used by one line of text."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-msdf-font"
+        }
+      ]
+    }
+  ]
+}

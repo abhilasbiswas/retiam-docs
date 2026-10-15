@@ -1,0 +1,512 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-raytracing-and-denoising-architecture",
+  "title": "Hardware-Accelerated Raytracing, Path Tracing & Denoising Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/RAYTRACING_AND_DENOISING_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/RAYTRACING_AND_DENOISING_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/RAYTRACING_AND_DENOISING_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Path](/api-entities-primitives-2d#path), [Scene](/api-core-scene#scene), [ModelGeometry](/api-components-geometry#modelgeometry), [RaytraceManager](/api-render-raytrace#raytracemanager), [GPUArena](/api-render-raytrace#gpuarena), [RaytraceGBufferPass](/api-render-passes#raytracepasses), [RaytracePass](/api-render-passes#raytracepasses), [SpatialDenoisePass](/api-render-passes-denoisers#spatialdenoisepass), [OIDNDenoisePass](/api-render-passes-denoisers#oidndenoisepass), [RTCompositePass](/api-render-passes#raytracepasses), [Triangle](/api-entities-primitives-2d#triangle), [Morph](/api-animation-transform#morph), [MorphGeometry](/api-components-geometry#morphgeometry), [AABB](/api-math#aabb), [Ray](/api-utils#raycaster), [Usage](/api-utils#gpu-utils), [Storage](/api-render-pipelines#resourcelayouts), [Light](/api-entities-primitives-3d#light), [Color](/api-math#color), [Camera](/api-camera#camera), [Pipeline](/api-render-pipelines#pipeline), [FrameGraph](/api-render-frame-graph#framegraph), [GraphBuilder](/api-render-frame-graph#graphbuilder)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam includes a native, hardware-accelerated **WebGPU Path Tracing and Monte Carlo Global Illumination** subsystem. Unlike typical WebGL engines that restrict rendering to rasterization, Retiam integrates a full Two-Level Acceleration Structure (TLAS / BLAS), custom GPU memory arenas, Multiple Importance Sampling (MIS), Next Event Estimation (NEE), and neural denoiser integration (Intel Open Image Denoise - OIDN) running entirely on WebGPU compute shaders."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  E[\"Active scene entities<br/>ModelGeometry and meshes\"] --> B[\"RaytraceManager.bakeMeshes\"]\n  B --> BL[\"BLAS build<br/>Per-mesh BVH trees\"]\n  B --> TL[\"TLAS build<br/>Top-level scene BVH\"]\n  BL --> A[\"GPUArena allocation<br/>Meshes: 288B; triangles: 96B<br/>BVH nodes: 32B; emitters: 96B\"]\n  TL --> A\n  A --> G[\"RaytraceGBufferPass<br/>Position, normal, albedo and depth\"]\n  G --> R[\"RaytracePass<br/>Monte Carlo path tracing\"]\n  R -->|Option 1| S[\"SpatialDenoisePass<br/>Edge-preserving wavelet\"]\n  R -->|Option 2| O[\"OIDNDenoisePass<br/>WebGPU neural UNet TZA\"]\n  S --> C[\"RTCompositePass<br/>ACES tone mapping and gamma\"]\n  O --> C"
+        }
+      ]
+    },
+    {
+      "id": "2-acceleration-structures-bvh-construction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Acceleration Structures & BVH Construction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The raytracing core is implemented across:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`src/engine/render/raytrace/BVHBuilder.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts)",
+            "[`src/engine/render/raytrace/GPUArena.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts)",
+            "[`src/engine/render/raytrace/RaytraceManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Bottom-Level Acceleration Structure (BLAS)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each 3D mesh is converted into an array of triangles:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Triangle format**: 3 vertices $(p_0, p_1, p_2)$, 3 normals $(n_0, n_1, n_2)$, and 3 UV coordinates $(uv_0, uv_1, uv_2)$.",
+            {
+              "text": "**Building algorithms**:",
+              "children": [
+                "**Binned Surface Area Heuristic (SAH)**: Divides bounding boxes into spatial bins along the longest axis, evaluating surface area traversal cost:"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "C = C_{\\text{trav}} + \\frac{S_A}{S} \\cdot N_A \\cdot C_{\\text{isect}} + \\frac{S_B}{S} \\cdot N_B \\cdot C_{\\text{isect}}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Spatial Median Split**: Fallback splitting when primitive count is below a threshold or SAH yields no split advantage.",
+            "**Node Flattening**: The hierarchical tree is serialized into a flat array of 32-byte GPU-friendly nodes:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface FlatBVHNode {\n      min: [number, number, number];\n      primitiveOffset: number; // For leaf: start triangle index in buffer\n      max: [number, number, number];\n      primitiveCount: number;  // > 0 if leaf, 0 if internal\n      rightChildFlatIdx: number; // Flat array offset of right child\n      isLeaf: boolean;\n  }"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Dynamic Morph Mesh Refitting"
+        },
+        {
+          "type": "paragraph",
+          "text": "For morphing geometries ([`MorphGeometry.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/MorphGeometry.ts)), recomputing a full BVH from scratch every frame is computationally prohibitive. Retiam builds a base BVH on the midpoint topology between Mesh A and Mesh B once, and performs **GPU-accelerated or bottom-up AABB refitting**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "The tree hierarchy remains topologically static.",
+            "Leaf bounding boxes are dynamically updated from interpolated vertices.",
+            "Internal nodes propagate union bounding boxes from leaves up to the root in $O(N)$ time."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Top-Level Acceleration Structure (TLAS)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The TLAS aggregates all active world-space entities:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Evaluates world-transformed bounding boxes for each entity.",
+            "Builds a top-level BVH over entity root nodes.",
+            "Ray traversal on the GPU traverses the TLAS first; once an entity leaf is hit, the ray is transformed into the object's local space to traverse the BLAS."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-gpu-memory-arena-gpuarena-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. GPU Memory Arena (GPUArena.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "WebGPU requires buffers to be allocated with explicit sizes. Rather than allocating individual buffers per mesh or triangle, Retiam implements **dynamic growing GPU memory arenas**:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class GPUArena {\n    public gpuBuffer!: GPUBuffer;\n    public cpuBuffer!: Float32Array;\n    public capacity: number;\n    public strideBytes: number;\n    // ...\n    public ensureCapacity(requiredCount: number): boolean;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Stride & Allocation Layout"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Arena",
+            "Stride (Bytes)",
+            "Stride (Floats)",
+            "Initial Capacity",
+            "Usage",
+            "Contents"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`meshArena`**",
+                  "type": "text"
+                },
+                {
+                  "text": "288 B"
+                },
+                {
+                  "text": "72 floats"
+                },
+                {
+                  "text": "1,000 meshes"
+                },
+                {
+                  "text": "Storage / CopyDst"
+                },
+                {
+                  "text": "World matrix, invWorld matrix, material properties (albedo, roughness, metallic, emissive, IOR)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`triangleArena`**",
+                  "type": "text"
+                },
+                {
+                  "text": "96 B"
+                },
+                {
+                  "text": "24 floats"
+                },
+                {
+                  "text": "50,000 tris"
+                },
+                {
+                  "text": "Storage / CopyDst"
+                },
+                {
+                  "text": "3x positions (vec3), 3x normals (vec3), 3x UVs (vec2)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`bvhArena`**",
+                  "type": "text"
+                },
+                {
+                  "text": "32 B"
+                },
+                {
+                  "text": "8 floats"
+                },
+                {
+                  "text": "100,000 nodes"
+                },
+                {
+                  "text": "Storage / CopyDst"
+                },
+                {
+                  "text": "AABB min (vec3 + count), AABB max (vec3 + rightChild)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`tlasArena`**",
+                  "type": "text"
+                },
+                {
+                  "text": "32 B"
+                },
+                {
+                  "text": "8 floats"
+                },
+                {
+                  "text": "2,000 nodes"
+                },
+                {
+                  "text": "Storage / CopyDst"
+                },
+                {
+                  "text": "World-space TLAS nodes"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`emitterArena`**",
+                  "type": "text"
+                },
+                {
+                  "text": "96 B"
+                },
+                {
+                  "text": "24 floats"
+                },
+                {
+                  "text": "1,000 emitters"
+                },
+                {
+                  "text": "Storage / CopyDst"
+                },
+                {
+                  "text": "Light-emitting triangles for Multiple Importance Sampling"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "When the primitive count exceeds the current arena size, `ensureCapacity` doubles the buffer size, copies existing data, and signals pipeline bind groups to rebind."
+        }
+      ]
+    },
+    {
+      "id": "4-path-tracing-kernel-multiple-importance-sampling",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Path Tracing Kernel & Multiple Importance Sampling"
+        },
+        {
+          "type": "paragraph",
+          "text": "The path tracing shader is defined in [`src/engine/render/raytrace/RaytraceShaders.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceShaders.ts)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Monte Carlo Integration & BRDFs"
+        },
+        {
+          "type": "paragraph",
+          "text": "The path tracer simulates physical transport via the rendering equation:"
+        },
+        {
+          "type": "math",
+          "tex": "L_o(p, \\omega_o) = L_e(p, \\omega_o) + \\int_{\\Omega} f_r(p, \\omega_i, \\omega_o) L_i(p, \\omega_i) (\\omega_i \\cdot n) d\\omega_i"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam evaluates:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Cook-Torrance Microfacet Specular BRDF**:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "f_r = \\frac{D(h) F(\\omega_o, h) G(\\omega_i, \\omega_o, h)}{4 (\\omega_i \\cdot n) (\\omega_o \\cdot n)}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "$D$: GGX / Trowbridge-Reitz normal distribution.",
+            "$F$: Schlick's approximation for Fresnel reflectance.",
+            "$G$: Smith's separable shadowing-masking function.",
+            "**Lambertian Diffuse BRDF**:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "f_{\\text{diffuse}} = \\frac{\\rho}{\\pi}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Multiple Importance Sampling (MIS)"
+        },
+        {
+          "type": "paragraph",
+          "text": "To eliminate fireflies and converge quickly in complex scenes with small bright emitters:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**BRDF Sampling**: Rays are cosine-weighted or GGX-importance sampled.",
+            "**Light Emitter Sampling (Next Event Estimation - NEE)**: Direct rays are explicitly cast towards triangles in `emitterArena`.",
+            "The power heuristic balances the two sampling strategies:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "w_{\\text{MIS}}(p_a, p_b) = \\frac{p_a^2}{p_a^2 + p_b^2}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Progressive Temporal Accumulation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Monte Carlo path tracing relies on temporal sample accumulation across frames:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Ping-Pong Textures**: Two `rgba32float` textures (`accumTexA` and `accumTexB`) are swapped each frame.",
+            "**Running Average**:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Color}_{\\text{accum}} = \\frac{\\text{Color}_{\\text{prev}} \\cdot N + \\text{Color}_{\\text{current}}}{N + 1}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Camera Invalidation**: If camera position, orientation, or FOV changes, `RaytraceManager.resetAccumulation()` resets $N = 0$."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-denoising-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Denoising Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "To enable real-time interactive previews and fast video exports without needing thousands of samples per pixel, Retiam provides two denoising options:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Spatial Edge-Preserving Denoise (SpatialDenoisePass.ts)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Implemented as a lightweight WebGPU compute pass.",
+            "Computes an adaptive cross-bilateral filter utilizing surface normals and depth:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "W(i, j) = \\exp\\left(-\\frac{\\|p_i - p_j\\|^2}{2\\sigma_x^2}\\right) \\exp\\left(-\\frac{|d_i - d_j|^2}{2\\sigma_d^2}\\right) \\max(0, n_i \\cdot n_j)^{\\gamma}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Throttles or bypasses compute when accumulated frames exceed 200 (where convergence has naturally smoothed the signal)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Intel Open Image Denoise (OIDN) Integration (OIDNDenoisePass.ts)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Retiam packages the Intel OIDN pre-trained UNet model weights (`rt_hdr_alb_nrm.tza`).",
+            {
+              "text": "Executes a deep learning denoising inference pass on WebGPU compute buffers:",
+              "children": [
+                "Inputs: Noisy Color (`rgba32float`), Auxiliary Albedo (`rgba16float`), Auxiliary Normals (`rgba16float`).",
+                "Output: High-fidelity reconstructed HDR color with zero high-frequency grain."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-framegraph-integration-render-passes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. FrameGraph Integration & Render Passes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Raytracing integrates into Retiam's declarative FrameGraph via three passes:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Register passes in GraphBuilder\nconst rtGBuffer = new RaytraceGBufferPass(rtManager, posTex, normTex, albTex, depthTex, albedoArray, normalArray);\nconst rtPass = new RaytracePass(rtManager, colorTex, albedoArray, normalArray);\nconst denoisePass = new SpatialDenoisePass(colorTex, denoisedTex);\nconst compositePass = new RTCompositePass(denoisedTex, depthTex, screenTex, rasterDepthTex);"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**`RaytraceGBufferPass`**: Generates full-resolution primary ray hit position, normal, albedo, and depth targets.",
+            "**`RaytracePass`**: Executes recursive path tracing bounces and temporal sample accumulation.",
+            {
+              "text": "**`RTCompositePass`**:",
+              "children": [
+                "Performs ACES filmic tonemapping:"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "f(x) = \\text{clamp}\\left(\\frac{x(2.51x + 0.03)}{x(2.43x + 0.59) + 0.14}, 0.0, 1.0\\right)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Applies gamma correction ($\\gamma = 2.2$).",
+            "Merges raytraced 3D depths with rasterized 2D overlays into the final swapchain render pass."
+          ]
+        }
+      ]
+    }
+  ]
+}

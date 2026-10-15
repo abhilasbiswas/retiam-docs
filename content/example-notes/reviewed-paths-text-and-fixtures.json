@@ -1,0 +1,293 @@
+{
+  "shapes_paths_2d/path_joints_caps_arrows": {
+    "description": "Inspect caps, joins and arrow tips against shared alignment references.",
+    "walkthrough": [
+      "This scene is an inspection sheet rather than a long animation. Camera2DController supplies pan/zoom, and player controls are disabled. Straight and curved paths, sharp turns, arrowheads and labels are arranged in separate areas so the same style can be compared on different geometry.",
+      "The cap section marks endpoint positions and compares BUTT, ROUND and SQUARE. Butt stops at the endpoint; round adds a semicircular end; square extends the stroke by half its width. The path endpoint itself does not move when the cap changes, which matters when aligning a dimension line to a datum.",
+      "The join section compares MITER, ROUND, BEVEL and NO_JOINT on acute corners, right angles and zigzags. A miter can extend far outside a sharp corner, a bevel clips that extension, and a round join adds an arc. Assess joins at the actual stroke width and corner angle you intend to use.",
+      "Arrow comparisons include triangular, stealth and line-style heads across straight, curved and orthogonal routes. A head’s orientation follows the path’s terminal direction; a curved route therefore needs an endpoint tangent. Changing the route while keeping the same endpoints can still change how the head meets its shaft.",
+      "Paint settings determine width and endpoint treatment, while path commands determine the route. The labels and reference marks use their own geometry, so altering one comparison should not require moving the entire board. Zoom into one cell of the sheet before deciding whether a difference is a cap, join or arrow geometry issue.",
+      "Use these comparisons when drawing diagrams, charts or annotations. Allow clearance for the outer extent of caps and sharp miters instead of aligning only centerlines. For a video, frame the particular comparison you are discussing and hold it long enough for the endpoint differences to be visible."
+    ],
+    "experiments": [
+      "Double strokeWidth on a butt/round/square comparison without changing endpoints. Inspect which strokes cross the endpoint marks.",
+      "Make an acute corner sharper while comparing MITER and BEVEL. Watch the outside extent before changing any camera setting."
+    ]
+  },
+  "shapes_paths_2d/path_transform": {
+    "description": "Morph between an infinity contour, heart and rose.",
+    "walkthrough": [
+      "Builder functions sample each mathematical outline into Path geometry. VectorTransform matches and interpolates those contours rather than moving a rigid shape between positions.",
+      "The axes remain a spatial reference during transitions. Matching strategy and sample density affect intermediate geometry even when endpoint shapes are unchanged."
+    ],
+    "experiments": [
+      "Reduce sampling in one outline and inspect the halfway morph. Compare correspondence quality before changing easing."
+    ]
+  },
+  "shapes_paths_2d/path_vertex_animation": {
+    "description": "Update path contours, spline points and polygon vertices in place.",
+    "walkthrough": [
+      "The panels demonstrate setRawContour, Spline.setPoints and Poly.setVertices on different representations. Each update changes geometry rather than only its entity transform.",
+      "Reusable arrays reduce temporary allocation, but derived contour and rendering data still need refresh. The source includes timing measurements for its own workload."
+    ],
+    "experiments": [
+      "Freeze updates in two panels and increase sampling in the third. Compare geometry smoothness with update cost."
+    ]
+  },
+  "shapes_paths_2d/shapes_showcase_demo": {
+    "description": "Compare configurable vector shapes with procedural spatial meshes.",
+    "walkthrough": [
+      "The showcase places labeled 2D paths and 3D models in rows. Imports come from retiam/shapes as well as the core package. Look at the constructor for each item before copying it: a path primitive accepts paint options, while a mesh primitive also has material and surface-sampling choices.",
+      "The flat rows include diamond, star, heart, trapezoid, parallelogram, cross, chevron and gear-like geometry. Their vertices/curves establish the silhouette; fill, stroke and opacity establish its treatment. Changing a paint setting does not regenerate a primitive with a different point count.",
+      "The spatial rows include a diamond-like solid, bipyramid, superellipsoid, capsule, torus knot and further models. Initial rotations expose their depth. Smooth or faceted appearance depends on mesh normals and topology as well as lighting, so inspect segment counts alongside material settings.",
+      "An always callback rotates selected models using the frame delta, and the 2D gear rotates in its plane. The orbit controller gives you independent camera movement. Pause object updates when comparing two constructors from the same angle; otherwise changing orientation can look like changing geometry.",
+      "The final entrance sequence presents multiple shapes together. Awaiting the entrance does not stop the continuous rotation updater. If you want an idle completed diagram, retain and stop that updater after the reveal, or define a finite rotation animation instead.",
+      "For your own scene, copy one constructor, choose a size in world units, then frame it before adding the whole gallery. Retain the mesh/path owner across paint changes and rebuild deliberately when topology options change. Test transparent surfaces from an oblique angle rather than assuming a front view establishes correct depth behavior."
+    ],
+    "experiments": [
+      "Disable the rotation updater and orbit around the capsule and superellipsoid. Compare depth without simultaneous object motion.",
+      "Change one mesh segment count while keeping its size, material and camera fixed. Inspect faceting and then measure its cost."
+    ]
+  },
+  "shapes_paths_2d/shapes_showcase_part2_demo": {
+    "description": "Explore additional planar profiles, hollow shapes and spatial solids.",
+    "walkthrough": [
+      "This second sheet expands the shapes vocabulary. Its first flat row contains a filleted regular polygon, capsule, teardrop, annulus and sector. These have different construction rules: an annulus uses an interior boundary, while a sector uses an angular interval. A hole is part of geometry, not simply a transparent paint color.",
+      "The next row includes a ribbon spiral, curved arrow, double arrow, waveform and architectural profile. A spiral’s growth changes its route; an arrow’s end treatment changes its terminal geometry; a waveform’s formula changes sampled points. Keep those controls distinct when experimenting.",
+      "The 3D rows show primitives such as prisms, pyramids, frustums, tubes, ellipsoids and Platonic solids. A tube follows a spatial path and needs an oriented cross-section; it is not just a thick 2D stroke. Vertex density and section shape determine the actual mesh before material shading is applied.",
+      "Initial world-axis rotations expose useful views of each model. The always callback then rotates several models using dt, with different speed multipliers, and turns the flat spiral around z. An OrbitCameraController lets the reader inspect the same objects independently.",
+      "Remove the updater temporarily when studying the fillets, the annulus interior or the tube’s cross-section. Compare a single geometric parameter at a time and keep its paint and camera stable. Otherwise width, orientation and lighting can all change what looks like the silhouette.",
+      "Use the sheet as a constructor reference, then reduce it to the objects needed by your scene. A primitive’s generation options are not automatically application state bindings: update through its supported methods or replace/rebuild geometry deliberately, and retire owned allocations when that geometry leaves the scene."
+    ],
+    "experiments": [
+      "Change the annulus inner radius while keeping the outer radius fixed. Compare the actual hole with reducing fill opacity.",
+      "Pause rotation and change the tube sampling density. Inspect both curvature and cross-section from a side view."
+    ]
+  },
+  "shapes_paths_2d/stroke_demo": {
+    "description": "Compare length-aware stroke shaders and reveal intervals.",
+    "walkthrough": [
+      "Circle, Arc, Poly and Line3D provide different contour representations. getTotalLength reports length information that can be used by dashed and custom stroke effects.",
+      "setT1 and setT2 change the visible interval. Length calculations and shader parameterization should be inspected separately from entity scaling."
+    ],
+    "experiments": [
+      "Use the same dash spacing on the circle and spiral. Compare spacing before and after scaling one entity."
+    ]
+  },
+  "shapes_paths_2d/svg_transform": {
+    "description": "Parse multi-path SVG icons and morph between them.",
+    "walkthrough": [
+      "SVG reads geometry and styling from XML. Write reveals the resulting paths before VectorTransform changes one icon into the other.",
+      "Multiple contours and differing topology make this more demanding than interpolating a single polygon. Source styling participates in the endpoint appearance."
+    ],
+    "experiments": [
+      "Change one source path’s fill in the SVG XML. Replay the transform and inspect how geometry and color transition."
+    ]
+  },
+  "shapes_paths_2d/tiger_scene": {
+    "description": "Draw a complex external SVG with a sketch treatment.",
+    "walkthrough": [
+      "The scene fetches the Ghostscript tiger from Wikimedia before constructing SVG. toExcalidraw adds the selected outline and fill treatment.",
+      "The length-distributed creation sequence takes 30 seconds. An external request or CORS failure can prevent the tiger from loading even when the engine itself is ready."
+    ],
+    "experiments": [
+      "Use a locally available SVG instead, then compare sequential and simultaneous path creation."
+    ]
+  },
+  "shapes_paths_2d/typography": {
+    "description": "Compare distance-field and vector typography during movement.",
+    "walkthrough": [
+      "SDFText uses a font atlas and supports its configured fill and outline. Text supplies vector glyph geometry, so the two labels use different rendering representations.",
+      "Both labels move through awaited animation chains. Font size and entity scale contribute to displayed size; they are not interchangeable resource-loading settings."
+    ],
+    "experiments": [
+      "Apply equal scaling to both labels and inspect their edges. Then change only the SDF outline width."
+    ]
+  },
+  "sketch/excalidraw_demo": {
+    "description": "Style a system diagram with hand-drawn outlines and fills.",
+    "walkthrough": [
+      "The top diagram is constructed from regular Rect, Diamond, Arrow and Circle entities, then styled with toExcalidraw. Client, gateway, service and database labels are positioned separately. The source supplies the layout; the sketch treatment does not calculate a graph layout or infer relationships.",
+      "The styling changes the drawn contour and fill treatment while preserving an entity that can still be placed and animated. Roughness and bowing affect the contour’s irregularity, fillStyle selects the interior treatment, and seed selects a repeatable procedural variation.",
+      "The lower gallery compares fill styles and puts rigid geometry beside its sketch-styled counterpart. Compare equal size and stroke width before adjusting roughness. A patterned fill, wobbly outline and thicker stroke can otherwise all contribute to what looks like a geometry difference.",
+      "Arrows remain directional connectors, while SDFText remains an independent label. Moving only a node does not establish an automatic constraint that reroutes every connector in this hand-positioned composition. Add endpoint updates or a layout model when building an editable application diagram.",
+      "The scene introduces the composition with its animation helper. Keep drawing appearance separate from event targets and layout measurements when you reuse it: bounds, hierarchy and picking still follow the entity representation, not a semantic understanding of the diagram.",
+      "For a stable exported illustration, use explicit seeds and compare a close-up at output size. If you enable time-varying sketch behavior, drive it from the scene clock and verify a paused or sought frame. Remove any additional application listeners along with the styled entities on teardown."
+    ],
+    "experiments": [
+      "Give two equal rectangles the same seed, roughness and bowing, then change only fillStyle. Compare their interiors without changing their outline.",
+      "Move the gateway without editing its connectors. Use the result to decide which endpoints an interactive diagram must update explicitly."
+    ]
+  },
+  "sketch/excalidraw_fills_demo": {
+    "description": "Compare eight sketch-fill treatments on a whiteboard palette.",
+    "walkthrough": [
+      "The gallery uses toExcalidraw with different fillStyle choices. The highlighted zigzag and orthogonal patterns make their internal stroke structure easier to inspect.",
+      "Creation timing and line boil animate the treatment independently of the underlying shape. Fill spacing affects density and legibility."
+    ],
+    "experiments": [
+      "Apply zigzag and hachure to two identical rectangles at equal spacing. Compare their pattern directions."
+    ]
+  },
+  "subdivision/subdivision_demo": {
+    "description": "Seven worked cases showing what subdivision, exact Bézier splitting and arc-length sampling each preserve.",
+    "walkthrough": [
+      "run builds the header and HTML case selector, then loadCase dispatches one builder for the selected technique. The builders retain their active entities and dynamic callback so a mode change replaces the previous illustration. Follow loadCase before studying individual formulas: each case answers a different geometry question.",
+      "Polyline and closed-polygon cases compare the coarse input with denser points. A fixed subdivision count divides each edge into a chosen number of pieces; maxSegmentLength adapts the count to edge length. Closed polygon sampling includes the last-to-first edge. More vertices do not automatically turn a polyline into a Bézier curve.",
+      "The split case uses splitQuadraticBezier or splitCubicBezier at parameter t. Its interpolation construction gives two exact sub-curves meeting at that parameter; this differs from approximating the curve with straight samples. Change t to inspect both the shared split point and the new control cages.",
+      "Recursive cubic splitting applies the same construction repeatedly. At depth d the number of sub-curves grows as 2^d, so control cages approach the curve at increasing CPU/memory cost. Inspect the visual improvement before choosing a higher depth for production.",
+      "The arc-length comparison separates segment subdivision from approximately uniform distances along the complete polyline. resampleByArcLength redistributes the target count across cumulative length; this is the useful basis for constant spatial spacing, while uniform parameter steps need not have constant distance.",
+      "The packed-buffer case stores each vertex as four floats [x,y,z,pad], calls subdividePackedVertices3D, then converts output back into Vec3 objects for the displayed Line. Packed numeric storage reduces object overhead in the algorithm, but the whole demonstration still allocates output arrays and rendering objects; its “zero allocation” source label is not a guarantee for the scene.",
+      "The deformation case applies a wave to a coarse line and a subdivided one. With only endpoints, transformed points still connect as one straight edge; dense vertices capture the nonlinear shape between them. This is why deformation resolution and shader/material appearance are independent choices.",
+      "The current demo increments animTime by 0.016 per updater call, rather than using measured dt. Its animation speed therefore depends on update cadence. When porting it into an external project or offline render, accumulate dt / 1000 or express phase from scene time, and reset custom counters on replay."
+    ],
+    "experiments": [
+      "Use unequal input edge lengths and compare fixed subdivisions with maxSegmentLength. Count the samples per edge.",
+      "Split a quadratic at t=0.2 and t=0.8; verify that each pair meets on the original curve.",
+      "Increase recursive depth one step at a time and compare the cage improvement with the doubled segment count.",
+      "In the deformation case, compare two endpoints with 32 samples at the same wave amplitude. Then change update timing without changing the geometry."
+    ]
+  },
+  "system/feedback": {
+    "description": "Inspect recursive zoom using the previous rendered frame.",
+    "walkthrough": [
+      "enableFrameFeedback makes the renderer’s previous frame available. FeedbackZoomView samples that frame inside a separate viewport rather than capturing only a chosen entity subtree.",
+      "Dragging its focus box and changing zoom alter the sampled region. Because the viewport can sample an image containing itself, repeated feedback differs from an ordinary ZoomView."
+    ],
+    "experiments": [
+      "Move the focus box onto the feedback viewport itself. Compare recursion with sampling the background curve."
+    ]
+  },
+  "test/boolean": {
+    "description": "Compose planar set operations before drawing the result.",
+    "walkthrough": [
+      "Circle and Rect act as source contours without needing separate scene placement. Union combines them; Difference subtracts the circle from that combined region.",
+      "Write reveals the resulting contour. Boolean geometry construction happens before the reveal rather than recalculating set membership during every animation frame."
+    ],
+    "experiments": [
+      "Change the circle’s offset before building the Difference. Compare the resulting cutout with merely moving the finished entity."
+    ]
+  },
+  "test/equation": {
+    "description": "Match typeset tokens through changing mathematical expressions.",
+    "walkthrough": [
+      "Tex generates equation geometry, and TransformMatchingTex associates tokens between expressions. The initial Write introduces the first equation before matching begins.",
+      "The literal strings in this fixture use c^0 and c^3 in later stages. The animation does not validate algebra, so these should not be read as equivalent rearrangements of the initial Pythagorean equation."
+    ],
+    "experiments": [
+      "Correct both later expressions to c^2 and replay. Compare a mathematically consistent sequence with the original fixture."
+    ]
+  },
+  "test/matching_shape": {
+    "description": "Match vector shapes while preserving reusable templates.",
+    "walkthrough": [
+      "The source creates master shapes and animates clones. TransformMatchingShapes handles correspondence between the current clone and each destination.",
+      "Keeping templates outside the scene avoids contaminating later transitions with previously animated state. Transform and paint choices still affect the endpoint presentation."
+    ],
+    "experiments": [
+      "Reuse an already animated object as a template for one cycle. Compare that behavior with a fresh clone."
+    ]
+  },
+  "test/model_transform": {
+    "description": "Morph a cube, sphere and torus while they rotate.",
+    "walkthrough": [
+      "ModelTransform prepares a transition between different mesh endpoints. Materials differ across those endpoints, so both geometry and appearance contribute to the result.",
+      "The source rotates all endpoints through an updater. This is a mesh-transformation fixture, rather than only a model-view-projection matrix test."
+    ],
+    "experiments": [
+      "Disable endpoint rotation and inspect the halfway cube-to-sphere transition. Then restore rotation."
+    ]
+  },
+  "test/paris30k": {
+    "description": "Render a detailed local Paris SVG asset.",
+    "walkthrough": [
+      "The scene fetches /res/svg/paris-30k.svg and constructs an SVG entity. Camera2DController uses a large coordinate scale appropriate to that asset.",
+      "This is a complex vector-asset workload. Comments naming the tiger and a slow rotation are stale; the active source loads Paris and does not install a rotation updater."
+    ],
+    "experiments": [
+      "Replace the asset with a smaller local SVG and adjust camera framing. Compare loading and contour detail."
+    ]
+  },
+  "text/code_demo": {
+    "description": "Present code as animated, syntax-highlighted scene content.",
+    "walkthrough": [
+      "Code loads its font and converts a source string into visible lines. Write introduces the listing; extracted text and line/block highlights direct attention to selected portions.",
+      "Deletion marks, error annotations, tooltips and cursors are presentation helpers. They do not execute the displayed program or compile the shown error."
+    ],
+    "experiments": [
+      "Change the highlighted line range while keeping the listing unchanged. Then extract a different character interval."
+    ]
+  },
+  "text/markup_text_demo": {
+    "description": "Lay out mathematical prose with inline and display equations.",
+    "walkthrough": [
+      "MarkupText parses mixed prose and math, wraps to maxWidth and aligns the resulting pieces. The scene arranges the title and body, then frames their bounds.",
+      "getMath locates an equation for Circumscribe after the body is written. Layout and typesetting resource loading precede the visible reveal."
+    ],
+    "experiments": [
+      "Reduce maxWidth and replay. Inspect wrapping and equation placement before changing font size."
+    ]
+  },
+  "tts/kokoro_tts_demo": {
+    "description": "Synthesize speech in the browser and coordinate captions with audio.",
+    "walkthrough": [
+      "The scene presents client-side Kokoro speech synthesis, with voice cards, a speaker visualization and Subtitles. It installs AudioPlugin with autoUnlock and checks TTS.isWebGPUSupported for the capability display. The engine library alone does not include the model weights; use the TTS configuration and network requirements shown with this example.",
+      "speakNarration awaits TTS.synthesize for a particular voice, retains the TTSAudioResult, synchronizes subtitles from its timing information, then awaits audio.play. Voices change between utterances. Synthesis readiness, an initialized audio graph and browser permission to produce sound are separate requirements.",
+      "The visualization first uses RMS from a Web Audio analyzer or the plugin’s bands. It also samples a 256-sample PCM window near the current utterance position and chooses the stronger energy estimate. Energy is clamped and smoothed before changing the speaker radius, halo, ring width/opacity and accent colors.",
+      "The fallback sample position is calculated from performance.now, in seconds, and the audio sample rate. That follows live wall time rather than the Retiam scene clock. A pause, seek or fixed-step export can therefore need a different timing source; do not assume this interactive fallback is a deterministic offline audio visualization.",
+      "Scene waits separate the spoken passages. duckingRatio reduces competing audio during speech, while volume sets playback level. These options do not choose a different voice or regenerate the speech. For a video, prepare the speech audio and subtitle cues before capture, then drive the visual envelope from the same export timeline.",
+      "When adapting the scene, dispose analyzers and application-owned audio/model resources according to their ownership, remove controls/listeners and handle synthesis failure visibly. The marketing text spoken in the demo is sample narration; it is not a guarantee about model download time, inference latency or every device’s support."
+    ],
+    "experiments": [
+      "After loading a voice, synthesize the same short sentence with two voice IDs and compare the duration and subtitle cues.",
+      "Pause the scene during an utterance and inspect the PCM envelope timing. Replace the wall-clock lookup with an audio/scene timeline lookup before relying on it for seeking or export."
+    ]
+  },
+  "tts/msedge_tts_demo": {
+    "description": "Four narrated beats use one provider, a subtitle object, a speaker animation and a quiet procedural music bed.",
+    "walkthrough": [
+      "run selects the msedge provider, configures the audio buses and constructs a Rhodes-like ambient buffer scheduled on the BGM timeline. This locally synthesized bed is separate from the remote narration requests. Master, voiceover and BGM gains solve different mixing problems.",
+      "The visual stage is assembled before narration: header, provider/status labels, waveform/speaker geometry and a Subtitles instance. Those are retained entities. Status changes update text and paint; the speaker’s reaction is supplied through the entity option of speak, rather than by recreating the scene for each sentence.",
+      "Before the first beat the scene waits for audio unlock when required. In a live documentation preview, click or interact when the browser asks for playback permission. Separately, the provider needs the configured Edge proxy endpoint: a user gesture does not repair a missing network service.",
+      "Each beat awaits speak with explicit provider, voice, speed, pitch, volume, subtitles and duckingRatio. Awaiting the result aligns the next step with narration completion. The 1600 ms waits between beats are scene-timeline pauses; changing narration speed changes spoken duration independently of those pauses.",
+      "Subtitles consume provider timing, while ducking reduces the music bus during speech. To inspect the synchronization, watch one short phrase first and compare audio start, subtitle transitions and the speaker’s visual response. A failed provider request should be surfaced before the rest of the sequence waits for unavailable audio.",
+      "The final beat changes the ending label and stops the music. For repeatable movie generation, save generated audio and timing in the application’s assets, keep the voice configuration with the scene, and test the encoded audio track. A standalone scene bundle does not contain the proxy service or bypass browser playback rules."
+    ],
+    "experiments": [
+      "Change one beat to a short sentence and inspect subtitle timing without changing its visual stage.",
+      "Compare speed 0.96 with 1.1 while retaining the 1600 ms inter-beat wait; spoken and silent durations should change independently.",
+      "Change duckingRatio while leaving BGM and voiceover gains fixed to hear the mixing distinction."
+    ],
+    "title": "Narration, subtitles and an audio-reactive speaker"
+  },
+  "tweaks/compute_limit_test": {
+    "description": "Stress vector morph preparation with a densely sampled curve.",
+    "walkthrough": [
+      "ParametricCurve3D creates a high-point-count contour, then VectorTransform prepares a transition to a circle. Dense sampling stresses buffer and dispatch handling.",
+      "This fixture is useful for limits and preparation cost, not a recommended default sampling density. Endpoint smoothness may stop improving before resource use does."
+    ],
+    "experiments": [
+      "Reduce the curve to 1,000 samples, then increase gradually. Compare visible quality with preparation time."
+    ]
+  },
+  "tweaks/physics_test": {
+    "description": "Measure explicit physics stepping within the scene update loop.",
+    "walkthrough": [
+      "Physics3D is configured for manual stepping, and the updater times step calls. A UI label reports the measured work for the configured body population.",
+      "The displayed duration measures the selected step operation, not full frame time or a solver-accuracy proof. Keep rendering and simulation costs separate when interpreting it."
+    ],
+    "experiments": [
+      "Reduce COUNT from 1,000 to 100 and compare reported stepping time. Keep mesh resolution and gravity fixed."
+    ]
+  },
+  "tweaks/spatial_hash_test": {
+    "description": "Inspect a sampled surface intersected by a translucent vector circle.",
+    "walkthrough": [
+      "ThreeDAxes and SurfaceGraph3D exercise spatial surface generation. The circle is rotated into the surface’s plane to expose overlap and depth behavior.",
+      "The callback includes scene time, but a time-dependent callback alone does not prove continuous mesh regeneration. This is a rendering and geometry fixture, not a standalone collision broadphase benchmark."
+    ],
+    "experiments": [
+      "Hold the callback time fixed and move the circle above the surface. Compare depth ordering with true geometric intersection."
+    ]
+  }
+}

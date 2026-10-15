@@ -1,0 +1,1131 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-math-fields",
+  "title": "math / fields API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "spatialfield",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SpatialField"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/fields/SpatialField.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/fields/SpatialField.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ISpatialField: Universal interface for mathematical vector fields: R³ × [0..1] -> R³",
+                "FunctionalSpatialField: Functional wrapper allowing any raw function (p, t) => Vec3 to act as an ISpatialField."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SpatialMappingFunction",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "HomotopyFunction",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ComplexMappingFunction",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ISpatialField",
+                    "Interface",
+                    "Universal interface for mathematical vector fields: R³ × [0..1] -> R³"
+                  ]
+                },
+                {
+                  "cells": [
+                    "FunctionalSpatialField",
+                    "Class",
+                    "Functional wrapper allowing any raw function (p, t) => Vec3 to act as an ISpatialField."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type SpatialMappingFunction = (p: Vec3, t?: number) => Vec3;\nexport type HomotopyFunction = (p: Vec3, t: number) => Vec3;\nexport type ComplexMappingFunction = (z: Complex, t?: number) => ComplexLike;\nexport interface ISpatialField {\n    evaluate(p: Vec3, t?: number): Vec3;\n    evaluateBuffer?(inOutBuffer: Float32Array, stride: number, count: number, t?: number, offset?: number): void;\n    pipe?(...fields: (ISpatialField | SpatialMappingFunction)[]): ISpatialField;\n    blend?(other: ISpatialField | SpatialMappingFunction, alpha: number): ISpatialField;\n    withFalloff?(options: {\n        center?: Vec3 | [\n            number,\n            number\n        ];\n        radius: number;\n        falloff?: \"smoothstep\" | \"linear\" | \"gaussian\";\n    }): ISpatialField;\n}\nexport declare class FunctionalSpatialField implements ISpatialField {\n    constructor(fn: SpatialMappingFunction);\n    evaluate(p: Vec3, t?: number): Vec3;\n    evaluateBuffer(inOutBuffer: Float32Array, stride: number, count: number, t?: number, offset?: number): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ISpatialField` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "evaluate(p: Vec3, t?: number): Vec3;",
+                    "—",
+                    "Evaluates the vector field at position `p` with optional time/progress factor `t`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "evaluateBuffer?(\n        inOutBuffer: Float32Array,\n        stride: number,\n        count: number,\n        t?: number,\n        offset?: number\n    ): void;",
+                    "—",
+                    "Optional zero-allocation batch evaluation directly mutating flat Float32Array buffers. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pipe?(...fields: (ISpatialField | SpatialMappingFunction)[]): ISpatialField;",
+                    "—",
+                    "Chains this field with subsequent fields [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "blend?(other: ISpatialField | SpatialMappingFunction, alpha: number): ISpatialField;",
+                    "—",
+                    "Blends this field with another field [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "withFalloff?(options: { center?: Vec3 | [number, number]; radius: number; falloff?: \"smoothstep\" | \"linear\" | \"gaussian\" }): ISpatialField;",
+                    "—",
+                    "Applies a radial decay mask to localize the field [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L39)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FunctionalSpatialField` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(private fn: SpatialMappingFunction)",
+                    "—",
+                    "Implementation: ``. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluate(p: Vec3, t: number = 1.0): Vec3",
+                    "—",
+                    "Implementation: `return this.fn(p, t);`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluateBuffer(\n        inOutBuffer: Float32Array,\n        stride: number,\n        count: number,\n        t: number = 1.0,\n        offset: number = 0\n    ): void",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `this.fn`; 1 explicit loop. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L52)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "standardfields",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "StandardFields"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/fields/StandardFields.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/fields/StandardFields.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Field: Factory and composable combinator collection for spatial vector fields."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WaveFieldOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SwirlFieldOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VortexFieldOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FisheyeFieldOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PinchFieldOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RadialRippleFieldOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MobiusOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "JoukowskyOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CircleInversionOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PowerMapOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "AttractorFieldOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "NoiseFieldOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FalloffOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Field",
+                    "Class",
+                    "Factory and composable combinator collection for spatial vector fields."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface WaveFieldOptions {\n    amplitude?: number | [\n        number,\n        number\n    ];\n    frequency?: number | [\n        number,\n        number\n    ];\n    phase?: number | [\n        number,\n        number\n    ];\n    axis?: \"x\" | \"y\" | \"both\";\n}\nexport interface SwirlFieldOptions {\n    center?: Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ];\n    strength?: number;\n    radius?: number;\n}\nexport interface VortexFieldOptions {\n    center?: Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ];\n    strength?: number;\n}\nexport interface FisheyeFieldOptions {\n    center?: Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ];\n    strength?: number;\n    radius?: number;\n}\nexport interface PinchFieldOptions {\n    center?: Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ];\n    strength?: number;\n    radius?: number;\n}\nexport interface RadialRippleFieldOptions {\n    center?: Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ];\n    amplitude?: number;\n    frequency?: number;\n    phase?: number;\n    speed?: number;\n}\nexport interface MobiusOptions {\n    a?: ComplexLike;\n    b?: ComplexLike;\n    c?: ComplexLike;\n    d?: ComplexLike;\n}\nexport interface JoukowskyOptions {\n    a?: number | ComplexLike;\n}\nexport interface CircleInversionOptions {\n    center?: Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ];\n    radius?: number;\n}\nexport interface PowerMapOptions {\n    exponent: number | ComplexLike;\n}\nexport interface AttractorFieldOptions {\n    center?: Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ];\n    mass?: number;\n    falloff?: number;\n    minDistance?: number;\n}\nexport interface NoiseFieldOptions {\n    scale?: number;\n    strength?: number;\n    seed?: number;\n}\nexport interface FalloffOptions {\n    center?: Vec3 | [\n        number,\n        number\n    ] | [\n        number,\n        number,\n        number\n    ];\n    radius: number;\n    falloff?: \"smoothstep\" | \"linear\" | \"gaussian\";\n}\nexport declare class Field {\n    static identity(): ISpatialField;\n    static custom(fn: SpatialMappingFunction): ISpatialField;\n    static homotopy(fn: HomotopyFunction): ISpatialField;\n    static wave(options?: WaveFieldOptions): ISpatialField;\n    static swirl(options?: SwirlFieldOptions): ISpatialField;\n    static vortex(options?: VortexFieldOptions): ISpatialField;\n    static fisheye(options?: FisheyeFieldOptions): ISpatialField;\n    static pinch(options?: PinchFieldOptions): ISpatialField;\n    static radialRipple(options?: RadialRippleFieldOptions): ISpatialField;\n    static conformal(complexFn: ComplexMappingFunction): ISpatialField;\n    static mobius(options?: MobiusOptions): ISpatialField;\n    static joukowsky(options?: JoukowskyOptions): ISpatialField;\n    static inversion(options?: CircleInversionOptions): ISpatialField;\n    static power(options: PowerMapOptions): ISpatialField;\n    static attractor(options?: AttractorFieldOptions): ISpatialField;\n    static noise(options?: NoiseFieldOptions): ISpatialField;\n    static pipe(...fields: (ISpatialField | SpatialMappingFunction)[]): ISpatialField;\n    static blend(fieldA: ISpatialField | SpatialMappingFunction, fieldB: ISpatialField | SpatialMappingFunction, alpha: number): ISpatialField;\n    static withFalloff(field: ISpatialField | SpatialMappingFunction, options: FalloffOptions): ISpatialField;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WaveFieldOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "amplitude?: number | [number, number];",
+                    "—",
+                    "Optional record/option field with declared type `number | [number, number]`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frequency?: number | [number, number];",
+                    "—",
+                    "Optional record/option field with declared type `number | [number, number]`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "phase?: number | [number, number];",
+                    "—",
+                    "Optional record/option field with declared type `number | [number, number]`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "axis?: \"x\" | \"y\" | \"both\";",
+                    "—",
+                    "Optional record/option field with declared type `\"x\" | \"y\" | \"both\"`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SwirlFieldOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center?: Vec3 | [number, number] | [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3 | [number, number] | [number, number, number]`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L25)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VortexFieldOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center?: Vec3 | [number, number] | [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3 | [number, number] | [number, number, number]`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L30)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FisheyeFieldOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center?: Vec3 | [number, number] | [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3 | [number, number] | [number, number, number]`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L36)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PinchFieldOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center?: Vec3 | [number, number] | [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3 | [number, number] | [number, number, number]`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L42)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RadialRippleFieldOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center?: Vec3 | [number, number] | [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3 | [number, number] | [number, number, number]`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "amplitude?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frequency?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "phase?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "speed?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L50)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MobiusOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "a?: ComplexLike;",
+                    "—",
+                    "Optional record/option field with declared type `ComplexLike`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "b?: ComplexLike;",
+                    "—",
+                    "Optional record/option field with declared type `ComplexLike`. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "c?: ComplexLike;",
+                    "—",
+                    "Optional record/option field with declared type `ComplexLike`. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "d?: ComplexLike;",
+                    "—",
+                    "Optional record/option field with declared type `ComplexLike`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L57)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `JoukowskyOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "a?: number | ComplexLike;",
+                    "—",
+                    "Optional record/option field with declared type `number | ComplexLike`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L61)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CircleInversionOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center?: Vec3 | [number, number] | [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3 | [number, number] | [number, number, number]`. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L66)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PowerMapOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "exponent: number | ComplexLike;",
+                    "—",
+                    "Required record/option field with declared type `number | ComplexLike`. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L70)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AttractorFieldOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center?: Vec3 | [number, number] | [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3 | [number, number] | [number, number, number]`. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "mass?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "falloff?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "minDistance?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L77)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `NoiseFieldOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "scale?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "seed?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L83)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FalloffOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center?: Vec3 | [number, number] | [number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3 | [number, number] | [number, number, number]`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "falloff?: \"smoothstep\" | \"linear\" | \"gaussian\";",
+                    "—",
+                    "Optional record/option field with declared type `\"smoothstep\" | \"linear\" | \"gaussian\"`. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L89)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Field` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static identity(): ISpatialField",
+                    "—",
+                    "Identity field mapping each point to itself: f(p) = p [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static custom(fn: SpatialMappingFunction): ISpatialField",
+                    "—",
+                    "Wraps a custom callback function into an ISpatialField [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L111)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static homotopy(fn: HomotopyFunction): ISpatialField",
+                    "—",
+                    "Converts a mathematical Homotopy function H(p, t) into an ISpatialField. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static wave(options: WaveFieldOptions = {}): ISpatialField",
+                    "—",
+                    "Creates a periodic sinusoidal wave distortion field. [Source line 129](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L129)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static swirl(options: SwirlFieldOptions = {}): ISpatialField",
+                    "—",
+                    "Creates an exponential swirl distortion around a center point. [Source line 157](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L157)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static vortex(options: VortexFieldOptions = {}): ISpatialField",
+                    "—",
+                    "Creates a rotational vortex vector field around a center point. [Source line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L180)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fisheye(options: FisheyeFieldOptions = {}): ISpatialField",
+                    "—",
+                    "Creates a fisheye / barrel distortion / magnification field. [Source line 206](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L206)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static pinch(options: PinchFieldOptions = {}): ISpatialField",
+                    "—",
+                    "Creates a pinch / pucker deformation towards a focal center. [Source line 230](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L230)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static radialRipple(options: RadialRippleFieldOptions = {}): ISpatialField",
+                    "—",
+                    "Creates a concentric radial ripple / droplet shockwave field. [Source line 252](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L252)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static conformal(complexFn: ComplexMappingFunction): ISpatialField",
+                    "—",
+                    "Creates a conformal complex analytic transformation: f(z): C -> C. Automatically wraps point coordinates into a Complex class instance with full arithmetic. [Source line 282](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L282)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static mobius(options: MobiusOptions = {}): ISpatialField",
+                    "—",
+                    "Fractional linear Möbius transformation: f(z) = (az + b) / (cz + d). [Source line 303](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L303)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static joukowsky(options: JoukowskyOptions = {}): ISpatialField",
+                    "—",
+                    "Joukowsky aerodynamic transform: f(z) = z + a^2 / z. [Source line 319](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L319)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static inversion(options: CircleInversionOptions = {}): ISpatialField",
+                    "—",
+                    "Geometric circle inversion mapping: z -> center + R^2 / conj(z - center). [Source line 332](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L332)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static power(options: PowerMapOptions): ISpatialField",
+                    "—",
+                    "Complex power map: f(z) = z^n. [Source line 356](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L356)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static attractor(options: AttractorFieldOptions = {}): ISpatialField",
+                    "—",
+                    "Gravitational or magnetic attractor field pulling towards a center point. [Source line 368](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L368)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static noise(options: NoiseFieldOptions = {}): ISpatialField",
+                    "—",
+                    "Organic turbulent pseudo-noise field. [Source line 394](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L394)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static pipe(...fields: (ISpatialField | SpatialMappingFunction)[]): ISpatialField",
+                    "—",
+                    "Chains multiple spatial fields sequentially: f_n(...(f_2(f_1(p)))) [Source line 418](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L418)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static blend(\n        fieldA: ISpatialField | SpatialMappingFunction,\n        fieldB: ISpatialField | SpatialMappingFunction,\n        alpha: number\n    ): ISpatialField",
+                    "—",
+                    "Linearly blends between two spatial fields with an interpolation weight alpha: H(p) = (1 - alpha) * fieldA(p) + alpha * fieldB(p) [Source line 434](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L434)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static withFalloff(\n        field: ISpatialField | SpatialMappingFunction,\n        options: FalloffOptions\n    ): ISpatialField",
+                    "—",
+                    "Applies a localized radial falloff mask to any spatial field. [Source line 456](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L456)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.amplitude ?? 0.35",
+                    "[Line 130](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L130)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.frequency ?? 2.2",
+                    "[Line 132](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L132)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.phase ?? 0",
+                    "[Line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L134)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.axis ?? \"both\"",
+                    "[Line 136](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L136)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strength ?? 1.0",
+                    "[Line 159](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L159)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.radius ?? 2.5",
+                    "[Line 160](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L160)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strength ?? 0.8",
+                    "[Line 208](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L208)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.radius ?? 3.0",
+                    "[Line 209](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L209)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strength ?? 0.5",
+                    "[Line 232](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L232)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.amplitude ?? 0.25",
+                    "[Line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L254)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.frequency ?? 4.0",
+                    "[Line 255](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L255)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.speed ?? 1.0",
+                    "[Line 257](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L257)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.a ?? Complex.ONE",
+                    "[Line 304](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L304)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.b ?? Complex.ZERO",
+                    "[Line 305](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L305)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.c ?? Complex.ZERO",
+                    "[Line 306](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L306)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.d ?? Complex.ONE",
+                    "[Line 307](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L307)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.radius ?? 1.5",
+                    "[Line 334](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L334)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.mass ?? 1.5",
+                    "[Line 370](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L370)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.falloff ?? 1.5",
+                    "[Line 371](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L371)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.minDistance ?? 0.3",
+                    "[Line 372](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L372)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.scale ?? 1.5",
+                    "[Line 395](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L395)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strength ?? 0.3",
+                    "[Line 396](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L396)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.seed ?? 42",
+                    "[Line 397](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L397)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.falloff ?? \"smoothstep\"",
+                    "[Line 463](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L463)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "resolveCenter: function resolveCenter(center?: Vec3 | [number, number] | [number, number, number]): { x: number; y: number; z: number }",
+                    "Implementation: `if (!center) return { x: 0, y: 0, z: 0 }; if (Array.isArray(center)) { return { x: center[0] ?? 0, y: center[1] ?? 0, z: center[2] ?? 0 }; } return { x: center.x, y: center.y, z: center.z };`.",
+                    "[Line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/StandardFields.ts#L92)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

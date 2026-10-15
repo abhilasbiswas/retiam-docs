@@ -1,0 +1,648 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-camera2d",
+  "title": "2D Camera Controller (Camera2DController)",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/camera2d.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/camera2d.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/camera2d.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Camera](/api-camera#camera), [Camera2DController](/api-camera#camera2dcontroller), [Rate](/api-animation#rate), [Arrow](/api-entities-composites-geometry#arrow), [Entity](/api-core-entity#entity), [Vec3](/api-math-vector#vec3), [Camera2DBounds](/api-camera#camera2dcontroller), [Animation](/api-animation#animation), [Scene](/api-core-scene#scene), [Camera2DControllerOptions](/api-camera#camera2dcontroller), [Camera2DDeadzone](/api-camera#camera2dcontroller), [Input](/api-camera#camera)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Camera2DController` provides a dedicated 2D orthographic camera system tailored for 2D animation scenes, interactive canvases, node graphs, map/CAD viewports, and 2D games."
+        }
+      ]
+    },
+    {
+      "id": "key-features",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Key Features"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Buttery-Smooth Pan Momentum & Inertia**: Flick-and-glide pan dragging with exponential friction decay (`inertiaFriction`), matching the responsiveness and tactile feel of Figma, Miro, and Apple Maps.",
+            "**Continuous, Drift-Free Cursor-Invariant Zooming (`zoomAt`)**: Scales smoothly across continuous trackpad pinch gestures and notched wheel ticks, anchoring the world point under the cursor with exact mathematical invariance and zero drift throughout smooth zoom transitions.",
+            "**Frame-Rate Independent Exponential Damping**: Exact exponential decay curves ($\\alpha = 1 - e^{-\\text{damping} \\cdot \\Delta t}$) guaranteeing silky-smooth interpolation across 60Hz, 120Hz, 144Hz+, and variable refresh displays.",
+            "**Multi-Touch Pan & Pinch-to-Zoom**: Native gesture support for single-finger panning with momentum and two-finger pinch-to-zoom centered at the touch midpoint.",
+            "**Smooth Keyboard Navigation**: Smooth velocity acceleration and deceleration for `W`/`A`/`S`/`D` and Arrow key panning with diagonal normalization.",
+            "**Jitter-Free Target Tracking**: Smoothly tracks any `Entity` or `Vec3` coordinate with a configurable **Deadzone box** and **Exponential Moving Average (EMA) Velocity Look-Ahead** prediction.",
+            "**World Bounds Clamping**: Constrains camera position and visible viewport within world boundaries (`Camera2DBounds`).",
+            "**Zoom to Fit**: Automatically calculates center position and orthographic scale to frame a collection of entities.",
+            "**Screen Shake**: High-frequency procedural oscillation effect with quadratic falloff.",
+            "**Screen $\\leftrightarrow$ World Coordinate Conversion**: Robust pixel-to-world and world-to-pixel coordinate projection taking into account canvas bounding client rect and aspect ratio.",
+            "**Declarative Animation System**: Fluid syntax integration with `scene.play(controller.animate.*)`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quick-start",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Quick Start"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Camera2DController, Vec3 } from \"retiam\";\n\nexport class My2DScene extends Scene {\n    public async run() {\n        // Initialize 2D controller with smooth damping & momentum\n        const controller = new Camera2DController(this, this.camera, {\n            bounds: { minX: -500, maxX: 500, minY: -500, maxY: 500 },\n            moveSpeed: 50.0,\n            damping: 12.0,\n            inertiaFriction: 0.92,\n            zoomSpeed: 1.0,\n            minZoom: 0.01,\n            maxZoom: 10000.0,\n            orthoScale: 100\n        });\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "configuration-options-camera2dcontrolleroptions",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Configuration Options (Camera2DControllerOptions)"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Option",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`bounds`",
+                  "type": "text"
+                },
+                {
+                  "text": "`Camera2DBounds \\| null`"
+                },
+                {
+                  "text": "`null`"
+                },
+                {
+                  "text": "World boundary limits `{ minX, maxX, minY, maxY }`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`clampToViewport`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`true`"
+                },
+                {
+                  "text": "Whether bounds clamping accounts for visible viewport size."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`moveSpeed`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`50.0`"
+                },
+                {
+                  "text": "Keyboard movement speed multiplier."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`damping`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`12.0`"
+                },
+                {
+                  "text": "Smoothing damping factor (higher = faster response)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`zoomSpeed`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`1.0`"
+                },
+                {
+                  "text": "Mouse scroll wheel / trackpad zoom sensitivity multiplier."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`minZoom`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.01`"
+                },
+                {
+                  "text": "Minimum allowed orthographic scale (maximum zoom in)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`maxZoom`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`10000.0`"
+                },
+                {
+                  "text": "Maximum allowed orthographic scale (maximum zoom out)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`inertiaFriction`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.92`"
+                },
+                {
+                  "text": "Friction coefficient applied to pan glide momentum (0.0 to 0.99)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`enableInertia`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`true`"
+                },
+                {
+                  "text": "Enable pan momentum / glide on drag release."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`dragSensitivity`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`1.0`"
+                },
+                {
+                  "text": "Mouse / touch drag sensitivity multiplier (1.0 = 1:1 speed)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`keySmoothing`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`12.0`"
+                },
+                {
+                  "text": "Keyboard acceleration / deceleration smoothing factor."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`orthoScale` / `zoom`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`10.0`"
+                },
+                {
+                  "text": "Initial orthographic scale (visible height in world units)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`deadzone`",
+                  "type": "text"
+                },
+                {
+                  "text": "`Camera2DDeadzone \\| null`"
+                },
+                {
+                  "text": "`null`"
+                },
+                {
+                  "text": "Default deadzone box `{ width, height }` for tracking."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`lookAheadFactor`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.0`"
+                },
+                {
+                  "text": "Velocity prediction multiplier for target tracking."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`enableKeys`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`true`"
+                },
+                {
+                  "text": "Enable WASD and Arrow key navigation."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`enablePan`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`true`"
+                },
+                {
+                  "text": "Enable mouse click-and-drag viewport panning."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`enableZoom`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`true`"
+                },
+                {
+                  "text": "Enable mouse scroll wheel and trackpad zooming."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`enableTouch`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`true`"
+                },
+                {
+                  "text": "Enable touch pan and pinch-to-zoom gestures."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interactive-controls",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Interactive Controls"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Input",
+            "Action",
+            "Behavior"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Mouse Wheel / Trackpad**",
+                  "type": "text"
+                },
+                {
+                  "text": "Cursor Zoom"
+                },
+                {
+                  "text": "Zooms in/out centered directly at the mouse pointer location with zero drift."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Mouse Drag**",
+                  "type": "text"
+                },
+                {
+                  "text": "Viewport Pan"
+                },
+                {
+                  "text": "Click and drag (Left, Middle, or Right button) to pan; glides with momentum on release."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Touch (1 Finger)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Touch Pan"
+                },
+                {
+                  "text": "Drag to pan viewport; glides with inertia upon finger release."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Touch (2 Fingers)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Pinch Zoom & Pan"
+                },
+                {
+                  "text": "Pinch to zoom centered at pinch midpoint and pan simultaneously."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**W / A / S / D**",
+                  "type": "text"
+                },
+                {
+                  "text": "Smooth Pan"
+                },
+                {
+                  "text": "Smoothly accelerates and decelerates camera up/left/down/right."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Arrow Keys**",
+                  "type": "text"
+                },
+                {
+                  "text": "Smooth Pan"
+                },
+                {
+                  "text": "Smoothly accelerates and decelerates camera up/left/down/right."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "target-following",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Target Following"
+        },
+        {
+          "type": "paragraph",
+          "text": "To lock the camera onto an entity or moving coordinate:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "controller.follow(playerEntity, {\n    damping: 10.0,\n    deadzone: { width: 40, height: 40 },\n    lookAheadFactor: 0.5\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Deadzone & Look-Ahead"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Deadzone (`{ width, height }`)**: Defines a rectangular region around the camera center where target movement does not trigger camera movement. When the target exits the deadzone box, the camera smoothly follows.",
+            "**Look-Ahead (`lookAheadFactor`)**: Predicts the target's trajectory using EMA-filtered velocity ($\\vec{v}$) to smoothly position the camera ahead in the direction of travel without velocity spike jitter.",
+            "**Stopping Follow**: Call `controller.follow(null)` or trigger manual controls (pan, key move, scroll zoom)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "world-clamping-framing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "World Clamping & Framing"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Boundary Limits"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Enable world boundaries\ncontroller.setBounds({ minX: -200, maxX: 200, minY: -200, maxY: 200 });\n\n// Disable boundaries\ncontroller.setBounds(null);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Zoom to Fit"
+        },
+        {
+          "type": "paragraph",
+          "text": "Automatically calculates the bounding box of the given entities, centers the camera on them, and zooms to frame them with padding:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "controller.zoomToFit(entityArray, 1.2, 0.8); // 20% margin, 0.8s transition"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Screen Shake"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// intensity: max offset in world units, duration: seconds, frequency: Hz\ncontroller.shake(15.0, 0.5, 30);"
+        }
+      ]
+    },
+    {
+      "id": "coordinate-conversions",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Coordinate Conversions"
+        },
+        {
+          "type": "paragraph",
+          "text": "Convert seamlessly between screen client pixels (relative to canvas top-left) and world coordinates:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Canvas pixel -> World space coordinate (Vec3)\nconst worldPoint = controller.screenToWorld(clientX - canvasRect.left, clientY - canvasRect.top);\n\n// World space coordinate (Vec3) -> Canvas pixel { x, y }\nconst screenPixel = controller.worldToScreen(entity.transform.position);"
+        }
+      ]
+    },
+    {
+      "id": "programmatic-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Programmatic API Reference"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Smoothly pan camera to world (x, y)\ncontroller.moveTo(x, y, durationSeconds);\n\n// Smoothly zoom camera to orthographic scale\ncontroller.zoomTo(orthoScale, durationSeconds);\n\n// Zoom camera centered on a specific screen coordinate (screenX, screenY) with zero drift\ncontroller.zoomAt(screenX, screenY, targetOrthoScale, smoothBool);\n\n// Reset camera position and zoom to defaults\ncontroller.reset(durationSeconds);"
+        }
+      ]
+    },
+    {
+      "id": "animation-system-scene-play",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Animation System (scene.play)"
+        },
+        {
+          "type": "paragraph",
+          "text": "All camera operations can be animated using `scene.play(...)` with custom easing rate functions:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Rate } from \"retiam\";\n\n// 1. Animate camera position\nawait scene.play(controller.animate.moveTo(100, 50), {\n    duration: 1000,\n    rate_func: Rate.ease_in_out\n});\n\n// 2. Animate zoom centered on viewport center\nawait scene.play(controller.animate.zoomTo(50), {\n    duration: 800,\n    rate_func: Rate.ease_out_cubic\n});\n\n// 3. Animate zoom centered on a specific screen coordinate / mouse pointer\nawait scene.play(controller.animate.zoomAt(screenX, screenY, 25), {\n    duration: 1200,\n    rate_func: Rate.ease_in_out\n});\n\n// 4. Animate look-ahead prediction factor\nawait scene.play(controller.animate.lookAhead(0.8), { duration: 600 });\n\n// 5. Animate deadzone box dimensions (width, height)\nawait scene.play(controller.animate.deadzone(80, 80), { duration: 800 });\n\n// 6. Animate camera damping / smoothness\nawait scene.play(controller.animate.damping(25.0), { duration: 500 });\n\n// 7. Animate inertia friction coefficient\nawait scene.play(controller.animate.inertia(0.95), { duration: 500 });\n\n// 8. Animate Zoom to Fit multiple objects\nawait scene.play(controller.animate.zoomToFit(targets, 1.3), {\n    duration: 1500,\n    rate_func: Rate.ease_in_out\n});\n\n// 9. Animate reset to initial position & zoom\nawait scene.play(controller.animate.reset(), { duration: 800 });"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-stencil-masking-and-zoom-view-architecture",
+  "title": "Hardware Stencil Masking & Picture-in-Picture Zoom Views Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/STENCIL_MASKING_AND_ZOOM_VIEW_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/STENCIL_MASKING_AND_ZOOM_VIEW_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/STENCIL_MASKING_AND_ZOOM_VIEW_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Mask](/api-entities-layout#mask), [ZoomView](/api-entities-layout#zoomview), [FeedbackZoomView](/api-entities-layout#feedbackzoomview), [Pipeline](/api-render-pipelines#pipeline), [Entity](/api-core-entity#entity), [Circle](/api-entities-primitives-2d#circle), [Rect](/api-entities-primitives-2d#rect), [Path](/api-entities-primitives-2d#path), [Color](/api-math#color), [Write](/api-animation#write), [VectorEntity](/api-core-vectorentity#vectorentity), [State](/api-core#state), [FragmentComponent](/api-components#fragmentcomponent), [Pass](/api-render-frame-graph#pass), [Scene](/api-core-scene#scene), [Line](/api-entities-primitives-2d#line), [Model](/api-entities-primitives-3d#model), [Texture](/api-render-pipelines#resourcelayouts), [Usage](/api-utils#gpu-utils), [Vec3](/api-math-vector#vec3), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Visual presentations frequently require clipping content to complex geometric boundaries (circular avatars, animated wipe masks, aperture cutouts) and magnifying focal details (technical zoom callouts, picture-in-picture insets)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides three specialized layout entities:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`Mask`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Mask.ts)**: Hardware-accelerated stencil clipping using the 8-bit WebGPU stencil buffer (`depth24plus-stencil8`), supporting nested masks, inverted hole punching, and zero color-buffer pollution.",
+            "**[`ZoomView`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts)**: Picture-in-picture magnifying callout that renders a target entity hierarchy into a focused circular or rectangular window with callout connector lines.",
+            "**[`FeedbackZoomView`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts)**: High-performance frame-feedback alternative that samples the previous frame's rendered color buffer directly without cloning entity hierarchies, guaranteeing 100% fidelity with 3D models, video textures, and post-processed shaders."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  H[\"Hardware stencil pipeline\"] --> M[\"Mask shape entity<br/>Circle / Rect / Path\"]\n  H --> C[\"Masked content entity<br/>Sprite / 3D / Group\"]\n  M --> MW[\"writeMask: 0x00<br/>No color writes\"] --> ST[\"stencilWrite: 0x80 OR ID<br/>Writes bitmask pattern\"]\n  C --> CW[\"writeMask: 0x0F<br/>Normal RGBA writes\"] --> TEST[\"Stencil test: EQUAL / NOTEQUAL<br/>Passes inside / outside mask boundary\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-hardware-stencil-masking-architecture-mask-ts-src-engine-entities-layout-mask-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Hardware Stencil Masking Architecture ([Mask.ts](../src/engine/entities/layout/Mask.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Mask` entity accepts a boundary shape ([`VectorEntity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts)) and arbitrary target content ([`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "new Mask(shape: VectorEntity, content: Entity, inverted: boolean = false)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. 8-Bit Stencil Bitmask Schema"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam partitions the 8-bit hardware stencil buffer (`0x00 - 0xFF`):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Bit 7 (`0x80`)**: Active mask flag.",
+            "**Bits 0–6 (`0x01 - 0x7F`)**: Unique stencil mask ID ($1 \\le \\text{maskId} \\le 127$). This allows up to 127 independent or nested masks to coexist without state cross-talk."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Render State Patching"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Mask` automatically patches the depth-stencil states of child [`FragmentComponent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/FragmentComponent.ts) instances:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Shape Pass (Stencil Write)**:",
+              "children": [
+                "**`writeMask = 0`**: Suppresses all RGBA color writes to the swap chain, rendering the mask boundary completely invisible.",
+                "**Stencil Operation**: `stencil.passOp = 'replace'`, writing `128 | maskId` into the stencil buffer wherever the shape's fill geometry exists."
+              ]
+            },
+            {
+              "text": "**Content Pass (Stencil Test)**:",
+              "children": [
+                "Standard color writes (`writeMask = 0x0F`).",
+                "**Normal Mask (`inverted: false`)**: `stencil.compare = 'equal'`, with reference value `128 | maskId`. Pixels outside the mask boundary fail the stencil test and are discarded.",
+                "**Inverted Mask (`inverted: true`)**: `stencil.compare = 'not-equal'`. Pixels inside the boundary are punched out, creating transparent holes."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-zoom-callout-systems-zoomview-ts-src-engine-entities-layout-zoomview-ts-feedbackzoomview-ts-src-engine-entities-layout-feedbackzoomview-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Zoom Callout Systems ([ZoomView.ts](../src/engine/entities/layout/ZoomView.ts) & [FeedbackZoomView.ts](../src/engine/entities/layout/FeedbackZoomView.ts))"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Primary Scene Canvas                         Zoom View Callout Window\n┌───────────────────────┐                    ┌───────────────────────────┐\n│                       │   Connector Line   │   Magnified Focal Area    │\n│       ┌───────┐       │ ══════════════════▷│        (3x Zoom)          │\n│       │ Focal │       │                    │                           │\n│       │ Target│       │                    │                           │\n│       └───────┘       │                    └───────────────────────────┘\n│                       │                       Frame Border & Drop Shadow\n└───────────────────────┘"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Comparison Matrix"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Architectural Aspect",
+            "[`ZoomView`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/ZoomView.ts)",
+            "[`FeedbackZoomView`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/FeedbackZoomView.ts)"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Execution Model**",
+                  "type": "text"
+                },
+                {
+                  "text": "Secondary camera view rendering target entity"
+                },
+                {
+                  "text": "Direct sampling of previous frame's rendered color texture"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**VRAM Overhead**",
+                  "type": "text"
+                },
+                {
+                  "text": "Extra vertex draw calls for magnified entities"
+                },
+                {
+                  "text": "Zero extra draw calls; reuses temporal frame texture"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Scene Content Support**",
+                  "type": "text"
+                },
+                {
+                  "text": "Vector entities, shapes, text, basic models"
+                },
+                {
+                  "text": "100% universal (supports 3D models, video, particles, post-processing)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Resolution Behavior**",
+                  "type": "text"
+                },
+                {
+                  "text": "True vector re-tessellation (infinite sharpness)"
+                },
+                {
+                  "text": "Texture magnification (sampled at canvas framebuffer resolution)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Connector Lines**",
+                  "type": "text"
+                },
+                {
+                  "text": "Dynamic line from target centroid to callout window"
+                },
+                {
+                  "text": "Dynamic line from focal point to callout window"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Rect, Mask, ZoomView, Color, Vec3 } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Stencil Masking: Clip a colorful grid inside a circular aperture\nconst aperture = new Circle(3.0);\nconst content = new Rect(8.0, 8.0, { fill: Color.fromHex(\"#3b82f6\") });\n\nconst maskedAvatar = new Mask(aperture, content);\nscene.add(maskedAvatar);\n\n// 2. Zoom Callout: Magnify the center of the avatar\nconst callout = new ZoomView(maskedAvatar, {\n    zoom: 2.5,\n    windowRadius: 2.0,\n    windowPosition: new Vec3(5, 2, 0),\n    borderColor: Color.WHITE,\n    borderWidth: 0.08,\n    showConnector: true\n});\nscene.add(callout);"
+        }
+      ]
+    }
+  ]
+}

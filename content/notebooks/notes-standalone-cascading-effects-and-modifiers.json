@@ -1,0 +1,612 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-standalone-cascading-effects-and-modifiers",
+  "title": "Standalone Cascading: Effects, Modifiers & Unified Shader Options",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/STANDALONE_CASCADING_EFFECTS_AND_MODIFIERS.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/STANDALONE_CASCADING_EFFECTS_AND_MODIFIERS.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/STANDALONE_CASCADING_EFFECTS_AND_MODIFIERS.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Shader](/api-entities-primitives-2d#shader), [PathEffect](/api-material#patheffect), [FillEffect](/api-material#filleffect), [PathModifier](/api-modifiers#pathmodifier), [PathModifierPipeline](/api-modifiers#pathmodifierpipeline), [Path](/api-entities-primitives-2d#path), [Entity](/api-core-entity#entity), [PathOptions](/api-entities-primitives-2d#path), [SVG](/api-entities-composites-svg#svg), [Graph](/api-libs-graphs-graph#graph), [Material](/api-core-material#material), [Pass](/api-render-frame-graph#pass), [PathContours](/api-modifiers#ipathmodifier), [Model](/api-entities-primitives-3d#model), [Color](/api-math#color), [Fill](/api-core#fill), [Line](/api-entities-primitives-2d#line), [Sequential](/api-animation#sequential), [PathGeometryUtils](/api-utils#pathgeometryutils), [ResampleModifier](/api-modifiers-path#resamplemodifier), [WobbleModifier](/api-modifiers-path#wobblemodifier), [OffsetModifier](/api-modifiers-path#offsetmodifier), [Create](/api-animation-creation#create), [Rect](/api-entities-primitives-2d#rect)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document specifies the architectural design and developer API for **cascading shader effects** (`PathEffect`, `FillEffect`) and **geometric path modifiers** (`PathModifier`, `PathModifierPipeline`) in the Retiam WebGPU Engine."
+        },
+        {
+          "type": "paragraph",
+          "text": "It explains how these systems operate as **independent, standalone mathematical and shader graph processors** without requiring any [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) or [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) instance, and how they seamlessly integrate into [`PathOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts#L28-L45) with clean, non-redundant configuration."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-philosophy-decoupled-by-design",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Philosophy: Decoupled by Design"
+        },
+        {
+          "type": "paragraph",
+          "text": "In Retiam, geometry modification and fragment shader synthesis are strictly decoupled from entity orchestration:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n  G[\"Geometry source<br/>SVG / parametric / triangles\"] --> M[\"PathModifierPipeline<br/>Pure math and curves\"] --> B[\"WebGPU buffers<br/>Vertex / index / SSBO\"]\n  S[\"Shader graph specification<br/>Gradients / dashes / glows\"] --> E[\"PathEffect / FillEffect<br/>Pure shader synthesis\"] --> W[\"WGSL material pass<br/>Analytical SDF / stencil\"]\n  M --> F[\"Standalone pure functions\"]\n  E --> F"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**PathModifiers** are pure geometric operators that take input curve contours (`PathContours`) and return transformed output contours (`PathContours`).",
+            "**PathEffects and FillEffects** are pure WGSL shader stage generators that accumulate algorithmic visual rules and compile them into optimized WebGPU fragment shader functions.",
+            "**The [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) Entity** is merely a consumer/orchestrator of these two independent pipelines, connecting modified geometry to GPU staging buffers and binding compiled shaders to the render pass."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-standalone-shader-cascading-patheffect-filleffect",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Standalone Shader Cascading (PathEffect & FillEffect)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Both stroke shaders ([`PathEffect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts)) and fill shaders ([`FillEffect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/FillEffect.ts)) can be constructed, chained, combined, and compiled to raw WGSL code with zero entity dependencies."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Stage Execution Model"
+        },
+        {
+          "type": "paragraph",
+          "text": "When multiple effects are cascaded, Retiam's shader compiler wraps each stage into an isolated WebGPU function (`_pe_stage_0`, `_pe_stage_1`, ...) and executes them in strict sequence, feeding the resulting color `c` of one stage into the next:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn pathEffect(t: f32, total_arc_len: f32, w: f32, col: vec4f) -> vec4f {\n    var c = col;\n    c = _pe_stage_0(t, total_arc_len, w, c);\n    c = _pe_stage_1(t, total_arc_len, w, c);\n    return c;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Option 1: Fluent Chaining"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every builder method on [`PathEffect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts) returns the instance (`this`), mutating its internal stage sequence:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { PathEffect, Color } from \"retiam\";\n\n// Accumulate: Gradient -> Neon Glow -> Dashed Pattern\nconst stroke = PathEffect.Gradient([\n    new Color(0.1, 0.9, 1.0, 1.0), // Neon Cyan\n    new Color(0.9, 0.1, 0.8, 1.0)  // Hot Magenta\n])\n.Glow(0.35)\n.Dashed(0.5, 0.2);\n\n// Standalone compilation to raw WGSL string:\nconst wgslCode: string = stroke.compile();"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Option 2: Combining Distinct Instances (PathEffect.combine)"
+        },
+        {
+          "type": "paragraph",
+          "text": "When effects are created modularly or passed from different sources, [`PathEffect.combine()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts#L390-L401) merges them into a single continuous chain:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { PathEffect, Color } from \"retiam\";\n\nconst gradientEffect = PathEffect.Gradient([new Color(1, 0, 0), new Color(0, 0, 1)]);\nconst glowEffect = PathEffect.Glow(0.4);\nconst dashEffect = PathEffect.Dashed(0.6, 0.3);\n\n// Standalone merger into one single PathEffect\nconst cascaded = PathEffect.combine([gradientEffect, glowEffect, dashEffect]);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Cascading Fill Effects (FillEffect.combine)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The same model applies to 2D interior fills:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { FillEffect, Color } from \"retiam\";\n\nconst checkerboard = FillEffect.Checkerboard(\n    new Color(0.15, 0.15, 0.15, 1.0),\n    new Color(0.25, 0.25, 0.25, 1.0),\n    0.5\n);\n\nconst linearRamp = FillEffect.GradientLinear(\n    [new Color(1, 0.5, 0, 0.8), new Color(0, 0.5, 1, 0.2)],\n    0, -1, 0, 1\n);\n\n// Cascades both shader stages into a single composite FillEffect\nconst combinedFill = FillEffect.combine([checkerboard, linearRamp]);\nconst fillWgsl: string = combinedFill.compile();"
+        }
+      ]
+    },
+    {
+      "id": "3-standalone-modifiers-cascading-pathmodifier-pathmodifierpipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Standalone Modifiers Cascading (PathModifier & PathModifierPipeline)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Geometric modifiers operate on pure mathematical vector curves (`PathContours`), where each contour is an array of parametric `Curve` segments (`Line`, `CubicBezier`, `QuadBezier`)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Option 1: Direct Sequential Evaluation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because every [`PathModifier`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifier.ts) exposes `apply(contours: PathContours): PathContours`, you can compose them as pure mathematical transforms:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { PathGeometryUtils, ResampleModifier, WobbleModifier } from \"retiam\";\n\n// 1. Decode an SVG path string to raw parametric contours\nconst rawContours = PathGeometryUtils.decode(\"M 0 0 L 100 0 L 100 100 Z\");\n\n// 2. Instantiate modifiers\nconst resampler = new ResampleModifier({ count: 60 });\nconst wobbler = new WobbleModifier({ roughness: 0.35, bowing: 0.2 });\n\n// 3. Evaluate sequentially\nconst step1 = resampler.apply(rawContours);\nconst step2 = wobbler.apply(step1);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Option 2: Standalone [PathModifierPipeline](../src/engine/modifiers/PathModifierPipeline.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "For production use outside of an entity, [`PathModifierPipeline`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/PathModifierPipeline.ts) provides dirty-checking, memoization, and automated execution order:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { \n    PathModifierPipeline, \n    ResampleModifier, \n    WobbleModifier, \n    OffsetModifier, \n    PathGeometryUtils \n} from \"retiam\";\n\n// Create a standalone pipeline\nconst pipeline = new PathModifierPipeline()\n    .add(new ResampleModifier({ count: 50 }))\n    .add(new WobbleModifier({ roughness: 0.25 }))\n    .add(new OffsetModifier({ offset: 0.05 }));\n\nconst source = PathGeometryUtils.decode(\"M -2 -2 L 2 -2 L 2 2 L -2 2 Z\");\n\n// Initial evaluation (calculates and caches output)\nconst result1 = pipeline.evaluate(source);\n\n// Second call returns cached result immediately (zero CPU cost)\nconst result2 = pipeline.evaluate(source);\n\n// Mutating a modifier marks the pipeline dirty\npipeline.get(WobbleModifier)!.roughness = 0.6;\nconst result3 = pipeline.evaluate(source); // Re-evaluates automatically"
+        }
+      ]
+    },
+    {
+      "id": "4-integration-with-entities-path-rect-circle-ellipse-svg",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Integration with Entities (Path, Rect, Circle, Ellipse, SVG)"
+        },
+        {
+          "type": "paragraph",
+          "text": "When rendering with Retiam's WebGPU primitives, you configure stroke shaders, fill shaders, and modifiers directly via [`PathOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts#L28-L45)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Clean, Non-Redundant PathOptions"
+        },
+        {
+          "type": "paragraph",
+          "text": "To avoid API pollution and naming conflicts, Retiam standardizes on 3 clear properties:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface PathOptions extends EntityOptions {\n    /** Path stroke shader effect (PathEffect, WGSL code string, or cascading array). */\n    strokeShader?: PathEffect | string | (PathEffect | string)[];\n\n    /** Fill shader effect (FillEffect, WGSL code string, or cascading array). */\n    fillShader?: FillEffect | string | (FillEffect | string)[];\n\n    /** Single or array of geometric path modifiers to attach in sequence. */\n    modifiers?: PathModifier | PathModifier[];\n\n    /** Use non-zero winding fill so the fill is solid at self-intersections. Default false (even-odd). */\n    overlap?: boolean;\n    \n    // ... tessellation and LOD options\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Constructor Initialization Examples"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Single Shader and Modifier"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Path, WobbleModifier, PathEffect, Color } from \"retiam\";\n\nconst path = new Path(\"M 0 0 L 10 0\", {\n    modifiers: new WobbleModifier({ roughness: 0.2 }),\n    strokeShader: PathEffect.Glow(0.3)\n});"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Cascading Arrays in Constructor"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Path, Rect, Circle, ResampleModifier, WobbleModifier, PathEffect, FillEffect, Color } from \"retiam\";\n\nconst complexPath = new Path(\"M -5 0 C -5 5, 5 5, 5 0\", {\n    // Array of modifiers cascaded in order:\n    modifiers: [\n        new ResampleModifier({ count: 64 }),\n        new WobbleModifier({ roughness: 0.3, bowing: 0.15 })\n    ],\n    // Array of cascading stroke shaders:\n    strokeShader: [\n        PathEffect.Gradient([new Color(0, 1, 1), new Color(1, 0, 1)]),\n        PathEffect.Dashed(0.4, 0.2)\n    ],\n    // Fill shader:\n    fillShader: FillEffect.GradientRadial(\n        [new Color(1, 1, 0, 0.8), new Color(1, 0, 0, 0)],\n        0, 0, 3\n    )\n});\n\n// Works identically on geometric primitives (Rect, Circle, Ellipse)\nconst handDrawnBox = new Rect(4, 2.5, {\n    modifiers: new WobbleModifier({ roughness: 0.25 }),\n    strokeShader: PathEffect.Chalk()\n});"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "SVG Forwarding"
+        },
+        {
+          "type": "paragraph",
+          "text": "When options are passed to [`SVG`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/svg/SVG.ts), they are automatically cascaded to all parsed child paths and primitives:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { SVG, WobbleModifier, PathEffect } from \"retiam\";\n\nconst handDrawnDiagram = new SVG(svgXmlContent, {\n    modifiers: new WobbleModifier({ roughness: 0.2, seed: 42 }),\n    strokeShader: PathEffect.Chalk()\n});\n// Every sub-path and shape inside handDrawnDiagram inherits the wobble & chalk styling!"
+        }
+      ]
+    },
+    {
+      "id": "5-runtime-imperative-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Runtime Imperative API Reference"
+        },
+        {
+          "type": "paragraph",
+          "text": "On any instantiated [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) (or subclass like `Rect`, `Circle`), the following methods manage the live cascade:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Stroke Effects / Stroke Shaders"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`path.addPathEffect(effect)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Appends an effect to the stroke cascade (switches to analytical rendering if needed)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.removePathEffect(effect)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Removes an attached stroke effect."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.clearPathEffect()`",
+                  "type": "text"
+                },
+                {
+                  "text": "Clears all stroke effects back to default solid stroke."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.setPathEffect(effect)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Replaces the entire stroke effect chain with a single effect."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.setStrokeShader(shader)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Alias for `setPathEffect`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.pathEffects`",
+                  "type": "text"
+                },
+                {
+                  "text": "Read-only array of all attached stroke effects."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Fill Effects / Fill Shaders"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`path.addFillEffect(effect)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Appends an effect to the fill cascade (switches to analytical rendering if needed)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.removeFillEffect(effect)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Removes an attached fill effect."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.clearFillEffect()`",
+                  "type": "text"
+                },
+                {
+                  "text": "Clears all fill effects back to solid color."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.setFillEffect(effect)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Replaces the entire fill effect chain with a single effect."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.setFillShader(shader)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Alias for `setFillEffect`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.fillEffects`",
+                  "type": "text"
+                },
+                {
+                  "text": "Read-only array of all attached fill effects."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Modifiers Pipeline"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`path.addModifier(mod)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Appends a modifier to the execution pipeline and connects reactive updates."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.removeModifier(mod \\| type)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Removes a specific modifier instance or first instance matching a class."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.clearModifier()`",
+                  "type": "text"
+                },
+                {
+                  "text": "Clears all modifiers and restores original source contours."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.setModifier(mod)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Clears existing modifiers and sets a single new modifier."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.getModifier(ClassType)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Retrieves the active instance of a modifier type (e.g. `path.getModifier(WobbleModifier)`)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`path.modifiers`",
+                  "type": "text"
+                },
+                {
+                  "text": "Read-only array of all attached modifiers."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-summary-comparison",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Summary Comparison"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Concept",
+            "Scope",
+            "Input",
+            "Output",
+            "Standalone Usage"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`PathEffect`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Fragment Stroke Shader"
+                },
+                {
+                  "text": "Arc-length `t`, stroke width `w`, base color `col`"
+                },
+                {
+                  "text": "Modified RGBA color `vec4f`"
+                },
+                {
+                  "text": "Fluent chaining (`.Glow().Dashed()`) or `PathEffect.combine([...])` $\\to$ `.compile()`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`FillEffect`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Fragment Fill Shader"
+                },
+                {
+                  "text": "Local 2D coordinate `localPos`, base color `col`"
+                },
+                {
+                  "text": "Modified RGBA color `vec4f`"
+                },
+                {
+                  "text": "`FillEffect.combine([...])` $\\to$ `.compile()`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`PathModifier`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Geometry Transformation"
+                },
+                {
+                  "text": "Parametric contours (`PathContours`)"
+                },
+                {
+                  "text": "Modified contours (`PathContours`)"
+                },
+                {
+                  "text": "Direct `mod.apply(contours)` or managed via `PathModifierPipeline`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`PathOptions`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Entity Configuration"
+                },
+                {
+                  "text": "Options object (`strokeShader`, `fillShader`, `modifiers`)"
+                },
+                {
+                  "text": "Fully configured GPU Entity"
+                },
+                {
+                  "text": "Passed directly to `Path`, `Rect`, `Circle`, `SVG` constructors"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

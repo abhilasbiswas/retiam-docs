@@ -1,0 +1,71 @@
+# Deployment
+
+This is a standalone Vite/React application. Publish only `dist/`. Its editable scenes load Retiam from the module URL in `content/config.json`.
+
+## GitHub Pages
+
+1. Create a public repository named `retiam-docs` and push this project to it.
+2. When the library release is available, update `cdnUrl` in `content/config.json` to its version-pinned public HTTPS module URL. Keep the emitted sublibraries, chunks, and assets available at their original relative paths.
+3. Open **Settings → Pages → Build and deployment** and set **Source → GitHub Actions**.
+4. Push to `main` or run **Actions → Documentation Pages → Run workflow**.
+5. Wait for the `build` and `deploy` jobs. The expected site is `https://abhilasbiswas.github.io/retiam-docs/`.
+
+The workflow gets its base path from Pages. Pull requests run validation without deploying. Deployment requires public HTTPS engine and service URLs; local development can continue using localhost. No repository CDN variable is required.
+
+The old engine repository needs no Pages workflow or documentation build scripts.
+
+## Local checks
+
+```bash
+npm ci
+npm run lint
+npm test
+RETIAM_DOCS_BASE_PATH=/retiam-docs/ npm run build
+npm run preview
+```
+
+Open the preview URL printed by Vite, including `/retiam-docs/`. The base path must match the destination repository name.
+
+```bash
+npm run check:deployment
+npm run check:deployment -- --runtime
+npm run check:cdn
+```
+
+The deployment checker uses a temporary ordinary static server with no SPA fallback. It checks physical routes, reloads, anchors, search, and the compiler. `--runtime` also exercises an edited WebGPU scene, the installed library package, an emitted font, and a documentation image; it does not require a source checkout or a running local CDN.
+
+On macOS, use installed Chrome if Puppeteer's cached browser is incompatible:
+
+```bash
+PUPPETEER_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run check:deployment -- --runtime
+```
+
+`check:cdn` validates the URL in `content/config.json` and requires the published module to be available with JavaScript MIME and appropriate CORS headers.
+
+## Routes, content, and privacy
+
+The build writes a physical `<page-id>/index.html` for every registered page, plus `404.html` and `.nojekyll`. Direct navigation and refreshes work on GitHub Pages. Unknown paths remain 404s.
+
+Content, API data, search, example metadata, the editor, and scene media load on demand. Referenced media is copied from this repository's `assets/`; the engine's built-in assets remain part of its own package/CDN.
+
+The site publishes its examples, versioned API descriptions, and engineering notes. Engine implementation files are not copied into `runtime/sources`. Reference data can describe internal APIs and behavior, so review it as public documentation before publishing. A private engine repository does not make the documentation or compiled npm library private.
+
+## Optional services
+
+GitHub Pages runs no backend. Demos that need external services require an explicit Run and report missing configuration.
+
+Optional public service configuration belongs in `content/config.json`:
+
+```json
+{
+  "cdnUrl": "https://cdn.example.org/retiam/dist/retiam.es.js",
+  "services": {
+    "msedgeEndpoint": "https://speech.example.org/api/tts/msedge",
+    "modelBaseUrl": "https://models.example.org/models"
+  }
+}
+```
+
+Edge synthesis in the browser requires a compatible proxy with CORS. Kokoro requires model and voice files hosted with CORS under its configured model directory. These services and downloaded models are not included in the site. Keep credentials on the service itself.
+
+Local Studio, recording services, and CLI rendering run separately from the static documentation. WebGPU availability depends on the visitor's browser and GPU. Features requiring cross-origin isolation need hosting that supplies the necessary headers; GitHub Pages does not provide custom response headers.

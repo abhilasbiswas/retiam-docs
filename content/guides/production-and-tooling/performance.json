@@ -1,0 +1,130 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "performance",
+  "title": "Measure CPU work, GPU work and allocation separately",
+  "group": "Production quality",
+  "summary": "Separate CPU work, GPU work and allocation costs with controlled experiments.",
+  "sections": [
+    {
+      "id": "baseline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Define the experiment before comparing speed"
+        },
+        {
+          "type": "paragraph",
+          "text": "Choose one scene, a fixed viewport and a stable camera. Record engine build, browser, GPU, device pixel ratio, render configuration and whether assets are already loaded. Compare the same workload after warm-up; shader compilation and font generation are startup costs, not steady-state draw costs. A larger canvas can make the GPU do more work even when entity count stays fixed."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Cost",
+            "Useful experiment",
+            "What it tells you"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "JavaScript update work",
+                "Freeze procedural motion while keeping the same objects visible.",
+                "How much CPU time the updater adds. Rendering may still continue."
+              ]
+            },
+            {
+              "cells": [
+                "Geometry rebuilds",
+                "Change transform only, then rebuild an equally complex path each frame.",
+                "Cost of layout, contour work, invalidation and uploads."
+              ]
+            },
+            {
+              "cells": [
+                "GPU pixels/passes",
+                "Keep object count fixed and change resolution, shadows, OIT or post effects one at a time.",
+                "Fill, bandwidth and multi-pass cost."
+              ]
+            },
+            {
+              "cells": [
+                "Object/resource churn",
+                "Compare retained entities with reconstruction; inspect allocation traces and GC.",
+                "Whether a smooth-looking preview hides periodic allocation pauses."
+              ]
+            },
+            {
+              "cells": [
+                "Startup",
+                "Measure empty-to-ready separately with a cold and warm font/cache.",
+                "Loading and compilation behavior."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Use browser performance traces for CPU tasks and allocation. GPU queue completion is a synchronization point and includes waiting; it is not a per-pass GPU timestamp. GPU timestamp queries require device support and deliberate instrumentation. Avoid calling onSubmittedWorkDone every realtime frame simply to produce a number: that changes the pipeline you are trying to measure."
+        }
+      ]
+    },
+    {
+      "id": "retained",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Keep the experiment editable"
+        },
+        {
+          "type": "example",
+          "example": "labs/workshop-performance"
+        },
+        {
+          "type": "paragraph",
+          "text": "The lab creates 120 circles once and updates their transforms. Click the label to stop the update workload, then edit count and rerun at the same preview size. The scene deliberately keeps ALWAYS_UPDATE enabled, so freezing does not also switch the composer to idle. This makes the comparison about CPU update work rather than combining two changes."
+        },
+        {
+          "type": "paragraph",
+          "text": "The move call still supplies a small array per dot. Retaining entities avoids new Circle/geometry/component construction each frame, but does not mean zero JavaScript allocation. If traces show those arrays matter, use reusable vector storage and the supported transform path. Confirm that your optimization preserves dirty-state updates and the visual result before interpreting its speed."
+        }
+      ]
+    },
+    {
+      "id": "redraw",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose reconstruction for the problem it solves"
+        },
+        {
+          "type": "paragraph",
+          "text": "`alwaysRedraw` is useful when rebuilding a mathematical object is simpler than mutating it. It attempts to transfer compatible GPU resources between consecutive entities, but the factory can still allocate JavaScript nodes. Prefer `updateGraph`, `setVertices`, scalar trackers or state setters when they represent the change directly. Replacing a whole text string is a glyph-layout rebuild; animating its parent is a transform update."
+        },
+        {
+          "type": "paragraph",
+          "text": "Batching and instancing help repeated geometry. A compute-driven instancer moves per-instance work to storage buffers and GPU kernels; it adds buffer layouts and synchronization contracts. Compare an equivalent visual distribution and sample count, then inspect CPU submission, upload bandwidth and GPU time. See [compute and instancing](/compute-instancing) and [GPU memory](/gpu-memory)."
+        }
+      ]
+    },
+    {
+      "id": "bounds",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Control scene complexity deliberately"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use fewer curve subdivisions when they do not change the silhouette at the target resolution. Camera framing is preferable to inflating z_index, which adds a depth bias and can clip geometry. Avoid recompiling shaders for a numeric parameter that belongs in a uniform. Reuse shared fonts/textures, throttle expensive interactive rebuilds, and choose shadows/transparency settings based on the output’s visual needs."
+        },
+        {
+          "type": "paragraph",
+          "text": "Publish measurements as experiments with dimensions, configuration and sample sizes. Do not turn one machine’s frame rate into a general engine guarantee. For video production, also report total render time, exported frame count and peak memory: a scene can preview smoothly and still have expensive asset setup or offline readback."
+        }
+      ]
+    }
+  ]
+}

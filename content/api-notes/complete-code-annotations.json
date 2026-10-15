@@ -1,0 +1,35 @@
+{
+  "CodeOptions.startLineNumber": {"description":"Displayed number assigned to the first source line, defaulting to 1. Line-based annotation methods use this displayed numbering even when line numbers are hidden."},
+  "Code.startLineNumber": {"description":"Base displayed line number. Methods translate a displayed line into a source-array offset by subtracting this value; it is not a zero-based source index."},
+  "Code.focusOn": {
+    "description":"Keep an inclusive displayed-line range opaque and dim other code tokens and line numbers to alpha 0.3.",
+    "parameters":{"startLine":"Displayed start line, respecting startLineNumber.","endLine":"Displayed end line, inclusive. Reversed endpoints are normalized and the range is clipped to available lines."},
+    "returnsDescription":"No value. A completely out-of-range selection dims every line.",
+    "notes":["This changes token paint and line-number alpha; it does not hide or delete source text. Use clearFocus to restore full opacity."]
+  },
+  "Code.clearFocus": {"description":"Set code token and line-number alpha back to 1. This restores full opacity rather than remembering arbitrary alpha values from before focusOn."},
+  "Code.scrollToLine": {
+    "description":"Move the code's scroll group vertically so the selected source row occupies the first-row position.",
+    "parameters":{"lineNum":"Displayed line number. Values outside the source range are clamped to the first or last row."},
+    "returnsDescription":"No value; the transform changes immediately.",
+    "notes":["This moves the group containing text and annotations; it is distinct from browser scrolling or changing the source string."]
+  },
+  "Code.getScrollAnimation": {
+    "description":"Create a StateAnimation targeting the scroll group's vertical position for a displayed line.",
+    "parameters":{"lineNum":"Displayed line number; clamped to the first/last source row.","options":"Animation duration, easing and other StateAnimation options. Duration uses milliseconds."},
+    "returnsDescription":"A StateAnimation for Scene.play. Creating it leaves the scroll group's current transform unchanged."
+  },
+  "Code.extractText": {
+    "description":"Create a separately addressable Entity containing a matching substring's styled text and add it to this code's scroll group.",
+    "parameters":{"targetText":"Nonempty literal substring. Search is case-sensitive and each match stays within one source line.","occurrence":"Positive one-based match number, defaulting to 1.","removeOriginal":"Hide the original matching glyph paths when true; defaults to false. The underlying code string remains unchanged."},
+    "returnsDescription":"The child Entity containing extracted Text fragments, or null when the requested match cannot be extracted.",
+    "notes":["The initial lookup counts matches across the whole source, but this implementation repeats the same occurrence count inside the selected line. A later match on another line can therefore return null or select a different local match. Prefer extractTextByIndices when selecting an exact editor range.","The returned entity is still a child of scrollGroup, so it follows the code's transforms and scrolling. Rebuilding the Code replaces that hierarchy; retain references only for the current build."]
+  },
+  "Code.extractTextByIndices": {
+    "description":"Create a styled text fragment from an exact displayed line and half-open source-column range.",
+    "parameters":{"lineNum":"Displayed line number, respecting startLineNumber. An invalid line returns null.","startCol":"Zero-based UTF-16 offset into the original line, before tab expansion. Clamped into the line.","endCol":"Exclusive UTF-16 end offset. Clamped to at least the start and at most the original line length.","removeOriginal":"Hide the selected original glyph paths when true, without deleting characters from the stored source string."},
+    "returnsDescription":"An Entity added to the code's scroll group, or null for an invalid line or empty range.",
+    "example":"labs/lab-code-indices",
+    "notes":["Tabs count as one source code unit and are expanded to tabSize spaces for geometry. Surrogate pairs and combining characters need application-side range handling; these offsets are not grapheme indices.","The extraction copies token text and colors into new Text children. Whitespace-only intersections do not produce a visible Text child, although a nonempty selection can still return an empty group."]
+  }
+}

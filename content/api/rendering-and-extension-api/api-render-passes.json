@@ -1,0 +1,2225 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-render-passes",
+  "title": "render / passes API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "antialiasingpass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "AntiAliasingPass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/AntiAliasingPass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/AntiAliasingPass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/AntiAliasingPass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AntiAliasingPass: Anti-Aliasing Post-Process Pass. Samples the intermediate scene-color texture (rendered at AA resolution) and writes the final, resolved image into the swap-chain canvas texture using the engine's configured AA shader (SSAA / Bilinear). This is always the last GPU pass in the frame. It is marked unculled so the FrameGraph never strips it."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AntiAliasingPass",
+                    "Class",
+                    "Anti-Aliasing Post-Process Pass. Samples the intermediate scene-color texture (rendered at AA resolution) and writes the final, resolved image into the swap-chain canvas texture using the engine's configured AA shader (SSAA / Bilinear). This is always the last GPU pass in the frame. It is marked unculled so the FrameGraph never strips it."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class AntiAliasingPass extends Pass {\n    inputTexture: TextureHandle;\n    outputTexture: TextureHandle;\n    constructor(inputTexture: TextureHandle, outputTexture: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AntiAliasingPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@read\n    inputTexture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/AntiAliasingPass.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@create\n    outputTexture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/AntiAliasingPass.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        inputTexture: TextureHandle,\n        outputTexture: TextureHandle\n    )",
+                    "—",
+                    "Implementation: `super(\"AntiAliasingPass\"); this.inputTexture = inputTexture; this.outputTexture = outputTexture;`. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/AntiAliasingPass.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `builder.createTexture`, `navigator.gpu?.getPreferredCanvasFormat`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/AntiAliasingPass.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.isDirty`; construction of `Float32Array`; calls to `this.init`, `context.getTexture`, `context.device.queue.writeBuffer`, `context.device.createBindGroup`, `this.pipeline.getBindGroupLayout`, `inputTexture.createView`, `outputTexture.createView`, `context.commandEncoder.beginRenderPass` and additional helpers. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/AntiAliasingPass.ts#L87)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AntiAliasingPass.init: private init(context: RenderContext)",
+                    "Body operations (including nested callbacks): assignments to `this.pipeline`, `this.sampler`, `this.resolutionBuf`; calls to `anti_aliasing_wgsl.replace`, `device.createShaderModule`, `device.createRenderPipeline`, `navigator.gpu?.getPreferredCanvasFormat`, `device.createSampler`, `createBuffer`.",
+                    "[Line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/AntiAliasingPass.ts#L42)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "blurpass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "BlurPass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/BlurPass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/BlurPass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "BlurPass: 2-pass separable Gaussian blur pass for Retiam render targets and textures. Uses 5-tap bilinear hardware sampling (effective 9-tap Gaussian) for maximum performance."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BlurPassOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BlurPass",
+                    "Class",
+                    "2-pass separable Gaussian blur pass for Retiam render targets and textures. Uses 5-tap bilinear hardware sampling (effective 9-tap Gaussian) for maximum performance."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface BlurPassOptions {\n    radius?: number;\n    iterations?: number;\n    name?: string;\n}\nexport declare class BlurPass extends Pass {\n    radius: number;\n    iterations: number;\n    enabled: boolean;\n    constructor(source: GPUTexture | (() => GPUTexture | null), options?: BlurPassOptions);\n    setSource(source: GPUTexture | (() => GPUTexture | null)): void;\n    get outputTexture(): GPUTexture | null;\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BlurPassOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Gaussian blur radius in texels (default: 4. 0 = bypass) [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "iterations?: number;",
+                    "—",
+                    "Number of blur passes/iterations for stronger blur (default: 1) [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "name?: string;",
+                    "—",
+                    "Custom pass label [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L17)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BlurPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public radius: number",
+                    "4",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public iterations: number",
+                    "1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enabled: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        source: GPUTexture | (() => GPUTexture | null),\n        options?: BlurPassOptions\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._getSourceTexture`, `this.radius`, `this.iterations`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSource(source: GPUTexture | (() => GPUTexture | null)): void",
+                    "—",
+                    "Updates the source texture getter. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get outputTexture(): GPUTexture | null",
+                    "—",
+                    "The resolved blurred GPUTexture, or the source texture if blur is disabled / radius <= 0. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Implementation: `builder.markUnculled();`. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; calls to `this._getSourceTexture`, `this._ensureTextures`, `this._ensurePipeline`, `this._ensureUniformBuffers`, `device.queue.writeBuffer`, `sourceTexture.createView`, `this._pingTexture!.createView`, `this._pongTexture!.createView` and additional helpers; 1 explicit loop. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._hUniformBuffer`, `this._vUniformBuffer`, `this._pipeline`, `this._sampler`; calls to `this._destroyTextures`, `this._hUniformBuffer.destroy`, `this._vUniformBuffer.destroy`. [Source line 298](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L298)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.name || \"BlurPass\"",
+                    "[Line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L48)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BlurPass._runSubPass: private _runSubPass( context: RenderContext, inputView: GPUTextureView, outputView: GPUTextureView, uniformBuffer: GPUBuffer ): void",
+                    "Body operations (including nested callbacks): calls to `context.commandEncoder.beginRenderPass`, `context.device.createBindGroup`, `this._pipeline!.getBindGroupLayout`, `pass.setPipeline`, `pass.setBindGroup`, `pass.draw`, `pass.end`.",
+                    "[Line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L145)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BlurPass._ensureTextures: private _ensureTextures(device: GPUDevice, width: number, height: number, format: GPUTextureFormat): void",
+                    "Body operations (including nested callbacks): assignments to `this._pingTexture`, `this._pongTexture`, `this._lastWidth`, `this._lastHeight`, `this._lastFormat`; calls to `this._destroyTextures`, `device.createTexture`.",
+                    "[Line 177](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L177)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BlurPass._ensureUniformBuffers: private _ensureUniformBuffers(device: GPUDevice): void",
+                    "Body operations (including nested callbacks): assignments to `this._hUniformBuffer`, `this._vUniformBuffer`; calls to `device.createBuffer`.",
+                    "[Line 207](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L207)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BlurPass._ensurePipeline: private _ensurePipeline(device: GPUDevice, format: GPUTextureFormat): void",
+                    "Body operations (including nested callbacks): assignments to `this._sampler`, `this._pipeline`, `this._pipelineFormat`; calls to `device.createSampler`, `device.createShaderModule`, `device.createBindGroupLayout`, `device.createPipelineLayout`, `device.createRenderPipeline`.",
+                    "[Line 224](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L224)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BlurPass._destroyTextures: private _destroyTextures(): void",
+                    "Implementation: `if (this._pingTexture) { this._pingTexture.destroy(); this._pingTexture = null; } if (this._pongTexture) { this._pongTexture.destroy(); this._pongTexture = null; }`.",
+                    "[Line 287](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/BlurPass.ts#L287)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "computeupdate",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ComputeUpdate"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/ComputeUpdate.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/ComputeUpdate.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ComputeUpdate.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ComputeUpdate",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ComputeUpdate extends Pass {\n    constructor();\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ComputeUpdate` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public constructor()",
+                    "—",
+                    "Implementation: `super(\"compute_update\");`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ComputeUpdate.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setup(builder: GraphBuilder)",
+                    "—",
+                    "Implementation: `builder.markUnculled();`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ComputeUpdate.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public execute(context: RenderContext)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `context.commandEncoder.beginComputePass`, `pass.setPipeline`, `pass.setBindGroup`, `pass.dispatchWorkgroups`, `pass.end`; 1 explicit loop. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ComputeUpdate.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "createtexturepass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CreateTexturePass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/CreateTexturePass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/CreateTexturePass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CreateTexturePass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CreateTexturePass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class CreateTexturePass extends Pass {\n    screen_texture: TextureHandle;\n    depth_texture: TextureHandle;\n    resolved_screen_texture: TextureHandle;\n    constructor(screen_texture: TextureHandle, resolved_screen_texture: TextureHandle, depth_texture: TextureHandle, config?: RenderConfig);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CreateTexturePass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@create screen_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CreateTexturePass.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@create depth_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CreateTexturePass.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "resolved_screen_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CreateTexturePass.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        screen_texture: TextureHandle,\n        resolved_screen_texture: TextureHandle,\n        depth_texture: TextureHandle,\n        private config: RenderConfig = new RenderConfig()\n    )",
+                    "—",
+                    "Implementation: `super(\"CreateTexturePass\"); this.screen_texture = screen_texture; this.resolved_screen_texture = resolved_screen_texture; this.depth_texture = depth_texture;`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CreateTexturePass.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `builder.createTexture`, `navigator.gpu?.getPreferredCanvasFormat`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CreateTexturePass.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Implementation: ``. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CreateTexturePass.ts#L58)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "customcomputepass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CustomComputePass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/CustomComputePass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/CustomComputePass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CustomComputePass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CustomComputePass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class CustomComputePass extends Pass {\n    workgroupSize: [\n        number,\n        number,\n        number\n    ];\n    constructor(name: string, wgslCode: string, inputs: GPUBuffer[], outputs: GPUBuffer[], workgroupSize?: [\n        number,\n        number,\n        number\n    ]);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CustomComputePass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public workgroupSize: [number, number, number]",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CustomComputePass.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        name: string,\n        wgslCode: string,\n        inputs: GPUBuffer[],\n        outputs: GPUBuffer[],\n        workgroupSize: [number, number, number] = [64, 1, 1]\n    )",
+                    "—",
+                    "Implementation: `super(name); this.wgslCode = wgslCode; this.workgroupSize = workgroupSize; this.rawInputs = inputs; this.rawOutputs = outputs;`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CustomComputePass.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.inputHandles`; calls to `builder.markUnculled`, `builder.graph.importPersistentBuffer`, `this.inputHandles.push`, `this.bufferReads.push`, `this.writeBuffer.push`; 2 explicit loops. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CustomComputePass.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.pipeline`, `this.isDirty`; calls to `context.device.createComputePipeline`, `context.device.createShaderModule`, `context.commandEncoder.beginComputePass`, `entries.push`, `context.getBuffer`, `context.device.createBindGroup`, `this.pipeline.getBindGroupLayout`, `pass.setPipeline` and additional helpers; 2 explicit loops. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/CustomComputePass.ts#L49)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "feedbackpass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "FeedbackPass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/FeedbackPass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/FeedbackPass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "FeedbackPass: Executes the GPU copy at the end of the frame pipeline",
+                "FrameFeedbackFeature: Render Feature Plugin for Frame Feedback (Ping-Ponging)"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FeedbackPass",
+                    "Class",
+                    "Executes the GPU copy at the end of the frame pipeline"
+                  ]
+                },
+                {
+                  "cells": [
+                    "FrameFeedbackFeature",
+                    "Class",
+                    "Render Feature Plugin for Frame Feedback (Ping-Ponging)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class FeedbackPass extends Pass {\n    inputColorHandle: TextureHandle;\n    constructor(inputColorHandle: TextureHandle, feature: FrameFeedbackFeature);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}\nexport declare class FrameFeedbackFeature implements IPlugin {\n    name: string;\n    getPreviousFrameTexture(): GPUTexture | null;\n    getCurrentFrameTexture(): GPUTexture | null;\n    registerPasses(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO;\n    updateAndCopy(context: RenderContext, srcTex: GPUTexture): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FeedbackPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@read public inputColorHandle: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(inputColorHandle: TextureHandle, feature: FrameFeedbackFeature)",
+                    "—",
+                    "Implementation: `super(\"FeedbackPass\"); this.inputColorHandle = inputColorHandle; this.feature = feature;`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Implementation: `builder.markUnculled();`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Implementation: `const srcTex = context.getTexture(this.inputColorHandle); this.feature.updateAndCopy(context, srcTex);`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L26)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FrameFeedbackFeature` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "name",
+                    "\"core:frame-feedback\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPreviousFrameTexture(): GPUTexture | null",
+                    "—",
+                    "Returns the GPUTexture containing the PREVIOUS rendered frame. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCurrentFrameTexture(): GPUTexture | null",
+                    "—",
+                    "Returns the active GPUTexture being written to for the current frame. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public registerPasses(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO",
+                    "—",
+                    "Implementation: `const feedbackPass = new FeedbackPass(io.resolvedColor, this); graph.addPass(feedbackPass); return io;`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateAndCopy(context: RenderContext, srcTex: GPUTexture)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.texA`, `this.texB`, `this.width`, `this.height`, `this.pingPong`; calls to `Renderer.destroyBuffers`, `device.createTexture`, `this.getCurrentFrameTexture`, `context.commandEncoder.copyTextureToTexture`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Implementation: `if (this.texA) Renderer.destroyBuffers(this.texA); if (this.texB) Renderer.destroyBuffers(this.texB); this.texA = null; this.texB = null;`. [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/FeedbackPass.ts#L101)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass), [IPlugin](/api-core#iplugin)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "offscreenrenderpass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "OffscreenRenderPass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/OffscreenRenderPass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/OffscreenRenderPass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "OffscreenRenderPassConfig: Configuration injected by RenderTarget for dedicated-camera offscreen rendering"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "OffscreenRenderPassConfig",
+                    "Interface",
+                    "Configuration injected by RenderTarget for dedicated-camera offscreen rendering"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OffscreenRenderPass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface OffscreenRenderPassConfig {\n    width: number;\n    height: number;\n    scene: Scene;\n    renderView: RenderView;\n    viewBuffer: GPUBuffer;\n    viewBindGroup: GPUBindGroup;\n    clearColor?: {\n        r: number;\n        g: number;\n        b: number;\n        a: number;\n    };\n}\nexport declare class OffscreenRenderPass extends Pass {\n    colorTexture: TextureHandle;\n    depthTexture: TextureHandle;\n    entityFilter?: (entity: Entity) => boolean;\n    outputTexture: GPUTexture | null;\n    constructor(name: string, entityFilter?: (entity: Entity) => boolean, config?: OffscreenRenderPassConfig);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `OffscreenRenderPassConfig` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "width: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scene: Scene;",
+                    "—",
+                    "Required record/option field with declared type `Scene`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "renderView: RenderView;",
+                    "—",
+                    "Required record/option field with declared type `RenderView`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "viewBuffer: GPUBuffer;",
+                    "—",
+                    "Required record/option field with declared type `GPUBuffer`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "viewBindGroup: GPUBindGroup;",
+                    "—",
+                    "Required record/option field with declared type `GPUBindGroup`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "clearColor?: { r: number; g: number; b: number; a: number };",
+                    "—",
+                    "Optional record/option field with declared type `{ r: number; g: number; b: number; a: number }`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L23)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `OffscreenRenderPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@create public colorTexture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@create public depthTexture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public entityFilter?: (entity: Entity)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public outputTexture: GPUTexture | null",
+                    "null",
+                    "The resolved single-sampled output GPUTexture (readable by materials) [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(name: string, entityFilter?: (entity: Entity) => boolean, config?: OffscreenRenderPassConfig)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.colorTexture`, `this.depthTexture`, `this.entityFilter`, `this._config`, `this._ownColorTexture`, `this.outputTexture`, `this._ownMsaaTexture`, `this._ownDepthTexture`; calls to `createTextureHandle`, `navigator.gpu?.getPreferredCanvasFormat`, `device.createTexture`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `builder.createTexture`, `navigator.gpu?.getPreferredCanvasFormat`, `builder.markUnculled`. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.outputTexture`; calls to `this._executeDedicated`, `context.getTextureView`, `context.getTexture`, `this._executeSceneViews`. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L110)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "config.clearColor || { r: 0, g: 0, b: 0, a: 0 }",
+                    "[Line 136](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L136)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "config.scene?.device || context.device",
+                    "[Line 159](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L159)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "OffscreenRenderPass._executeDedicated: private _executeDedicated(context: RenderContext): void",
+                    "Renders using the dedicated RenderView camera with own MSAA-matched textures Body operations (including nested callbacks): calls to `context.device.queue.writeBuffer`, `config.renderView.getData`, `this._ownMsaaTexture!.createView`, `this._ownColorTexture!.createView`, `this._ownDepthTexture!.createView`, `context.commandEncoder.beginRenderPass`, `RenderStateCache.reset`, `pass.setBindGroup` and additional helpers; 1 explicit loop.",
+                    "[Line 124](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L124)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OffscreenRenderPass._executeSceneViews: private _executeSceneViews(context: RenderContext, colorView: GPUTextureView, depthView: GPUTextureView): void",
+                    "Original behavior: renders using scene's active views/cameras Body operations (including nested callbacks): calls to `GlobalStateAllocator.getInstance`, `context.commandEncoder.beginRenderPass`, `RenderStateCache.reset`, `pass.setBindGroup`, `this.entityFilter`, `packet.geometry.getPasses`, `this._getOrCreateShadowBindGroup`, `packet.renderer.render` and additional helpers; 2 explicit loops.",
+                    "[Line 190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L190)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OffscreenRenderPass._getOrCreateShadowBindGroup: private _getOrCreateShadowBindGroup(device: GPUDevice, layout: GPUBindGroupLayout, renderer?: any): GPUBindGroup",
+                    "Body operations (including nested callbacks): assignments to `this._shadowSampler`, `this._texSampler`, `this._dummyDepthTex`, `this._dummyArrayTex`, `this._shadowBindGroup`, `this._cachedAlbedoTex`, `this._cachedNormalTex`; calls to `device.createSampler`, `device.createTexture`, `device.createBindGroup`, `this._dummyDepthTex.createView`, `aTex.createView`, `nTex.createView`; return paths including `this._shadowBindGroup`.",
+                    "[Line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/OffscreenRenderPass.ts#L248)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ppllcompositepass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PPLLCompositePass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/PPLLCompositePass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/PPLLCompositePass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLCompositePass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PPLLCompositePass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PPLLCompositePass extends Pass {\n    depth_texture: TextureHandle;\n    resolved_screen_texture: TextureHandle;\n    constructor(ppll: PPLLManager, resolved_screen_texture: TextureHandle, depth_texture: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PPLLCompositePass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@read depth_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLCompositePass.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@write resolved_screen_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLCompositePass.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        private readonly ppll: PPLLManager,\n        resolved_screen_texture: TextureHandle,\n        depth_texture: TextureHandle,\n    )",
+                    "—",
+                    "Implementation: `super(\"PPLLCompositePass\"); this.resolved_screen_texture = resolved_screen_texture; this.depth_texture = depth_texture;`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLCompositePass.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Implementation: ``. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLCompositePass.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Implementation: `if (this.ppll) { const sceneColorView = context.getTexture(this.resolved_screen_texture).createView(); this.ppll.renderComposite(context.commandEncoder, sceneColorView); }`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLCompositePass.ts#L25)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ppllpreparepass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PPLLPreparePass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/PPLLPreparePass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/PPLLPreparePass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLPreparePass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PPLLPreparePass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PPLLPreparePass extends Pass {\n    depth_texture: TextureHandle;\n    constructor(ppll: PPLLManager, depth_texture: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PPLLPreparePass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@read depth_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLPreparePass.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(private readonly ppll: PPLLManager, depth_texture: TextureHandle)",
+                    "—",
+                    "Implementation: `super(\"PPLLPreparePass\"); this.depth_texture = depth_texture;`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLPreparePass.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Implementation: `builder.markUnculled();`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLPreparePass.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.isDirty`; calls to `context.getTexture`, `depth_texture.createView`, `this.ppll.resize`, `this.ppll.prepareFrame`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLPreparePass.ts#L21)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "persistentrendertexture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PersistentRenderTexture"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/PersistentRenderTexture.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/PersistentRenderTexture.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PersistentRenderConfig: Configuration injected by RenderTarget for dedicated-camera persistent rendering"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PersistentRenderConfig",
+                    "Interface",
+                    "Configuration injected by RenderTarget for dedicated-camera persistent rendering"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PersistentRenderTexture",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface PersistentRenderConfig {\n    renderView: RenderView;\n    viewBuffer: GPUBuffer;\n    viewBindGroup: GPUBindGroup;\n    clearColor?: {\n        r: number;\n        g: number;\n        b: number;\n        a: number;\n    };\n}\nexport declare class PersistentRenderTexture extends Pass {\n    texture: GPUTexture;\n    layerMask: number;\n    clearColor: {\n        r: number;\n        g: number;\n        b: number;\n        a: number;\n    };\n    constructor(scene: Scene, width: number, height: number, targetLayer?: number, config?: PersistentRenderConfig);\n    clear(clearColor?: {\n        r: number;\n        g: number;\n        b: number;\n        a: number;\n    }): void;\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PersistentRenderConfig` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "renderView: RenderView;",
+                    "—",
+                    "Required record/option field with declared type `RenderView`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "viewBuffer: GPUBuffer;",
+                    "—",
+                    "Required record/option field with declared type `GPUBuffer`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "viewBindGroup: GPUBindGroup;",
+                    "—",
+                    "Required record/option field with declared type `GPUBindGroup`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "clearColor?: { r: number; g: number; b: number; a: number };",
+                    "—",
+                    "Optional record/option field with declared type `{ r: number; g: number; b: number; a: number }`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PersistentRenderTexture` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public texture: GPUTexture",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public layerMask: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearColor: { r: number; g: number; b: number; a: number }",
+                    "{ r: 0, g: 0, b: 0, a: 0 }",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(scene: Scene, width: number, height: number, targetLayer: number = 2, config?: PersistentRenderConfig)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.layerMask`, `this.clearColor`, `this.texture`, `this.msaaTexture`, `this.depthTexture`, `this._view`, `this._viewBuffer` and other instance fields; construction of `RenderView`; calls to `device.createTexture`, `navigator.gpu?.getPreferredCanvasFormat`, `this._view.camera.position.set`, `this._view.init`, `this._view.getData`, `GPUAllocator.safeCreateBuffer`, `device.createBindGroup`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear(clearColor?: { r: number; g: number; b: number; a: number })",
+                    "—",
+                    "Manually wipe the canvas clean [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Implementation: `builder.markUnculled(); // Guarantee this runs every frame`. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L115)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._view.time`, `this._forceClearNext`; calls to `context.device.queue.writeBuffer`, `this._view.getData`, `this.msaaTexture!.createView`, `this.texture.createView`, `this.depthTexture.createView`, `context.commandEncoder.beginRenderPass`, `RenderStateCache.reset`, `pass.setBindGroup` and additional helpers; 1 explicit loop. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L119)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PersistentRenderTexture._getOrCreateShadowBindGroup: private _getOrCreateShadowBindGroup(device: GPUDevice, layout: GPUBindGroupLayout, renderer?: any): GPUBindGroup",
+                    "Body operations (including nested callbacks): assignments to `this._shadowSampler`, `this._texSampler`, `this._dummyDepthTex`, `this._dummyArrayTex`, `this._shadowBindGroup`, `this._cachedAlbedoTex`, `this._cachedNormalTex`; calls to `device.createSampler`, `device.createTexture`, `device.createBindGroup`, `this._dummyDepthTex.createView`, `aTex.createView`, `nTex.createView`; return paths including `this._shadowBindGroup`.",
+                    "[Line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PersistentRenderTexture.ts#L188)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "postprocesspass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PostProcessPass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/PostProcessPass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/PostProcessPass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PostProcessPass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PostProcessPass extends Pass {\n    inputTexture: TextureHandle;\n    outputTexture: TextureHandle;\n    presentationOutput: TextureHandle;\n    constructor(name: string, input: TextureHandle, shaderCode: string);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n    static getDefaultShader(fragmentMain: string): string;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PostProcessPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@read public inputTexture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@create public outputTexture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public presentationOutput: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(name: string, input: TextureHandle, shaderCode: string)",
+                    "—",
+                    "Implementation: `super(name); this.inputTexture = input; this.outputTexture = createTextureHandle(); this.presentationOutput = this.outputTexture; this.shaderCode = shaderCode;`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `builder.createTexture`, `navigator.gpu?.getPreferredCanvasFormat`, `builder.markUnculled`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.sampler`, `this.pipeline`, `this.isDirty`; calls to `context.device.createShaderModule`, `context.device.createSampler`, `context.device.createBindGroupLayout`, `context.device.createPipelineLayout`, `context.device.createRenderPipeline`, `navigator.gpu?.getPreferredCanvasFormat`, `context.getTextureView`, `context.commandEncoder.beginRenderPass` and additional helpers. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getDefaultShader(fragmentMain: string): string",
+                    "—",
+                    "Helper generator that provides a standard full-screen triangle Vertex shader. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PostProcessPass.ts#L100)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "presentpass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PresentPass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/PresentPass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/PresentPass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PresentPass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PresentPass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PresentPass extends Pass {\n    finalSceneColor: TextureHandle;\n    constructor(device: GPUDevice, finalSceneColor: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PresentPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@read\n    finalSceneColor: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PresentPass.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(device: GPUDevice, finalSceneColor: TextureHandle)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.finalSceneColor`, `this.sampler`, `this.pipeline`; calls to `device.createSampler`, `device.createShaderModule`, `device.createRenderPipeline`, `navigator.gpu.getPreferredCanvasFormat`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PresentPass.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder)",
+                    "—",
+                    "Implementation: `builder.markUnculled();`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PresentPass.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `context.getTextureView`, `context.sceneData.texture.createView`, `context.commandEncoder.beginRenderPass`, `pass.setPipeline`, `pass.setBindGroup`, `context.device.createBindGroup`, `this.pipeline.getBindGroupLayout`, `pass.draw` and additional helpers. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PresentPass.ts#L63)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "raytracepasses",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RaytracePasses"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/RaytracePasses.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/RaytracePasses.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RaytraceGBufferPass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RaytracePass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RTCompositePass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class RaytraceGBufferPass extends Pass {\n    posTex: TextureHandle;\n    normTex: TextureHandle;\n    albTex: TextureHandle;\n    depthTex: TextureHandle;\n    albedoTexArray: TextureHandle;\n    normalTexArray: TextureHandle;\n    constructor(manager: RaytraceManager, pos: TextureHandle, norm: TextureHandle, alb: TextureHandle, depth: TextureHandle, albedoTexArray: TextureHandle, normalTexArray: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}\nexport declare class RaytracePass extends Pass {\n    colorTex: TextureHandle;\n    albedoTexArray: TextureHandle;\n    normalTexArray: TextureHandle;\n    constructor(manager: RaytraceManager, color: TextureHandle, albedoTexArray: TextureHandle, normalTexArray: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}\nexport declare class RTCompositePass extends Pass {\n    rtColor: TextureHandle;\n    rtDepth: TextureHandle;\n    screenTex: TextureHandle;\n    rasterDepth: TextureHandle;\n    constructor(rtC: TextureHandle, rtD: TextureHandle, screen: TextureHandle, rasterD: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RaytraceGBufferPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@create posTex: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@create normTex: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@create albTex: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@create depthTex: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@read albedoTexArray: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@read normalTexArray: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        private manager: RaytraceManager,\n        pos: TextureHandle,\n        norm: TextureHandle,\n        alb: TextureHandle,\n        depth: TextureHandle,\n        albedoTexArray: TextureHandle,\n        normalTexArray: TextureHandle\n    )",
+                    "—",
+                    "Implementation: `super(\"RaytraceGBufferPass\"); this.posTex = pos; this.normTex = norm; this.albTex = alb; this.depthTex = depth; this.albedoTexArray = albedoTexArray; this.normalTexArray = normalTexArray;`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `builder.createTexture`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.texSampler`, `this.bg0Layout`, `this.pipeline`; calls to `context.device.createSampler`, `context.device.createShaderModule`, `context.device.createBindGroupLayout`, `context.device.createPipelineLayout`, `context.device.createRenderPipeline`, `context.getTexture(this.albedoTexArray).createView`, `context.getTexture`, `context.getTexture(this.normalTexArray).createView` and additional helpers. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L52)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RaytracePass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@create colorTex: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 133](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L133)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@read albedoTexArray: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L134)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@read normalTexArray: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 135](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L135)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        private manager: RaytraceManager,\n        color: TextureHandle,\n        albedoTexArray: TextureHandle,\n        normalTexArray: TextureHandle\n    )",
+                    "—",
+                    "Implementation: `super(\"RaytracePass\"); this.colorTex = color; this.albedoTexArray = albedoTexArray; this.normalTexArray = normalTexArray;`. [Source line 137](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L137)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder)",
+                    "—",
+                    "Implementation: `builder.createTexture(this.colorTex, { format: 'rgba32float', mode: 'relative', scale: 1.0, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC });`. [Source line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L149)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.texSampler`, `this.bg0Layout`, `this.pipeline`; calls to `context.device.createSampler`, `context.device.createShaderModule`, `context.device.createBindGroupLayout`, `context.device.createPipelineLayout`, `context.device.createRenderPipeline`, `context.getTexture(this.albedoTexArray).createView`, `context.getTexture`, `context.getTexture(this.normalTexArray).createView` and additional helpers. [Source line 153](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L153)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RTCompositePass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@read rtColor: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 243](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L243)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@read rtDepth: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 244](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L244)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@write screenTex: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 245](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L245)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@write rasterDepth: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 246](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L246)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(rtC: TextureHandle, rtD: TextureHandle, screen: TextureHandle, rasterD: TextureHandle)",
+                    "—",
+                    "Implementation: `super(\"RTCompositePass\"); this.rtColor = rtC; this.rtDepth = rtD; this.screenTex = screen; this.rasterDepth = rasterD;`. [Source line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L248)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder)",
+                    "—",
+                    "Implementation: `builder.markUnculled();`. [Source line 256](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L256)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.pipeline`; calls to `context.device.createShaderModule`, `context.device.createRenderPipeline`, `navigator.gpu.getPreferredCanvasFormat`, `context.device.createBindGroup`, `this.pipeline.getBindGroupLayout`, `context.getTextureView`, `context.commandEncoder.beginRenderPass`, `pass.setPipeline` and additional helpers. [Source line 258](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RaytracePasses.ts#L258)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "renderpass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RenderPass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/RenderPass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/RenderPass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RenderPass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RenderPass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class RenderPass extends Pass {\n    constructor(ppll: PPLLManager, screen_texture: TextureHandle, resolved_screen_texture: TextureHandle, depth_texture: TextureHandle, shadow_texture: TextureHandle, albedo_texture: TextureHandle, normal_texture: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RenderPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        private ppll: PPLLManager,\n        screen_texture: TextureHandle,\n        resolved_screen_texture: TextureHandle,\n        depth_texture: TextureHandle,\n        shadow_texture: TextureHandle,\n        albedo_texture: TextureHandle,\n        normal_texture: TextureHandle\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.screen_texture`, `this.resolved_screen_texture`, `this.depth_texture`, `this.shadow_texture`, `this.albedo_texture`, `this.normal_texture`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RenderPass.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Implementation: `this.writeTexture.push(this.resolved_screen_texture);`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RenderPass.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.isDirty`, `this.cachedAlbedoTex`, `this.cachedNormalTex`, `this.cachedShadowTex`, `this.shadowSampler`, `this.texSampler`, `this.shadowBindGroup`, `this.clearPipeline` and other instance fields; construction of `Float32Array`; calls to `context.getTexture`, `context.device.createSampler`, `context.device.createBindGroupLayout`, `context.device.createBindGroup`, `context.getTextureView`, `albedoTex.createView`, `normalTex.createView`, `context.device.createShaderModule` and additional helpers; return paths including `true`, `false`; 4 explicit loops. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RenderPass.ts#L70)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shadowpass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ShadowPass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/passes/ShadowPass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/passes/ShadowPass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ShadowPass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ShadowPass extends Pass {\n    shadow_texture: TextureHandle;\n    depth_texture: TextureHandle;\n    albedo_texture: TextureHandle;\n    constructor(ppll: PPLLManager, shadow_texture: TextureHandle, depth_texture: TextureHandle, albedo_texture: TextureHandle);\n    setup(builder: GraphBuilder): void;\n    execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ShadowPass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "@create shadow_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@write depth_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "@read albedo_texture: TextureHandle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        private ppll: PPLLManager,\n        shadow_texture: TextureHandle,\n        depth_texture: TextureHandle,\n        albedo_texture: TextureHandle\n    )",
+                    "—",
+                    "Implementation: `super(\"ShadowPass\"); this.shadow_texture = shadow_texture; this.depth_texture = depth_texture; this.albedo_texture = albedo_texture;`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setup(builder: GraphBuilder): void",
+                    "—",
+                    "Implementation: `builder.createTexture(this.shadow_texture, { format: 'depth32float', mode: 'fixed', width: 2048, height: 2048, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });`. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "execute(context: RenderContext): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.isDirty`, `this.cachedAlbedoTex`; calls to `context.getTexture`, `this.init`, `shadowTex.createView`, `context.commandEncoder.beginRenderPass`, `RenderStateCache.reset`, `RenderStateCache.setPipeline`, `pass.setBindGroup`, `GlobalStateAllocator.getInstance` and additional helpers; 3 explicit loops. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts#L168)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ShadowPass.init: private init(context: RenderContext, albedoTex: GPUTexture)",
+                    "Body operations (including nested callbacks): assignments to `this.pipeline`, `this.texSampler`, `this.shadowBindGroup`; construction of `ShaderBuilder`, `VertexSchema`, `VaryingSchema`; calls to `builder.include`, `builder.addSampler`, `builder.addTexture`, `builder.setVertexSchema`, `builder.setVaryingSchema`, `builder.getWGSLShader`, `device.createShaderModule`, `builder.getBindGroupLayout` and additional helpers.",
+                    "[Line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts#L52)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Pass](/api-render-frame-graph#pass)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

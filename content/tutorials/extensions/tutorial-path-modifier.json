@@ -1,0 +1,123 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tutorial-path-modifier",
+  "title": "Create a custom path modifier",
+  "group": "Extending Retiam",
+  "summary": "Deform copied contours and invalidate the modifier when its parameters change.",
+  "prerequisites": [
+    "[Vector paths](/vector-paths)",
+    "[Path modifiers](/path-modifiers)"
+  ],
+  "outcome": "A moving wave that preserves the original path and can pause on click.",
+  "difficulty": "intermediate",
+  "estimatedMinutes": 25,
+  "sections": [
+    {
+      "id": "result",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "What you will build"
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep the original muted path alongside a cyan path whose Y coordinates follow a sine wave. The existing workshop provides the complete editable implementation."
+        }
+      ]
+    },
+    {
+      "id": "copy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Preserve the original contour"
+        },
+        {
+          "type": "paragraph",
+          "text": "An analytical contour stores one starting point followed by quadratic control/end pairs. Copy each contour before changing its coordinates. Modifying source arrays would make repeated evaluations accumulate deformation."
+        }
+      ]
+    },
+    {
+      "id": "apply",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Apply a parameterized deformation"
+        },
+        {
+          "type": "paragraph",
+          "text": "CustomModifier wraps a contour transformation. Adjust each Y coordinate from its corresponding X coordinate and the current phase. Apply the modifier to one path, leaving the comparison path unchanged. Use [PathModifierBase](/api-modifiers#pathmodifierbase) when you need a reusable class with named parameters or attachment behavior."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "let phase = 0, amplitude = 0.7;\nconst bend = new CustomModifier(contours => contours.map(contour => {\n  const result = contour.slice();\n  for (let i = 0; i < result.length; i += 2) {\n    result[i + 1] += amplitude * Math.sin(result[i] + phase);\n  }\n  return result;\n}), 'Wave');\nconst deformed = new Path('M -3 0 Q -1.5 0 0 0 Q 1.5 0 3 0', {\n  fill: Color.NONE, stroke: hex('#38bdf8'), strokeWidth: 0.1, modifiers: [bend]\n});\nthis.add(deformed);"
+        }
+      ]
+    },
+    {
+      "id": "invalidate",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Invalidate after changing captured values"
+        },
+        {
+          "type": "paragraph",
+          "text": "A captured phase variable does not automatically change the modifier’s version. Call invalidate after advancing it so the path pipeline reevaluates the chain. Disabled modifiers and a paused phase should preserve the source contour."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "this.always((_time, dt) => {\n  phase += dt / 1000;\n  bend.invalidate();\n  this.invalidate();\n});"
+        }
+      ]
+    },
+    {
+      "id": "complete",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Run the complete modifier"
+        },
+        {
+          "type": "example",
+          "example": "labs/workshop-modifier"
+        }
+      ]
+    },
+    {
+      "id": "practice-and-next",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Practice and continue"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Adjust the wave amplitude.",
+            "Freeze phase while retaining the original path.",
+            "Remove invalidate and observe the frozen geometry, then restore it."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Check the result: The muted original should remain fixed. If the cyan path accumulates changes, check that the callback copies its input."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Write a custom shader](/tutorial-custom-shader). Use the [tutorial index](/tutorials) to choose another project."
+        }
+      ]
+    }
+  ]
+}

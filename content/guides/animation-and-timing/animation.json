@@ -1,0 +1,177 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "animation",
+  "title": "Animation and asynchronous choreography",
+  "group": "Animation and timing",
+  "summary": "Build sequences and parallel motion with play, wait, animation options and easing.",
+  "sections": [
+    {
+      "id": "direct-changes-versus-animation-builders",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Direct changes versus animation builders"
+        },
+        {
+          "type": "paragraph",
+          "text": "`entity.animate` produces a new Animator that records changes to a copied target State. Scene.play calls getAnim for builders, applies options, prepares animations, registers referenced entities and queues work. Construct the animator immediately before the play that should use it so its starting state is intentional."
+        },
+        {
+          "type": "paragraph",
+          "text": "Animation duration defaults to 1000 ms in the base class. rate_func transforms normalized progress. delay, callbacks, loop settings and fps/interval controls form the shared AnimOptions contract, although subclass update logic must honor that contract. Do not treat an animation object as reusable mutable configuration after it has resolved."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Animation](/api-animation#animation), [Animator](/api-animation#animator), [GroupAnimator](/api-animation#groupanimator), [AnimOptions](/api-animation#animoptions)."
+        }
+      ]
+    },
+    {
+      "id": "compare-sequence-parallel",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compare a sequence with simultaneous changes"
+        },
+        {
+          "type": "paragraph",
+          "text": "The upper dot moves and then grows through two awaited calls. The lower dot changes position and scale through one target-state animation. Click either dot after completion to replay."
+        },
+        {
+          "type": "example",
+          "example": "labs/compare-sequence-parallel"
+        }
+      ]
+    },
+    {
+      "id": "interactive-easing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compare easing and duration"
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-easing"
+        }
+      ]
+    },
+    {
+      "id": "concurrent-and-sequential-sequences",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Concurrent and sequential sequences"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-sequencescene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Separate awaited plays preserve sequence. One play with multiple targets waits for all of them. Concurrent coordinates overlapping child timing, while Sequential advances its next child at a completion boundary. Group duration changes can redistribute or scale child durations; delay and stagger are part of the timing calculation."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Concurrent](/api-animation#concurrent), [Sequential](/api-animation#sequential), [Delay](/api-animation#delay), [Waiting](/api-animation#waiting)."
+        }
+      ]
+    },
+    {
+      "id": "completion-boundary-scheduling",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Completion-boundary scheduling"
+        },
+        {
+          "type": "paragraph",
+          "text": "play and wait resolve as Promise<void>; they do not expose a balance time. When an animation finishes in the middle of a render frame, Retiam splits the frame at that completion boundary, drains the awaited continuation, and advances its newly queued work through the remaining time in the same frame. This keeps ordinary scene code gap-free without passing an overshoot value through animations or promises."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "await this.play(firstPhase);\nawait this.wait(250);\nawait this.play(secondPhase);"
+        },
+        {
+          "type": "paragraph",
+          "text": "The scheduler uses measured dt, so this behavior is frame-rate independent at 60, 144 or 240 FPS. fps and interval intentionally throttle an animation's application updates. Custom animations report completion with boolean update/step results, call complete() after applying their terminal state, and may expose an earlier data-driven boundary with timeUntilNextBoundary()."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Animation](/api-animation#animation), [Scene](/api-core-scene#scene), [SceneComposer](/api-core-scenecomposer#scenecomposer)."
+        }
+      ]
+    },
+    {
+      "id": "trackbuilder-and-custom-entity-reveals",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TrackBuilder and custom entity reveals"
+        },
+        {
+          "type": "paragraph",
+          "text": "TrackBuilder.add receives animations, not an absolute timestamp. Multiple arguments form a parallel step; the next add advances after the longest duration plus local delay. wait advances the playhead. build creates TrackAnimation. Entity.createAnim and its related reveal hooks can encapsulate choreography instead of exposing all child animation details to a scene."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const track = new TrackBuilder()\n  .add(new Write(title, { duration: 900 }), new Create(border, { duration: 1200 }))\n  .wait(250)\n  .add(new FadeIn(detail, { duration: 700 }));\nawait this.play(track.build());"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [TrackBuilder](/api-animation#trackbuilder), [TrackAnimation](/api-animation#trackanimation), [Create](/api-animation-creation#create)."
+        }
+      ]
+    },
+    {
+      "id": "rate-functions-and-pacing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Rate functions and pacing"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rate provides linear, polynomial, sine, exponential, bounce, elastic, bezier, there-and-back, wiggle and spring-style curves. Some curves overshoot or return to zero. They are suitable for emphasis but can place geometry beyond the initial framing. Compare easing with a fixed geometry and duration so the timing difference is visible."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Rate](/api-animation#rate), [CustomAnimation](/api-animation#customanimation)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Reveal, motion and highlight catalog](/animation-catalog)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Your first scene](/first-scene)"
+  ]
+}

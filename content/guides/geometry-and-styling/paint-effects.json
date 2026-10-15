@@ -1,0 +1,148 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "paint-effects",
+  "title": "Paint, fills and stroke effects",
+  "group": "Geometry and styling",
+  "summary": "Control fills, strokes, gradients and opacity while keeping geometry and appearance distinct.",
+  "sections": [
+    {
+      "id": "the-paint-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "The paint contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "Paint contains 2D fill, stroke, strokeWidth, opacity, cap/joint values, clip-space coordinates and z ordering. It is part of the entity State typed-array block. The current property spelling is strokeWidth. Paint.setClip takes two Vec2 values for spatial clipping; it is not the path-length reveal API."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const path = new Path(\"M -2 0 L 2 0\", { fill: Color.NONE });\npath.setStroke(0.12, hex(\"#38BDF8\"));\npath.setCap(CapType.ROUND);\npath.setJoint(JointType.ROUND);\npath.setOpacity(0.9);"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Paint](/api-core-paint#paint), [CapType](/api-utils#gpu-utils), [JointType](/api-utils#gpu-utils), [State](/api-core#state)."
+        }
+      ]
+    },
+    {
+      "id": "compare-geometry-paint",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compare size with stroke width"
+        },
+        {
+          "type": "paragraph",
+          "text": "The cyan circle changes transform scale; the amber circle keeps its centerline radius and changes stroke width. Click either to freeze the comparison."
+        },
+        {
+          "type": "example",
+          "example": "labs/compare-geometry-paint"
+        }
+      ]
+    },
+    {
+      "id": "interactive-paint",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Try the paint controls"
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-paint"
+        }
+      ]
+    },
+    {
+      "id": "effects-versus-geometry-modifiers",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Effects versus geometry modifiers"
+        },
+        {
+          "type": "paragraph",
+          "text": "PathEffect modifies stroke shading, opacity, patterns and width profiles. FillEffect modifies interior shading using local coordinates. A path modifier changes contour geometry before it is rendered. A shader dash hides parts of an existing stroke; a geometric dash modifier changes the evaluated path. Choose according to whether downstream sampling and boolean operations should see the altered geometry."
+        },
+        {
+          "type": "paragraph",
+          "text": "strokeShader and fillShader accept effect objects, raw WGSL strings or ordered arrays. Effects compile into named helper stages, with output from one stage passed to the next. The order matters for tint, opacity, glow, gradients and custom functions."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PathEffect](/api-material#patheffect), [FillEffect](/api-material#filleffect), [PathEffectBase](/api-material#patheffectbase), [FillEffectBase](/api-material#filleffectbase)."
+        }
+      ]
+    },
+    {
+      "id": "available-families",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Available families"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Stroke: solid, gradient, dashed/dot-dash, opacity, taper/fade ends/comet, wave, glow, sketch and chalk.",
+            "Dynamic stroke: Pencil, Calligraphic, Brush, Fluid and Spontaneous presets with pressure, noise, asymmetry and closed-path behavior.",
+            "Fill: solid, linear/radial gradients, stripes, dots, checkerboard, glow, opacity, tint and vignette.",
+            "TextureFill and VideoFill provide sampled image/video material inputs; they have resource requirements beyond a pure procedural shader."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [DynamicStrokeOptions](/api-material-path-effects#dynamicstrokeshader), [ChalkEffectOptions](/api-material-path-effects#chalkshader), [GlowEffectOptions](/api-material-fill-effects#glowshader), [GradientFill](/api-material-fills#gradientfill), [TextureFill](/api-material-fills#texturefill), [VideoFill](/api-material-fills#videofill)."
+        }
+      ]
+    },
+    {
+      "id": "update-effects-deliberately",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Update effects deliberately"
+        },
+        {
+          "type": "paragraph",
+          "text": "Changing an effect’s topology or shader code can rebuild pipelines. Keep per-frame animation in parameters/state when possible. Inspect the exact effect constructor or builder method: option names and scale conventions differ by effect. A strong glow can extend beyond geometric bounds, so leave visual padding even when the base shape is correctly framed."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Curves, sampling and subdivision](/curves-subdivision)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Entities, components and ownership](/entities)"
+  ]
+}

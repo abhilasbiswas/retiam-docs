@@ -1,0 +1,268 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-boolean-csg-and-polygon-clipping-architecture",
+  "title": "2D Constructive Solid Geometry (CSG) & Polygon Clipping Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/BOOLEAN_CSG_AND_POLYGON_CLIPPING_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/BOOLEAN_CSG_AND_POLYGON_CLIPPING_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/BOOLEAN_CSG_AND_POLYGON_CLIPPING_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [BooleanOps](/api-entities-composites-geometry#booleanops), [Entity](/api-core-entity#entity), [SVG](/api-entities-composites-svg#svg), [Circle](/api-entities-primitives-2d#circle), [Star](/api-libs-shapes-2d#star), [Union](/api-entities-composites-geometry#booleanops), [Intersection](/api-entities-composites-geometry#booleanops), [Path](/api-entities-primitives-2d#path), [Difference](/api-entities-composites-geometry#booleanops), [BooleanOpOptions](/api-entities-composites-geometry#booleanops), [EntityOptions](/api-core-entity#entity), [Pipeline](/api-render-pipelines#pipeline), [Group](/api-core#group), [VGroup](/api-entities-layout#vgroup), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [Rect](/api-entities-primitives-2d#rect), [Color](/api-math#color), [Create](/api-animation-creation#create), [Compute](/api-compute#compute), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-system-rationale",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & System Rationale"
+        },
+        {
+          "type": "paragraph",
+          "text": "Mathematical visual explanations (Venn diagrams, set theory operations, shape intersection proofs, geometry boolean demonstrations) require evaluating exact 2D Constructive Solid Geometry (CSG) operations on arbitrary vector entities."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides the [`BooleanOps`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts) engine, which implements:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Arbitrary Vector Entity Operands**: Accepts circles, rectangles, text glyphs, stars, gears, or complex SVG paths.",
+            "**World-Space Matrix Baking**: Automatically computes accumulated parent-to-world transformation matrices so entities at different positions, scales, or orientations can interact seamlessly.",
+            "**Robust Multi-Polygon Clipping**: Implements the Martinez-Rueda-Feito polygon clipping algorithm via `polygon-clipping`.",
+            "**Smooth Curve Reconstruction**: Simplifies collinear floating-point artifacts and reconstructs smooth $C^1$ cubic Bézier curves from discrete polygonal outputs."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  A[\"Entity A: Circle\"] --> PA[\"Extract all paths\"] --> WA[\"Bake world matrix\"]\n  B[\"Entity B: Star\"] --> PB[\"Extract all paths\"] --> WB[\"Bake world matrix\"]\n  WA --> T[\"Linear ring tessellation<br/>Example resolution: 24 segments\"]\n  WB --> T\n  T --> C[\"Martinez-Rueda-Feito clipping<br/>Union / intersection / difference / XOR\"]\n  C --> S[\"Collinear simplification<br/>Example simplifyTolerance: 0.005\"]\n  S --> R[\"Smooth curve reconstruction\"] --> P[\"Resulting Path entity\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-mathematical-operations-api",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Mathematical Operations & API"
+        },
+        {
+          "type": "paragraph",
+          "text": "All operations are exposed as static methods on [`BooleanOps`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Operation",
+            "Method Signature",
+            "Set Theory Formulation",
+            "Visual Outcome"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Union**",
+                  "type": "text"
+                },
+                {
+                  "text": "`BooleanOps.union(A, B, options)`"
+                },
+                {
+                  "text": "$A \\cup B = \\{x \\mid x \\in A \\lor x \\in B\\}$"
+                },
+                {
+                  "text": "Merges two overlapping shapes into a single unified outline."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Intersection**",
+                  "type": "text"
+                },
+                {
+                  "text": "`BooleanOps.intersection(A, B, options)`"
+                },
+                {
+                  "text": "$A \\cap B = \\{x \\mid x \\in A \\land x \\in B\\}$"
+                },
+                {
+                  "text": "Preserves only the overlapping lens/region shared by both shapes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Difference**",
+                  "type": "text"
+                },
+                {
+                  "text": "`BooleanOps.difference(A, B, options)`"
+                },
+                {
+                  "text": "$A \\setminus B = \\{x \\mid x \\in A \\land x \\notin B\\}$"
+                },
+                {
+                  "text": "Subtracts/punches shape $B$ out of shape $A$."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**XOR**",
+                  "type": "text"
+                },
+                {
+                  "text": "`BooleanOps.xor(A, B, options)`"
+                },
+                {
+                  "text": "$A \\oplus B = (A \\setminus B) \\cup (B \\setminus A)$"
+                },
+                {
+                  "text": "Preserves areas covered by exactly one shape; removes the intersection."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Configuration Options (BooleanOpOptions)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface BooleanOpOptions extends EntityOptions {\n    /** Number of linear segments used to approximate curved Bézier arcs (Default: 24) */\n    resolution?: number;\n\n    /** Epsilon threshold for merging collinear vertices and removing numerical noise (Default: 0.005) */\n    simplifyTolerance?: number;\n\n    /** Whether to reconstruct smooth cubic Bézier curves instead of faceted polygons (Default: true) */\n    reconstructCurves?: boolean;\n\n    /** Minimum area threshold. Polygons below this area are culled as numerical debris (Default: 1e-4) */\n    minArea?: number;\n}"
+        }
+      ]
+    },
+    {
+      "id": "3-geometric-processing-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Geometric Processing Pipeline"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. World-Space Matrix Baking"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because entities may reside inside nested groups ([`Group`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts), [`VGroup`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/VGroup.ts)) or have localized position/rotation/scale offsets, `BooleanOps` computes the cumulative world transformation matrix:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{M}_{\\text{world}} = \\prod_{k=0}^{D} \\mathbf{M}_k"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every vertex of the operand paths is transformed into common world space before clipping:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}_{\\text{world}} = \\mathbf{M}_{\\text{world}} \\begin{bmatrix} x \\\\ y \\\\ z \\\\ 1 \\end{bmatrix}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Martinez-Rueda-Feito Clipping"
+        },
+        {
+          "type": "paragraph",
+          "text": "The engine models shapes as `MultiPolygon` structures:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{MultiPolygon} = [\\text{Polygon}_1, \\text{Polygon}_2, \\dots]"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Polygon} = [\\text{OuterRing}, \\text{HoleRing}_1, \\text{HoleRing}_2, \\dots]"
+        },
+        {
+          "type": "paragraph",
+          "text": "The plane sweep algorithm handles complex self-intersecting boundaries, nested holes (e.g. donut geometries), and shared edge segments in $O((n + k) \\log n)$ time, where $n$ is total edges and $k$ is edge intersections."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Collinear Simplification & Area Debris Culling"
+        },
+        {
+          "type": "paragraph",
+          "text": "Floating-point arithmetic during clipping can introduce redundant collinear vertices along straight edges. Retiam evaluates the triangle area formed by three consecutive vertices $(p_{i-1}, p_i, p_{i+1})$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\Delta = \\frac{1}{2} \\big|(x_i - x_{i-1})(y_{i+1} - y_{i-1}) - (x_{i+1} - x_{i-1})(y_i - y_{i-1})\\big|"
+        },
+        {
+          "type": "paragraph",
+          "text": "If $\\Delta < \\text{simplifyTolerance}$, vertex $p_i$ is discarded. Rings with total signed area $|\\oint y\\,dx| < \\text{minArea}$ are eliminated."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Curve Reconstruction"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `reconstructCurves: true`, adjacent linear segments with smooth tangent continuity are fitted with cubic Bézier control points:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{B}(t) = (1-t)^3 \\mathbf{P}_0 + 3(1-t)^2 t \\mathbf{P}_1 + 3(1-t) t^2 \\mathbf{P}_2 + t^3 \\mathbf{P}_3"
+        },
+        {
+          "type": "paragraph",
+          "text": "The resulting curves are ingested directly into [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) with hardware-accelerated anti-aliased SDF extrusion."
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Rect, BooleanOps, Color } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// Create two overlapping geometric operands\nconst circle = new Circle(2.5, {\n    position: [-1.0, 0, 0],\n    fill: Color.fromHex(\"#3b82f6\")\n});\n\nconst rect = new Rect(4.0, 4.0, {\n    position: [1.0, 0, 0],\n    fill: Color.fromHex(\"#ec4899\")\n});\n\n// Compute Venn diagram intersection lens\nconst lens = BooleanOps.intersection(circle, rect, {\n    fill: Color.fromHex(\"#a855f7\"),\n    stroke: Color.WHITE,\n    stroke_width: 0.08,\n    reconstructCurves: true\n});\n\nscene.add(lens);"
+        }
+      ]
+    }
+  ]
+}

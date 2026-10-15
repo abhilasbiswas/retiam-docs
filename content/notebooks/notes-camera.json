@@ -1,0 +1,202 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-camera",
+  "title": "Cinematic Camera & Rendering Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/camera.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/camera.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/camera.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Camera](/api-camera#camera), [Path](/api-entities-primitives-2d#path), [FrameGraph](/api-render-frame-graph#framegraph), [Point](/api-math-vector#point), [Field](/api-math-fields#standardfields), [CameraModel](/api-camera#camera), [Entity](/api-core-entity#entity), [Box](/api-entities-primitives-3d#box), [AABB](/api-math#aabb), [CameraMove](/api-animation-camera#cameramove)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The Retiam Engine now supports advanced cinematic camera models and hybrid rendering (Rasterization + Path Tracing)."
+        }
+      ]
+    },
+    {
+      "id": "live-controls",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Live Controls"
+        },
+        {
+          "type": "paragraph",
+          "text": "Click on the canvas to lock the mouse cursor and enable interactive camera control. Press `ESC` to release the cursor."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Movement"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "  **W / S:** Move Forward / Backward",
+            "  **A / D:** Move Left / Right",
+            "  **Space / Shift:** Move Up / Down",
+            "  **Mouse:** Look around"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Rendering Engine Toggles"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "  **T:** Toggle **Raytracing**. ",
+              "children": [
+                "  When `ON`, 3D models will be path-traced using the BVH, providing real-time global illumination, soft shadows, and physically-accurate glass refraction.",
+                "  When `OFF`, the engine dynamically rebuilds the FrameGraph and instantly switches to the high-speed Rasterizer."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Camera Models"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "  **M:** Cycle through the 5 available projection models:",
+              "children": [
+                " **Perspective:** Standard 3D camera.",
+                " **Orthographic:** Flat isometric projection.",
+                " **Fisheye (Raytrace Only):** Ultra-wide distorted lens.",
+                " **360 VR (Raytrace Only):** Equirectangular projection for HDRI/VR rendering.",
+                " **2-Point Perspective:** Automatically keeps vertical lines perfectly straight (Architectural photography style), applying tilt-shift mathematically."
+              ],
+              "ordered": true
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Lens Adjustments"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "  **[ / ]:** Adjust **Aperture**. Increases/Decreases the Depth of Field (DoF) blur effect. (Raytrace Only).",
+            "  **Q / E:** Adjust **Focus Distance** manually. Moves the focal plane closer or further away. (Raytrace Only).",
+            "  **F:** Toggle **Auto Focus**. When turned ON, the camera casts a ray into the scene (using the CPU-side BVH) to automatically detect objects in the center of the screen and smoothly lerp the `focusDist` to them, keeping them perfectly sharp!",
+            "  **- / =:** Adjust **Orthographic Scale**. Zooms the camera in and out when the `Orthographic` camera model is active."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "programmatic-api",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Programmatic API"
+        },
+        {
+          "type": "paragraph",
+          "text": "You can script these parameters directly in your animation sequence using the `Camera` instance:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "let camera = scene.default_view.camera;\n\n// Change camera type\ncamera.model = CameraModel.ORTHOGRAPHIC; // or CameraModel.PERSPECTIVE\n\n// Adjust Depth of Field\ncamera.aperture = 0.5;\ncamera.focusDist = 12.0;\n\n// Apply Tilt-Shift Lens Offsets\ncamera.lensShiftX = 0.1;\ncamera.lensShiftY = -0.2;"
+        }
+      ]
+    },
+    {
+      "id": "automated-framing-api-camera-frame-camera-frameentities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "📐 Automated Framing API (camera.frame & camera.frameEntities)"
+        },
+        {
+          "type": "paragraph",
+          "text": "To eliminate manual camera guesswork and solve AI spatial placement issues, Retiam provides automated bounding-volume framing. The camera computes exact sensor-plane projections and positions itself so that all target entities fit comfortably into view with guaranteed margins."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Key Capabilities:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Perspective Projection**: Solves frustum depth $D = \\max(D_h, D_w) + \\frac{\\text{depth}}{2}$, guaranteeing 3D volumes never clip the near plane.",
+            "**Orthographic Projection**: Automatically calculates `orthoScale` to envelope targets across horizontal and vertical aspect ratios.",
+            "**Depth of Field Integration**: Automatically aligns `camera.focusDist` with the center of the framed content for sharp focal plane rendering.",
+            "**Multi-Entity & Bounding Box Support**: Accepts a single `Entity`, `Entity[]`, `AABB`, or coordinate point array.",
+            "**Directional Reorientation**: Optional `direction` parameter to view the framed content from an angle (e.g. `[1, 1, 1]`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Examples:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Frame a single 2D or 3D entity with default 15% margin\nscene.camera.frame(myCircle);\n\n// 2. Frame an entire array of entities in Orthographic mode\nscene.camera.model = CameraModel.ORTHOGRAPHIC;\nscene.camera.frameEntities([title, formula, graph], { padding: 0.2 });\n\n// 3. Frame with an explicit aspect ratio and angle in Perspective mode\nscene.camera.frame(model3D, {\n    direction: [1, 1, 2], // view from diagonal high-angle\n    padding: 0.1,\n    updateFocusDist: true // sets focusDist for cinematic bokeh\n});\n\n// 4. Pre-compute framing transform without immediately applying (for smooth animations)\nconst transform = scene.camera.computeFrameTransform([title, formula], { padding: 0.15 });\nif (transform) {\n    await scene.play(new CameraMove(scene.camera, {\n        position: transform.position,\n        duration: 1200\n    }));\n}"
+        }
+      ]
+    },
+    {
+      "id": "2d-orthographic-camera-controller",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2D Orthographic Camera Controller"
+        },
+        {
+          "type": "paragraph",
+          "text": "For 2D scenes, CAD viewports, target tracking, deadzones, and cursor-centered zoom animations, see the **[2D Camera Controller Guide](/notes-camera2d)**."
+        }
+      ]
+    }
+  ]
+}

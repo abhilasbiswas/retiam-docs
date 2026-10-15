@@ -1,0 +1,2801 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-camera",
+  "title": "camera API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "camera",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Camera"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/camera/Camera.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/camera/Camera.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "FrameOptions: Configuration options for automated camera framing of entities or bounding volumes.",
+                "FrameTransformResult: Result of a computed camera framing transformation without immediately mutating the camera.",
+                "CameraModel: Camera projection models.",
+                "Camera: Represents a Camera in the 3D/2D scene. Extends [[Entity]] to benefit from the Scene Graph, hierarchies, and transformations."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Input",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FrameOptions",
+                    "Interface",
+                    "Configuration options for automated camera framing of entities or bounding volumes."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FrameTransformResult",
+                    "Interface",
+                    "Result of a computed camera framing transformation without immediately mutating the camera."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CameraModel",
+                    "Enum",
+                    "Camera projection models."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera",
+                    "Class",
+                    "Represents a Camera in the 3D/2D scene. Extends [[Entity]] to benefit from the Scene Graph, hierarchies, and transformations."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface Input {\n    keys: {\n        [key: string]: boolean;\n    };\n    dx: number;\n    dy: number;\n}\nexport interface FrameOptions {\n    padding?: number;\n    aspect?: number;\n    direction?: Vec3Type;\n    updateFocusDist?: boolean;\n    lookAt?: boolean;\n    minDistance?: number;\n}\nexport interface FrameTransformResult {\n    position: Vec3;\n    center: Vec3;\n    distance: number;\n    orthoScale: number;\n    focusDist: number;\n    rotation: Quaternion;\n    bounds: AABB;\n}\nexport declare enum CameraModel {\n    PERSPECTIVE = 0,\n    ORTHOGRAPHIC = 1,\n    FISHEYE = 2,\n    VR360 = 3,\n    TWO_POINT = 4\n}\nexport declare class Camera extends Entity {\n    cullingMask: number;\n    fov: number;\n    pitch: number;\n    yaw: number;\n    aperture: number;\n    focusDist: number;\n    bounces: number;\n    model: CameraModel;\n    orthoScale: number;\n    lensShiftX: number;\n    lensShiftY: number;\n    giMultiplier: number;\n    near: number;\n    far: number;\n    lookAtTarget: Entity | Vec3Type | null;\n    lookAt(target: Entity | Vec3Type | null): this;\n    constructor(fov_rad?: number);\n    init(): void;\n    reset(): this;\n    get position(): Vec3;\n    set position(v: Vec3Type);\n    get rotation(): Quaternion;\n    set rotation(q: Quaternion);\n    get forward(): Vec3;\n    get right(): Vec3;\n    get up(): Vec3;\n    toOrtho(targetDistance?: number): this;\n    toPerspective(targetPos?: Vec3Type): this;\n    computeFrameTransform(target: Entity | Entity[] | AABB | Vec3Type | Vec3Type[], options?: FrameOptions): FrameTransformResult | null;\n    frame(target: Entity | Entity[] | AABB | Vec3Type | Vec3Type[], options?: FrameOptions): this;\n    frameEntities(entities: Entity[], options?: FrameOptions): this;\n    seeOnlyLayers(layers: number[]): void;\n    seeLayer(layer: number): void;\n    ignoreLayer(layer: number): void;\n    seeAllLayers(): void;\n    updateInput(dt: number, input: Input, moveSpeedMultiplier?: number, dragSensitivityMultiplier?: number): void;\n    getProjectionMatrix(aspect: number): Mat4;\n    getWorldTransform(): {\n        matrix: Mat4;\n        offset: Vec3;\n    };\n    getViewMatrix(): Mat4;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Input` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "keys: { [key: string]: boolean },",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dx: number,",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dy: number",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L9)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FrameOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "padding?: number;",
+                    "—",
+                    "Extra margin padding around the framed content as a fraction of dimension. For example, 0.15 represents a 15% margin around the bounding box. Default: 0.15. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "aspect?: number;",
+                    "—",
+                    "Explicit aspect ratio (width / height). If omitted, automatically retrieved from the active Scene/Canvas or defaults to 16/9. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "direction?: Vec3Type;",
+                    "—",
+                    "Optional viewing direction vector (camera will reorient to view from this direction towards the center). For example, [0, 0, 1] to view from the front (+Z), or [1, 1, 1] to view from an isometric angle. If omitted, retains the current camera viewing direction. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "updateFocusDist?: boolean;",
+                    "—",
+                    "If true, updates `this.focusDist` to place the physical depth-of-field focal plane right on the center of the framed volume (for ray tracing & cinematic DoF). Default: true. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lookAt?: boolean;",
+                    "—",
+                    "If true, updates camera orientation (or `lookAtTarget`) so the camera points directly at the framed center. Default: true. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "minDistance?: number;",
+                    "—",
+                    "Minimum camera distance clamp (prevents camera from getting closer than this distance). Default: `Math.max(this.near * 2, 0.1)`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L52)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FrameTransformResult` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "position: Vec3;",
+                    "—",
+                    "Target world position for the camera [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "center: Vec3;",
+                    "—",
+                    "Target center point of the framed volume [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "distance: number;",
+                    "—",
+                    "Computed distance from the camera to the framed center [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "orthoScale: number;",
+                    "—",
+                    "Computed orthographic scale (applicable if camera.model === CameraModel.ORTHOGRAPHIC) [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "focusDist: number;",
+                    "—",
+                    "Recommended focal distance for depth of field (focusDist) [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotation: Quaternion;",
+                    "—",
+                    "Target camera rotation quaternion to face the framed center [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bounds: AABB;",
+                    "—",
+                    "Bounding box of the framed content in world space [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L72)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CameraModel` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PERSPECTIVE",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ORTHOGRAPHIC",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FISHEYE",
+                    "—",
+                    "Experimental: Not yet implemented in `getProjectionMatrix()`. Using this model will fall back to PERSPECTIVE rendering. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VR360",
+                    "—",
+                    "Experimental: Not yet implemented in `getProjectionMatrix()`. Using this model will fall back to PERSPECTIVE rendering. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TWO_POINT",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L91)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public cullingMask: number",
+                    "1",
+                    "Bitmask used to selectively render entities based on their layer. Default is `0xFFFFFFFF` (all layers visible). Change this to limit which layers this camera renders. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fov: number",
+                    "—",
+                    "Field of View in radians (for perspective camera models). [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pitch: number",
+                    "—",
+                    "Euler rotation pitch angle in radians (vertical tilt). [Source line 128](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L128)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public yaw: number",
+                    "—",
+                    "Euler rotation yaw angle in radians (horizontal panning). [Source line 133](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L133)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public aperture: number",
+                    "—",
+                    "Aperture size for depth-of-field blur effects in Ray Tracing. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public focusDist: number",
+                    "—",
+                    "Focal distance for depth-of-field focal plane alignment in Ray Tracing. [Source line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L144)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bounces: number",
+                    "—",
+                    "Maximum light bounce recursion depth for Path Tracing. [Source line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L149)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public model: CameraModel",
+                    "—",
+                    "Active projection model type (Perspective, Orthographic, etc.). [Source line 154](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L154)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public orthoScale: number",
+                    "—",
+                    "Horizontal scale limit factor for Orthographic projection. [Source line 159](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L159)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lensShiftX: number",
+                    "—",
+                    "Horizontal lens shifting/decentering factor. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lensShiftY: number",
+                    "—",
+                    "Vertical lens shifting/decentering factor. [Source line 169](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L169)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public giMultiplier: number",
+                    "—",
+                    "Global illumination light multiplier. [Source line 174](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L174)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public near: number",
+                    "—",
+                    "Near clipping plane distance. [Source line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L179)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public far: number",
+                    "—",
+                    "Far clipping plane distance. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lookAtTarget: Entity | Vec3Type | null",
+                    "null",
+                    "Optional entity target or point coordinate to focus and face automatically. [Source line 190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L190)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lookAt(target: Entity | Vec3Type | null): this",
+                    "—",
+                    "Focuses and faces the camera towards a 3D coordinate point or target Entity. Param: target World coordinate position [x, y, z] or Entity to look at. [Source line 197](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L197)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(fov_rad: number = 45)",
+                    "—",
+                    "Creates a new Camera instance. Param: fov_rad The field of view in radians. Defaults to 45. [Source line 219](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L219)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public init()",
+                    "—",
+                    "Resets camera properties to defaults (position [0, 0, 100], yaw/pitch to 0). [Source line 233](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L233)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset(): this",
+                    "—",
+                    "Public alias for {@link init} — resets all camera properties to their default values. Equivalent to reconstructing the camera from scratch. [Source line 255](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L255)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get position(): Vec3",
+                    "—",
+                    "Accessor mapping directly to the underlying Entity Transform position. [Source line 264](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L264)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set position(v: Vec3Type)",
+                    "—",
+                    "Implementation: `this.transform.position = v;`. [Source line 265](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L265)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rotation(): Quaternion",
+                    "—",
+                    "Accessor mapping directly to the underlying Entity Transform rotation. [Source line 270](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L270)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rotation(q: Quaternion)",
+                    "—",
+                    "Implementation: `this.transform.rotation = q;`. [Source line 271](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L271)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get forward(): Vec3",
+                    "—",
+                    "Getter computing the forward vector (pointing down the -Z axis) in world coordinates. [Source line 277](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L277)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get right(): Vec3",
+                    "—",
+                    "Getter computing the right vector (pointing down the +X axis) in world coordinates. [Source line 285](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L285)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get up(): Vec3",
+                    "—",
+                    "Getter computing the up vector (pointing down the +Y axis) in world coordinates. [Source line 293](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L293)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toOrtho(targetDistance?: number): this",
+                    "—",
+                    "Adjusts the orthographic scale so that the Orthographic projection perfectly matches the visual size of the Perspective projection at a specific distance. Param: targetDistance The distance to the subject plane. Defaults to the camera's distance to the origin. [Source line 306](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L306)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPerspective(targetPos?: Vec3Type): this",
+                    "—",
+                    "Moves the camera along its viewing axis so that the Perspective projection perfectly matches the visual size of the current Orthographic scale. Param: targetPos The target point in space to frame (usually z=0). Defaults to the origin [0,0,0]. [Source line 319](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L319)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeFrameTransform(\n        target: Entity | Entity[] | AABB | Vec3Type | Vec3Type[],\n        options: FrameOptions = {}\n    ): FrameTransformResult | null",
+                    "—",
+                    "Computes the required camera position, distance, and orthographic scale needed to comfortably frame one or more entities, an AABB, or coordinate points without immediately modifying the camera. Param: target Entity, array of Entities, AABB, or coordinate points to frame. Param: options Framing options including padding margin, aspect ratio, direction, and distance constraints. Returns: Computed framing parameters, or null if the target bounding box is empty. [Source line 339](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L339)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public frame(\n        target: Entity | Entity[] | AABB | Vec3Type | Vec3Type[],\n        options: FrameOptions = {}\n    ): this",
+                    "—",
+                    "Automatically adjusts the camera position, distance, and/or orthographic scale so that the specified entities or bounding volume fit comfortably inside the viewport. Param: target Single Entity, array of Entities, AABB, or coordinate points to frame. Param: options Framing options (padding margin, aspect ratio, direction, etc.). Returns: This camera instance for method chaining. [Source line 486](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L486)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public frameEntities(entities: Entity[], options?: FrameOptions): this",
+                    "—",
+                    "Fluent alias for {@link frame} specifically accepting an array of Entities. Param: entities Array of entities to fit comfortably into the camera viewport. Param: options Framing options (padding margin, aspect ratio, etc.). [Source line 520](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L520)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public seeOnlyLayers(layers: number[])",
+                    "—",
+                    "Sets the camera to ONLY render the specified layer indices. Overwrites any previously visible layers. [Source line 529](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L529)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public seeLayer(layer: number)",
+                    "—",
+                    "Instructs the camera to render an additional layer. [Source line 539](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L539)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public ignoreLayer(layer: number)",
+                    "—",
+                    "Instructs the camera to stop rendering a specific layer. [Source line 546](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L546)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public seeAllLayers()",
+                    "—",
+                    "Instructs the camera to render absolutely everything in the scene. [Source line 553](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L553)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateInput(dt: number, input: Input, moveSpeedMultiplier: number = 1.0, dragSensitivityMultiplier: number = 1.0)",
+                    "—",
+                    "Updates the camera position and Euler angles based on keys and mouse offsets. Param: dt Delta time in seconds. Param: input Current keyboard and mouse state. Param: moveSpeedMultiplier Normalized WASD movement speed multiplier (defaults to 1.0). Param: dragSensitivityMultiplier Normalized mouse look rotation sensitivity multiplier (defaults to 1.0). [Source line 567](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L567)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getProjectionMatrix(aspect: number): Mat4",
+                    "—",
+                    "Generates the 4x4 projection matrix based on aspect ratio and active projection model. Param: aspect The screen aspect ratio (width / height). [Source line 591](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L591)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override getWorldTransform(): { matrix: Mat4, offset: Vec3 }",
+                    "—",
+                    "Overrides Entity.getWorldTransform to ensure the camera always synchronizes its world transform every frame, allowing direct mutations like camera.position.set(...) and camera.position.xy = ... to take effect immediately without manual invalidation. [Source line 616](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L616)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getViewMatrix(): Mat4",
+                    "—",
+                    "Generates the 4x4 view matrix representing the inverse world space position and orientation. [Source line 624](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L624)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.padding ?? 0.15",
+                    "[Line 387](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L387)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.minDistance ?? Math.max(this.near * 2, 0.1)",
+                    "[Line 441](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts#L441)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "camera2dcontroller",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Camera2DController"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/camera/Camera2DController.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/camera/Camera2DController.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Camera2DBounds: World bounding box limits for camera position clamping.",
+                "Camera2DDeadzone: Deadzone box parameters (in screen/world units) for target tracking.",
+                "Camera2DFollowOptions: Options for configuring 2D Target Following.",
+                "Camera2DControllerOptions: Configuration options for Camera2DController.",
+                "Camera2DController: Dedicated 2D Orthographic Camera Controller. Provides buttery-smooth damping, pan momentum/inertia, continuous cursor-invariant wheel zooming, multi-touch pan & pinch gestures, keyboard acceleration, target tracking with velocity lookahead, world boundary clamping, screen shake, and zoom-to-fit framing.",
+                "Camera2DAnimation: Animation instance for animating Camera2DController position and zoom via scene.play().",
+                "Camera2DZoomAtAnimation: Animation instance for animating zoom centered on a specific screen coordinate.",
+                "Camera2DLookAheadAnimation: Animation instance for animating look-ahead factor.",
+                "Camera2DDeadzoneAnimation: Animation instance for animating deadzone box dimensions.",
+                "Camera2DDampingAnimation: Animation instance for animating damping / smoothness responsiveness factor.",
+                "Camera2DInertiaAnimation: Animation instance for animating inertia friction coefficient.",
+                "Camera2DAnimator: Animator builder class for Camera2DController, providing fluid syntax for scene.play(...)."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Camera2DBounds",
+                    "Interface",
+                    "World bounding box limits for camera position clamping."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DDeadzone",
+                    "Interface",
+                    "Deadzone box parameters (in screen/world units) for target tracking."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DFollowOptions",
+                    "Interface",
+                    "Options for configuring 2D Target Following."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DControllerOptions",
+                    "Interface",
+                    "Configuration options for Camera2DController."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DController",
+                    "Class",
+                    "Dedicated 2D Orthographic Camera Controller. Provides buttery-smooth damping, pan momentum/inertia, continuous cursor-invariant wheel zooming, multi-touch pan & pinch gestures, keyboard acceleration, target tracking with velocity lookahead, world boundary clamping, screen shake, and zoom-to-fit framing."
+                  ]
+                },
+                {
+                  "cells": [
+                    "camera2DController",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DAnimation",
+                    "Class",
+                    "Animation instance for animating Camera2DController position and zoom via scene.play()."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DZoomAtAnimation",
+                    "Class",
+                    "Animation instance for animating zoom centered on a specific screen coordinate."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DLookAheadAnimation",
+                    "Class",
+                    "Animation instance for animating look-ahead factor."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DDeadzoneAnimation",
+                    "Class",
+                    "Animation instance for animating deadzone box dimensions."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DDampingAnimation",
+                    "Class",
+                    "Animation instance for animating damping / smoothness responsiveness factor."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DInertiaAnimation",
+                    "Class",
+                    "Animation instance for animating inertia friction coefficient."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DAnimator",
+                    "Class",
+                    "Animator builder class for Camera2DController, providing fluid syntax for scene.play(...)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface Camera2DBounds {\n    minX: number;\n    maxX: number;\n    minY: number;\n    maxY: number;\n}\nexport interface Camera2DDeadzone {\n    width: number;\n    height: number;\n}\nexport interface Camera2DFollowOptions {\n    damping?: number;\n    deadzone?: Camera2DDeadzone | null;\n    lookAheadFactor?: number;\n}\nexport interface Camera2DControllerOptions {\n    bounds?: Camera2DBounds | null;\n    clampToViewport?: boolean;\n    moveSpeed?: number;\n    damping?: number;\n    zoomSpeed?: number;\n    minZoom?: number;\n    maxZoom?: number;\n    orthoScale?: number;\n    zoom?: number;\n    inertiaFriction?: number;\n    enableInertia?: boolean;\n    dragSensitivity?: number;\n    keySmoothing?: number;\n    deadzone?: Camera2DDeadzone | null;\n    lookAheadFactor?: number;\n    enableKeys?: boolean;\n    enablePan?: boolean;\n    enableZoom?: boolean;\n    enableTouch?: boolean;\n}\nexport declare class Camera2DController {\n    scene: Scene;\n    camera: Camera;\n    input: Input;\n    moveSpeed: number;\n    damping: number;\n    zoomSpeed: number;\n    minZoom: number;\n    maxZoom: number;\n    inertiaFriction: number;\n    enableInertia: boolean;\n    dragSensitivity: number;\n    keySmoothing: number;\n    enableKeys: boolean;\n    enablePan: boolean;\n    enableZoom: boolean;\n    enableTouch: boolean;\n    bounds: Camera2DBounds | null;\n    clampToViewport: boolean;\n    get zoom(): number;\n    set zoom(value: number);\n    get orthoScale(): number;\n    set orthoScale(value: number);\n    get lookAheadFactor(): number;\n    set lookAheadFactor(value: number);\n    get deadzone(): Camera2DDeadzone | null;\n    set deadzone(value: Camera2DDeadzone | null);\n    get followDampingFactor(): number;\n    set followDampingFactor(value: number);\n    get animate(): Camera2DAnimator;\n    constructor(scene: Scene, camera: Camera, options?: Camera2DControllerOptions);\n    syncFromCamera(): this;\n    getState(): {\n        targetPosition: Vec3;\n        targetOrthoScale: number;\n        position: Vec3;\n        orthoScale: number;\n        bounds: {\n            minX: number;\n            maxX: number;\n            minY: number;\n            maxY: number;\n        };\n    };\n    restoreState(state: any): this;\n    configure(options: Camera2DControllerOptions): this;\n    follow(target: Entity | Vec3 | null, options?: Camera2DFollowOptions): this;\n    setBounds(bounds: Camera2DBounds | null): this;\n    shake(intensity: number, duration: number, frequency?: number): this;\n    zoomToFit(entities: Entity[], padding?: number, duration?: number): this;\n    moveTo(x: number, y: number, duration?: number): this;\n    zoomTo(targetOrthoScale: number, duration?: number): this;\n    reset(duration?: number): this;\n    screenToWorld(screenX: number, screenY: number): Vec3;\n    worldToScreen(worldPos: Vec3): {\n        x: number;\n        y: number;\n    };\n    getCanvasDimensions(): {\n        width: number;\n        height: number;\n        left: number;\n        top: number;\n    };\n    getAspectRatio(): number;\n    zoomAt(screenX: number, screenY: number, targetOrthoScale: number, smooth?: boolean): this;\n    destroy(): void;\n}\nexport declare function camera2DController(scene: Scene, camera: Camera, options?: Camera2DControllerOptions): Camera2DController;\nexport declare class Camera2DAnimation extends Animation {\n    constructor(controller: Camera2DController, targetPos?: Vec3, targetScale?: number, options?: AnimOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}\nexport declare class Camera2DZoomAtAnimation extends Animation {\n    constructor(controller: Camera2DController, screenX: number, screenY: number, targetScale: number, options?: AnimOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}\nexport declare class Camera2DLookAheadAnimation extends Animation {\n    constructor(controller: Camera2DController, targetLookAhead: number, options?: AnimOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}\nexport declare class Camera2DDeadzoneAnimation extends Animation {\n    constructor(controller: Camera2DController, targetWidth: number, targetHeight: number, options?: AnimOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}\nexport declare class Camera2DDampingAnimation extends Animation {\n    constructor(controller: Camera2DController, targetDamping: number, options?: AnimOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}\nexport declare class Camera2DInertiaAnimation extends Animation {\n    constructor(controller: Camera2DController, targetFriction: number, options?: AnimOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}\nexport declare class Camera2DAnimator {\n    constructor(controller: Camera2DController);\n    zoomTo(targetOrthoScale: number, options?: AnimOptions): Camera2DAnimation;\n    zoomAt(screenX: number, screenY: number, targetOrthoScale: number, options?: AnimOptions): Camera2DZoomAtAnimation;\n    moveTo(x: number, y: number, options?: AnimOptions): Camera2DAnimation;\n    lookAhead(targetLookAhead: number, options?: AnimOptions): Camera2DLookAheadAnimation;\n    deadzone(width: number, height: number, options?: AnimOptions): Camera2DDeadzoneAnimation;\n    damping(targetDamping: number, options?: AnimOptions): Camera2DDampingAnimation;\n    inertia(targetFriction: number, options?: AnimOptions): Camera2DInertiaAnimation;\n    zoomToFit(entities: Entity[], padding?: number, options?: AnimOptions): Camera2DAnimation;\n    reset(options?: AnimOptions): Camera2DAnimation;\n}"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "camera2DController: Implementation: `return new Camera2DController(scene, camera, options);`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DBounds` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "minX: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxX: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "minY: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxY: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L17)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DDeadzone` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "width: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L25)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DFollowOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "damping?: number;",
+                    "—",
+                    "Smooth damping factor for position tracking (higher = faster response). Defaults to 10.0. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "deadzone?: Camera2DDeadzone | null;",
+                    "—",
+                    "Deadzone box around screen center where target movement does not trigger camera movement. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lookAheadFactor?: number;",
+                    "—",
+                    "Factor predicting target future position based on velocity (0.0 = disabled). Defaults to 0.0. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L37)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DControllerOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "bounds?: Camera2DBounds | null;",
+                    "—",
+                    "World boundaries for clamping camera viewport. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "clampToViewport?: boolean;",
+                    "—",
+                    "Whether bounds clamping accounts for visible viewport size. Defaults to true. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "moveSpeed?: number;",
+                    "—",
+                    "Manual panning keyboard / move speed. Defaults to 50.0. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "damping?: number;",
+                    "—",
+                    "Smoothing / damping interpolation speed. Defaults to 12.0. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zoomSpeed?: number;",
+                    "—",
+                    "Mouse wheel zoom sensitivity multiplier. Defaults to 1.0. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "minZoom?: number;",
+                    "—",
+                    "Minimum allowed orthographic scale (max zoom in). Defaults to 0.01. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxZoom?: number;",
+                    "—",
+                    "Maximum allowed orthographic scale (max zoom out). Defaults to 10000.0. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "orthoScale?: number;",
+                    "—",
+                    "Initial or target orthographic scale. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zoom?: number;",
+                    "—",
+                    "Alias for orthoScale. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "inertiaFriction?: number;",
+                    "—",
+                    "Friction factor applied to pan inertia glide (0.0 to 0.99). Defaults to 0.92. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "enableInertia?: boolean;",
+                    "—",
+                    "Whether momentum/inertia glide is enabled on mouse/touch release. Defaults to true. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dragSensitivity?: number;",
+                    "—",
+                    "Mouse / touch pan drag sensitivity multiplier (1.0 = standard 1:1 speed). Defaults to 1.0. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "keySmoothing?: number;",
+                    "—",
+                    "Keyboard smoothing / acceleration responsiveness factor. Defaults to 12.0. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "deadzone?: Camera2DDeadzone | null;",
+                    "—",
+                    "Default deadzone box for target tracking. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lookAheadFactor?: number;",
+                    "—",
+                    "Default lookahead factor for target tracking. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "enableKeys?: boolean;",
+                    "—",
+                    "Enable WASD / Arrow key panning. Defaults to true. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "enablePan?: boolean;",
+                    "—",
+                    "Enable mouse drag panning. Defaults to true. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "enableZoom?: boolean;",
+                    "—",
+                    "Enable scroll wheel zooming. Defaults to true. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "enableTouch?: boolean;",
+                    "—",
+                    "Enable touch pan and pinch-to-zoom gestures. Defaults to true. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L81)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DController` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public scene: Scene",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public camera: Camera",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public input: Input",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L99)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public moveSpeed: number",
+                    "50.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public damping: number",
+                    "12.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public zoomSpeed: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public minZoom: number",
+                    "0.01",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 105](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L105)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxZoom: number",
+                    "10000.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public inertiaFriction: number",
+                    "0.92",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 107](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L107)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enableInertia: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dragSensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public keySmoothing: number",
+                    "12.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L110)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enableKeys: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L111)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enablePan: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enableZoom: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enableTouch: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L114)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bounds: Camera2DBounds | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clampToViewport: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get zoom(): number",
+                    "—",
+                    "Current target orthographic zoom level (visible height in world units). Reading returns the current active zoom level (orthoScale). Setting immediately updates the zoom level. [Source line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L142)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set zoom(value: number)",
+                    "—",
+                    "Implementation: `this.zoomTo(value, 0);`. [Source line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L145)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get orthoScale(): number",
+                    "—",
+                    "Alias getter/setter for orthographic scale. [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set orthoScale(value: number)",
+                    "—",
+                    "Implementation: `this.zoomTo(value, 0);`. [Source line 153](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L153)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get lookAheadFactor(): number",
+                    "—",
+                    "Active lookahead prediction factor for target following. [Source line 158](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L158)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set lookAheadFactor(value: number)",
+                    "—",
+                    "Implementation: `this.followLookAhead = Math.max(0, value);`. [Source line 161](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L161)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get deadzone(): Camera2DDeadzone | null",
+                    "—",
+                    "Active deadzone box for target following. [Source line 166](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L166)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set deadzone(value: Camera2DDeadzone | null)",
+                    "—",
+                    "Implementation: `this.followDeadzone = value;`. [Source line 169](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L169)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get followDampingFactor(): number",
+                    "—",
+                    "Active target follow damping factor. [Source line 174](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L174)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set followDampingFactor(value: number)",
+                    "—",
+                    "Implementation: `this.followDamping = Math.max(0.1, value);`. [Source line 177](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L177)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get animate(): Camera2DAnimator",
+                    "—",
+                    "Returns an animator instance to construct animations for this controller compatible with `scene.play(...)`. Example: `await scene.play(controller.animate.zoomTo(50), { duration: 1000 })` [Source line 185](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L185)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(scene: Scene, camera: Camera, options?: Camera2DControllerOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.camera`, `this.scene.controls`, `this.camera.model`, `this.camera.pitch`, `this.camera.yaw`, `this.input`, `this.targetPosition` and other instance fields; calls to `this.camera.position.clone`, `this.configure`, `this.initEvents`, `this.initLoop`. [Source line 209](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L209)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncFromCamera(): this",
+                    "—",
+                    "Synchronizes controller internal target position and zoom level from the active camera. Essential for restoring camera state during hot-reloads and timeline seek checkpoints. [Source line 241](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L241)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getState()",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.targetPosition.clone`, `this.camera.position.clone`; long return expressions shown in the linked implementation. [Source line 266](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L266)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public restoreState(state: any): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.targetOrthoScale`, `this.camera.orthoScale`; calls to `this.targetPosition.set`, `this.camera.position.set`, `this.syncFromCamera`; return paths including `this`, `this.syncFromCamera()`. [Source line 276](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L276)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public configure(options: Camera2DControllerOptions): this",
+                    "—",
+                    "Updates controller options. [Source line 288](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L288)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public follow(target: Entity | Vec3 | null, options?: Camera2DFollowOptions): this",
+                    "—",
+                    "Instructs the camera to follow a target Entity or 3D/2D point. Param: target Target entity, vector position, or null to disable following. Param: options Target follow settings (damping, deadzone, lookAheadFactor). [Source line 323](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L323)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBounds(bounds: Camera2DBounds | null): this",
+                    "—",
+                    "Sets world bounds to clamp the camera position or visible frustum within. Param: bounds Minimum/maximum world limits or null to disable bounding. [Source line 347](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L347)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public shake(intensity: number, duration: number, frequency: number = 30): this",
+                    "—",
+                    "Triggers a screen shake effect. Param: intensity Max displacement offset in world units. Param: duration Duration of shake effect in seconds. Param: frequency Shake oscillation frequency in Hz (defaults to 30). [Source line 359](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L359)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public zoomToFit(entities: Entity[], padding: number = 1.2, duration: number = 0.5): this",
+                    "—",
+                    "Automatically adjusts camera position and zoom (orthoScale) to frame a set of entities. Param: entities Array of entities to fit within view. Param: padding Margin multiplier applied around the bounding box (defaults to 1.2 = 20% margin). Param: duration Transition duration in seconds (0 for immediate snap). [Source line 374](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L374)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public moveTo(x: number, y: number, duration: number = 0): this",
+                    "—",
+                    "Smoothly pans the camera position to (x, y). Param: x Target world X coordinate. Param: y Target world Y coordinate. Param: duration Transition duration in seconds (0 for immediate snap). [Source line 430](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L430)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public zoomTo(targetOrthoScale: number, duration: number = 0): this",
+                    "—",
+                    "Smoothly adjusts camera zoom (orthoScale). Param: targetOrthoScale Desired orthographic scale value. Param: duration Transition duration in seconds (0 for immediate snap). [Source line 450](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L450)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset(duration: number = 0.5): this",
+                    "—",
+                    "Resets camera position, zoom, target tracking, and shake to defaults. Param: duration Transition duration in seconds. [Source line 464](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L464)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public screenToWorld(screenX: number, screenY: number): Vec3",
+                    "—",
+                    "Converts canvas pixel coordinates to 2D world space coordinates. Param: screenX Pixel X relative to canvas top-left. Param: screenY Pixel Y relative to canvas top-left. [Source line 487](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L487)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public worldToScreen(worldPos: Vec3): { x: number, y: number }",
+                    "—",
+                    "Converts a 2D/3D world position to canvas pixel coordinates. Param: worldPos World coordinate position vector. [Source line 508](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L508)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCanvasDimensions(): { width: number, height: number, left: number, top: number }",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `(this.scene.canvas as HTMLCanvasElement).getBoundingClientRect`; return paths including `{ width: rect.width, height: rect.height, left: rect.left, top: rect.top }`, `{ width, height, left: 0, top: 0 }`. [Source line 525](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L525)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getAspectRatio(): number",
+                    "—",
+                    "Implementation: `if (this.scene.canvas && this.scene.canvas.height > 0) { return this.scene.canvas.width / this.scene.canvas.height; } return 16 / 9;`. [Source line 542](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L542)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public zoomAt(screenX: number, screenY: number, targetOrthoScale: number, smooth: boolean = true): this",
+                    "—",
+                    "Adjusts camera zoom (orthoScale) centered on a specific screen coordinate with zero cursor drift. Param: screenX Pixel X relative to canvas top-left. Param: screenY Pixel Y relative to canvas top-left. Param: targetOrthoScale Desired orthographic scale value. Param: smooth Whether to smoothly damp to the target zoom and position (defaults to true). [Source line 587](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L587)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `window.removeEventListener`, `this.scene.canvas.removeEventListener`, `document.removeEventListener`, `this.scene.unregister`. [Source line 1063](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1063)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        controller: Camera2DController,\n        targetPos?: Vec3,\n        targetScale?: number,\n        options: AnimOptions = {}\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.controller`, `this.LABEL`, `this.startPos`, `this.targetPos`, `this.startScale`, `this.targetScale`; calls to `controller.camera.position.clone`, `targetPos.clone`, `this.startPos.clone`. [Source line 1100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: `this.startPos = this.controller.camera.position.clone(); this.startScale = this.controller.camera.orthoScale;`. [Source line 1116](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1116)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`; calls to `this.rate_func`, `this.startPos.lerp`, `this.controller.moveTo`, `this.controller.zoomTo`, `this.complete`; return paths including `false`, `true`. [Source line 1121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1121)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DZoomAtAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        controller: Camera2DController,\n        screenX: number,\n        screenY: number,\n        targetScale: number,\n        options: AnimOptions = {}\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.controller`, `this.screenX`, `this.screenY`, `this.LABEL`, `this.startScale`, `this.targetScale`, `this.startPos`, `this.targetPos`; calls to `controller.camera.position.clone`, `this.startPos.clone`, `this.computeTarget`. [Source line 1161](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1161)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: `this.startPos = this.controller.camera.position.clone(); this.startScale = this.controller.camera.orthoScale; this.computeTarget();`. [Source line 1195](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1195)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`; calls to `this.rate_func`, `this.startPos.lerp`, `this.controller.moveTo`, `this.controller.zoomTo`, `this.complete`; return paths including `false`, `true`. [Source line 1201](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1201)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DLookAheadAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        controller: Camera2DController,\n        targetLookAhead: number,\n        options: AnimOptions = {}\n    )",
+                    "—",
+                    "Implementation: `super(options); this.controller = controller; this.LABEL = \"Camera2DLookAheadAnimation\"; this.startLookAhead = controller.lookAheadFactor; this.targetLookAhead = Math.max(0, targetLookAhead);`. [Source line 1237](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1237)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: `this.startLookAhead = this.controller.lookAheadFactor;`. [Source line 1249](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1249)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`, `this.controller.lookAheadFactor`; calls to `this.rate_func`, `this.complete`; return paths including `false`, `true`. [Source line 1253](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1253)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DDeadzoneAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        controller: Camera2DController,\n        targetWidth: number,\n        targetHeight: number,\n        options: AnimOptions = {}\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.controller`, `this.LABEL`, `this.startWidth`, `this.startHeight`, `this.targetWidth`, `this.targetHeight`. [Source line 1287](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1287)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: `this.startWidth = this.controller.deadzone ? this.controller.deadzone.width : 0; this.startHeight = this.controller.deadzone ? this.controller.deadzone.height : 0;`. [Source line 1302](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1302)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`, `this.controller.deadzone`; calls to `this.rate_func`, `this.complete`; return paths including `false`, `true`. [Source line 1307](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1307)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DDampingAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        controller: Camera2DController,\n        targetDamping: number,\n        options: AnimOptions = {}\n    )",
+                    "—",
+                    "Implementation: `super(options); this.controller = controller; this.LABEL = \"Camera2DDampingAnimation\"; this.startDamping = controller.damping; this.targetDamping = Math.max(0.1, targetDamping);`. [Source line 1341](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1341)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: `this.startDamping = this.controller.damping;`. [Source line 1353](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1353)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`, `this.controller.damping`, `this.controller.followDampingFactor`; calls to `this.rate_func`, `this.complete`; return paths including `false`, `true`. [Source line 1357](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1357)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DInertiaAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        controller: Camera2DController,\n        targetFriction: number,\n        options: AnimOptions = {}\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.controller`, `this.LABEL`, `this.startFriction`, `this.targetFriction`. [Source line 1391](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1391)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: `this.startFriction = this.controller.inertiaFriction;`. [Source line 1403](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1403)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`, `this.controller.inertiaFriction`; calls to `this.rate_func`, `this.complete`; return paths including `false`, `true`. [Source line 1407](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1407)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Camera2DAnimator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(controller: Camera2DController)",
+                    "—",
+                    "Implementation: `this.controller = controller;`. [Source line 1438](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1438)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public zoomTo(targetOrthoScale: number, options?: AnimOptions): Camera2DAnimation",
+                    "—",
+                    "Animates camera zoom to the specified orthographic scale centered on the viewport center. [Source line 1445](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1445)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public zoomAt(screenX: number, screenY: number, targetOrthoScale: number, options?: AnimOptions): Camera2DZoomAtAnimation",
+                    "—",
+                    "Animates camera zoom to the specified orthographic scale centered on a specific screen coordinate (screenX, screenY). [Source line 1452](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1452)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public moveTo(x: number, y: number, options?: AnimOptions): Camera2DAnimation",
+                    "—",
+                    "Animates camera position to (x, y). [Source line 1459](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1459)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lookAhead(targetLookAhead: number, options?: AnimOptions): Camera2DLookAheadAnimation",
+                    "—",
+                    "Animates the look-ahead factor for target following. [Source line 1466](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1466)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public deadzone(width: number, height: number, options?: AnimOptions): Camera2DDeadzoneAnimation",
+                    "—",
+                    "Animates the deadzone box dimensions (width, height) for target following. [Source line 1473](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1473)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public damping(targetDamping: number, options?: AnimOptions): Camera2DDampingAnimation",
+                    "—",
+                    "Animates the damping / smoothing responsiveness factor. [Source line 1480](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1480)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public inertia(targetFriction: number, options?: AnimOptions): Camera2DInertiaAnimation",
+                    "—",
+                    "Animates the inertia friction coefficient. [Source line 1487](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1487)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public zoomToFit(entities: Entity[], padding: number = 1.2, options?: AnimOptions): Camera2DAnimation",
+                    "—",
+                    "Animates camera position and zoom to fit the specified entities. [Source line 1494](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1494)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset(options?: AnimOptions): Camera2DAnimation",
+                    "—",
+                    "Resets camera position and zoom to defaults. [Source line 1552](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1552)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Camera2DController.getTargetPosition: private getTargetPosition(target: Entity | Vec3): Vec3",
+                    "Implementation: `if (target instanceof Entity) { return target.getWorldTransform().matrix.getTranslate(); } return Vec3.cast(target);`.",
+                    "[Line 549](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L549)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DController.clampPositionToBounds: private clampPositionToBounds(pos: Vec3, orthoScale: number): Vec3",
+                    "Body operations (including nested callbacks): calls to `pos.clone`, `this.getAspectRatio`; return paths including `pos`, `clamped`.",
+                    "[Line 556](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L556)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DController.recordPointerSample: private recordPointerSample(screenX: number, screenY: number)",
+                    "Body operations (including nested callbacks): calls to `performance.now`, `this.pointerHistory.push`, `this.pointerHistory.shift`; 1 explicit loop.",
+                    "[Line 623](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L623)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DController.computeReleaseVelocity: private computeReleaseVelocity(): { vx: number, vy: number }",
+                    "Body operations (including nested callbacks): return paths including `{ vx: 0, vy: 0 }`, `{ vx: (last.x - first.x) / dt, vy: (last.y - first.y) / dt }`.",
+                    "[Line 633](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L633)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DController.initEvents: private initEvents()",
+                    "Body operations (including nested callbacks): calls to `window.addEventListener`, `this.scene.canvas.addEventListener`, `document.addEventListener`.",
+                    "[Line 1041](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1041)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DController.initLoop: private initLoop()",
+                    "Implementation: `this.scene.always(this.onUpdateLoop);`.",
+                    "[Line 1059](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1059)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Camera2DZoomAtAnimation.computeTarget: private computeTarget(): void",
+                    "Body operations (including nested callbacks): assignments to `this.targetPos`; construction of `Vec3`; calls to `this.controller.getCanvasDimensions`, `this.controller.getAspectRatio`.",
+                    "[Line 1181](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera2DController.ts#L1181)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Animation](/api-animation#animation)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cameracontroller",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CameraController"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/camera/CameraController.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/camera/CameraController.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "CameraControllerOptions: Options for configuring CameraController sensitivity and movement behavior.",
+                "CameraController: Standard keyboard and mouse controller for the camera. Supports WASD flying movements, panning, scroll-wheel zooming, autofocus raycasting, and camera model toggling."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CameraControllerOptions",
+                    "Interface",
+                    "Options for configuring CameraController sensitivity and movement behavior."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CameraController",
+                    "Class",
+                    "Standard keyboard and mouse controller for the camera. Supports WASD flying movements, panning, scroll-wheel zooming, autofocus raycasting, and camera model toggling."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cameraController",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface CameraControllerOptions {\n    sensitivity?: number;\n    overallSensitivity?: number;\n    dragSensitivity?: number;\n    rotateSensitivity?: number;\n    panSensitivity?: number;\n    scrollSensitivity?: number;\n    zoomSensitivity?: number;\n    moveSpeed?: number;\n}\nexport declare class CameraController {\n    scene: Scene;\n    camera: Camera;\n    input: Input;\n    sensitivity: number;\n    dragSensitivity: number;\n    panSensitivity: number;\n    scrollSensitivity: number;\n    moveSpeed: number;\n    get overallSensitivity(): number;\n    set overallSensitivity(v: number);\n    get rotateSensitivity(): number;\n    set rotateSensitivity(v: number);\n    get zoomSensitivity(): number;\n    set zoomSensitivity(v: number);\n    autoFocus: boolean;\n    constructor(scene: Scene, camera: Camera, options?: CameraControllerOptions);\n    setSensitivity(options: CameraControllerOptions): this;\n    syncFromCamera(): void;\n    destroy(): void;\n}\nexport declare function cameraController(scene: Scene, camera: Camera, options?: CameraControllerOptions): CameraController;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "cameraController: Implementation: `return new CameraController(scene, camera, options);`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CameraControllerOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "sensitivity?: number;",
+                    "—",
+                    "Overall sensitivity multiplier affecting all camera interactions. Defaults to 1.0. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "overallSensitivity?: number;",
+                    "—",
+                    "Alias for sensitivity. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dragSensitivity?: number;",
+                    "—",
+                    "Drag rotation / mouse look sensitivity multiplier (1.0 = standard speed). Defaults to 1.0. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotateSensitivity?: number;",
+                    "—",
+                    "Alias for dragSensitivity. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "panSensitivity?: number;",
+                    "—",
+                    "Panning sensitivity multiplier (1.0 = standard speed). Defaults to 1.0. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scrollSensitivity?: number;",
+                    "—",
+                    "Scroll wheel zoom sensitivity multiplier (1.0 = standard speed). Defaults to 1.0. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zoomSensitivity?: number;",
+                    "—",
+                    "Alias for scrollSensitivity. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "moveSpeed?: number;",
+                    "—",
+                    "WASD / space / shift movement speed multiplier (1.0 = standard speed). Defaults to 1.0. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L31)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CameraController` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "scene: Scene",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "camera: Camera",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "input: Input",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dragSensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public panSensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scrollSensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public moveSpeed: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get overallSensitivity(): number",
+                    "—",
+                    "Alias getter/setter for sensitivity (overallSensitivity). [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set overallSensitivity(v: number)",
+                    "—",
+                    "Implementation: `this.sensitivity = v;`. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rotateSensitivity(): number",
+                    "—",
+                    "Alias getter/setter for dragSensitivity (rotateSensitivity). [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rotateSensitivity(v: number)",
+                    "—",
+                    "Implementation: `this.dragSensitivity = v;`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get zoomSensitivity(): number",
+                    "—",
+                    "Alias getter/setter for scrollSensitivity (zoomSensitivity). [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set zoomSensitivity(v: number)",
+                    "—",
+                    "Implementation: `this.scrollSensitivity = v;`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public autoFocus: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(scene: Scene, camera: Camera, options?: CameraControllerOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.camera`, `this.scene.controls`, `this.targetFocus`, `this.input`; calls to `this.setSensitivity`, `this.initEvents`, `this.initLoop`. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSensitivity(options: CameraControllerOptions): this",
+                    "—",
+                    "Updates camera sensitivity settings. Param: options Configurable sensitivity options. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L99)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncFromCamera()",
+                    "—",
+                    "Implementation: `this.targetFocus = this.camera.focusDist; this.camera.invalidateTransform();`. [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L111)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `window.removeEventListener`, `this.scene.canvas.removeEventListener`, `document.removeEventListener`, `this.scene.unregister`. [Source line 282](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L282)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CameraController.initEvents: private initEvents()",
+                    "Body operations (including nested callbacks): calls to `window.addEventListener`, `this.scene.canvas.addEventListener`, `document.addEventListener`.",
+                    "[Line 264](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L264)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "CameraController.initLoop: private initLoop()",
+                    "Implementation: `this.scene.always(this.onUpdateLoop);`.",
+                    "[Line 278](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L278)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "CameraController.raycast: private raycast(origin: Vec3, dir: Vec3, entities: Entity[]): number",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `ent.getComponent`, `ent.state.transform._matrix.inverse`, `invMat.transformPoint`, `invMat.transformDirection`, `stack.pop`, `ent.state.transform._matrix.transformPoint`, `worldHit.sub(origin).length`, `worldHit.sub` and additional helpers; return paths including `closestDist`; 2 explicit loops.",
+                    "[Line 300](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/CameraController.ts#L300)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orbitcameracontroller",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "OrbitCameraController"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/camera/OrbitCameraController.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/camera/OrbitCameraController.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "OrbitCameraControllerOptions: Options for configuring OrbitCameraController sensitivity, speed, and behavior.",
+                "OrbitCameraController: Smooth Orbital Camera Controller with inertia/momentum support. Wraps around a Camera to orbit a target center point, support panning, and mouse scroll zooms."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "OrbitCameraControllerOptions",
+                    "Interface",
+                    "Options for configuring OrbitCameraController sensitivity, speed, and behavior."
+                  ]
+                },
+                {
+                  "cells": [
+                    "OrbitCameraController",
+                    "Class",
+                    "Smooth Orbital Camera Controller with inertia/momentum support. Wraps around a Camera to orbit a target center point, support panning, and mouse scroll zooms."
+                  ]
+                },
+                {
+                  "cells": [
+                    "orbitCameraController",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface OrbitCameraControllerOptions {\n    sensitivity?: number;\n    overallSensitivity?: number;\n    targetCenter?: Vec3;\n    radius?: number;\n    dragSensitivity?: number;\n    rotateSensitivity?: number;\n    orbitSpeed?: number;\n    panSensitivity?: number;\n    panSpeed?: number;\n    scrollSensitivity?: number;\n    zoomSensitivity?: number;\n    zoomSpeed?: number;\n    minRadius?: number;\n    maxRadius?: number;\n    inertiaFriction?: number;\n    damping?: number;\n}\nexport declare class OrbitCameraController {\n    scene: Scene;\n    camera: Camera;\n    input: Input;\n    sensitivity: number;\n    dragSensitivity: number;\n    panSensitivity: number;\n    scrollSensitivity: number;\n    get overallSensitivity(): number;\n    set overallSensitivity(v: number);\n    get rotateSensitivity(): number;\n    set rotateSensitivity(v: number);\n    get zoomSensitivity(): number;\n    set zoomSensitivity(v: number);\n    minRadius: number;\n    maxRadius: number;\n    orbitSpeed: number;\n    panSpeed: number;\n    zoomSpeed: number;\n    inertiaFriction: number;\n    damping: number;\n    targetCenter: Vec3;\n    targetRadius: number;\n    targetYaw: number;\n    targetPitch: number;\n    actualCenter: Vec3;\n    actualRadius: number;\n    isInteracted: boolean;\n    autoFocus: boolean;\n    constructor(scene: Scene, camera: Camera, options?: OrbitCameraControllerOptions);\n    setSensitivity(options: OrbitCameraControllerOptions): this;\n    getState(): {\n        targetCenter: Vec3;\n        actualCenter: Vec3;\n        targetRadius: number;\n        actualRadius: number;\n        targetPitch: number;\n        targetYaw: number;\n        autoFocus: boolean;\n        targetFocus: number;\n        isInteracted: boolean;\n    };\n    restoreState(state: {\n        targetCenter?: Vec3 | [\n            number,\n            number,\n            number\n        ] | number[];\n        actualCenter?: Vec3 | [\n            number,\n            number,\n            number\n        ] | number[];\n        targetRadius?: number;\n        actualRadius?: number;\n        targetPitch?: number;\n        targetYaw?: number;\n        autoFocus?: boolean;\n        targetFocus?: number;\n        isInteracted?: boolean;\n    }): void;\n    syncFromCamera(): void;\n    destroy(): void;\n}\nexport declare function orbitCameraController(scene: Scene, camera: Camera, options?: OrbitCameraControllerOptions): OrbitCameraController;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "orbitCameraController: Implementation: `return new OrbitCameraController(scene, camera, options);`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `OrbitCameraControllerOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "sensitivity?: number;",
+                    "—",
+                    "Overall sensitivity multiplier affecting orbit, pan, and zoom. Defaults to 1.0. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "overallSensitivity?: number;",
+                    "—",
+                    "Alias for sensitivity. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "targetCenter?: Vec3;",
+                    "—",
+                    "Target focus center point. Defaults to [0, 0, 0]. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Orbit radius / distance from target center. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dragSensitivity?: number;",
+                    "—",
+                    "Orbit drag rotation sensitivity multiplier (1.0 = standard speed). Defaults to 1.0. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotateSensitivity?: number;",
+                    "—",
+                    "Alias for dragSensitivity. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "orbitSpeed?: number;",
+                    "—",
+                    "Base orbit speed factor. Defaults to 0.015. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "panSensitivity?: number;",
+                    "—",
+                    "Pan drag sensitivity multiplier (1.0 = standard speed). Defaults to 1.0. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "panSpeed?: number;",
+                    "—",
+                    "Base pan speed factor. Defaults to 0.002. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scrollSensitivity?: number;",
+                    "—",
+                    "Scroll wheel zoom sensitivity multiplier (1.0 = standard speed). Defaults to 1.0. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zoomSensitivity?: number;",
+                    "—",
+                    "Alias for scrollSensitivity. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zoomSpeed?: number;",
+                    "—",
+                    "Base zoom speed factor. Defaults to 0.15. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "minRadius?: number;",
+                    "—",
+                    "Minimum allowed orbit radius. Defaults to 0.1. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxRadius?: number;",
+                    "—",
+                    "Maximum allowed orbit radius. Defaults to 5000.0. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "inertiaFriction?: number;",
+                    "—",
+                    "Inertia friction multiplier (0.0 to 1.0). Defaults to 0.95. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "damping?: number;",
+                    "—",
+                    "Damping smoothing factor. Defaults to 15.0. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L48)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `OrbitCameraController` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "scene: Scene",
+                    "—",
+                    "Target scene orchestrator. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "camera: Camera",
+                    "—",
+                    "Controlled camera instance. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "input: Input",
+                    "—",
+                    "Current keyboard and mouse inputs. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dragSensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public panSensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scrollSensitivity: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get overallSensitivity(): number",
+                    "—",
+                    "Alias getter/setter for sensitivity (overallSensitivity). [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set overallSensitivity(v: number)",
+                    "—",
+                    "Implementation: `this.sensitivity = v;`. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rotateSensitivity(): number",
+                    "—",
+                    "Rotate sensitivity (alias for dragSensitivity). [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rotateSensitivity(v: number)",
+                    "—",
+                    "Implementation: `this.dragSensitivity = v;`. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get zoomSensitivity(): number",
+                    "—",
+                    "Zoom sensitivity (alias for scrollSensitivity). [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set zoomSensitivity(v: number)",
+                    "—",
+                    "Implementation: `this.scrollSensitivity = v;`. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public minRadius",
+                    "0.1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxRadius",
+                    "5000.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public orbitSpeed",
+                    "0.015",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public panSpeed",
+                    "0.002",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public zoomSpeed",
+                    "0.15",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public inertiaFriction",
+                    "0.95",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public damping",
+                    "15.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public targetCenter: Vec3",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public targetRadius: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public targetYaw: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 95](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L95)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public targetPitch: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L96)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public actualCenter: Vec3",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L99)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public actualRadius: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isInteracted: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public autoFocus: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 124](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L124)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(scene: Scene, camera: Camera, options?: OrbitCameraControllerOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.camera`, `this.scene.controls`, `this.input`, `this.targetCenter`, `this.actualCenter`, `this.targetRadius`, `this.actualRadius` and other instance fields; construction of `Vec3`; calls to `center.clone`, `this.setSensitivity`, `this.camera.position.sub`, `offset.length`, `offset.scale(-1).normalize`, `offset.scale`, `this.initEvents`, `this.initLoop`. [Source line 127](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L127)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSensitivity(options: OrbitCameraControllerOptions): this",
+                    "—",
+                    "Configures sensitivity options for orbiting, panning, zooming, and limits. Param: options Configurable orbit controller options. [Source line 170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L170)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getState()",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.targetCenter.clone`, `this.actualCenter.clone`; long return expressions shown in the linked implementation. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L188)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public restoreState(state: {\n        targetCenter?: Vec3 | [number, number, number] | number[];\n        actualCenter?: Vec3 | [number, number, number] | number[];\n        targetRadius?: number;\n        actualRadius?: number;\n        targetPitch?: number;\n        targetYaw?: number;\n        autoFocus?: boolean;\n        targetFocus?: number;\n        isInteracted?: boolean;\n    })",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.targetCenter`, `this.actualCenter`, `this.targetRadius`, `this.actualRadius`, `this.targetPitch`, `this.camera.pitch`, `this.targetYaw`, `this.camera.yaw` and other instance fields; construction of `Vec3`; calls to `Vec3.cast(state.targetCenter as any).clone`, `Vec3.cast`, `Vec3.cast(state.actualCenter as any).clone`, `this.targetCenter.clone`, `this.panDelta.set`, `Quaternion.fromEuler`, `this.camera.rotation.rotateVec3(new Vec3(0, 0, -1)).normalize`, `this.camera.rotation.rotateVec3` and additional helpers. [Source line 202](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L202)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncFromCamera()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.targetPitch`, `this.targetYaw`, `this.yawDelta`, `this.pitchDelta`, `this.zoomDelta`, `this.camera.rotation`, `this.targetRadius`, `this.actualRadius` and other instance fields; construction of `Vec3`; calls to `this.panDelta.set`, `Quaternion.fromEuler`, `this.camera.rotation.rotateVec3(new Vec3(0, 0, -1)).normalize`, `this.camera.rotation.rotateVec3`, `this.camera.position.add`, `localForward.scale`, `this.targetCenter.clone`, `this.camera.position.sub` and additional helpers. [Source line 245](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L245)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `window.removeEventListener`, `this.scene.canvas.removeEventListener`, `document.removeEventListener`, `this.scene.unregister`. [Source line 462](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L462)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.targetCenter ?? new Vec3(0, 0, 0)",
+                    "[Line 133](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L133)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "OrbitCameraController.initEvents: private initEvents()",
+                    "Body operations (including nested callbacks): calls to `window.addEventListener`, `this.scene.canvas.addEventListener`, `document.addEventListener`.",
+                    "[Line 444](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L444)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OrbitCameraController.initLoop: private initLoop()",
+                    "Implementation: `this.scene.always(this.onUpdateLoop);`.",
+                    "[Line 458](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L458)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OrbitCameraController.handleDebugToggles: private handleDebugToggles(dt: number)",
+                    "Body operations (including nested callbacks): assignments to `this.camera.focusDist`, `this.autoFocus`, `this.camera.aperture`, `this.camera.model`, `this.mPressed`, `this.fPressed`, `this.scene.renderConfig.raytraceEnabled`, `this.tPressed` and other instance fields; construction of `RaytraceManager`; calls to `this.scene.continue`, `this.scene.renderer.raytraceManager.init`, `this.scene.renderer.raytraceManager.resize`, `this.scene.invalidate`, `this.raycast`.",
+                    "[Line 481](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L481)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OrbitCameraController.raycast: private raycast(origin: Vec3, dir: Vec3, entities: Entity[]): number",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `ent.getComponent`, `ent.state.transform._matrix.inverse`, `invMat.transformPoint`, `invMat.transformDirection`, `stack.pop`, `ent.state.transform._matrix.transformPoint`, `worldHit.sub(origin).length`, `worldHit.sub` and additional helpers; return paths including `closestDist`; 2 explicit loops.",
+                    "[Line 529](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/OrbitCameraController.ts#L529)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "renderview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RenderView"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/camera/RenderView.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/camera/RenderView.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "RenderView: Represents a viewport view mapping a region of the target canvas. Manages view-projection matrices, environmental sky and ground colors, lighting uniforms, shadow mapping computations, and packs them into raw WebGPU Float32 arrays."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RenderView",
+                    "Class",
+                    "Represents a viewport view mapping a region of the target canvas. Manages view-projection matrices, environmental sky and ground colors, lighting uniforms, shadow mapping computations, and packs them into raw WebGPU Float32 arrays."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class RenderView {\n    camera: Camera;\n    width: number;\n    height: number;\n    time: number;\n    padding: number;\n    viewport: {\n        x: number;\n        y: number;\n        w: number;\n        h: number;\n    };\n    clearColor: boolean;\n    clearDepth: boolean;\n    bindGroup: GPUBindGroup;\n    device: GPUDevice;\n    fov_rad: number;\n    constructor(width: number, height: number);\n    frustum: Frustum;\n    init(device: GPUDevice): void;\n    getViewProjection(): Mat4;\n    getData(): Float32Array;\n    getSize(): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RenderView` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "camera: Camera",
+                    "—",
+                    "The camera associated with this view. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "width: number",
+                    "100",
+                    "Viewport width in pixels. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height: number",
+                    "100",
+                    "Viewport height in pixels. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "time: number",
+                    "0",
+                    "Current absolute scene timeline running time in milliseconds. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "padding: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "viewport: { x: number, y: number, w: number, h: number }",
+                    "—",
+                    "Viewport relative bounding layout [X, Y, Width, Height] normalized to [0.0 - 1.0]. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "clearColor: boolean",
+                    "—",
+                    "If true, the color attachment back-buffer is cleared before drawing this view. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "clearDepth: boolean",
+                    "—",
+                    "If true, the depth attachment back-buffer is cleared before drawing this view. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bindGroup: GPUBindGroup",
+                    "—",
+                    "WebGPU Bind group mapping this view's uniform values. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "device: GPUDevice",
+                    "—",
+                    "Active GPUDevice. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fov_rad",
+                    "45 * Math.PI / 180",
+                    "Initial Camera Field of View in radians. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(width: number, height: number)",
+                    "—",
+                    "Creates a new RenderView. Param: width Screen width in pixels. Param: height Screen height in pixels. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public frustum: Frustum",
+                    "new Frustum()",
+                    "Active 6-plane camera frustum for frustum culling [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public init(device: GPUDevice)",
+                    "—",
+                    "Binds the GPUDevice. Param: device Active GPUDevice. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getViewProjection(): Mat4",
+                    "—",
+                    "Computes the combined 4x4 View-Projection matrix for the view's camera. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getData(): Float32Array",
+                    "—",
+                    "Formats and returns all camera parameters, matrices, ambient environments, light colors, positions, and shadow-maps as a contiguous Float32Array. [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L96)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSize(): number",
+                    "—",
+                    "Calculates the memory allocation footprint in Float elements (aligned to WebGPU requirements). [Source line 182](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts#L182)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

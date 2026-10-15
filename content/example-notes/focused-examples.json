@@ -1,0 +1,606 @@
+{
+  "labs/pg-barchart": {
+    "title": "Bar height encodes one value",
+    "description": "Three build stages become three bars; no other chart type competes for attention.",
+    "walkthrough": [
+      "BarChart receives category/value pairs and maps each value to a vertical mark. The labels and values belong to the chart itself.",
+      "animateIn reveals the same three bars from their baseline. It does not replace the dataset or introduce a second encoding."
+    ],
+    "experiments": [
+      "Change only Bundle from 5 to 8 and predict which bar changes."
+    ],
+    "related": [
+      "BarChart"
+    ]
+  },
+  "labs/pg-graph": {
+    "title": "A directed three-node graph",
+    "description": "Two edges make the direction A to B to C immediately readable.",
+    "walkthrough": [
+      "Graph owns three GraphNode instances and two directed GraphEdge instances.",
+      "applyLayout assigns explicit positions once. There is no force simulation, path-finding or layout morph in this scene."
+    ],
+    "experiments": [
+      "Reverse the second edge and inspect its arrow direction."
+    ],
+    "related": [
+      "Graph",
+      "Graph.addNode",
+      "Graph.addEdge",
+      "Graph.applyLayout"
+    ]
+  },
+  "labs/pg-automaton": {
+    "title": "A DFA for strings ending in 1",
+    "description": "Two states and four transitions express one complete deterministic rule.",
+    "walkthrough": [
+      "State 0 is the start state and state 1 is accepting. Reading 1 moves to the accepting state; reading 0 moves to state 0.",
+      "The scene shows only the automaton topology. Tape playback and runner controls are intentionally omitted."
+    ],
+    "experiments": [
+      "Swap the accepting state to recognize strings ending in 0."
+    ],
+    "related": [
+      "Automaton",
+      "Automaton.addState",
+      "Automaton.addTransition"
+    ]
+  },
+  "labs/pg-physics2d": {
+    "title": "One dynamic body under gravity",
+    "description": "A ball falls, collides with a fixed floor and rebounds.",
+    "walkthrough": [
+      "Physics2D owns one static rectangle and one dynamic circle. Gravity changes only the dynamic body.",
+      "Restitution controls the rebound after contact; no joints, walls or extra bodies obscure the collision."
+    ],
+    "experiments": [
+      "Set restitution to 0 and compare the first impact."
+    ],
+    "related": [
+      "Physics2D"
+    ]
+  },
+  "labs/pg-subdivision": {
+    "title": "Sample one polyline more densely",
+    "description": "Amber points expose exactly what subdividePolyline adds between three control points.",
+    "walkthrough": [
+      "SubdivisionEngine subdivides each source segment until no result segment exceeds maxSegmentLength.",
+      "The cyan line and amber dots use the returned samples directly. No smoothing or deformation is applied."
+    ],
+    "experiments": [
+      "Double maxSegmentLength and compare the number of amber samples."
+    ],
+    "related": [
+      "SubdivisionEngine",
+      "SubdivisionEngine.subdividePolyline"
+    ]
+  },
+  "labs/pg-procedural-star": {
+    "title": "One procedural star",
+    "description": "Five points, two radii and one corner radius define the complete shape.",
+    "walkthrough": [
+      "Star generates its contour from the supplied parameters and remains ordinary vector geometry afterward.",
+      "Create reveals that one contour. The scene contains no shape gallery or 3D model."
+    ],
+    "experiments": [
+      "Change points from 5 to 7 while keeping both radii fixed."
+    ],
+    "related": [
+      "Star",
+      "Create"
+    ]
+  },
+  "labs/pg-shader-uniform": {
+    "title": "One uniform drives one shader ring",
+    "description": "A single float changes the radius calculated by the fragment shader.",
+    "walkthrough": [
+      "The Pulse struct occupies one aligned uniform buffer. Each update writes only its radius value.",
+      "The fragment shader compares each pixel's distance from the center with that radius, producing one moving ring."
+    ],
+    "experiments": [
+      "Hold radius at 0.3 to separate uniform animation from shader evaluation."
+    ],
+    "related": [
+      "Shader",
+      "Shader.setUniformBuffer"
+    ]
+  },
+  "labs/pg-render-target": {
+    "title": "Render once, display as a texture",
+    "description": "A moving offscreen circle appears only through the target's texture.",
+    "walkthrough": [
+      "RenderTarget captures the circle into a 256 by 256 offscreen texture.",
+      "Sprite displays that texture in the main scene. The amber frame is ordinary main-scene geometry and is not captured."
+    ],
+    "experiments": [
+      "Stop moving the captured circle and verify the displayed texture becomes static."
+    ],
+    "related": [
+      "RenderTarget",
+      "RenderTarget.capture",
+      "Sprite"
+    ]
+  },
+  "labs/pg-image": {
+    "title": "Display one raster image",
+    "description": "RTImage loads a single asset and presents it at an explicit world-space size.",
+    "walkthrough": [
+      "The source path identifies the image asset; width and height control only its displayed quad.",
+      "No video playback, atlas slicing or material mapping is involved."
+    ],
+    "experiments": [
+      "Change the displayed width without changing the source image."
+    ],
+    "related": [
+      "RTImage"
+    ]
+  },
+  "labs/pg-noise": {
+    "title": "Sample one Perlin noise function",
+    "description": "One deterministic noise source becomes one curve on mathematical axes.",
+    "walkthrough": [
+      "PerlinNoise evaluates a scalar for each x coordinate requested by FunctionGraph2D.",
+      "The fixed seed keeps the curve reproducible. No additional noise families, octaves or vector fields are combined."
+    ],
+    "experiments": [
+      "Change only scale from 1.2 to 2.4 and compare feature spacing."
+    ],
+    "related": [
+      "PerlinNoise",
+      "FunctionGraph2D"
+    ]
+  },
+  "labs/pg-msdf-font": {
+    "title": "Load and use one MSDF font",
+    "description": "One pre-baked MSDF descriptor loads one atlas for one SDFText line.",
+    "walkthrough": [
+      "FontLoader.msdf loads the pre-baked Roboto descriptor before SDFText is constructed.",
+      "The resulting glyph atlas remains crisp as the camera scale changes. No second font is loaded for comparison."
+    ],
+    "experiments": [
+      "Change fontSize while keeping the generated font object unchanged."
+    ],
+    "related": [
+      "FontLoader.msdf",
+      "SDFText"
+    ]
+  },
+  "labs/pg-audio-cue": {
+    "title": "Schedule one sound effect",
+    "description": "Click the circle to place one generated tone on the SFX timeline.",
+    "walkthrough": [
+      "AudioPlugin provides the scene audio buses. The scene creates a short in-memory tone so no network asset is involved.",
+      "The click schedules that buffer at the current scene time. The small scale pulse only confirms the same cue visually."
+    ],
+    "experiments": [
+      "Change frequency from 440 to 660 while leaving duration and volume fixed."
+    ],
+    "related": [
+      "AudioPlugin",
+      "AudioTimeline"
+    ]
+  },
+  "labs/pg-tts-subtitles": {
+    "title": "Speak one captioned sentence",
+    "description": "One TTS request and one subtitle component share the scene timeline.",
+    "walkthrough": [
+      "speak requests one Microsoft Edge voice and awaits the returned duration.",
+      "Subtitles receives the same utterance timing. No background music, automaton or multi-beat presentation is included."
+    ],
+    "experiments": [
+      "Change only speed from 0.96 to 0.8 and compare caption timing."
+    ],
+    "requirements": [
+      "Microsoft Edge narration requires the /api/tts/msedge service from the Retiam development server."
+    ],
+    "related": [
+      "speak",
+      "Subtitles"
+    ]
+  },
+  "labs/pg-svg": {
+    "title": "Parse one SVG document",
+    "description": "A single inline star becomes Retiam vector geometry.",
+    "walkthrough": [
+      "SVG reads the document's viewBox, path data, fill and stroke into one vector hierarchy.",
+      "The parsed contour renders directly. No remote fetch, sketch conversion or atlas is involved."
+    ],
+    "experiments": [
+      "Change one path point and inspect the resulting silhouette."
+    ],
+    "related": [
+      "SVG"
+    ]
+  },
+  "labs/pg-texture-atlas": {
+    "title": "Select one atlas frame",
+    "description": "A two-cell atlas yields one named amber SubTexture.",
+    "walkthrough": [
+      "TextureAtlas combines a canvas with a TexturePacker-style manifest.",
+      "Sprite displays only the named amber frame, making UV selection the sole mechanism under study."
+    ],
+    "experiments": [
+      "Change getTexture from amber to cyan without changing the Sprite size."
+    ],
+    "related": [
+      "TextureAtlas",
+      "SubTexture",
+      "Sprite"
+    ]
+  },
+  "labs/pg-plugin": {
+    "title": "One plugin owns one updater",
+    "description": "RotationPlugin installs and disposes the task that turns one tile.",
+    "walkthrough": [
+      "Scene.use calls the plugin's install hook. The returned AlwaysHandle stays inside the plugin.",
+      "dispose stops that exact handle, so the behavior has a clear lifecycle owner."
+    ],
+    "experiments": [
+      "Halve the radians-per-frame multiplier and compare rotation speed."
+    ],
+    "related": [
+      "IPlugin",
+      "Scene.use",
+      "AlwaysHandle"
+    ]
+  },
+  "labs/pg-post-process": {
+    "title": "One full-frame luminance pass",
+    "description": "A single post-process leaves the left side colored and converts the right side to grayscale.",
+    "walkthrough": [
+      "PostProcessPass reads renderer.finalOutputHandle and writes one presentation output.",
+      "Its fragment code computes luminance once and selects that value only on the right, giving the effect a direct before/after comparison."
+    ],
+    "experiments": [
+      "Return color unchanged to verify that geometry and materials were not modified."
+    ],
+    "related": [
+      "PostProcessPass",
+      "Scene.addPass"
+    ]
+  },
+  "labs/pg-procedural-helix": {
+    "title": "One procedural 3D helix",
+    "description": "Radius, pitch and turns define one tube mesh.",
+    "walkthrough": [
+      "Helix3D generates the mesh directly from four geometric parameters.",
+      "The update rotates the completed mesh only so its depth is visible; it does not alter the helix definition."
+    ],
+    "experiments": [
+      "Double pitch while leaving radius and turn count fixed."
+    ],
+    "related": [
+      "Helix3D"
+    ]
+  },
+  "labs/pg-text-split": {
+    "title": "Split one sentence into words",
+    "description": "Only the second word moves after Text.splitWords creates independent entities.",
+    "walkthrough": [
+      "splitWords replaces the original sentence with word-level Text entities at matching positions.",
+      "Moving the cyan word demonstrates its independent transform without mixing line, character or LaTeX splitting."
+    ],
+    "experiments": [
+      "Move the first word instead and verify the second remains in place."
+    ],
+    "related": [
+      "Text.splitWords"
+    ]
+  },
+  "labs/pg-path-tracing": {
+    "title": "Accumulate one path-traced material",
+    "description": "One metallic sphere is the only subject in the progressive raytracing pipeline.",
+    "walkthrough": [
+      "raytraceEnabled selects the compute path-tracing pipeline and rtMaxAccumulation limits progressive sampling.",
+      "The sphere's metallic and roughness values affect the same fixed subject; no model loading or fallback scene is involved."
+    ],
+    "experiments": [
+      "Increase roughness from 0.12 to 0.6 and compare the reflected highlight."
+    ],
+    "related": [
+      "RenderConfig",
+      "RaytraceManager",
+      "Material"
+    ]
+  },
+  "labs/pg-scene-event": {
+    "title": "Handle one scene-level click",
+    "description": "One Scene.setEvent callback moves one marker to the clicked world position.",
+    "walkthrough": [
+      "InteractionManager converts the pointer location into scene coordinates.",
+      "The scene-level click handler changes only the marker transform."
+    ],
+    "experiments": ["Click near each corner and compare the marker position."],
+    "related": ["Scene.setEvent", "InteractionManager"]
+  },
+  "labs/pg-time-scale": {
+    "title": "Slow one scene clock",
+    "description": "One orbit visibly slows and resumes while its motion rule remains unchanged.",
+    "walkthrough": [
+      "The updater derives position from scene time.",
+      "animateTimeScale changes the rate of that clock rather than editing the orbit."
+    ],
+    "experiments": ["Change the slow target from 0.2 to 0.5."],
+    "related": ["Scene.animateTimeScale"]
+  },
+  "labs/pg-animator": {
+    "title": "Build one target-state animation",
+    "description": "Entity.animate moves one rectangle to one target position.",
+    "walkthrough": [
+      "The animator records the requested target state.",
+      "Scene.play applies duration and easing to that single state change."
+    ],
+    "experiments": ["Change only the target x coordinate."],
+    "related": ["Entity.animate", "Animator"]
+  },
+  "labs/pg-camera-frame": {
+    "title": "Frame one subject",
+    "description": "Camera.frame centers and fits one off-center rectangle.",
+    "walkthrough": [
+      "The rectangle begins away from the world origin.",
+      "Camera.frame derives the view from its bounds and one padding value."
+    ],
+    "experiments": ["Increase padding from 0.25 to 0.4."],
+    "related": ["Camera.frame"]
+  },
+  "labs/pg-material": {
+    "title": "Style one 3D material",
+    "description": "One sphere exposes material color, metallic response and roughness.",
+    "walkthrough": [
+      "The sphere geometry remains fixed.",
+      "Only Material properties determine the visible surface response."
+    ],
+    "experiments": ["Set metallic to 0 while keeping roughness fixed."],
+    "related": ["Material"]
+  },
+  "labs/pg-linechart": {
+    "title": "Plot one line series",
+    "description": "Five numeric samples become one LineChart.",
+    "walkthrough": [
+      "The explicit domains keep the axes fixed.",
+      "A single series supplies every line segment and dot."
+    ],
+    "experiments": ["Change the middle y value from 2 to 4."],
+    "related": ["LineChart"]
+  },
+  "labs/pg-areachart": {
+    "title": "Fill one area series",
+    "description": "Five numeric samples become one AreaChart region.",
+    "walkthrough": [
+      "The line defines the top edge of the area.",
+      "fillOpacity changes only the region beneath that line."
+    ],
+    "experiments": ["Change fillOpacity from 0.32 to 0.12."],
+    "related": ["AreaChart"]
+  },
+  "labs/pg-scene-update": {
+    "title": "Update one entity each frame",
+    "description": "Scene.update derives one dot position from engine time.",
+    "walkthrough": [
+      "The override calls super.update so normal scene processing continues.",
+      "The supplied time controls only the dot's horizontal position."
+    ],
+    "experiments": ["Change the divisor from 700 to 350."],
+    "related": ["Scene.update"]
+  },
+  "labs/pg-add-compute": {
+    "title": "Queue one compute dispatch",
+    "description": "One compute kernel writes the colors displayed by one shader surface.",
+    "walkthrough": [
+      "ComputeKernel writes 64 color values into one storage buffer.",
+      "Scene.addCompute queues that dispatch before the surface reads the same buffer."
+    ],
+    "experiments": ["Swap the red and blue expressions in the kernel."],
+    "related": ["Scene.addCompute", "ComputeKernel"]
+  },
+  "labs/pg-text-load-fonts": {
+    "title": "Load one vector font",
+    "description": "Text.loadFonts prepares one font before one Text entity is created.",
+    "walkthrough": [
+      "The loader awaits one local TTF asset.",
+      "The following Text constructor uses the loaded global vector font."
+    ],
+    "experiments": ["Replace the displayed words without changing the font URL."],
+    "related": ["Text.loadFonts", "Text"]
+  },
+  "labs/pg-text-paths": {
+    "title": "Expose text glyph paths",
+    "description": "Text.getPaths returns the glyph paths of one short word.",
+    "walkthrough": [
+      "getPaths decomposes the original vector text into glyph entities.",
+      "Moving one cyan glyph proves that the returned paths are independent."
+    ],
+    "experiments": ["Move a different returned glyph."],
+    "related": ["Text.getPaths", "Text.toPaths"]
+  },
+  "labs/pg-text-rebuild": {
+    "title": "Rebuild one vector word",
+    "description": "Text.rebuild regenerates the same word after one size change.",
+    "walkthrough": [
+      "fontSize changes the requested vector geometry scale.",
+      "rebuild replaces the old generated paths with the new geometry."
+    ],
+    "experiments": ["Change the rebuilt font size from 1.3 to 0.9."],
+    "related": ["Text.rebuild"]
+  },
+  "labs/pg-sdf-text": {
+    "title": "Construct one SDF text line",
+    "description": "One SDFText constructor call produces one texture-backed label.",
+    "walkthrough": [
+      "The text, font size and anchor are supplied once.",
+      "No vector-path conversion or font generation is involved."
+    ],
+    "experiments": ["Change the label while keeping its size fixed."],
+    "related": ["SDFText"]
+  },
+  "labs/pg-sdf-rebuild": {
+    "title": "Rebuild one SDF text line",
+    "description": "SDFText.rebuild regenerates one label after its size changes.",
+    "walkthrough": [
+      "fontSize is changed on the existing entity.",
+      "rebuild replaces its generated glyph geometry once."
+    ],
+    "experiments": ["Rebuild at a smaller font size."],
+    "related": ["SDFText.rebuild"]
+  },
+  "labs/pg-sdf-subentities": {
+    "title": "Expose SDF glyph entities",
+    "description": "SDFText.getSubEntities returns three independently transformable glyphs.",
+    "walkthrough": [
+      "The method decomposes one short label into SDFChar children.",
+      "Only the middle glyph is recolored and moved."
+    ],
+    "experiments": ["Transform the first glyph instead of the middle glyph."],
+    "related": ["SDFText.getSubEntities"]
+  },
+  "labs/pg-entity-always": {
+    "title": "Attach one entity updater",
+    "description": "Entity.always makes one rectangle own its rotation behavior.",
+    "walkthrough": [
+      "The callback belongs to the rectangle's lifecycle.",
+      "Its dt value controls only incremental rotation."
+    ],
+    "experiments": ["Halve the dt multiplier."],
+    "related": ["Entity.always"]
+  },
+  "labs/pg-always-options": {
+    "title": "Throttle one scene updater",
+    "description": "AlwaysOptions.interval makes one dot advance four times per second.",
+    "walkthrough": [
+      "Scene.always owns one position update.",
+      "The interval option makes the stepping rate visible without changing the path."
+    ],
+    "experiments": ["Change interval from 250 to 500 milliseconds."],
+    "related": ["Scene.always", "AlwaysOptions"]
+  },
+  "labs/pg-scene-play": {
+    "title": "Play one animation",
+    "description": "Scene.play applies one duration and easing function to one moving dot.",
+    "walkthrough": [
+      "Entity.animate supplies the target position.",
+      "The AnimOptions object controls timing without adding another animation."
+    ],
+    "experiments": ["Replace easeInOutCubic with linear easing."],
+    "related": ["Scene.play", "AnimOptions"]
+  },
+  "labs/pg-animator-pause": {
+    "title": "Pause one animator",
+    "description": "One moving dot pauses in place, holds, and resumes on the same Animator.",
+    "walkthrough": [
+      "The entity creates one target-state animator.",
+      "pause and resume change only that animator's clock."
+    ],
+    "experiments": ["Double the paused wait while leaving the movement duration unchanged."],
+    "related": ["Animator.pause", "Animator.resume"]
+  },
+  "labs/pg-component-update": {
+    "title": "Update one component",
+    "description": "One Component.update method rotates its owning rectangle.",
+    "walkthrough": [
+      "The Spin component contains the behavior and no rendering code.",
+      "Its dt input is converted from milliseconds before rotation is applied."
+    ],
+    "experiments": ["Change the rotation multiplier without editing the rectangle."],
+    "related": ["Component.update"]
+  },
+  "labs/pg-shader": {
+    "title": "Draw one procedural shader",
+    "description": "One Shader fragment blends two colors across one retained quad.",
+    "walkthrough": [
+      "input.uv supplies normalized coordinates across the surface.",
+      "The fragment body writes one finalColor and uses no external resources."
+    ],
+    "experiments": ["Swap input.uv.x for input.uv.y."],
+    "related": ["Shader"]
+  },
+  "labs/pg-barchart-data": {
+    "title": "Animate one bar-chart dataset",
+    "description": "BarChart.animateData changes only the three values of one existing chart.",
+    "walkthrough": [
+      "The category count and order stay fixed.",
+      "Only bar heights and their value labels move to the replacement values."
+    ],
+    "experiments": ["Change only the middle target value."],
+    "related": ["BarChart.animateData"]
+  },
+  "labs/pg-barchart-animate-in": {
+    "title": "Reveal one bar chart",
+    "description": "BarChart.animateIn reveals the values of one existing chart from its baseline.",
+    "walkthrough": [
+      "The chart is built once from three category/value pairs.",
+      "animateIn changes only the visibility and height of those same bars."
+    ],
+    "experiments": ["Double the duration while leaving the data unchanged."],
+    "related": ["BarChart.animateIn"]
+  },
+  "labs/pg-value-tracker": {
+    "title": "Animate one tracked number",
+    "description": "One ValueTracker supplies the x coordinate of one dot.",
+    "walkthrough": [
+      "ValueTracker stores no visible geometry.",
+      "The updater reads value and maps that single scalar to the dot position."
+    ],
+    "experiments": ["Reverse the start and target values."],
+    "related": ["ValueTracker", "ValueTracker.animateValue"]
+  },
+  "labs/pg-axes-conversion": {
+    "title": "Round-trip one axes coordinate",
+    "description": "Axes.c2p and Axes.p2c convert one point out and back.",
+    "walkthrough": [
+      "c2p maps the mathematical coordinate to the axes rectangle.",
+      "p2c recovers the same numbers before the marker is positioned."
+    ],
+    "experiments": ["Change the source coordinate from (1.5, 1) to (-2, -1)."],
+    "related": ["Axes.c2p", "Axes.p2c"]
+  },
+  "labs/pg-function-graph": {
+    "title": "Sample one function graph",
+    "description": "One FunctionGraph2D maps a sine function through one Axes instance.",
+    "walkthrough": [
+      "Axes defines the mathematical domain and visible rectangle.",
+      "FunctionGraph2D samples only the supplied sine function."
+    ],
+    "experiments": ["Replace Math.sin(x) with Math.cos(x)."],
+    "related": ["FunctionGraph2D.constructor"]
+  },
+  "labs/pg-function-update": {
+    "title": "Replace one graph function",
+    "description": "FunctionGraph2D.setFunction changes one sine curve into one straight line.",
+    "walkthrough": [
+      "The axes and graph entity stay in place.",
+      "setFunction replaces the sampled function and rebuilds only the curve."
+    ],
+    "experiments": ["Use x => x * x * 0.2 as the replacement."],
+    "related": ["FunctionGraph2D.setFunction"]
+  },
+  "labs/pg-orbit-controller": {
+    "title": "Control one orbit camera",
+    "description": "One OrbitCameraController targets one sphere with one camera.",
+    "walkthrough": [
+      "The camera begins at one known position looking at the origin.",
+      "The controller owns only orbit, pan and zoom input for that camera."
+    ],
+    "experiments": ["Change only the controller radius."],
+    "related": ["OrbitCameraController.constructor"]
+  },
+  "labs/pg-frame-graph": {
+    "title": "Declare one frame-graph dependency",
+    "description": "A vignette pass reads the presentation output of one luminance pass.",
+    "walkthrough": [
+      "The first pass reads the renderer output.",
+      "The second pass consumes the first pass handle, creating one explicit edge."
+    ],
+    "experiments": ["Remove the vignette pass and compare the output."],
+    "related": ["Scene.addPass", "FrameGraph.execute"]
+  },
+  "labs/pg-performance": {
+    "title": "Isolate transform-update cost",
+    "description": "One toggle pauses transform updates while retained entity count stays fixed.",
+    "walkthrough": [
+      "The scene creates its 120 circles once.",
+      "The toggle changes only whether their positions are recomputed."
+    ],
+    "experiments": ["Compare 120 and 240 circles at the same preview size."],
+    "related": ["Scene.always", "Entity.setPosition"]
+  }
+}

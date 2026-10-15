@@ -1,0 +1,159 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "best-practices",
+  "title": "Best practices and troubleshooting",
+  "group": "Production quality",
+  "summary": "Keep scene code predictable by making timing, ownership, geometry updates and rendering intent explicit.",
+  "sections": [
+    {
+      "id": "build-a-clear-visual-explanation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Build a clear visual explanation"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Introduce the subject before changing it; use transforms to preserve identity.",
+            "Keep colors consistent with semantic roles across formula, geometry and labels.",
+            "Use measured bounds and explicit camera framing after content is ready.",
+            "Inspect intermediate morph frames and readable typography at final output size.",
+            "Keep a brief final hold long enough for the viewer to understand the result."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "performance-choices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Performance choices"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Reuse entity instances and typed-array capacities for continuous updates.",
+            "Change shader parameters without rebuilding shader topology where possible.",
+            "Use GPU instancing for repeated compatible geometry and CPU entities for heterogeneous behavior.",
+            "Measure analytical versus fast paths with the actual view and effects.",
+            "Reduce SSAA, shadow, transparency and tracing cost independently while diagnosing a bottleneck.",
+            "Do not add per-frame GPU readbacks unless the application really needs CPU access to the result."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diagnose-a-blank-canvas",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Diagnose a blank canvas"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Check canvas dimensions and navigator.gpu/adapter availability.",
+            "Open the console and distinguish asset fetch errors from WebGPU validation errors.",
+            "Verify the default Scene export and await composer initialization before GPU work.",
+            "Draw one simple primitive with an explicit camera before loading a large model.",
+            "Check VISIBILITY, alpha, layer masks, camera position and empty bounds.",
+            "Check that geometry is attached once and that a matching renderer/fragment component exists."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diagnose-frozen-updates-or-bad-timing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Diagnose frozen updates or bad timing"
+        },
+        {
+          "type": "paragraph",
+          "text": "An always callback is not a wall-clock interval. Keep the composer in continuous mode for a continuously moving simulation, or ensure active animations/invalidation cause frames. Use `(time, dt)` in that order and convert milliseconds to seconds for a physical solver. Check await on play/wait and avoid an infinite animation in a sequence that must reach later steps."
+        },
+        {
+          "type": "paragraph",
+          "text": "When a seek differs from a fresh render, look for Date.now, performance.now, network completion, mutable external state and unseeded randomness. Snapshots of engine State cannot automatically restore every custom JavaScript variable or third-party solver state."
+        }
+      ]
+    },
+    {
+      "id": "diagnose-incorrect-output",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Diagnose incorrect output"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Symptom",
+            "Inspect"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Path holes or seams",
+                "Closure, winding/fill rule, contour conversion and sampling"
+              ]
+            },
+            {
+              "cells": [
+                "Wrong text alignment",
+                "Font readiness, anchor, bounds and re-layout"
+              ]
+            },
+            {
+              "cells": [
+                "Transparent intersections",
+                "Depth-write policy and PPLL mode/capacity"
+              ]
+            },
+            {
+              "cells": [
+                "SDF clipping",
+                "Conservative node bounds and deformation padding"
+              ]
+            },
+            {
+              "cells": [
+                "Instanced corruption",
+                "Stride, active count, upload ownership and firstInstance range"
+              ]
+            },
+            {
+              "cells": [
+                "Different physics speed",
+                "Fixed step, dt units, frame cadence and timeScale handling"
+              ]
+            },
+            {
+              "cells": [
+                "HTML missing from capture",
+                "DOM overlay versus GPU texture mode"
+              ]
+            },
+            {
+              "cells": [
+                "Noise or denoiser smearing",
+                "Accumulation reset, samples and auxiliary channel compatibility"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

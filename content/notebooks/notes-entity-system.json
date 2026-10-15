@@ -1,0 +1,197 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-entity-system",
+  "title": "Entity System",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/ENTITY_SYSTEM.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/ENTITY_SYSTEM.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/ENTITY_SYSTEM.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Entity](/api-core-entity#entity), [Component](/api-core#component), [Transform](/api-core-transform#transform), [Paint](/api-core-paint#paint), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Animator](/api-animation#animator), [GeometryComponent](/api-components#geometrycomponent), [PathGeometry](/api-components-geometry#pathgeometry), [Shapes](/api-render-pipelines#pipeline), [Circle](/api-entities-primitives-2d#circle), [Triangle](/api-entities-primitives-2d#triangle), [Star](/api-libs-shapes-2d#star), [SVGPath](/api-entities-composites-svg#svgpath), [SVG](/api-entities-composites-svg#svg), [Text](/api-entities-composites-text#text)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The Entity System is the heart of Retiam's scene management. It uses a composition-based approach where functionalities are added to base `Entity` objects via `Component`s."
+        }
+      ]
+    },
+    {
+      "id": "the-entity-class",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "The Entity Class"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Entity` class represents an object in the scene. It contains:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Transform**: Position, Rotation, Scale (handled via `Transform` class).",
+            "**Paint**: Visual properties like color, opacity, and stroke (handled via `Paint` class).",
+            "**Scene Graph**: Parent-child relationships for hierarchical transformations.",
+            "**Components**: A list of `Component` objects that define the entity's behavior and rendering."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Key Methods"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`addComponent(component)`: Attaches a component to the entity.",
+            "`getComponent(type)`: Retrieves a component of a specific type.",
+            "`add(...entities)`: Adds children to the entity.",
+            "`animate`: A getter that returns an `Animator` for the entity.",
+            "`always(callback)`: Adds a function to be executed every frame."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "components",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Components"
+        },
+        {
+          "type": "paragraph",
+          "text": "Functional components define how an entity behaves or is rendered."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. GeometryComponent"
+        },
+        {
+          "type": "paragraph",
+          "text": "Handles the geometric data of the entity (vertices, indices, etc.)."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**PathGeometry**: For 2D shapes and paths.",
+            "**Geometry3D**: For 3D meshes."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. MaterialComponent"
+        },
+        {
+          "type": "paragraph",
+          "text": "Defines how the entity is shaded."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**SolidMaterial**: Basic color or texture.",
+            "**ComputeMaterial**: Shaders that use compute data."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2d-entities-shapes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2D Entities & Shapes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a variety of built-in 2D shapes in `src/engine/entity/2d/shapes/Shapes.ts`:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`Circle`, `Square`, `Rectangle`, `Triangle`, `Star`, etc.",
+            "`SVGPath`: For rendering complex paths from SVG data.",
+            "`Text`: For rendering text using Canvas or SDF."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3d-entities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3D Entities"
+        },
+        {
+          "type": "paragraph",
+          "text": "3D geometry is supported through `Geometry3D` and related components in `src/engine/entity/3d`."
+        }
+      ]
+    },
+    {
+      "id": "creating-custom-entities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Creating Custom Entities"
+        },
+        {
+          "type": "paragraph",
+          "text": "To create a custom entity, you can either:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            " **Extend `Entity`**: Useful for complex objects with many parts.",
+            " **Compose via Components**: Add custom `Component` subclasses to a base `Entity`."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "class MyCustomEntity extends Entity {\n    constructor() {\n        super();\n        this.addComponent(new MyCustomComponent());\n    }\n}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,719 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "shaders-includes",
+  "title": "includes WGSL",
+  "group": "Shader reference",
+  "sections": [
+    {
+      "id": "shader-implementation-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Shader implementation contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "WGSL modules are assembled through engine imports, chunk registration and ShaderBuilder. Functions, structures and bindings below come directly from the checked-out shader files. A file can be a reusable include, an active entry point or a retained experimental/legacy variant; file presence alone does not establish that it executes in the default pipeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the corresponding geometry, fragment and pass API before changing an entry point. CPU data offsets, WGSL alignment, bindings, varying interpolation, reversed depth and workgroup sizes must continue to agree."
+        }
+      ]
+    },
+    {
+      "id": "common",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "common.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/common.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/common.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "unpackJointType",
+                "packed: u32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "unpackStartCapType",
+                "packed: u32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "unpackEndCapType",
+                "packed: u32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "getJointType",
+                "joint_param: f32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "getStartCapType",
+                "joint_param: f32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "getEndCapType",
+                "joint_param: f32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "getStateIndex",
+                "instance_index: u32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "getLocalIndex",
+                "instance_index: u32",
+                "u32"
+              ]
+            },
+            {
+              "cells": [
+                "getIsStroke",
+                "instance_index: u32",
+                "bool"
+              ]
+            },
+            {
+              "cells": [
+                "clipSpace",
+                "p: vec4f, instance_index: u32",
+                "vec4f"
+              ]
+            },
+            {
+              "cells": [
+                "clip2D",
+                "p: vec2f, instance_index: u32",
+                "vec4f"
+              ]
+            },
+            {
+              "cells": [
+                "clip3D",
+                "p: vec3f, instance_index: u32",
+                "vec4f"
+              ]
+            },
+            {
+              "cells": [
+                "aa",
+                "d:f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "aa2",
+                "d:f32, stroke_width: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "slope",
+                "d:f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "sdAa",
+                "sd: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "sdAa_local",
+                "sd: f32, p: vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "sdAaX",
+                "sd: f32, aa: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "sdAa2",
+                "sd:f32, stroke_width: f32",
+                "f32"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Paint`, `State`, `Material`, `EntityState`, `Environment`, `Light`, `View`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "1",
+                "0",
+                "var<uniform> view: View;"
+              ]
+            },
+            {
+              "cells": [
+                "2",
+                "0",
+                "var<storage, read> states: array<EntityState>;"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "instance",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "instance.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/instance.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/instance.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "quatRotate",
+                "v: vec3f, q: vec4f",
+                "vec3f"
+              ]
+            },
+            {
+              "cells": [
+                "hsv2rgb",
+                "c: vec3f",
+                "vec3f"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `Instance`, `ComputeUniforms`."
+        }
+      ]
+    },
+    {
+      "id": "math",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "math.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/math.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/math.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "cross2d",
+                "v1: vec2<f32>, v2: vec2<f32>",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "barycentric_coords",
+                "p: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>",
+                "vec3<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "interpolate_texture_coord",
+                "p: vec2<f32>, p1: vec2<f32>, p2: vec2<f32>, p3: vec2<f32>, t1: vec2<f32>, t2: vec2<f32>, t3: vec2<f32>",
+                "vec2<f32>"
+              ]
+            },
+            {
+              "cells": [
+                "dist",
+                "a:vec2f, b:vec2f, p:vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "dist2",
+                "b_a:vec2f, a: vec2f, _l:f32, p:vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "dist3",
+                "a: vec2f, _l:f32, p:vec2f",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "random",
+                "seed: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "randomColor",
+                "index: u32",
+                "vec4f"
+              ]
+            },
+            {
+              "cells": [
+                "sampleTexture4xGrad",
+                "tex: texture_2d_array<f32>, smp: sampler, uv: vec2f, idx: i32, dx: vec2f, dy: vec2f",
+                "vec4f"
+              ]
+            },
+            {
+              "cells": [
+                "sampleTexture4x",
+                "tex: texture_2d_array<f32>, smp: sampler, uv: vec2f, idx: i32",
+                "vec4f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math3d",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "math3d.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/math3d.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/math3d.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "distributionGGX",
+                "NdotH: f32, roughness: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "geometrySchlickGGX",
+                "NdotV: f32, roughness: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "geometrySmith",
+                "NdotV: f32, NdotL: f32, roughness: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "fresnelSchlick",
+                "cosTheta: f32, F0: vec3f",
+                "vec3f"
+              ]
+            },
+            {
+              "cells": [
+                "ACESFilm",
+                "x: vec3f",
+                "vec3f"
+              ]
+            },
+            {
+              "cells": [
+                "sampleTexture4xGrad",
+                "tex: texture_2d_array<f32>, smp: sampler, uv: vec2f, idx: i32, dx: vec2f, dy: vec2f",
+                "vec4f"
+              ]
+            },
+            {
+              "cells": [
+                "sampleTexture4x",
+                "tex: texture_2d_array<f32>, smp: sampler, uv: vec2f, idx: i32",
+                "vec4f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "path-utils",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "path_utils.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/path_utils.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/path_utils.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "curvePoint",
+                "p0: vec2f, p1: vec2f, p2: vec2f, t: f32",
+                "vec2f"
+              ]
+            },
+            {
+              "cells": [
+                "curveDist",
+                "p: vec2f, p0: vec2f, p1: vec2f, p2: vec2f, t: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "cbrt",
+                "x: f32",
+                "f32"
+              ]
+            },
+            {
+              "cells": [
+                "solveCubic",
+                "p: f32, q: f32, offset: f32",
+                "vec3f"
+              ]
+            },
+            {
+              "cells": [
+                "sdBezier",
+                "pos: vec2f, p0: vec2f, p1: vec2f, p2: vec2f, GH: vec2f, offset: f32, round_joint: bool",
+                "vec2f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ppll-global",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ppll_global.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/ppll_global.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/ppll_global.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "draw",
+                "color: vec4f, fragCoord: vec4f",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `PPLL_Node`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read_write> ppll_heads: array<atomic<u32>>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> ppll_nodes: array<PPLL_Node>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<storage, read_write> ppll_counter: atomic<u32>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<uniform> ppll_scene: vec4u;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "4",
+                "var<storage, read_write> stencil: array<atomic<u32>>;"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ppll-local",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ppll_local.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/ppll_local.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/ppll_local.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "draw",
+                "color: vec4f, fragCoord: vec4f",
+                "void"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Declared structures: `PPLL_Node`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Group",
+            "Binding",
+            "Declaration"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "0",
+                "var<storage, read_write> pixelCounters: array<atomic<u32>>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "1",
+                "var<storage, read_write> ppll_nodes: array<PPLL_Node>;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "2",
+                "var<uniform> ppll_scene: vec4u;"
+              ]
+            },
+            {
+              "cells": [
+                "0",
+                "3",
+                "var<storage, read_write> stencil: array<atomic<u32>>;"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdf",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "sdf.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/sdf.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/sdf.wgsl)."
+        }
+      ]
+    },
+    {
+      "id": "stencil-ops",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "stencil_ops.wgsl"
+        },
+        {
+          "type": "paragraph",
+          "text": "Implementation: [src/engine/shaders/includes/stencil_ops.wgsl](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/stencil_ops.wgsl)."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Function",
+            "Parameters",
+            "Return"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "xor",
+                "fragCoord: vec4f, mask: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "readSet",
+                "fragCoord: vec4f, mask: u32",
+                "bool"
+              ]
+            },
+            {
+              "cells": [
+                "fill",
+                "fragCoord: vec4f, mask: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "clearStencil",
+                "fragCoord: vec4f, mask: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "setStencil",
+                "fragCoord: vec4f, mask: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "testXng",
+                "fragCoord: vec4f, mask: u32, test_value: u32, new_value: u32",
+                "void"
+              ]
+            },
+            {
+              "cells": [
+                "testExchange",
+                "fragCoord: vec4f, test_value: u32, new_value: u32",
+                "void"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

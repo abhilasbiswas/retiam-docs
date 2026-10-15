@@ -1,0 +1,89 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "morphing",
+  "title": "Morphing, matching and vertex deformation",
+  "group": "3D and cameras",
+  "summary": "Match source and target geometry and choose a morphing strategy for their structure.",
+  "sections": [
+    {
+      "id": "choose-a-morph-contract",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose a morph contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "Morph is a factory that selects a compatible vector, model or SDF transform. Call `Morph(source, target, options)` without new. Unsupported or mismatched source/target types throw. VectorTransform equalizes and matches contours; model transforms match or resample mesh points according to their options."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-morphscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Morph](/api-animation-transform#morph), [VectorTransform](/api-animation-transform#vectortransform), [ModelTransform](/api-animation-transform#modeltransform), [SDF3DTransform](/api-animation-transform#sdf3dtransform), [MorphOptions](/api-entities-primitives-3d#morphoptions)."
+        }
+      ]
+    },
+    {
+      "id": "preserve-correspondence",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Preserve correspondence"
+        },
+        {
+          "type": "paragraph",
+          "text": "TransformMatchingShapes pairs geometric contours; TransformMatchingText pairs text tokens; TransformMatchingTex pairs formula symbols. Matching policy, repeated symbols, unmatched parts and alignment determine the result. A target may be used as a geometry template rather than a second permanently displayed object; inspect finalize behavior before retaining both objects in the scene."
+        },
+        {
+          "type": "paragraph",
+          "text": "MorphModel supports mesh-to-mesh interpolation and swarm-style trajectories. Shared topology produces more predictable deformation; arbitrary topology requires additional matching or sampling. Verify silhouette, normal continuity and intermediate bounds at more than just the start and end frames."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [TransformMatchingShapes](/api-animation-transform#transformmatchingshapes), [TransformMatchingText](/api-animation-transform#transformmatchingtext), [TransformMatchingTex](/api-animation-transform#transformmatchingtex), [MorphModel](/api-entities-primitives-3d#morphmodel), [MatchingPolicy](/api-utils#pathequalizer)."
+        }
+      ]
+    },
+    {
+      "id": "spatial-functions-and-homotopy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Spatial functions and homotopy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Entity.applyFunction and spatial transform animations apply nonlinear coordinate maps. PrepareForNonlinearTransform can subdivide geometry first. A homotopy interpolates a spatial map over time; affine Transform operations keep lines straight, while a nonlinear map can bend them. Texture deformation needs corresponding UV/mesh handling rather than only moving an image plane."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [SpaceTransform](/api-animation-transform#spacetransform), [HomotopyAnimation](/api-animation-transform#homotopyanimation), [SubdivisionEngine](/api-utils#subdivisionengine)."
+        }
+      ]
+    },
+    {
+      "id": "dynamic-trajectories",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Dynamic trajectories"
+        },
+        {
+          "type": "paragraph",
+          "text": "Line3D represents 3D curve geometry. TracePath records a moving point or entity trajectory and updates a ribbon/tube with smoothing and tail controls. MathShape3D combines an illustrated surface and selected edge strokes. Updating vertices directly should preserve array layout, vertex counts, normals and intended ownership of GPU buffers."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Line3D](/api-entities-primitives-3d#line3d), [TracePath](/api-entities-primitives-3d#tracepath), [MathShape3D](/api-entities-composites-geometry#mathshape3d)."
+        }
+      ]
+    }
+  ]
+}

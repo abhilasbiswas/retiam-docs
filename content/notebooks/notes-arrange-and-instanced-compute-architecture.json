@@ -1,0 +1,699 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-arrange-and-instanced-compute-architecture",
+  "title": "Instanced, Arrange & WebGPU Compute Architecture & Usage Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/ARRANGE_AND_INSTANCED_COMPUTE_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/ARRANGE_AND_INSTANCED_COMPUTE_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/ARRANGE_AND_INSTANCED_COMPUTE_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Instanced](/api-entities#instanced), [Arrange](/api-entities-layout#arrange), [Compute](/api-compute#compute), [Usage](/api-utils#gpu-utils), [Shader](/api-entities-primitives-2d#shader), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Mode](/api-render-frame-graph#resource), [ComputeKernel](/api-compute#computekernel), [Entity](/api-core-entity#entity), [ComputeUpdate](/api-render-passes#computeupdate), [Pass](/api-render-frame-graph#pass), [Pipeline](/api-render-pipelines#pipeline), [Storage](/api-render-pipelines#resourcelayouts), [Layouts](/api-libs-graphs-core#layouts), [Uniform](/api-render-pipelines#resourcelayouts), [Color](/api-math#color), [Quaternion](/api-math-vector#quaternion), [IRaycastable](/api-core#interfaces), [InstanceItem](/api-entities-layout#arrange), [Complex](/api-math#complex), [RED](/api-core#constants), [RIGHT](/api-core#constants), [Arc](/api-entities-primitives-2d#arc)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an in-depth architectural breakdown, implementation analysis, and complete developer manual for [Instanced](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts), [Arrange](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts), CPU vs. GPU instancing modes, and real-time **WebGPU Compute Shader** integration in the Retiam Engine."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam is designed to bridge declarative motion-graphics workflows (similar to Manim or Motion Canvas) with extreme real-time WebGPU performance (10,000 to 100,000+ interactive instances at 60–120 FPS)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Three Core Components"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[Instanced](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts)**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "A low-level, high-performance rendering entity that executes single-draw-call hardware instancing via **programmable vertex-pulling from a WebGPU storage buffer** (`GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST`)."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[Arrange](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts)**:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "A high-level procedural layout container. It replicates a template entity across 1D linear lines, 2D grids, 3D volume lattices, radial circles/arcs, and parametric curves. It operates in either **CPU Scene-Graph Mode** (`gpu: false`) or **GPU Instancing Mode** (`gpu: true`)."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**WebGPU Compute Shader Integration**:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "A direct pipeline connecting [ComputeKernel](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts) to the [Instanced](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts) storage buffer. Instead of running heavy JavaScript loops on the CPU and uploading megabytes across PCIe each frame, a compute shader mutates positions, scales, rotations, and colors **directly in GPU VRAM** in $<0.15\\text{ ms}$."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph Declarative_API [\"User Layout Layer\"]\n        A[\"new Arrange(template, count, { gpu: true })\"]\n        A --> B[\"Procedural Distribution (Grid / Radial / Volume / Curve)\"]\n    end\n\n    subgraph Operation_Modes [\"Execution Mode Decision\"]\n        B -->|gpu: false| CPU_Mode[\"CPU Scene-Graph Mode\\n(N Cloned Entities, N Draw Calls)\"]\n        B -->|gpu: true| GPU_Mode[\"GPU Instancing Mode\\n(Instanced Entity, 1 Draw Call)\"]\n    end\n\n    subgraph GPU_Data [\"GPU Memory & Compute Layer\"]\n        GPU_Mode --> Buffer[\"GPUStorageBuffer: array<Instance>\\n(Stride = 16 floats, VRAM)\"]\n        ComputeShader[\"WebGPU Compute Shader (onCompute)\\n(Dispatched via ComputeUpdate Pass)\"] -->|Direct VRAM Mutation| Buffer\n    end\n\n    subgraph Render_Pipeline [\"WebGPU Render Pipeline\"]\n        Buffer --> Pulling[\"Vertex Shader Pulling (instance_index)\"]\n        Pulling --> Screen[\"Final 60/120 FPS Render (1 Single Draw Call)\"]\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-the-instanced-engine-entity-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. The Instanced Engine Entity Architecture"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.1 Programmable Vertex Pulling vs. Vertex Buffers"
+        },
+        {
+          "type": "paragraph",
+          "text": "Traditional graphics APIs use per-instance vertex buffer attributes (`stepMode: 'instance'`). In WebGPU, this approach introduces rigid bind group layouts and prevents compute shaders from mutating instance data in place."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam utilizes **programmable vertex-pulling**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Per-instance transforms and colors reside in a **WebGPU Storage Buffer** (`array<vec4f>` or `array<Instance>`).",
+            "The vertex shader pulls instance parameters branchlessly using the WebGPU built-in `instance_index`.",
+            "Fragment shaders automatically receive the instance tint (`iColor`) via the varying schema."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.2 Storage Buffer Memory Layouts"
+        },
+        {
+          "type": "paragraph",
+          "text": "[Instanced](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts) supports two memory layout modes:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Layout Mode",
+            "Stride",
+            "Vector Allocation",
+            "Supported Features",
+            "Typical Use Case"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`'standard'`",
+                  "type": "text"
+                },
+                {
+                  "text": "12 floats (48 bytes)"
+                },
+                {
+                  "text": "$3 \\times \\text{vec4f}$"
+                },
+                {
+                  "text": "Translation $(x,y,z)$, Uniform Scale $(s)$, RGBA Color, Quaternion $(qx,qy,qz,qw)$"
+                },
+                {
+                  "text": "Uniform particles, dots, circles, text glyphs"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'extended'`",
+                  "type": "text"
+                },
+                {
+                  "text": "16 floats (64 bytes)"
+                },
+                {
+                  "text": "$4 \\times \\text{vec4f}$"
+                },
+                {
+                  "text": "All standard fields + Independent 3D Scale $(sx, sy, sz)$ + Custom ID/UV tile"
+                },
+                {
+                  "text": "3D meshes, directional boxes, layout containers ([Arrange](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts))"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Memory Layout Diagram (Extended Mode — 16 Floats / 64 Bytes):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Float offsets",
+            "Field",
+            "Packed components"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0–3",
+                "pos_scale",
+                "`[posX, posY, posZ, scaleW]`"
+              ]
+            },
+            {
+              "cells": [
+                "4–7",
+                "color",
+                "`[red, green, blue, alpha]`"
+              ]
+            },
+            {
+              "cells": [
+                "8–11",
+                "rotation",
+                "`[quatX, quatY, quatZ, quatW]`"
+              ]
+            },
+            {
+              "cells": [
+                "12–15",
+                "scale3d",
+                "`[scaleX, scaleY, scaleZ, customW]`"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "In WebGPU `std430` storage buffer layout rules, each `vec4f` has a 16-byte alignment and 16-byte size. Because 64 bytes is an exact multiple of 16, this maps **1:1 without padding hazards** to the WGSL `struct Instance`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.3 Buffer Lifecycle & Partial Streaming"
+        },
+        {
+          "type": "paragraph",
+          "text": "[Instanced](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts) implements an intelligent partial streaming mechanism:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`ensureGPUBuffer(device)`**: Guarantees the GPU buffer is allocated with `STORAGE | COPY_DST`. If `instanceCount` expands beyond buffer capacity, the buffer is reallocated and compute bindings are automatically rebuilt via `computeKernel.setResource(...)`.",
+            "**Dirty Range Tracking**: When CPU modifications occur (via `setInstancePosition`, `setInstanceColor`, etc.), `markDirty(index)` tracks `dirtyMinIndex` and `dirtyMaxIndex`. `prepare()` uploads **only the modified byte slice** to VRAM via `scene.device.queue.writeBuffer(...)`.",
+            "**Compute Pass Safety**: When a compute shader drives instance motion, `isDirty` remains `false`. As a result, the CPU performs **zero writeBuffer operations**, ensuring VRAM data is never clobbered by stale CPU arrays."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.4 Zero-Allocation 3D Raycasting & Picking ([IRaycastable](../src/engine/core/Interfaces.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "[Instanced](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts) implements high-speed CPU raycasting over thousands of instances:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Uses static pre-allocated scratch vectors (`_scratchLocalOrigin`, `_scratchRelOrigin`, `_scratchQuatInv`).",
+            "Converts the world-space ray into each instance's local coordinate frame via inverse quaternion rotation and scale normalization.",
+            "Performs an analytical bounding sphere or template raycast test.",
+            "Returns the exact `instanceId` and hit coordinates."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-the-arrange-layout-container-cpu-vs-gpu-mode",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. The Arrange Layout Container: CPU vs. GPU Mode"
+        },
+        {
+          "type": "paragraph",
+          "text": "[Arrange](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts) is Retiam's procedural layout engine. It takes a blueprint template entity and replicates it across mathematical distributions."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.1 Architectural Comparison"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Feature",
+            "CPU Scene-Graph Mode (`gpu: false`)",
+            "GPU Instancing Mode (`gpu: true`)"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Instantiation**",
+                  "type": "text"
+                },
+                {
+                  "text": "Clones full entity trees via `template.clone(true)`."
+                },
+                {
+                  "text": "Allocates one [Instanced](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts) node + lightweight [InstanceItem](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L76) proxies."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Draw Calls**",
+                  "type": "text"
+                },
+                {
+                  "text": "$N$ separate draw calls (1 per instance)."
+                },
+                {
+                  "text": "**1 single draw call** for all $N$ instances."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Scalability Limit**",
+                  "type": "text"
+                },
+                {
+                  "text": "500 – 2,000 instances before CPU frame drops."
+                },
+                {
+                  "text": "**10,000 – 100,000+ instances** at locked 60 FPS."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Individual Entity Control**",
+                  "type": "text"
+                },
+                {
+                  "text": "Full access to individual entity children, deep sub-geometries, and independent animation queues."
+                },
+                {
+                  "text": "Synchronized through [InstanceItem](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L76) getters/setters mapped to the storage buffer."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Compute Shader Support**",
+                  "type": "text"
+                },
+                {
+                  "text": "Not supported (entities live on CPU heap)."
+                },
+                {
+                  "text": "**Native** via `arrange.onCompute(...)`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Best For**",
+                  "type": "text"
+                },
+                {
+                  "text": "Complex composite UI components, heterogeneous text blocks, nested interactive groups."
+                },
+                {
+                  "text": "Massive particle lattices, data visualizations, dot grids, audio visualizers, geometric fields."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.2 The InstanceItem Proxy Adapter"
+        },
+        {
+          "type": "paragraph",
+          "text": "When [Arrange](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts) operates in GPU mode (`gpu: true`), accessing `arrange.items[i]` yields an [InstanceItem](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L76)."
+        },
+        {
+          "type": "paragraph",
+          "text": "[InstanceItem](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts#L76) wraps JavaScript ES6 Proxies around `paint` and `material`, and intercepts `transform.onChange`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Any standard mutation automatically syncs to the underlying Instanced buffer!\narrange.items[42].transform.position.set(10, 5, 0); // Updates buffer slice\narrange.items[42].paint.fill = Color.RED;            // Updates RGBA buffer slice"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.3 Procedural Distribution Methods"
+        },
+        {
+          "type": "paragraph",
+          "text": "[Arrange](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/layout/Arrange.ts) provides chainable methods for mathematical layouts:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. 1D Linear sequence along a direction vector\narrange.arrangeLinear(RIGHT, 0.5, 'gap');\n\n// 2. 2D Uniform Grid with auto-calculated rows/cols\narrange.arrangeGrid(rows, cols, [buffX, buffY]);\n\n// 3. 3D Volume Lattice (X * Y * Z)\narrange.arrangeVolume(dimX, dimY, dimZ, 0.5);\n\n// 4. Radial Dial / Circular Arc with tangent/normal orientation\narrange.arrangeRadial(radius, { plane: 'xy', orient: 'tangent', closed: true });\n\n// 5. Arbitrary Parametric Curve (t in [0, 1] => Vec3) with finite-difference tangents\narrange.arrangeAlongCurve((t) => [Math.cos(t * 6.28) * 10, Math.sin(t * 12.56) * 5, 0], { orient: true });"
+        }
+      ]
+    },
+    {
+      "id": "4-webgpu-compute-shader-integration-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. WebGPU Compute Shader Integration Architecture"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.1 The Scaling Problem with CPU Updaters"
+        },
+        {
+          "type": "paragraph",
+          "text": "While GPU instancing solves the rendering bottleneck (1 draw call), dynamic animations traditionally required looping over instances on the CPU:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// CPU Bottleneck: 65,536 iterations every 16ms in JavaScript!\narrange.onUpdate((time, dt) => {\n    for (let i = 0; i < COUNT; i++) {\n        // Math in JS...\n    }\n    arrange.syncGPU(); // Uploads 4.19 MB of floats over PCIe every frame!\n});"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**CPU Cost**: $65,536 \\times 60 = 3.93\\text{ million}$ JavaScript iterations per second.",
+            "**PCIe Cost**: $65,536 \\times 64\\text{ bytes} \\times 60\\text{ fps} \\approx 251\\text{ MB/s}$ continuous bandwidth saturation.",
+            "**Result**: Frame rates drop to 15–20 FPS on high-density grids."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.2 The Solution: WebGPU Compute Shaders"
+        },
+        {
+          "type": "paragraph",
+          "text": "By connecting [ComputeKernel](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts) directly to `Instanced.instanceBuffer`, instance transformations are calculated **in-place in GPU VRAM**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Execution Cost**: $<0.15\\text{ ms}$ on the GPU via parallel workgroups.",
+            "**CPU Cost**: **0%** (CPU simply queues an $O(1)$ dispatch command).",
+            "**PCIe Cost**: **0 MB/s** (data never leaves VRAM)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.3 The WGSL Typed Contract: [instance.wgsl](../src/engine/shaders/includes/instance.wgsl)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a standardized include chunk registered in the [ChunkRegistry](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/ChunkRegistry.ts):"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "struct Instance {\n    pos_scale: vec4f,      // xyz = position, w = uniform scale\n    color: vec4f,          // rgba (0.0 to 1.0)\n    rotation: vec4f,       // quaternion (x, y, z, w)\n    scale3d: vec4f,        // xyz = non-uniform scale (sx, sy, sz), w = custom/id\n};\n\nstruct ComputeUniforms {\n    time: f32,             // Scene time in seconds\n    dt: f32,               // Frame delta time in seconds\n    count: u32,            // Total active instances\n    pad: u32,              // std140 16-byte alignment padding\n};\n\n// Rotates a 3D vector v by quaternion q\nfn quatRotate(v: vec3f, q: vec4f) -> vec3f {\n    return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);\n}\n\n// Converts HSV color (h, s, v in [0, 1]) to RGB\nfn hsv2rgb(c: vec3f) -> vec3f {\n    let k = vec4f(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n    let p = abs(fract(c.xxx + k.xyz) * 6.0 - k.www);\n    return c.z * mix(k.xxx, clamp(p - k.xxx, vec3f(0.0), vec3f(1.0)), c.y);\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.4 Frame-by-Frame Execution Lifecycle"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "sequenceDiagram\n    autonumber\n    participant App as Scene Loop (CPU)\n    participant Inst as Arrange / Instanced\n    participant Kernel as ComputeKernel\n    participant Pass as FrameGraph (ComputeUpdate)\n    participant GPU as WebGPU Device (VRAM)\n    participant Render as Render Pass\n\n    App->>Inst: update(time, dt)\n    Inst->>Inst: dispatchCompute(time, dt)\n    Inst->>GPU: queue.writeBuffer(uniformBuffer, {time, dt, count})\n    Inst->>Kernel: dispatch(device, workgroups)\n    Kernel->>App: scene.addCompute(command)\n    App->>Pass: execute(RenderContext)\n    Pass->>GPU: beginComputePass() -> dispatchWorkgroups()\n    Note over GPU: Compute Shader mutates instanceBuffer in VRAM (<0.15ms)\n    Pass->>GPU: end()\n    App->>Render: Forward / Shadow Render Passes\n    Note over GPU: Vertex Shader pulls updated positions directly from instanceBuffer\n    Render->>GPU: Draw 1 Call to Screen"
+        }
+      ]
+    },
+    {
+      "id": "5-api-reference-method-signatures",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. API Reference & Method Signatures"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.1 Instanced"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "ensureGPUBuffer(device: GPUDevice): GPUBuffer"
+        },
+        {
+          "type": "paragraph",
+          "text": "Allocates or validates the underlying GPU storage buffer. Reallocates and refreshes compute bindings if capacity needs to grow."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "compute(computeLogicOrKernel: string | ComputeKernel, options?: InstancedComputeOptions): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Attaches a compute shader or pre-compiled [ComputeKernel](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts)."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`computeLogicOrKernel`: WGSL logic snippet, full `@compute` WGSL module, or [ComputeKernel](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts) instance.",
+            "`options.workgroupSize`: Thread dimensions `[X, Y, Z]` (defaults to `[64, 1, 1]`).",
+            "`options.extraResources`: Additional storage/uniform buffers or textures.",
+            "`options.autoDispatch`: Whether to automatically dispatch every frame (defaults to `true`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "dispatchCompute(time?: number, dt?: number): void"
+        },
+        {
+          "type": "paragraph",
+          "text": "Uploads latest `{ time, dt, count }` to the uniform buffer and submits the compute command to `scene.addCompute(...)`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.2 Arrange"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "onCompute(wgslLogicOrKernel: string | ComputeKernel, options?: InstancedComputeOptions): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Fluent chaining method. Wires compute shaders directly to the internal [Instanced](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts) node when `{ gpu: true }` is enabled."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "onUpdate(fn: (time: number, dt: number, arrange: this) => void): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Attaches a CPU-side frame updater callback (automatically syncs to GPU buffer via `syncGPU()`)."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "setCount(newCount: number): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Dynamically expands or shrinks instance count. Handles GPU buffer expansion and proxy entity pooling."
+        }
+      ]
+    },
+    {
+      "id": "6-complete-practical-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Complete Practical Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.1 Basic 2D CPU Layout (Small Count / Individual Animation)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Arrange, Circle, Color } from \"retiam\";\n\nexport class CPULayoutScene extends Scene {\n    public async run() {\n        // CPU Mode: Ideal for 10-500 elements needing individual animation queues\n        const grid = new Arrange(new Circle(0.4), 16)\n            .forAll((i, circle) => {\n                circle.paint.fill = Color.fromHSV(i / 16, 0.8, 1.0);\n            })\n            .arrangeGrid(4, 4, 0.3);\n\n        this.add(grid);\n\n        // Staggered reveal animation across items\n        await this.play(grid.stagger(0.08).fadeIn());\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.2 10,000 GPU Instanced Grid (1 Draw Call with CPU Updates)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Arrange, Dot, Color, Vec3 } from \"retiam\";\n\nexport class GPUGridScene extends Scene {\n    public async run() {\n        const COUNT = 10000;\n        const grid = new Arrange(new Dot(0.2), COUNT, { gpu: true })\n            .arrangeGrid(100, 100, 0.1);\n\n        this.add(grid);\n\n        // CPU frame-by-frame updater: syncs changed transforms to GPU buffer\n        grid.onUpdate((time, dt, arrange) => {\n            const t = time * 0.003;\n            arrange.forAll((i, dot) => {\n                const row = Math.floor(i / 100);\n                const col = i % 100;\n                const wave = Math.sin((row + col) * 0.1 + t);\n                dot.transform.scaling = new Vec3(1.0 + wave * 0.3, 1.0 + wave * 0.3, 1.0);\n            });\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.3 65,536 Primitives Real-Time WebGPU Compute Wave ([arrangecomputewave.ts](../examples/demos/layout/arrangecomputewave.ts))"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Arrange, Circle, Color, CameraController } from \"retiam\";\n\nexport default class ArrangeComputeWaveScene extends Scene {\n    public async run() {\n        this.camera.position.set([0, -32, 36]);\n        this.camera.lookAt([0, 0, 0]);\n        this.clearColor(new Color(0.02, 0.02, 0.04, 1.0));\n        new CameraController(this, this.camera);\n\n        const COLS = 256;\n        const ROWS = 256;\n        const COUNT = COLS * ROWS; // 65,536 instances\n\n        const grid = new Arrange(new Circle(0.12), COUNT, { gpu: true })\n            .arrangeGrid(ROWS, COLS, 0.08);\n        this.add(grid);\n\n        // WebGPU Compute Shader: Runs directly on GPU VRAM with 0% CPU overhead\n        grid.onCompute(`\n            let i = id.x;\n            if (i >= uniforms.count) { return; }\n\n            let p = instances[i].pos_scale.xyz;\n            let t = uniforms.time * 0.001; // Adjust time speed\n\n            // 1. Multi-octave wave math\n            let r = length(p.xy);\n            let ripple = sin(r * 0.4 - t * 3.6);\n            let crossWave = cos(p.x * 0.28 + t * 2.2) * sin(p.y * 0.28 - t * 1.8);\n            let spiral = sin(r * 0.18 - atan2(p.y, p.x) * 2.0 - t * 1.4);\n\n            // 2. 3D Elevation displacement\n            let elevation = (ripple * 0.65 + crossWave * 0.45 + spiral * 0.3) * 3.2;\n            instances[i].pos_scale.z = elevation;\n\n            // 3. Scale pulsing on wave peaks\n            let normElevation = elevation / 3.2;\n            instances[i].pos_scale.w = clamp(0.7 + 0.6 * normElevation, 0.25, 1.75);\n\n            // 4. Cyberpunk HSV color gradient via built-in hsv2rgb() helper\n            let hue = fract((r * 0.025) + (normElevation * 0.22) + (t * 0.06));\n            let rgb = hsv2rgb(vec3f(hue, 0.85, 1.0));\n            instances[i].color = vec4f(rgb, 0.95);\n        `);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.4 Custom WGSL Compute Module with Helper Functions"
+        },
+        {
+          "type": "paragraph",
+          "text": "If you need helper functions or custom workgroup sizing, write a complete WGSL module:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "grid.onCompute(`\n    fn getInterference(pos: vec2f, t: f32) -> f32 {\n        let d1 = distance(pos, vec2f(10.0 * sin(t), 10.0 * cos(t)));\n        let d2 = distance(pos, vec2f(-10.0 * sin(t), -10.0 * cos(t)));\n        return sin(d1 * 0.5 - t * 3.0) + sin(d2 * 0.5 - t * 3.0);\n    }\n\n    @compute @workgroup_size(64, 1, 1)\n    fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {\n        let i = global_id.x;\n        if (i >= uniforms.count) { return; }\n\n        let p = instances[i].pos_scale.xyz;\n        let wave = getInterference(p.xy, uniforms.time * 0.001);\n\n        instances[i].pos_scale.z = wave * 2.0;\n        instances[i].color = vec4f(hsv2rgb(vec3f(wave * 0.25 + 0.5, 0.9, 1.0)), 1.0);\n    }\n`, { workgroupSize: [64, 1, 1] });"
+        }
+      ]
+    },
+    {
+      "id": "7-performance-best-practices-gotchas",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Performance Best Practices & Gotchas"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. Always Guard Bounds in Compute Shaders"
+        },
+        {
+          "type": "paragraph",
+          "text": "WebGPU dispatches workgroups in multiples of the workgroup size (e.g. 64 threads). If your instance count is 100,000, WebGPU dispatches $\\lceil 100,000 / 64 \\rceil = 1,563$ workgroups $= 100,032$ threads. Always include:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let i = id.x;\nif (i >= uniforms.count) { return; }"
+        },
+        {
+          "type": "paragraph",
+          "text": "*(When passing raw snippets without `@compute`, `Instanced.compute()` automatically prepends this safeguard).*"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. Time Scale"
+        },
+        {
+          "type": "paragraph",
+          "text": "In Retiam, `scene.time` is recorded in milliseconds. Therefore, `uniforms.time` passed to compute shaders increases by $\\approx 1000$ per second. To achieve normal mathematical wave speeds in your shader, multiply by `0.001`:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let t = uniforms.time * 0.001;"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. CPU vs. GPU State Divergence"
+        },
+        {
+          "type": "paragraph",
+          "text": "When compute shaders mutate `instances[i].pos_scale`, the changes occur **in GPU VRAM only**. The CPU-side `instanceData` `Float32Array` remains in its base state."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "For visual motion graphics, this is optimal (maximum speed, 0 PCIe readback).",
+            "If your application requires precise CPU raycasting or physics collisions on compute-driven positions, test against the initial layout boundaries or perform asynchronous readbacks."
+          ]
+        }
+      ]
+    }
+  ]
+}

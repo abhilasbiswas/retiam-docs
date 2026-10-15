@@ -1,0 +1,300 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-ppll-oit-architecture",
+  "title": "Order-Independent Transparency (PPLL OIT) Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/PPLL_OIT_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/PPLL_OIT_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/PPLL_OIT_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Topology](/api-entities-primitives-3d#model), [PPLLManager](/api-render-ppll-oit#ppllmanager), [Pass](/api-render-frame-graph#pass), [Shader](/api-entities-primitives-2d#shader), [Texture](/api-render-pipelines#resourcelayouts), [Storage](/api-render-pipelines#resourcelayouts), [PPLLManagerGlobal](/api-render-ppll-oit#ppllmanagerglobal), [PPLLManagerLocal](/api-render-ppll-oit#ppllmanagerlocal), [PPLLCompositePass](/api-render-passes#ppllcompositepass), [FrameGraph](/api-render-frame-graph#framegraph), [PPLLPreparePass](/api-render-passes#ppllpreparepass), [Scene](/api-core-scene#scene), [RenderPass](/api-render-passes#renderpass)."
+        }
+      ]
+    },
+    {
+      "id": "1-the-transparency-dilemma-in-mathematical-graphics",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. The Transparency Dilemma in Mathematical Graphics"
+        },
+        {
+          "type": "paragraph",
+          "text": "In mathematical animations (such as Riemann sum visualizations, complex Riemannian surfaces, intersecting manifolds, Venn diagrams, and overlapping geometric contours), multiple transparent surfaces frequently intersect in 3D/2D space."
+        },
+        {
+          "type": "paragraph",
+          "text": "Standard WebGPU rasterization evaluates transparency via **alpha blending with depth writes disabled**. However:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**CPU Depth Sorting Fails on Intersecting Meshes**: When two transparent triangles intersect each other, neither triangle is strictly \"in front\" of the other. Any triangle-level sorting order causes rendering artifacts along the intersection line.",
+            "**Dynamic Topology Morphing**: In Retiam, shapes morph continuously. Sorting tens of thousands of triangles on the CPU every frame destroys 60 FPS performance.",
+            "**Multi-Layer Stencil & Vector Overlays**: Overlapping vector paths with translucent fills require exact order-independent color accumulation."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "To solve this, Retiam implements **Per-Pixel Linked List Order-Independent Transparency (PPLL OIT)** directly in WebGPU storage buffers."
+        }
+      ]
+    },
+    {
+      "id": "2-architecture-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Architecture Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides two distinct OIT architectures coordinated under [`PPLLManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/ppll_oit/PPLLManager.ts):"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  R[\"Rasterization pass<br/>Transparent geometry\"] --> I[\"WGSL fragment atomic insertion<br/>atomicExchange on head pointers\"]\n  I --> H[\"Head pointer buffer<br/>width * height * 4 bytes\"]\n  I --> N[\"Node pool buffer<br/>12 bytes per fragment node\"]\n  H --> C[\"PPLL composite pass<br/>Fullscreen quad\"]\n  N --> C\n  C --> S[\"Per-pixel insertion sort<br/>Under-blending\"] --> O[\"Swapchain output\"]"
+        }
+      ]
+    },
+    {
+      "id": "3-global-a-buffer-vs-local-k-buffer-implementation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Global A-Buffer vs. Local K-Buffer Implementation"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Global Dynamic A-Buffer ([PPLLManagerGlobal.ts](../src/engine/render/pplloit/PPLLManagerGlobal.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Uses a shared global fragment node pool with dynamic atomic allocation:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Head Pointer Buffer**: `width * height * 4` bytes (`Uint32Array`), initialized to `0xFFFFFFFF` (`NULL`) at the beginning of each frame.",
+            "**Atomic Counter Buffer**: A 4-byte `atomic<u32>` buffer tracking the total number of fragments written across the entire screen.",
+            "**Node Pool Buffer**: Sized to `width * height * maxLayers * 12` bytes:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "struct PPLLNode {\n      color: u32,      // Packed RGBA8 (4 bytes)\n      depth: f32,      // Fragment depth value in [0..1] (4 bytes)\n      next: u32        // Index pointing to previous head node (4 bytes)\n  };"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "WGSL Fragment Ingestion"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a transparent fragment passes depth testing:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "// 1. Increment global atomic node counter\nlet nodeIdx = atomicAdd(&atomicCounter, 1u);\n\n// 2. Ensure node pool capacity is not exceeded\nif (nodeIdx < uniforms.maxNodes) {\n    let pixelCoord = vec2<u32>(in.position.xy);\n    let pixelIdx = pixelCoord.y * uniforms.width + pixelCoord.x;\n\n    // 3. Atomically swap head pointer: returns previous head index\n    let prevHead = atomicExchange(&headPointers[pixelIdx], nodeIdx);\n\n    // 4. Store node data in GPU storage buffer\n    nodePool[nodeIdx].color = pack4x8unorm(fragColor);\n    nodePool[nodeIdx].depth = in.position.z;\n    nodePool[nodeIdx].next  = prevHead;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Local Fixed K-Buffer ([PPLLManagerLocal.ts](../src/engine/render/pplloit/PPLLManagerLocal.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "For platforms with atomic contention limits or bounded layer requirements:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Replaces the global linked list with a per-pixel array of `maxLayers` (typically 8 layers).",
+            "**Pixel Counter Buffer**: `width * height * 4` bytes, holding a per-pixel atomic counter.",
+            "**Node Pool Buffer**: `width * height * maxLayers * 8` bytes (`color: u32, depth: f32`).",
+            "Prevents unbounded global atomic serialization at the cost of fixed memory layout per pixel."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-resolve-composite-pass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Resolve & Composite Pass"
+        },
+        {
+          "type": "paragraph",
+          "text": "The composite pass is executed by [`PPLLCompositePass.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/PPLLCompositePass.ts) using a fullscreen triangle rendered with `compositePipeline`:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Fragment Gathering & In-Shader Insertion Sort"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each fragment invocation on the fullscreen quad retrieves its head pointer:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Traverses the linked list for that pixel up to `maxLayers`.",
+            "Unpacks color (`unpack4x8unorm`) and reads depth.",
+            "Sorts the local array by depth using a branch-efficient **insertion sort**:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "var count: u32 = 0u;\n   var curr: u32 = headPointers[pixelIdx];\n\n   while (curr != 0xFFFFFFFFu && count < 16u) {\n       let node = nodePool[curr];\n       let d = node.depth;\n       let c = unpack4x8unorm(node.color);\n\n       // Insertion sort into local register array\n       var j: u32 = count;\n       while (j > 0u && sortedDepths[j - 1u] > d) {\n           sortedDepths[j] = sortedDepths[j - 1u];\n           sortedColors[j] = sortedColors[j - 1u];\n           j = j - 1u;\n       }\n       sortedDepths[j] = d;\n       sortedColors[j] = c;\n       count = count + 1u;\n       curr = node.next;\n   }"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Over-Operator Alpha Blending"
+        },
+        {
+          "type": "paragraph",
+          "text": "Once sorted from front to back (closest depth first), fragments are blended using the standard `over` operator:"
+        },
+        {
+          "type": "math",
+          "tex": "C_{\\text{acc}} = C_{\\text{acc}} + C_i \\cdot \\alpha_i \\cdot (1 - \\alpha_{\\text{acc}})"
+        },
+        {
+          "type": "math",
+          "tex": "\\alpha_{\\text{acc}} = \\alpha_{\\text{acc}} + \\alpha_i \\cdot (1 - \\alpha_{\\text{acc}})"
+        },
+        {
+          "type": "paragraph",
+          "text": "When $\\alpha_{\\text{acc}} \\ge 0.99$, ray traversal terminates early, saving evaluation cycles."
+        }
+      ]
+    },
+    {
+      "id": "5-framegraph-integration",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. FrameGraph Integration"
+        },
+        {
+          "type": "paragraph",
+          "text": "The PPLL OIT pipeline is configured in Retiam's FrameGraph:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Frame initialization: clear atomic counter and head pointers\nconst ppllPrepPass = new PPLLPreparePass(ppllManager);\n\n// Scene rendering: all transparent meshes rasterize into PPLL storage buffers\nconst renderPass = new RenderPass(...);\n\n// Fullscreen resolution: resolve linked lists to swapchain\nconst ppllCompPass = new PPLLCompositePass(ppllManager, screenTextureView);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Memory Footprint at 4K Resolution ($3840 \\times 2160$)"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Buffer",
+            "Global A-Buffer Size",
+            "Local K-Buffer Size (8 Layers)"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Head Pointers / Pixel Counters**",
+                  "type": "text"
+                },
+                {
+                  "text": "$3840 \\times 2160 \\times 4\\text{ B} \\approx 33.17\\text{ MB}$"
+                },
+                {
+                  "text": "$3840 \\times 2160 \\times 4\\text{ B} \\approx 33.17\\text{ MB}$"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Node Pool (8 Layers)**",
+                  "type": "text"
+                },
+                {
+                  "text": "$3840 \\times 2160 \\times 8 \\times 12\\text{ B} \\approx 796.26\\text{ MB}$"
+                },
+                {
+                  "text": "$3840 \\times 2160 \\times 8 \\times 8\\text{ B} \\approx 530.84\\text{ MB}$"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Atomic Counter**",
+                  "type": "text"
+                },
+                {
+                  "text": "$4\\text{ B}$"
+                },
+                {
+                  "text": "N/A"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Scene Uniforms**",
+                  "type": "text"
+                },
+                {
+                  "text": "$16\\text{ B}$"
+                },
+                {
+                  "text": "$16\\text{ B}$"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "At 1080p ($1920 \\times 1080$), memory consumption for the Global A-Buffer drops to only $\\approx 199\\text{ MB}$, making it exceptionally fast for 60 FPS real-time rendering."
+        }
+      ]
+    }
+  ]
+}

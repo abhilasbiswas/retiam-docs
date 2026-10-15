@@ -1,0 +1,1096 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-core-scenecomposer",
+  "title": "SceneComposer API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scenecomposer",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SceneComposer"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/SceneComposer.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/SceneComposer.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SceneComposer: The SceneComposer is the top-level orchestrator for the Retiam animation engine. It owns all GPU resources (WebGPU device, Renderer, TextureManager, StateDataManager), manages the canvas and render loop, and composes multiple lightweight Scene instances into a single rendered output — similar to how After Effects manages Compositions."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SceneEntry",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SceneComposer",
+                    "Class",
+                    "The SceneComposer is the top-level orchestrator for the Retiam animation engine. It owns all GPU resources (WebGPU device, Renderer, TextureManager, StateDataManager), manages the canvas and render loop, and composes multiple lightweight Scene instances into a single rendered output — similar to how After Effects manages Compositions."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface SceneEntry {\n    scene: Scene;\n    zIndex: number;\n}\nexport declare class SceneComposer {\n    device: GPUDevice;\n    renderer: Renderer;\n    compute: Compute;\n    stateManager: StateDataManager;\n    canvas: HTMLCanvasElement | OffscreenCanvas;\n    views: RenderView[];\n    default_view: RenderView;\n    uiView: RenderView | null;\n    camera: Camera;\n    light: Light;\n    env: Environment;\n    VIEWS_DIRTY: boolean;\n    rendering: boolean;\n    RENDER_LIVE: boolean;\n    IS_MOVING: boolean;\n    FRAME_UPDATE_COUNT: number;\n    ALWAYS_UPDATE: boolean;\n    realtime: RealTime;\n    dt: number;\n    time: number;\n    timeScale: number;\n    frame_interval: number;\n    COMPUTE_DELTA_TIME: number;\n    COMPUTE_DELAY: number;\n    lockedOverrides: any;\n    get renderConfig(): RenderConfig;\n    get TEXTURES_DIRTY(): boolean;\n    set TEXTURES_DIRTY(val: boolean);\n    get VIDEO_DIRTY(): boolean;\n    set VIDEO_DIRTY(val: boolean);\n    get isBuildingTextures(): boolean;\n    set isBuildingTextures(val: boolean);\n    get OFFLINE_RENDER(): boolean;\n    set OFFLINE_RENDER(val: boolean);\n    get offlineMaxDuration(): number;\n    set offlineMaxDuration(val: number);\n    get offlineFps(): number;\n    set offlineFps(val: number);\n    get offlineRecorder(): OfflineRecorder | null;\n    set offlineRecorder(val: OfflineRecorder | null);\n    get _isPersistent(): boolean;\n    set _isPersistent(val: boolean);\n    get _persistentRegion(): PersistentRegion | undefined;\n    set _persistentRegion(val: PersistentRegion | undefined);\n    get _forceClearNext(): boolean;\n    set _forceClearNext(val: boolean);\n    recorder: InputRecorder;\n    playerControls: PlayerControls | null;\n    controls: any;\n    get isPlayerEnabled(): boolean;\n    get playerEnabled(): boolean;\n    set playerEnabled(val: boolean);\n    enablePlayer(enabled?: boolean): this;\n    disablePlayer(): this;\n    setPlayerEnabled(enabled: boolean): this;\n    pendingTasks: Promise<any>[];\n    customPasses: Pass[];\n    render_queue: RenderCommand[];\n    compute_queue: ComputeCommand[];\n    IS_SEEKING: boolean;\n    constructor();\n    always(callback: (time: number, dt: number, ctx: AlwaysContext) => any, options?: AlwaysOptions): AlwaysHandle;\n    always(callback: (time: number, dt: number) => any, options?: AlwaysOptions): AlwaysHandle;\n    always(callback: () => any, options?: AlwaysOptions): AlwaysHandle;\n    unregister(callbackOrHandle: ((...args: any[]) => any) | AlwaysHandle): boolean;\n    onAfterReset(): void;\n    seekTo(targetTimeMs: number): Promise<void>;\n    init(canvas: HTMLCanvasElement | OffscreenCanvas): Promise<void>;\n    static staticInit(device: GPUDevice): Promise<void>;\n    setRenderer(renderer: Renderer): void;\n    setCanvas(canvas: HTMLCanvasElement | OffscreenCanvas): boolean;\n    add(scene: Scene, options?: {\n        zIndex?: number;\n    }): void;\n    remove(scene: Scene): void;\n    get scenes(): Scene[];\n    createView(width: number, height: number): RenderView;\n    setupUICamera(config?: UIConfig): void;\n    updateViewData(device: GPUDevice): void;\n    addPass(pass: Pass): void;\n    removePass(pass: Pass): void;\n    addFeature(feature: IPlugin): this;\n    removeFeature(feature: IPlugin): this;\n    use(plugin: IPlugin): this;\n    removePlugin(name: string): this;\n    hasPlugin(name: string): boolean;\n    start(): void;\n    startRenderLoop(): Promise<void>;\n    isFrameUpdate(): boolean;\n    invalidate(): void;\n    continue(): void;\n    nextFrame(loop: any): any;\n    updateTime(dt?: number): void;\n    update(t: number, dt: number): Promise<void>;\n    traverse(entity: Entity, parentState: State, scene?: Scene, activeScissorBox?: AABB): void;\n    prepare(): void;\n    submit(texture: GPUTexture): void;\n    getCurrentTexture(): GPUTexture;\n    getViews(): RenderView[];\n    syncTextureArrays(isFullRebuild: boolean): Promise<void>;\n    addAnim(...anim: Animation[]): void;\n    removeAnim(anim: Animation): void;\n    play(target: Playable, options?: PlayOptions): Promise<void>;\n    play(targets: Playable[], options?: PlayOptions): Promise<void>;\n    play(...targets: Playable[]): Promise<void>;\n    play(...args: [\n        ...Playable[],\n        PlayOptions\n    ]): Promise<void>;\n    wait(ms?: number): Promise<void>;\n    get isPaused(): boolean;\n    isFinished(): boolean;\n    pause(): void;\n    resume(): void;\n    postRender(): void;\n    clearColor(color: Color): void;\n    applyLockedOverrides(): void;\n    enableFrameFeedback(): FrameFeedbackFeature;\n    setPersistence(enable: boolean): this;\n    setPersistentRegion(x: number, y: number, w: number, h: number): this;\n    clearPersistentRegion(): this;\n    clearNextFrame(): this;\n    addCompute(...compute_commands: ComputeCommand[]): void;\n    startOfflineRender(canvas: HTMLCanvasElement | OffscreenCanvas, fps?: number, maxDurationMs?: number, wsUrl?: string): Promise<void>;\n    reset(): Promise<void>;\n    restart(): Promise<void>;\n    destroy(): void;\n    static isSafari(): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SceneEntry` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "scene: Scene;",
+                    "—",
+                    "Required record/option field with declared type `Scene`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L59)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SceneComposer` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public device!: GPUDevice",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public renderer!: Renderer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public compute!: Compute",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public stateManager!: StateDataManager",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public canvas!: HTMLCanvasElement | OffscreenCanvas",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public views: RenderView[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public default_view!: RenderView",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public uiView: RenderView | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public camera!: Camera",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public light: Light",
+                    "light",
+                    "3D Key Directional Light [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public env: Environment",
+                    "env",
+                    "3D Ambient Environment [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L96)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public VIEWS_DIRTY: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rendering: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public RENDER_LIVE",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 107](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L107)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public IS_MOVING: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public FRAME_UPDATE_COUNT",
+                    "1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L110)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public ALWAYS_UPDATE",
+                    "false",
+                    "Single source of truth for continuous-render mode. When true, the render loop ticks every frame regardless of animation activity, and each scene's seekTo steps frame-by-frame instead of jumping to the target time. Scene.ALWAYS_UPDATE is a read-only getter that delegates here. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L115)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public realtime!: RealTime",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dt: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public time: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public timeScale: number",
+                    "1.0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L121)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public frame_interval",
+                    "1000 / 75",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L122)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public COMPUTE_DELTA_TIME: number",
+                    "1000 / 60",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public COMPUTE_DELAY: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 124](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L124)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lockedOverrides: any",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 128](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L128)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get renderConfig(): RenderConfig",
+                    "—",
+                    "Implementation: `return this.renderer ? this.renderer.config : this._renderConfig;`. [Source line 130](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L130)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get TEXTURES_DIRTY(): boolean",
+                    "—",
+                    "Implementation: `return this.textureManager.texturesDirty;`. [Source line 152](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L152)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set TEXTURES_DIRTY(val: boolean)",
+                    "—",
+                    "Implementation: `this.textureManager.texturesDirty = val;`. [Source line 153](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L153)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get VIDEO_DIRTY(): boolean",
+                    "—",
+                    "Implementation: `return this.textureManager.videoDirty;`. [Source line 154](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L154)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set VIDEO_DIRTY(val: boolean)",
+                    "—",
+                    "Implementation: `this.textureManager.videoDirty = val;`. [Source line 155](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L155)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get isBuildingTextures(): boolean",
+                    "—",
+                    "Implementation: `return this.textureManager.isBuildingTextures;`. [Source line 156](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L156)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set isBuildingTextures(val: boolean)",
+                    "—",
+                    "Implementation: `this.textureManager.isBuildingTextures = val;`. [Source line 157](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L157)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get OFFLINE_RENDER(): boolean",
+                    "—",
+                    "Implementation: `return this.offlineManager.isOfflineRender;`. [Source line 160](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L160)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set OFFLINE_RENDER(val: boolean)",
+                    "—",
+                    "Implementation: `this.offlineManager.isOfflineRender = val;`. [Source line 161](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L161)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get offlineMaxDuration(): number",
+                    "—",
+                    "Implementation: `return this.offlineManager.offlineMaxDuration;`. [Source line 162](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L162)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set offlineMaxDuration(val: number)",
+                    "—",
+                    "Implementation: `this.offlineManager.offlineMaxDuration = val;`. [Source line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L163)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get offlineFps(): number",
+                    "—",
+                    "Implementation: `return this.offlineManager.offlineFps;`. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set offlineFps(val: number)",
+                    "—",
+                    "Implementation: `this.offlineManager.offlineFps = val;`. [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L165)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get offlineRecorder(): OfflineRecorder | null",
+                    "—",
+                    "Implementation: `return this.offlineManager.offlineRecorder;`. [Source line 166](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L166)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set offlineRecorder(val: OfflineRecorder | null)",
+                    "—",
+                    "Implementation: `this.offlineManager.offlineRecorder = val;`. [Source line 167](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L167)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get _isPersistent(): boolean",
+                    "—",
+                    "Implementation: `return this.uiManager.isPersistent;`. [Source line 170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L170)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set _isPersistent(val: boolean)",
+                    "—",
+                    "Implementation: `this.uiManager.isPersistent = val;`. [Source line 171](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L171)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get _persistentRegion(): PersistentRegion | undefined",
+                    "—",
+                    "Implementation: `return this.uiManager.persistentRegion;`. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L172)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set _persistentRegion(val: PersistentRegion | undefined)",
+                    "—",
+                    "Implementation: `this.uiManager.persistentRegion = val;`. [Source line 173](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L173)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get _forceClearNext(): boolean",
+                    "—",
+                    "Implementation: `return this.uiManager.forceClearNext;`. [Source line 174](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L174)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set _forceClearNext(val: boolean)",
+                    "—",
+                    "Implementation: `this.uiManager.forceClearNext = val;`. [Source line 175](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L175)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public recorder!: InputRecorder",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L178)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public playerControls: PlayerControls | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L179)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public controls: any",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L180)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isPlayerEnabled(): boolean",
+                    "—",
+                    "Implementation: `return this._playerEnabled;`. [Source line 183](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L183)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get playerEnabled(): boolean",
+                    "—",
+                    "Implementation: `return this._playerEnabled;`. [Source line 187](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L187)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set playerEnabled(val: boolean)",
+                    "—",
+                    "Implementation: `this.enablePlayer(val);`. [Source line 191](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L191)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enablePlayer(enabled: boolean = true): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._playerEnabled`, `this.playerControls`; construction of `PlayerControls`; calls to `this.playerControls.destroy`; return paths including `this`. [Source line 195](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L195)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public disablePlayer(): this",
+                    "—",
+                    "Implementation: `return this.enablePlayer(false);`. [Source line 210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L210)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPlayerEnabled(enabled: boolean): this",
+                    "—",
+                    "Implementation: `return this.enablePlayer(enabled);`. [Source line 214](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L214)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pendingTasks: Promise<any>[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 219](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L219)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customPasses: Pass[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 222](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L222)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public render_queue: RenderCommand[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 225](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L225)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public compute_queue: ComputeCommand[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L226)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public IS_SEEKING: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 247](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L247)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor()",
+                    "—",
+                    "Implementation: `this.anim_queue = [];`. [Source line 258](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L258)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public always(callback: (time: number, dt: number, ctx: AlwaysContext) => any, options?: AlwaysOptions): AlwaysHandle;",
+                    "—",
+                    "Registers a callback to be called every frame. Supports optional execution options (interval, delay, duration, times, phase, priority, conditions). [Source line 270](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L270)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public always(callback: (time: number, dt: number) => any, options?: AlwaysOptions): AlwaysHandle;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 271](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L271)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public always(callback: () => any, options?: AlwaysOptions): AlwaysHandle;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 272](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L272)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public always(callback: (...args: any[]) => any, options?: AlwaysOptions): AlwaysHandle",
+                    "—",
+                    "Implementation: `return this._alwaysRegistry.add(callback, options);`. [Source line 273](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L273)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public unregister(callbackOrHandle: ((...args: any[]) => any) | AlwaysHandle): boolean",
+                    "—",
+                    "Unregisters a previously registered update callback. [Source line 280](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L280)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onAfterReset()",
+                    "—",
+                    "Lifecycle hook called after a reset. Override or patch externally. [Source line 287](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L287)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async seekTo(targetTimeMs: number): Promise<void>",
+                    "—",
+                    "Seeks ALL scenes to a target time. Delegates to each scene's seekTo. [Source line 293](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L293)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async init(canvas: HTMLCanvasElement | OffscreenCanvas): Promise<void>",
+                    "—",
+                    "Initializes the SceneComposer: requests WebGPU, creates the renderer, sets up the canvas, and prepares font caches. [Source line 338](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L338)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async staticInit(device: GPUDevice)",
+                    "—",
+                    "Implementation: `await Text.loadFonts(robotoFontUrl); await Font.get(fontJsonUrl, fontImageUrl);`. [Source line 407](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L407)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRenderer(renderer: Renderer)",
+                    "—",
+                    "Implementation: `this.renderer = renderer; this.device = renderer.device; this.compute = new Compute(this.device); this.stateManager = new StateDataManager(this.device, Pipeline.state_layout);`. [Source line 412](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L412)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setCanvas(canvas: HTMLCanvasElement | OffscreenCanvas)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.canvas`, `this.context`, `this.canvas.style.width`, `this.canvas.style.height`, `this.canvas.width`, `this.canvas.height`; calls to `this.canvas.getContext`, `navigator.gpu?.getPreferredCanvasFormat`, `this.context.configure`, `this.canvas.hasAttribute`, `this.canvas.getAttribute`, `window.addEventListener`; return paths including `false`. [Source line 423](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L423)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add(scene: Scene, options?: { zIndex?: number }): void",
+                    "—",
+                    "Adds a Scene to the composer's render stack. [Source line 508](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L508)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(scene: Scene): void",
+                    "—",
+                    "Removes a Scene from the composer's render stack. [Source line 566](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L566)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get scenes(): Scene[]",
+                    "—",
+                    "Returns all scenes currently in the composer stack. [Source line 582](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L582)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createView(width: number, height: number): RenderView",
+                    "—",
+                    "Implementation: `let view = new RenderView(width, height); if (this.device) { view.init(this.device); } this.views.push(view); this.VIEWS_DIRTY = true; return view;`. [Source line 590](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L590)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setupUICamera(config?: UIConfig)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.uiView`, `this.VIEWS_DIRTY`; calls to `this.uiManager.setupUICamera`, `this.createView`, `this.invalidate`. [Source line 600](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L600)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateViewData(device: GPUDevice)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.VIEWS_DIRTY`; calls to `this.initViews`, `this.view_data.set`, `view.getData`, `view.getSize`, `device.queue.writeBuffer`; 1 explicit loop. [Source line 647](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L647)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addPass(pass: Pass)",
+                    "—",
+                    "Implementation: `this.customPasses.push(pass); if (this.renderer) { this.renderer.customPasses = this.customPasses; this.renderer.frameGraphDirty = true; } this.invalidate();`. [Source line 669](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L669)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removePass(pass: Pass)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.renderer.customPasses`, `this.renderer.frameGraphDirty`; calls to `this.customPasses.indexOf`, `this.customPasses.splice`, `this.invalidate`. [Source line 678](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L678)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addFeature(feature: IPlugin): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.renderer.frameGraphDirty`; calls to `this.renderer.features.push`, `this.renderer.features.sort`, `this.invalidate`; return paths including `this`. [Source line 694](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L694)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removeFeature(feature: IPlugin): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.renderer.frameGraphDirty`; calls to `this.renderer.features.indexOf`, `this.renderer.features.splice`, `feature.dispose`, `this.invalidate`; return paths including `this`. [Source line 706](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L706)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public use(plugin: IPlugin): this",
+                    "—",
+                    "Installs a plugin on this composer. Plugins with registerPasses() are automatically added to the FrameGraph. [Source line 723](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L723)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removePlugin(name: string): this",
+                    "—",
+                    "Removes an installed plugin by name. [Source line 740](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L740)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public hasPlugin(name: string): boolean",
+                    "—",
+                    "Checks whether a plugin with the given name is currently installed. [Source line 755](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L755)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public start(): void",
+                    "—",
+                    "Starts the live render loop. [Source line 766](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L766)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async startRenderLoop()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.rendering`, `this.pendingTasks`, `this.frameId`; calls to `performance.now`, `this.isFrameUpdate`, `this.updateTime`, `this.update`, `this.prepare`, `this.stateManager.uploadToGPU`, `this.getCurrentTexture`, `this.submit` and additional helpers. [Source line 774](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L774)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isFrameUpdate(): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.FRAME_UPDATE_COUNT`, `this.IS_MOVING`; calls to `scene.hasActiveAnimations`; return paths including `true`, `this.IS_MOVING || isAccumulating`; 1 explicit loop. [Source line 831](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L831)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public invalidate()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.FRAME_UPDATE_COUNT`; calls to `this.prepare`, `this.stateManager.uploadToGPU`, `this.getCurrentTexture`, `this.submit`, `this.startRenderLoop`. [Source line 859](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L859)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public continue()",
+                    "—",
+                    "Implementation: `this.FRAME_UPDATE_COUNT = 10; this.startRenderLoop();`. [Source line 877](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L877)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public nextFrame(loop: any): any",
+                    "—",
+                    "Implementation: `if (this.RENDER_LIVE) { return requestAnimationFrame(loop); } else { return setTimeout(loop, 0); }`. [Source line 882](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L882)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateTime(dt?: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.dt`, `this.time`; calls to `this.realtime.dt`. [Source line 902](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L902)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.FRAME_UPDATE_COUNT`, `this.ANIM_INSERT_LIST.length`, `this.ANIM_REMOVE_LIST.length`; calls to `ComputeBufferPool.resetForNewFrame`, `this._alwaysRegistry.step`, `this.anim_queue.push`, `this.anim_queue.indexOf`, `this.anim_queue.splice`, `anim.step`, `anim.update`, `this.recorder.update` and additional helpers; 4 explicit loops. [Source line 921](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L921)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public traverse(entity: Entity, parentState: State, scene?: Scene, activeScissorBox?: AABB)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.renderCommandCount`, `this.statePoolIndex`, `this.bit_count`, `this.z_index`, `this.aabbPoolIndex`; construction of `State`, `AABB`, `Vec3`; calls to `entity.getComponent`, `this.renderCommandPool.push`, `this.stateManager.allocateDirect`, `this.statePool.push`, `worldState.apply`, `entity._setAutoZIndex`, `this.aabbPool.push`, `bounds.min.set` and additional helpers; 2 explicit loops. [Source line 1008](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1008)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.VIEWS_DIRTY`, `this.renderer.raytraceManager.accumulatedFrames`, `this._forceClearNext`, `this.preparedSceneData`; calls to `this.initViews`, `this._processPendingTextureRebuild`, `this.updateViewData`, `this.getViews`, `this.buildRenderQueues`, `GlobalGeometryAllocator.getInstance(this.device).flush`, `GlobalGeometryAllocator.getInstance`, `GlobalAnalyticalAllocator.getInstance(this.device).flush` and additional helpers. [Source line 1126](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1126)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public submit(texture: GPUTexture)",
+                    "—",
+                    "Implementation: `if (this.preparedSceneData && texture) { this.preparedSceneData.texture = texture; this.renderer.render(this.preparedSceneData as SceneData); this.preparedSceneData = null; }`. [Source line 1190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1190)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCurrentTexture(): GPUTexture",
+                    "—",
+                    "Implementation: `return this.context.getCurrentTexture();`. [Source line 1198](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1198)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getViews(): RenderView[]",
+                    "—",
+                    "Implementation: `return this.views;`. [Source line 1202](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1202)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async syncTextureArrays(isFullRebuild: boolean): Promise<void>",
+                    "—",
+                    "Implementation: `const allEntities = this._getAllEntities(); return this.textureManager.syncTextureArrays(allEntities, this.renderer, isFullRebuild);`. [Source line 1240](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1240)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addAnim(...anim: Animation[])",
+                    "—",
+                    "Implementation: `if (!this.rendering) { this.anim_queue.push(...anim); this.startRenderLoop(); } else { anim.forEach(a => this.ANIM_INSERT_LIST.push(a)); }`. [Source line 1249](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1249)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removeAnim(anim: Animation)",
+                    "—",
+                    "Implementation: `this.ANIM_REMOVE_LIST.push(anim); this.invalidate();`. [Source line 1258](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1258)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public play(target: Playable, options?: PlayOptions): Promise<void>;",
+                    "—",
+                    "Plays composer-level animations (scene transitions, crossfades). [Source line 1266](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1266)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public play(targets: Playable[], options?: PlayOptions): Promise<void>;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 1267](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1267)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public play(...targets: Playable[]): Promise<void>;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 1268](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1268)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public play(...args: [...Playable[], PlayOptions]): Promise<void>;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 1269](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1269)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public play(...args: (Playable | Playable[] | PlayOptions)[]): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `args.slice`, `targets.push`, `targets.map`, `t.getAnim`, `anim.applyOptions`, `anim.prepare`, `this.addAnim`, `this.invalidate` and additional helpers; returns the queued animation completion promise; 2 explicit loops. [Source line 1270](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1270)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public wait(ms: number = 1000): Promise<void>",
+                    "—",
+                    "Waits for a specific duration at the composer level. [Source line 1320](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1320)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isPaused(): boolean",
+                    "—",
+                    "Implementation: `return this.PAUSED;`. [Source line 1331](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1331)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isFinished(): boolean",
+                    "—",
+                    "Implementation: `if (this.anim_queue.length > 0 || this.FRAME_UPDATE_COUNT > 0) return false; for (const entry of this.sceneEntries) { if (!entry.scene.isFinished()) return false; } return true;`. [Source line 1335](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1335)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pause()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.PAUSED`, `this.rendering`, `this.frameId`; calls to `cancelAnimationFrame`, `clearTimeout`, `entry.scene.pause`; 1 explicit loop. [Source line 1343](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1343)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resume()",
+                    "—",
+                    "Implementation: `this.PAUSED = false; this.realtime.skip(); for (const entry of this.sceneEntries) { entry.scene.resume(); } this.startRenderLoop();`. [Source line 1362](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1362)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public postRender()",
+                    "—",
+                    "Implementation: ``. [Source line 1374](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1374)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearColor(color: Color)",
+                    "—",
+                    "Implementation: `this.config.clear_color.r = color.r * color.a; this.config.clear_color.g = color.g * color.a; this.config.clear_color.b = color.b * color.a; this.config.clear_color.a = color.a;`. [Source line 1382](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1382)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyLockedOverrides()",
+                    "—",
+                    "Implementation: `if (this.lockedOverrides) { for (const key in this.lockedOverrides) { (this.renderConfig as any)[key] = this.lockedOverrides[key]; } }`. [Source line 1393](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1393)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public enableFrameFeedback(): FrameFeedbackFeature",
+                    "—",
+                    "Implementation: `return this.renderer.enableFrameFeedback();`. [Source line 1401](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1401)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPersistence(enable: boolean): this",
+                    "—",
+                    "Implementation: `this.uiManager.setPersistence(enable, () => this.invalidate()); return this;`. [Source line 1409](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1409)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPersistentRegion(x: number, y: number, w: number, h: number): this",
+                    "—",
+                    "Implementation: `this.uiManager.setPersistentRegion(x, y, w, h, () => this.invalidate()); return this;`. [Source line 1414](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1414)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearPersistentRegion(): this",
+                    "—",
+                    "Implementation: `this.uiManager.clearPersistentRegion(() => this.invalidate()); return this;`. [Source line 1419](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1419)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearNextFrame(): this",
+                    "—",
+                    "Implementation: `this.uiManager.clearNextFrame(() => this.invalidate()); return this;`. [Source line 1424](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1424)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addCompute(...compute_commands: ComputeCommand[])",
+                    "—",
+                    "Implementation: `this.compute_queue.push(...compute_commands);`. [Source line 1433](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1433)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async startOfflineRender(\n        canvas: HTMLCanvasElement | OffscreenCanvas,\n        fps: number = 60,\n        maxDurationMs: number = 0,\n        wsUrl: string = \"ws://localhost:5001\"\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.OFFLINE_RENDER`, `this.RENDER_LIVE`, `this.rendering`, `this.offlineFps`, `this.offlineMaxDuration`, `this.frame_interval`, `this.offlineRecorder`, `this.realtime` and other instance fields; construction of `OfflineRecorder`, `RealTime`; calls to `this.offlineRecorder.connect`, `this.applyLockedOverrides`, `this.renderer.preloadDenoisers`, `this.offlineManager.offlineRenderLoop`. [Source line 1441](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1441)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async reset(): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.runId`, `this.anim_queue`, `this.ANIM_INSERT_LIST`, `this.ANIM_REMOVE_LIST`, `this.pendingTasks`, `this.time`, `this.dt`, `this.skip_time` and other instance fields; construction of `Error`, `RealTime`; calls to `this.pause`, `anim.reject`, `entry.scene.reset`, `this.device.queue.onSubmittedWorkDone`, `buffersToDestroy.pop()!.destroy`, `buffersToDestroy.pop`, `this._alwaysRegistry.clear`, `this.invalidate` and additional helpers; 4 explicit loops. [Source line 1471](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1471)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async restart(): Promise<void>",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.reset`, `this.startRenderLoop`, `entry.scene.run().catch`, `entry.scene.run`; 1 explicit loop. [Source line 1519](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1519)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.sceneEntries`; calls to `this.pause`, `entity.destroy`, `this.controls.destroy`, `this.playerControls.destroy`, `this.recorder.destroy`, `(this.recorder as any).stopRecording`, `Renderer.destroy_queue.pop()!.destroy`, `Renderer.destroy_queue.pop` and additional helpers; 3 explicit loops. [Source line 1532](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1532)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static isSafari(): boolean",
+                    "—",
+                    "Implementation: `const userAgent = navigator.userAgent.toLowerCase(); return userAgent.includes('safari') && !userAgent.includes('chrome');`. [Source line 1580](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1580)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.zIndex ?? this.sceneEntries.length",
+                    "[Line 509](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L509)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SceneComposer._initRenderer: private async _initRenderer(canvas: HTMLCanvasElement | OffscreenCanvas): Promise<void>",
+                    "Body operations (including nested callbacks): construction of `Renderer`; calls to `renderer.init`, `this.setRenderer`, `SceneComposer.staticInit`, `this.setCanvas`, `this.canvasResizeListenerCallback`.",
+                    "[Line 397](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L397)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SceneComposer.initViews: private initViews(device: GPUDevice)",
+                    "Body operations (including nested callbacks): assignments to `this.view_data`, `this.view_buffer`, `this.views[i].bindGroup`; construction of `Float32Array`; calls to `this.views.forEach`, `view.init`, `Renderer.destroyBuffers`, `data.push`, `view.getData`, `createBuffer`, `this.views[i].getSize`, `this.device.createBindGroup`; 2 explicit loops.",
+                    "[Line 615](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L615)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SceneComposer.finishRender: private finishRender()",
+                    "Implementation: `this.rendering = false; if (this.ANIM_INSERT_LIST.length > 0) { this.invalidate(); }`.",
+                    "[Line 890](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L890)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SceneComposer.buildRenderQueues: private buildRenderQueues(): { render_queue: RenderCommand[], compute_queue: ComputeCommand[] }",
+                    "Body operations (including nested callbacks): assignments to `this.z_index`, `this.bit_count`, `this.statePoolIndex`, `this.aabbPoolIndex`, `this.renderCommandCount`, `this.render_queue.length`, `this.compute_queue.length`; calls to `this.stateManager.resetForNewFrame`, `this.compute_queue.push`, `this.traverse`; return paths including `{ render_queue: this.render_queue, compute_queue: this.compute_queue }`; 3 explicit loops.",
+                    "[Line 975](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L975)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SceneComposer._getAllEntities: private _getAllEntities(): Entity[]",
+                    "Implementation: `const all: Entity[] = []; for (const entry of this.sceneEntries) { all.push(...entry.scene.entities); } return all;`.",
+                    "[Line 1206](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1206)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SceneComposer._processPendingTextureRebuild: private _processPendingTextureRebuild(): void",
+                    "Body operations (including nested callbacks): assignments to `this.textureManager.texturesDirty`, `this.textureManager.videoDirty`, `this.textureManager.queuedTextureRebuild`, `this.textureManager.isBuildingTextures`; calls to `this._getAllEntities`, `this.textureManager.syncTextureArrays(allEntities, this.renderer, isFullRebuild) .then(() => { this.textureManager.isBuildingTextures = false; if (th…`, `this.textureManager.syncTextureArrays(allEntities, this.renderer, isFullRebuild) .then`, `this.textureManager.syncTextureArrays`, `this.invalidate`.",
+                    "[Line 1214](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L1214)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

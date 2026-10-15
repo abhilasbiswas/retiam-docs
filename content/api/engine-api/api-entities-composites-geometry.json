@@ -1,0 +1,2402 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-entities-composites-geometry",
+  "title": "entities / composites / geometry API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrow",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Arrow"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/geometry/Arrow.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/geometry/Arrow.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ArrowTipType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ArrowOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "computeCatmullRom",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CurveSampler",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type ArrowTipType = 'triangle' | 'stealth' | 'line' | 'circle' | 'dot' | 'diamond' | 'bar' | 'tee' | 'square' | 'none';\nexport interface ArrowOptions extends EntityOptions {\n    points?: Vec3Type[];\n    isSmooth?: boolean;\n    tension?: number;\n    segments?: number;\n    color?: Color;\n    headLength?: number;\n    headWidth?: number;\n    headAngle?: number;\n    tipType?: ArrowTipType;\n    startTipType?: ArrowTipType;\n    startHeadLength?: number;\n    startHeadWidth?: number;\n    startHeadAngle?: number;\n    startColor?: Color;\n    startFill?: boolean;\n    startStrokeWidth?: number;\n    startTipInverted?: boolean;\n    startTipOffset?: number;\n    startTrim?: number;\n    endTipType?: ArrowTipType;\n    endHeadLength?: number;\n    endHeadWidth?: number;\n    endHeadAngle?: number;\n    endColor?: Color;\n    endFill?: boolean;\n    endStrokeWidth?: number;\n    endTipInverted?: boolean;\n    endTipOffset?: number;\n    endTrim?: number;\n}\nexport declare function computeCatmullRom(points: Vec3[], segments: number, tension: number): Vec3[];\nexport declare class CurveSampler {\n    points: Vec3[];\n    lengths: number[];\n    totalLength: number;\n    update(points: Vec3[]): void;\n    getPointAndTangent(t: number): {\n        point: Vec3;\n        tangent: Vec3;\n    };\n    getPointAndTangentAtDistance(distance: number): {\n        point: Vec3;\n        tangent: Vec3;\n    };\n    getTrimmedPoints(startTrimDist: number, endTrimDist: number): Vec3[];\n}\nexport declare class Arrow extends VectorEntity {\n    body: Path;\n    get head(): VectorEntity;\n    set head(val: VectorEntity);\n    get endHead(): VectorEntity;\n    set endHead(val: VectorEntity);\n    get startHead(): VectorEntity;\n    set startHead(val: VectorEntity);\n    options: ArrowOptions;\n    constructor(start?: Vec3Type, end?: Vec3Type, options?: ArrowOptions);\n    setPoints(points: Vec3Type[]): void;\n    putStartAndEndOn(start: Vec3Type, end: Vec3Type): void;\n    setTipType(type: ArrowTipType): void;\n    setStartTip(type: ArrowTipType, options?: {\n        length?: number;\n        width?: number;\n        color?: Color;\n    }): void;\n    setEndTip(type: ArrowTipType, options?: {\n        length?: number;\n        width?: number;\n        color?: Color;\n    }): void;\n    update(t: number, dt: number): void;\n    getSubEntities(): VectorEntity[];\n    toPaths(): Path[];\n}"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "computeCatmullRom: Body operations (including nested callbacks): construction of `Vec3`; calls to `pts.unshift`, `pts[0].add`, `pts[0].sub`, `pts.push`, `pts[pts.length - 1].add`, `pts[pts.length - 1].sub`, `result.push`, `p1.clone`; return paths including `[...points]`, `result`; 2 explicit loops."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ArrowOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "points?: Vec3Type[];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type[]`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isSmooth?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tension?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "segments?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "color?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "headLength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "headWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "headAngle?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tipType?: ArrowTipType;",
+                    "—",
+                    "Optional record/option field with declared type `ArrowTipType`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startTipType?: ArrowTipType;",
+                    "—",
+                    "Optional record/option field with declared type `ArrowTipType`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startHeadLength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startHeadWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startHeadAngle?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startColor?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startFill?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startStrokeWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startTipInverted?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startTipOffset?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startTrim?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endTipType?: ArrowTipType;",
+                    "—",
+                    "Optional record/option field with declared type `ArrowTipType`. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endHeadLength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endHeadWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endHeadAngle?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endColor?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endFill?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endStrokeWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endTipInverted?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endTipOffset?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endTrim?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L60)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CurveSampler` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public points: Vec3[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lengths: number[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 99](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L99)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public totalLength: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(points: Vec3[])",
+                    "—",
+                    "Implementation: `this.points = points; this.lengths = [0]; let len = 0; for (let i = 1; i < points.length; i++) { len += points[i].sub(points[i - 1]).length(); this.lengths.push(len); } this.totalLength = len;`. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPointAndTangent(t: number): { point: Vec3, tangent: Vec3 }",
+                    "—",
+                    "Implementation: `return this.getPointAndTangentAtDistance((t ?? 0) * this.totalLength);`. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPointAndTangentAtDistance(distance: number): { point: Vec3, tangent: Vec3 }",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `this.points[0].clone`, `p0.lerp`, `p1.sub(p0).normalize`, `p1.sub`, `tangent.lengthSq`, `p0.sub(this.points[i - 1]).normalize`, `p0.sub`; return paths including `{ point: this.points.length > 0 ? this.points[0].clone() : new Vec3(), tangent: new Vec3(1, 0, 0) }`, `{ point, tangent }`; 1 explicit loop. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getTrimmedPoints(startTrimDist: number, endTrimDist: number): Vec3[]",
+                    "—",
+                    "Physically truncates the curve's vertices on the CPU, returning only the points that lie within [startTrimDist, totalLength - endTrimDist]. [Source line 149](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L149)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Arrow` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public body: Path",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 177](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L177)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get head(): VectorEntity",
+                    "—",
+                    "Backward-compatible alias for the primary / end arrow head entity. [Source line 186](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L186)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set head(val: VectorEntity)",
+                    "—",
+                    "Implementation: `this.endHead = val;`. [Source line 189](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L189)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get endHead(): VectorEntity",
+                    "—",
+                    "Implementation: `const type = this.options.endTipType ?? this.options.tipType ?? 'stealth'; return (type === 'circle' || type === 'dot') ? this._endCircle : this._endPath;`. [Source line 193](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L193)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set endHead(val: VectorEntity)",
+                    "—",
+                    "Implementation: `if (val instanceof Circle) { this._endCircle = val; } else if (val instanceof Path) { this._endPath = val; }`. [Source line 197](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L197)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get startHead(): VectorEntity",
+                    "—",
+                    "Implementation: `const type = this.options.startTipType ?? 'none'; return (type === 'circle' || type === 'dot') ? this._startCircle : this._startPath;`. [Source line 205](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L205)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set startHead(val: VectorEntity)",
+                    "—",
+                    "Implementation: `if (val instanceof Circle) { this._startCircle = val; } else if (val instanceof Path) { this._startPath = val; }`. [Source line 209](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L209)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public options: ArrowOptions",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 220](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L220)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(start?: Vec3Type, end?: Vec3Type, options: ArrowOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.options`, `this.options.endTipType`, `this.options.startTipType`, `this.body`, `this._startPath`, `this._startCircle`, `this._endPath`, `this._endCircle` and other instance fields; construction of `Path`, `Circle`, `CurveSampler`; calls to `this.add`, `this.setPoints`, `this.syncArrowState`. [Source line 226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L226)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPoints(points: Vec3Type[])",
+                    "—",
+                    "Implementation: `this._points = points.map(p => Vec3.cast(p)); this.rebuildCurve(); this.rebuildHeads(); this.syncArrowState(); this.lastT2 = -1; this.lastT1 = -1;`. [Source line 284](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L284)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public putStartAndEndOn(start: Vec3Type, end: Vec3Type)",
+                    "—",
+                    "Implementation: `this.setPoints([start, end]);`. [Source line 293](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L293)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTipType(type: ArrowTipType)",
+                    "—",
+                    "Implementation: `this.options.tipType = type; this.options.endTipType = type; this.rebuildCurve(); this.rebuildHeads(); this.syncArrowState(); this.paint.UPDATE_FLAG = true;`. [Source line 297](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L297)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStartTip(type: ArrowTipType, options?: { length?: number, width?: number, color?: Color })",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.options.startTipType`, `this.options.startHeadLength`, `this.options.startHeadWidth`, `this.options.startColor`, `this.paint.UPDATE_FLAG`; calls to `this.rebuildCurve`, `this.rebuildHeads`, `this.syncArrowState`. [Source line 306](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L306)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setEndTip(type: ArrowTipType, options?: { length?: number, width?: number, color?: Color })",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.options.endTipType`, `this.options.endHeadLength`, `this.options.endHeadWidth`, `this.options.endColor`, `this.paint.UPDATE_FLAG`; calls to `this.rebuildCurve`, `this.rebuildHeads`, `this.syncArrowState`. [Source line 317](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L317)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.lastStrokeWidth`, `this.lastT2`, `this.lastT1`, `this.paint.UPDATE_FLAG`; calls to `super.update`, `this.rebuildHeads`, `this.syncArrowState`. [Source line 540](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L540)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Resolves the distinct animatable path structures inside the Arrow (the shaft and the tip(s)). [Source line 677](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L677)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Maps the Arrow's body and head shapes securely into standalone Path extraction sets. [Source line 687](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L687)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.stroke ?? options.color ?? Color.WHITE",
+                    "[Line 227](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L227)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.stroke ?? options.color",
+                    "[Line 227](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L227)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strokeWidth ?? 0.1",
+                    "[Line 228](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L228)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Arrow.addLineSegment: private addLineSegment(contour: number[], x0: number, y0: number, x1: number, y1: number)",
+                    "Implementation: `if (Math.abs(x0 - x1) < 0.00001 && Math.abs(y0 - y1) < 0.00001) return; contour.push( x0 + (x1 - x0) * 0.7, y0 + (y1 - y0) * 0.7, x1, y1 );`.",
+                    "[Line 328](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L328)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow.rebuildCurve: private rebuildCurve()",
+                    "Body operations (including nested callbacks): assignments to `this.body.VISIBILITY`; calls to `computeCatmullRom`, `this.sampler.update`, `this.defaultTrim`, `this.sampler.getTrimmedPoints`, `this.body.setVertices`, `contour.push`, `this.addLineSegment`; 1 explicit loop.",
+                    "[Line 338](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L338)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow.buildTipGeometry: private buildTipGeometry(type: ArrowTipType, hl: number, hw: number, strokeWidth: number = 0): { contours: number[][], isLine: boolean }",
+                    "Body operations (including nested callbacks): calls to `contour.push`, `this.addLineSegment`; return paths including `{ contours: [], isLine: false }`, `{ contours: [contour], isLine: false }`, `{ contours: [contour], isLine: true }`.",
+                    "[Line 385](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L385)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow.defaultTrim: private defaultTrim(type: ArrowTipType, hl: number, hw: number): number",
+                    "Body operations (including nested callbacks): return paths including `hl`, `hl * 0.5`, `hw`.",
+                    "[Line 442](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L442)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow.rebuildHeads: private rebuildHeads()",
+                    "Implementation: `this.rebuildSingleHead('start'); this.rebuildSingleHead('end');`.",
+                    "[Line 464](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L464)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow.rebuildSingleHead: private rebuildSingleHead(side: 'start' | 'end')",
+                    "Body operations (including nested callbacks): calls to `pathHead.setVertices`, `this.buildTipGeometry`.",
+                    "[Line 469](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L469)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow.syncArrowState: private syncArrowState()",
+                    "Body operations (including nested callbacks): assignments to `this.body.paint.stroke`, `this.body.paint.strokeWidth`, `this.body.paint.opacity`, `this._endPath.VISIBILITY`, `this._endCircle.VISIBILITY`, `this._startPath.VISIBILITY`, `this._startCircle.VISIBILITY`, `this.body.state.transform.t1` and other instance fields; calls to `this.defaultTrim`, `this.sampler.getPointAndTangentAtDistance`, `juncPoint.add`, `juncTangent.scale`, `finalPos.add`, `head.transform.setRotationZ`, `juncPoint.sub`.",
+                    "[Line 559](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts#L559)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrow3d",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Arrow3D"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/geometry/Arrow3D.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/geometry/Arrow3D.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Arrow3DOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow3D",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface Arrow3DOptions extends EntityOptions {\n    points?: Vec3Type[];\n    isSmooth?: boolean;\n    tension?: number;\n    segments?: number;\n    color?: Color;\n    headLength?: number;\n    headRadius?: number;\n    headSegments?: number;\n}\nexport declare class Arrow3D extends VectorEntity {\n    body: Line3D;\n    head: Cone;\n    options: Arrow3DOptions;\n    constructor(start?: Vec3Type, end?: Vec3Type, options?: Arrow3DOptions);\n    setPoints(points: Vec3Type[]): void;\n    putStartAndEndOn(start: Vec3Type, end: Vec3Type): void;\n    update(t: number, dt: number): void;\n    getSubEntities(): VectorEntity[];\n    toPaths(): Path[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Arrow3DOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "points?: Vec3Type[];",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type[]`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isSmooth?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tension?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "segments?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "color?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "headLength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "headRadius?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "headSegments?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L22)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Arrow3D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public body: Line3D",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public head: Cone",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public options: Arrow3DOptions",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(start?: Vec3Type, end?: Vec3Type, options: Arrow3DOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.options`, `this.body`, `this.body.paint.cap`, `this.head`, `this.sampler`, `this.paint.stroke`, `this.paint.strokeWidth`; construction of `Line3D`, `Cone`, `CurveSampler`; calls to `this.add`, `this.setPoints`, `this.syncArrowState`. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPoints(points: Vec3Type[])",
+                    "—",
+                    "Implementation: `this._points = points.map(p => Vec3.cast(p)); this.rebuildCurve(); this.lastT2 = -1;`. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public putStartAndEndOn(start: Vec3Type, end: Vec3Type)",
+                    "—",
+                    "Implementation: `this.setPoints([start, end]);`. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.lastT2`, `this.lastT1`, `this.paint.UPDATE_FLAG`; calls to `super.update`, `this.syncArrowState`. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Implementation: `return [this.body];`. [Source line 155](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L155)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `return this.body.toPaths();`. [Source line 161](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L161)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.stroke ?? options.color ?? Color.WHITE",
+                    "[Line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L38)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.stroke ?? options.color",
+                    "[Line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L38)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strokeWidth ?? 0.06",
+                    "[Line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L39)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Arrow3D.rebuildCurve: private rebuildCurve()",
+                    "Body operations (including nested callbacks): calls to `computeCatmullRom`, `this.sampler.update`, `this.body.setVertices`.",
+                    "[Line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L87)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Arrow3D.syncArrowState: private syncArrowState()",
+                    "Body operations (including nested callbacks): assignments to `this.body.paint.stroke`, `this.body.paint.strokeWidth`, `this.head.material.color`, `this.head.material.opacity`, `this.body.state.transform.t2`, `this.body.state.transform.t1`, `this.head.VISIBILITY`, `this.head.state.transform.t2` and other instance fields; construction of `Vec3`, `Quaternion`; calls to `this.sampler.getPointAndTangent`, `up.dot`, `Quaternion.fromAxisAngle`, `Quaternion.fromTwoVec3s`, `q.rotateVec3`, `point.sub`.",
+                    "[Line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts#L111)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "booleanops",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "BooleanOps"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/geometry/BooleanOps.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/geometry/BooleanOps.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BooleanOpOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BooleanOps",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Union",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Difference",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Intersection",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Exclusion",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "union",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "difference",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "intersection",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "exclusion",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface BooleanOpOptions extends EntityOptions {\n    resolution?: number;\n    simplifyTolerance?: number;\n    reconstructCurves?: boolean;\n    minArea?: number;\n}\nexport declare class BooleanOps {\n    static combine(A: VectorEntity, B: VectorEntity, operation: 'union' | 'difference' | 'intersection' | 'xor', options?: BooleanOpOptions): Path;\n}\nexport declare class Union extends Path {\n    constructor(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions);\n}\nexport declare class Difference extends Path {\n    constructor(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions);\n}\nexport declare class Intersection extends Path {\n    constructor(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions);\n}\nexport declare class Exclusion extends Path {\n    constructor(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions);\n}\nexport declare function union(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions): Path;\nexport declare function difference(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions): Path;\nexport declare function intersection(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions): Path;\nexport declare function exclusion(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions): Path;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "union: Implementation: `return new Union(A, B, options);`.",
+                "difference: Implementation: `return new Difference(A, B, options);`.",
+                "intersection: Implementation: `return new Intersection(A, B, options);`.",
+                "exclusion: Implementation: `return new Exclusion(A, B, options);`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BooleanOpOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "resolution?: number;",
+                    "—",
+                    "How many linear segments each curve is broken into. Default is 24. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "simplifyTolerance?: number;",
+                    "—",
+                    "How aggressively to merge collinear points. Default is 0.005. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "reconstructCurves?: boolean;",
+                    "—",
+                    "Reconstruct smooth curves instead of straight lines. Default is true. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "minArea?: number;",
+                    "—",
+                    "The minimum area a polygon must have to be rendered. Culls floating point debris. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L23)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BooleanOps` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static combine(A: VectorEntity, B: VectorEntity, operation: 'union' | 'difference' | 'intersection' | 'xor', options?: BooleanOpOptions): Path",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Builder`, `Path`; calls to `this.extractMultiPolygon`, `polygonClipping.union`, `polygonClipping.difference`, `polygonClipping.intersection`, `polygonClipping.xor`, `this.getRingArea`, `this.simplifyRing`, `builder.moveTo` and additional helpers; return paths including `finalPath`; 4 explicit loops. [Source line 241](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L241)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Union` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions)",
+                    "—",
+                    "Implementation: `const temp = BooleanOps.combine(A, B, 'union', options); super(temp.svgString, options); this.paint.set(temp.paint); this.LABEL = \"Union\";`. [Source line 318](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L318)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Difference` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions)",
+                    "—",
+                    "Implementation: `const temp = BooleanOps.combine(A, B, 'difference', options); super(temp.svgString, options); this.paint.set(temp.paint); this.LABEL = \"Difference\";`. [Source line 327](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L327)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Intersection` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions)",
+                    "—",
+                    "Implementation: `const temp = BooleanOps.combine(A, B, 'intersection', options); super(temp.svgString, options); this.paint.set(temp.paint); this.LABEL = \"Intersection\";`. [Source line 336](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L336)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Exclusion` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(A: VectorEntity, B: VectorEntity, options?: BooleanOpOptions)",
+                    "—",
+                    "Implementation: `const temp = BooleanOps.combine(A, B, 'xor', options); super(temp.svgString, options); this.paint.set(temp.paint); this.LABEL = \"Exclusion\";`. [Source line 345](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L345)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.resolution || 24",
+                    "[Line 242](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L242)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BooleanOps.getWorldMatrix: private static getWorldMatrix(entity: Entity): Mat4",
+                    "Body operations (including nested callbacks): construction of `State`; calls to `chain.unshift`, `nextState.apply`, `worldState.transform._matrix.mul`, `Mat4.translation`; return paths including `worldState.transform._matrix.mul(Mat4.translation(worldState.transform.offset))`; 2 explicit loops.",
+                    "[Line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L28)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BooleanOps.extractMultiPolygon: private static extractMultiPolygon(entity: VectorEntity, resolution: number): MultiPolygon",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `entity.extractAllPaths`, `this.getWorldMatrix`, `verts.slice`, `finalMat.transformPoint`, `ring.push`, `polygon.push`, `entityMultiPolygon.push`, `polygonClipping.union` and additional helpers; return paths including `polygonClipping.union(entityMultiPolygon[0] as any, ...(entityMultiPolygon.slice(1) as any)) as MultiPolygon`, `[entityMultiPolygon[0]]`, `entityMultiPolygon`; 4 explicit loops.",
+                    "[Line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L47)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BooleanOps.getSqDist: private static getSqDist(p: Pair, p1: Pair, p2: Pair): number",
+                    "Body operations (including nested callbacks): return paths including `dx * dx + dy * dy`.",
+                    "[Line 126](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L126)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BooleanOps.simplifyDPStep: private static simplifyDPStep(points: Ring, first: number, last: number, sqTolerance: number, simplified: Ring)",
+                    "Body operations (including nested callbacks): calls to `this.getSqDist`, `this.simplifyDPStep`, `simplified.push`; 1 explicit loop.",
+                    "[Line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L142)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BooleanOps.simplifyRing: private static simplifyRing(points: Ring, tolerance: number): Ring",
+                    "Body operations (including nested callbacks): calls to `this.simplifyDPStep`, `simplified.push`; return paths including `points`, `simplified`.",
+                    "[Line 160](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L160)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BooleanOps.findCorners: private static findCorners(ring: Ring): number[]",
+                    "Body operations (including nested callbacks): calls to `corners.push`; return paths including `corners`; 1 explicit loop.",
+                    "[Line 170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L170)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BooleanOps.drawSmoothSegment: private static drawSmoothSegment(builder: Builder, points: Ring, isContinuousLoop: boolean, tension: number = 0.5)",
+                    "Body operations (including nested callbacks): calls to `builder.lineTo`, `builder.bezierCurveTo`; 1 explicit loop.",
+                    "[Line 195](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L195)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "BooleanOps.getRingArea: private static getRingArea(ring: Ring): number",
+                    "Implementation: `let area = 0; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { area += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]); } return Math.abs(area) * 0.5;`.",
+                    "[Line 233](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/BooleanOps.ts#L233)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [Path](/api-entities-primitives-2d#path)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "brace",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Brace"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/geometry/Brace.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/geometry/Brace.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "BraceOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Brace",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface BraceOptions {\n    direction?: Vec3Type;\n    padding?: number;\n    color?: Color;\n    strokeWidth?: number;\n    sharpness?: number;\n}\nexport declare class Brace extends VectorEntity {\n    target: Entity | Entity[] | Group;\n    direction: Vec3;\n    padding: number;\n    options: BraceOptions;\n    path: Path;\n    constructor(target: Entity | Entity[] | Group, options?: BraceOptions);\n    sync(): void;\n    getText(text: string, fontSize?: number): Text;\n    getTex(text: string, fontSize?: number): Tex;\n    getSubEntities(): VectorEntity[];\n    toPaths(): Path[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BraceOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "direction?: Vec3Type;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "padding?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "color?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sharpness?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Brace` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public target: Entity | Entity[] | Group",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public direction: Vec3",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public padding: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public options: BraceOptions",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public path: Path",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(target: Entity | Entity[] | Group, options: BraceOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.target`, `this.options`, `this.direction`, `this.padding`, `this.path`; construction of `Path`; calls to `Vec3.cast`, `this.add`, `this.sync`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sync()",
+                    "—",
+                    "Rebuilds the brace geometry based on the target's current Bounding Box [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getText(text: string, fontSize: number = 0.8): Text",
+                    "—",
+                    "Returns a standard text label (Preserves spaces natively) [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getTex(text: string, fontSize: number = 0.8): Tex",
+                    "—",
+                    "Returns a high-quality MathJax Tex label (Strips spaces automatically like standard LaTeX) [Source line 131](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L131)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Implementation: `return [this.path];`. [Source line 138](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L138)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `return this.path.toPaths();`. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L139)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.direction || DOWN",
+                    "[Line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts#L34)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathshape3d",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MathShape3D"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/geometry/MathShape3D.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/geometry/MathShape3D.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MathShape3DOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MathShape3D",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface MathShape3DOptions extends EntityOptions {\n    fill?: Color;\n    stroke?: Color;\n    stroke_width?: number;\n    fillOpacity?: number;\n    transmission?: number;\n    roughness?: number;\n    edges?: [\n        Vec3,\n        Vec3\n    ][];\n}\nexport declare class MathShape3D extends Entity {\n    surface: Model;\n    strokes: VGroup;\n    constructor(mesh: WebGPUMesh, options?: MathShape3DOptions);\n    static extractUniqueEdges(mesh: WebGPUMesh): [\n        Vec3,\n        Vec3\n    ][];\n    static Box(width?: number, height?: number, depth?: number, options?: MathShape3DOptions): MathShape3D;\n    static Sphere(radius?: number, numRings?: number, options?: MathShape3DOptions): MathShape3D;\n    static Cylinder(radiusTop?: number, radiusBottom?: number, height?: number, numSideLines?: number, options?: MathShape3DOptions): MathShape3D;\n    static Torus(radius?: number, tube?: number, radialSegs?: number, tubularSegs?: number, options?: MathShape3DOptions): MathShape3D;\n    static Tetrahedron(radius?: number, options?: MathShape3DOptions): MathShape3D;\n    static Prism(sides?: number, radius?: number, height?: number, options?: MathShape3DOptions): MathShape3D;\n    static Octahedron(radius?: number, options?: MathShape3DOptions): MathShape3D;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MathShape3DOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fill?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stroke?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stroke_width?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillOpacity?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "transmission?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "roughness?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "edges?: [Vec3, Vec3][];",
+                    "—",
+                    "Optional record/option field with declared type `[Vec3, Vec3][]`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L22)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MathShape3D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public surface: Model",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokes: VGroup",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(mesh: WebGPUMesh, options: MathShape3DOptions = {})",
+                    "—",
+                    "Param: mesh The input WebGPUMesh containing vertices, normals, and optional indices. Param: options Style configuration options and optional custom wireframe edges. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static extractUniqueEdges(mesh: WebGPUMesh): [Vec3, Vec3][]",
+                    "—",
+                    "Parses any general mesh (indexed or non-indexed flat-shaded) and extracts a list of unique geometric wireframe edges. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Box(width: number = 1.0, height: number = 1.0, depth: number = 1.0, options: MathShape3DOptions = {}): MathShape3D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Box`, `Vec3`, `MathShape3D`; calls to `boxModel.destroy`; return paths including `new MathShape3D(mesh, { ...options, edges })`. [Source line 136](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L136)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Sphere(radius: number = 1.0, numRings: number = 8, options: MathShape3DOptions = {}): MathShape3D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Sphere`, `Vec3`, `MathShape3D`; calls to `edges.push`, `sphereModel.destroy`; return paths including `new MathShape3D(mesh, { ...options, edges })`; 4 explicit loops. [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L165)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Cylinder(radiusTop: number = 1.0, radiusBottom: number = 1.0, height: number = 2.0, numSideLines: number = 4, options: MathShape3DOptions = {}): MathShape3D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Cylinder`, `Vec3`, `MathShape3D`; calls to `edges.push`, `cylModel.destroy`; return paths including `new MathShape3D(mesh, { ...options, edges })`; 3 explicit loops. [Source line 204](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L204)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Torus(radius: number = 1.0, tube: number = 0.4, radialSegs: number = 8, tubularSegs: number = 24, options: MathShape3DOptions = {}): MathShape3D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Torus`, `Vec3`, `MathShape3D`; calls to `edges.push`, `torusModel.destroy`; return paths including `new MathShape3D(mesh, { ...options, edges })`; 4 explicit loops. [Source line 242](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L242)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Tetrahedron(radius: number = 1.0, options: MathShape3DOptions = {}): MathShape3D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`, `Float32Array`, `Uint32Array`, `MathShape3D`; calls to `p1.sub`, `p2.sub`, `edge1.cross(edge2).normalize`, `edge1.cross`, `positions.push`, `normals.push`, `indices.push`; return paths including `new MathShape3D(mesh, { ...options, edges })`; 1 explicit loop. [Source line 282](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L282)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Prism(sides: number = 3, radius: number = 1.0, height: number = 2.0, options: MathShape3DOptions = {}): MathShape3D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`, `Float32Array`, `Uint32Array`, `MathShape3D`; calls to `topVerts.push`, `bottomVerts.push`, `positions.push`, `normals.push`, `indices.push`, `new Vec3(Math.cos(midAngle), 0, Math.sin(midAngle)).normalize`, `edges.push`; return paths including `new MathShape3D(mesh, { ...options, edges })`; 9 explicit loops. [Source line 326](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L326)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Octahedron(radius: number = 1.0, options: MathShape3DOptions = {}): MathShape3D",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`, `Float32Array`, `Uint32Array`, `MathShape3D`; calls to `p1.sub`, `p2.sub`, `edge1.cross(edge2).normalize`, `edge1.cross`, `positions.push`, `normals.push`, `indices.push`; return paths including `new MathShape3D(mesh, { ...options, edges })`; 1 explicit loop. [Source line 408](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L408)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.fill || new Color(0.1, 0.5, 1.0, 0.4)",
+                    "[Line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L36)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.stroke || new Color(1.0, 1.0, 1.0, 1.0)",
+                    "[Line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L37)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strokeWidth ?? 0.05",
+                    "[Line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L38)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fillOpacity ?? 0.9",
+                    "[Line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L39)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.transmission ?? 0.3",
+                    "[Line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L40)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.roughness ?? 0.1",
+                    "[Line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L41)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.edges || MathShape3D.extractUniqueEdges(mesh)",
+                    "[Line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MathShape3D.ts#L55)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meshsprite",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MeshSprite"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/geometry/MeshSprite.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/geometry/MeshSprite.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "MeshSprite: High-performance textured 2D/3D mesh sprite entity. Projects an image or video texture onto an N x M tessellated grid or arbitrary polygon mesh, allowing non-linear vector fields and mathematical homotopies to bend, ripple, and conformal-map the image in exact 1:1 synchronization with coordinate systems."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "UVGenerator",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MeshSpriteOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MeshSprite",
+                    "Class",
+                    "High-performance textured 2D/3D mesh sprite entity. Projects an image or video texture onto an N x M tessellated grid or arbitrary polygon mesh, allowing non-linear vector fields and mathematical homotopies to bend, ripple, and conformal-map the image in exact 1:1 synchronization with coordinate systems."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type UVGenerator = (col: number, row: number, uFrac: number, vFrac: number) => Vec3 | [\n    number,\n    number\n] | [\n    number,\n    number,\n    number\n];\nexport interface MeshSpriteOptions extends EntityOptions {\n    source: SpriteSource | Sprite;\n    xRange?: [\n        number,\n        number\n    ];\n    yRange?: [\n        number,\n        number\n    ];\n    width?: number;\n    height?: number;\n    gridResolution?: number | [\n        number,\n        number\n    ];\n    vertices?: Vec3[] | [\n        number,\n        number\n    ][] | [\n        number,\n        number,\n        number\n    ][] | Float32Array;\n    uvs?: Vec3[] | [\n        number,\n        number\n    ][] | [\n        number,\n        number,\n        number\n    ][] | Float32Array | UVGenerator;\n    indices?: Uint32Array | number[];\n    opacity?: number;\n}\nexport declare class MeshSprite extends VectorEntity {\n    geo: DeformableMeshGeometry;\n    fragment: SpriteFragment;\n    xMin: number;\n    xMax: number;\n    yMin: number;\n    yMax: number;\n    cols: number;\n    rows: number;\n    constructor(options: MeshSpriteOptions);\n    setSource(source: SpriteSource | Sprite): void;\n    refresh(): void;\n    applyFunction(fn: (p: Vec3) => Vec3, alpha?: number): this;\n    update(t: number, dt: number): void;\n    play(): void;\n    pause(): void;\n    toPaths(): Path[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MeshSpriteOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "source: SpriteSource | Sprite;",
+                    "—",
+                    "Any image URL, video URL, HTMLCanvasElement, ImageBitmap, GPUTexture, SubTexture, or existing Sprite instance [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "xRange?: [number, number];",
+                    "—",
+                    "Optional record/option field with declared type `[number, number]`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "yRange?: [number, number];",
+                    "—",
+                    "Optional record/option field with declared type `[number, number]`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "width?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "gridResolution?: number | [number, number];",
+                    "—",
+                    "Optional record/option field with declared type `number | [number, number]`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertices?: Vec3[] | [number, number][] | [number, number, number][] | Float32Array;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3[] | [number, number][] | [number, number, number][] | Float32Array`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "uvs?: Vec3[] | [number, number][] | [number, number, number][] | Float32Array | UVGenerator;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3[] | [number, number][] | [number, number, number][] | Float32Array | UVGenerator`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "indices?: Uint32Array | number[];",
+                    "—",
+                    "Optional record/option field with declared type `Uint32Array | number[]`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "opacity?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L38)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MeshSprite` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public geo: DeformableMeshGeometry",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fragment: SpriteFragment",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public xMin: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public xMax: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public yMin: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public yMax: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cols: number",
+                    "32",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rows: number",
+                    "18",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options: MeshSpriteOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.geo`, `this.fragment`, `this.paint.fill`; construction of `DeformableMeshGeometry`, `SpriteFragment`, `MeshRenderer`, `Color`; calls to `this.extractSource`, `this.addComponent`, `this.buildCustomMesh`, `this.buildGridMesh`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSource(source: SpriteSource | Sprite)",
+                    "—",
+                    "Updates the underlying image/sprite source. [Source line 301](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L301)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public refresh()",
+                    "—",
+                    "Refreshes the texture content on the GPU (e.g. for dynamic Canvas sources). [Source line 310](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L310)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override applyFunction(fn: (p: Vec3) => Vec3, alpha: number = 1.0): this",
+                    "—",
+                    "Applies a mathematical deformation function to all mesh vertices in-place with zero heap allocations. [Source line 318](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L318)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override update(t: number, dt: number): void",
+                    "—",
+                    "Implementation: `super.update(t, dt); if (this.fragment.isVideo) { const scene = this.getScene(); const isLive = scene ? scene.RENDER_LIVE : true; this.fragment.syncVideo(t, isLive, scene); }`. [Source line 349](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L349)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public play(): void",
+                    "—",
+                    "Implementation: `if (this.fragment.videoData) this.fragment.videoData.play();`. [Source line 359](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L359)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pause(): void",
+                    "—",
+                    "Implementation: `if (this.fragment.videoData) this.fragment.videoData.pause();`. [Source line 363](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L363)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `return [];`. [Source line 367](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L367)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.width ?? 8",
+                    "[Line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L113)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.height ?? 4.5",
+                    "[Line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L122)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MeshSprite.extractSource: private extractSource(source: SpriteSource | Sprite): SpriteSource",
+                    "Body operations (including nested callbacks): return paths including `source`.",
+                    "[Line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L85)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MeshSprite.extractUVBounds: private extractUVBounds(source: SpriteSource): { uMin: number; vMin: number; uMax: number; vMax: number }",
+                    "Body operations (including nested callbacks): return paths including `{ uMin, vMin, uMax, vMax }`.",
+                    "[Line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L92)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MeshSprite.buildGridMesh: private buildGridMesh(options: MeshSpriteOptions, source: SpriteSource)",
+                    "Builds standard N x M subdivided grid mesh from bounds. Body operations (including nested callbacks): assignments to `this.xMin`, `this.xMax`, `this.yMin`, `this.yMax`, `this.cols`, `this.rows`, `this._baseVertices`, `this._currentVertices` and other instance fields; construction of `Float32Array`, `Uint32Array`; calls to `this.extractUVBounds`, `customUVFn`, `this.geo.setVertices`; 4 explicit loops.",
+                    "[Line 107](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L107)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MeshSprite.buildCustomMesh: private buildCustomMesh(options: MeshSpriteOptions, source: SpriteSource)",
+                    "Builds custom polygon mesh from raw vertex arrays and UVs. Body operations (including nested callbacks): assignments to `this._baseVertices`, `this._currentVertices`, `this._baseVertices[i * 4 + 0]`, `this._baseVertices[i * 4 + 1]`, `this._baseVertices[i * 4 + 2]`, `this._baseVertices[i * 4 + 3]`, `this._currentVertices[i * 4 + 0]`, `this._currentVertices[i * 4 + 1]` and other instance fields; construction of `Float32Array`, `Uint32Array`; calls to `this.extractUVBounds`, `this.geo.setVertices`; 1 explicit loop.",
+                    "[Line 235](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/MeshSprite.ts#L235)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pixelgrid",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PixelGrid"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/geometry/PixelGrid.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/geometry/PixelGrid.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PixelGrid: Renders a 2D matrix of colored pixel tiles (pixel art) with subdivided perimeter edges. Allows non-linear and conformal transformations to bend each pixel seamlessly with the coordinate space."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PixelGridOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PixelGrid",
+                    "Class",
+                    "Renders a 2D matrix of colored pixel tiles (pixel art) with subdivided perimeter edges. Allows non-linear and conformal transformations to bend each pixel seamlessly with the coordinate space."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface PixelGridOptions extends EntityOptions {\n    matrix: number[][];\n    colorMap: Record<number, Color>;\n    tileSize?: number;\n    edgeSubdivisions?: number;\n    strokeColor?: Color;\n    strokeWidth?: number;\n    centerOrigin?: boolean;\n}\nexport declare class PixelGrid extends VectorEntity {\n    matrix: number[][];\n    colorMap: Record<number, Color>;\n    tileSize: number;\n    edgeSubdivisions: number;\n    strokeColor: Color;\n    strokeWidth: number;\n    constructor(options: PixelGridOptions);\n    applyFunction(fn: (p: Vec3) => Vec3, alpha?: number): this;\n    applyComplexFunction(fn: ComplexMappingFunction | ((z: any) => any), alpha?: number): this;\n    resetDeformation(): this;\n    toPaths(): Path[];\n    getSubEntities(): VectorEntity[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PixelGridOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "matrix: number[][];",
+                    "—",
+                    "Required record/option field with declared type `number[][]`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "colorMap: Record<number, Color>;",
+                    "—",
+                    "Required record/option field with declared type `Record<number, Color>`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tileSize?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "edgeSubdivisions?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeColor?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "centerOrigin?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L23)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PixelGrid` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public matrix: number[][]",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public colorMap: Record<number, Color>",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public tileSize: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public edgeSubdivisions: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokeColor: Color",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokeWidth: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options: PixelGridOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.matrix`, `this.colorMap`, `this.tileSize`, `this.edgeSubdivisions`, `this.strokeColor`, `this.strokeWidth`, `this.tileGroup`; construction of `Color`, `VGroup`; calls to `this.add`, `this.buildTiles`. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override applyFunction(fn: (p: Vec3) => Vec3, alpha: number = 1.0): this",
+                    "—",
+                    "Warps all tile boundary polygons with the non-linear spatial mapping function. Param: fn Mathematical mapping (x, y, z) => (x', y', z') Param: alpha Interpolation factor [0..1] [Source line 137](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L137)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override applyComplexFunction(\n        fn: ComplexMappingFunction | ((z: any) => any),\n        alpha: number = 1.0\n    ): this",
+                    "—",
+                    "Applies a complex mapping f(z): C -> C across all tiles. [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L165)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override resetDeformation(): this",
+                    "—",
+                    "Restores all tiles to their undeformed Euclidean positions. [Source line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L180)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `return [];`. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Implementation: `return this.tileGroup.getSubEntities();`. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L188)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.tileSize ?? 0.3",
+                    "[Line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L52)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.edgeSubdivisions ?? 6",
+                    "[Line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L53)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strokeColor ?? new Color(1.0, 1.0, 1.0, 0.9)",
+                    "[Line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L54)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strokeWidth ?? 0.02",
+                    "[Line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L55)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PixelGrid.sampleSegment: private sampleSegment(p1: Vec3, p2: Vec3, count: number): Vec3[]",
+                    "Subdivides a straight line segment into intermediate points. Implementation: `const pts = SubdivisionEngine.subdividePolyline([p1, p2], count); return pts.slice(0, pts.length - 1);`.",
+                    "[Line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L66)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PixelGrid.buildTiles: private buildTiles(centerOrigin: boolean)",
+                    "Body operations (including nested callbacks): assignments to `this.tileRecords`; construction of `Vec3`, `Float32Array`, `Poly`; calls to `this.tileGroup.children.slice().forEach`, `this.tileGroup.children.slice`, `this.tileGroup.remove`, `this.sampleSegment`, `poly.setRawVertices`, `this.tileGroup.add`, `this.tileRecords.push`; 3 explicit loops.",
+                    "[Line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts#L72)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

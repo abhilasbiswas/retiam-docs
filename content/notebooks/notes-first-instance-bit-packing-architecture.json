@@ -1,0 +1,704 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-first-instance-bit-packing-architecture",
+  "title": "firstInstance Bit-Packing Architecture, Engine Multiplexing & Limits",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/FIRST_INSTANCE_BIT_PACKING_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/FIRST_INSTANCE_BIT_PACKING_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/FIRST_INSTANCE_BIT_PACKING_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Entity](/api-core-entity#entity), [State](/api-core#state), [Pass](/api-render-frame-graph#pass), [Fill](/api-core#fill), [Mode](/api-render-frame-graph#resource), [Shader](/api-entities-primitives-2d#shader), [Field](/api-math-fields#standardfields), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [Usage](/api-utils#gpu-utils), [Component](/api-core#component), [MeshRenderer](/api-components-renderers#meshrenderer), [ModelRenderer](/api-components-renderers#modelrenderer), [Complex](/api-math#complex), [TriangulatedPathRenderer](/api-components-renderers#triangulatedpathrenderer), [PathRenderer](/api-components-renderers#pathrenderer), [PathGeometry](/api-components-geometry#pathgeometry), [MegaDrawBatchManager](/api-render-allocator#megadrawbatchmanager), [ShadowPass](/api-render-passes#shadowpass), [Light](/api-entities-primitives-3d#light), [Instanced](/api-entities#instanced)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an exhaustive technical breakdown of the **`firstInstance` bit-packing architecture**, its role in bindless state dispatching, mathematical limits, hardware instancing mechanics, pass discrimination, and safeguards in the Retiam WebGPU Engine."
+        }
+      ]
+    },
+    {
+      "id": "1-executive-summary-core-architectural-role",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Executive Summary & Core Architectural Role"
+        },
+        {
+          "type": "paragraph",
+          "text": "In WebGPU, `firstInstance` is the parameter passed to draw commands:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`pass.draw(vertexCount, instanceCount, firstVertex, firstInstance)`",
+            "`pass.drawIndexed(indexCount, instanceCount, firstIndex, baseVertex, firstInstance)`"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The WebGPU Built-In Behavior:"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a draw call executes on the GPU, the vertex shader receives the built-in variable `@builtin(instance_index)`. The GPU automatically computes:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{instance\\_index} = \\text{firstInstance} + i \\quad \\text{where } i \\in [0, \\text{instanceCount} - 1]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Why Retiam Bit-Packs firstInstance:"
+        },
+        {
+          "type": "paragraph",
+          "text": "In traditional rendering engines, `firstInstance` is simply used as an offset ($0, 1, 2 \\dots$). However, in Retiam's **Zero-GC Bindless Architecture**, `firstInstance` is repurposed as a **high-density 32-bit multiplexer** that carries:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Bindless Entity State Index** (`state_index`): Points directly to `states[state_index]` in `@group(2) @binding(0)` (transform matrices, paint colors, clipping bounds).",
+            "**Local Instance Index** (`local_index`): Offsets into per-entity storage buffers (e.g. `instances[local_index * 3]`).",
+            "**Pass Discrimination Flag** (`isStroke`): Dispatches Fill vs. Stroke sub-passes through an uber-shader in a single draw call.",
+            "**Mode Switch (Bit 31)**: Dynamically expands instance capacity from 16k to 262k objects without shader recompilation."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    A[\"pass.draw / pass.drawIndexed(..., firstInstance)\"] --> B[\"WebGPU Built-in: instance_index = firstInstance + i\"]\n    B --> C{\"Bit 31 Mode Switch\"}\n    \n    C -->|\"Bit 31 = 0 (Standard Mode)\"| D[\"getStateIndex: Bits 29..14 (0..65,535)<br/>getLocalIndex: Bits 13..0 (0..16,383)\"]\n    C -->|\"Bit 31 = 1 (Mega Mode)\"| E[\"getStateIndex: Bits 29..18 (0..4,095)<br/>getLocalIndex: Bits 17..0 (0..262,143)\"]\n    \n    B --> F[\"getIsStroke: Bit 30 (0x40000000)<br/>0 = Fill Pass, 1 = Stroke Pass\"]\n    \n    D --> G[\"Lookup states[state_index] in @group(2)\"]\n    E --> G\n    D --> H[\"Pull instances[local_index] in @group(3)\"]\n    E --> H\n    F --> I[\"Uber-Shader Branchless Fill/Stroke Evaluation\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-dual-mode-32-bit-allocation-layout",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Dual-Mode 32-Bit Allocation Layout"
+        },
+        {
+          "type": "paragraph",
+          "text": "The 32-bit unsigned integer `instance_index` is partitioned into two mutually exclusive packing schemes determined by the Most Significant Bit (Bit 31):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Mode",
+            "Bit 31",
+            "Bit 30",
+            "State index bits",
+            "Local instance bits"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Standard",
+                "`0`",
+                "`S`",
+                "29–14: 16 bits, values 0–65,535",
+                "13–0: 14 bits, values 0–16,383"
+              ]
+            },
+            {
+              "cells": [
+                "Mega-instance",
+                "`1`",
+                "`S`",
+                "29–18: 12 bits, values 0–4,095",
+                "17–0: 18 bits, values 0–262,143"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Bit-Field Definitions:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Bit Range",
+            "Field",
+            "Mode 0 (Standard)",
+            "Mode 1 (Mega)",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Bit 31**",
+                  "type": "text"
+                },
+                {
+                  "text": "`is_mega`"
+                },
+                {
+                  "text": "`0`"
+                },
+                {
+                  "text": "`1`"
+                },
+                {
+                  "text": "Mode switch selector."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Bit 30**",
+                  "type": "text"
+                },
+                {
+                  "text": "`isStroke` (`S`)"
+                },
+                {
+                  "text": "`0` or `1`"
+                },
+                {
+                  "text": "`0` or `1`"
+                },
+                {
+                  "text": "Secondary pass / Stroke flag (`0` = Fill, `1` = Stroke)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Bits 29..14**",
+                  "type": "text"
+                },
+                {
+                  "text": "`stateIndex` (Mode 0)"
+                },
+                {
+                  "text": "16 bits ($0..65,535$)"
+                },
+                {
+                  "text": "—"
+                },
+                {
+                  "text": "Index of the entity in `GlobalStateAllocator`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Bits 29..18**",
+                  "type": "text"
+                },
+                {
+                  "text": "`stateIndex` (Mode 1)"
+                },
+                {
+                  "text": "—"
+                },
+                {
+                  "text": "12 bits ($0..4,095$)"
+                },
+                {
+                  "text": "Index of the entity in `GlobalStateAllocator`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Bits 13..0**",
+                  "type": "text"
+                },
+                {
+                  "text": "`localIndex` (Mode 0)"
+                },
+                {
+                  "text": "14 bits ($0..16,383$)"
+                },
+                {
+                  "text": "—"
+                },
+                {
+                  "text": "Instance/contour offset within the entity."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Bits 17..0**",
+                  "type": "text"
+                },
+                {
+                  "text": "`localIndex` (Mode 1)"
+                },
+                {
+                  "text": "—"
+                },
+                {
+                  "text": "18 bits ($0..262,143$)"
+                },
+                {
+                  "text": "Instance/particle offset within the entity."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-typescript-encoder-wgsl-branchless-decoder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. TypeScript Encoder & WGSL Branchless Decoder"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "TypeScript Encoder ([src/engine/utils/gpuutils.ts](../src/engine/utils/gpuutils.ts#L162-L182)):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "/**\n * Packs a state index, local instance index, and pass flag into a 32-bit instance_index.\n * - Bit 31: Mode switch (0 = Standard, 1 = Mega-Instance)\n * - Bit 30: Secondary / Stroke flag (0 = Fill / Default, 1 = Stroke)\n * - Mode 0 (Standard, MSB = 0): 16-bit state (0..65,535), 14-bit local index (0..16,383)\n * - Mode 1 (Mega-Instance, MSB = 1): 12-bit state (0..4,095), 18-bit local index (0..262,143)\n */\nexport function packInstanceIndex(\n    stateIndex: number,\n    localIndex: number = 0,\n    isMega: boolean = false,\n    isStroke: boolean = false\n): number {\n    const strokeBit = isStroke ? 0x40000000 : 0;\n    if (isMega || localIndex > 16383) {\n        return (0x80000000 | strokeBit | ((stateIndex & 0xFFF) << 18) | (localIndex & 0x3FFFF)) >>> 0;\n    }\n    return (strokeBit | ((stateIndex & 0xFFFF) << 14) | (localIndex & 0x3FFF)) >>> 0;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Branchless WGSL Decoder ([src/engine/shaders/includes/common.wgsl](../src/engine/shaders/includes/common.wgsl#L103-L115)):"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn getStateIndex(instance_index: u32) -> u32 {\n    let is_mega = (instance_index & 0x80000000u) != 0u;\n    return select((instance_index >> 14u) & 0xFFFFu, (instance_index >> 18u) & 0xFFFu, is_mega);\n}\n\nfn getLocalIndex(instance_index: u32) -> u32 {\n    let is_mega = (instance_index & 0x80000000u) != 0u;\n    return select(instance_index & 0x3FFFu, instance_index & 0x3FFFFu, is_mega);\n}\n\nfn getIsStroke(instance_index: u32) -> bool {\n    return (instance_index & 0x40000000u) != 0u;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Why Branchless select() Matters:"
+        },
+        {
+          "type": "paragraph",
+          "text": "In WGSL, `select(falseVal, trueVal, condition)` compiles directly into a single GPU hardware conditional move (`csel` / `movc`). There is **zero branch divergence**, zero warp stalling, and zero penalty across adjacent GPU execution threads."
+        }
+      ]
+    },
+    {
+      "id": "4-hardware-instancing-arithmetic-carry-rollovers",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Hardware Instancing Arithmetic & Carry Rollovers"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Mathematical Vulnerability:"
+        },
+        {
+          "type": "paragraph",
+          "text": "When WebGPU runs hardware instancing, it increments the index for each instance:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{instance\\_index}_i = \\text{firstInstance} + i \\quad (i = 0, 1, 2 \\dots \\text{instanceCount}-1)"
+        },
+        {
+          "type": "paragraph",
+          "text": "In binary addition:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "In Mode 0, `localIndex` occupies Bits 0..13 (max value $2^{14}-1 = 16,383$).",
+            "If an entity starts at `localStart = 10,000` and draws `instanceCount = 10,000`, the final instance reaches $i = 19,999$.",
+            "In binary, $16,384 = \\text{0x4000} = (1 \\ll 14)$.",
+            "**Addition Carry**: Adding past 16,383 carries a $+1$ directly into **Bit 14** (the lowest bit of `stateIndex`)!",
+            "**Consequence**: The GPU starts reading state transforms from $(\\text{stateIndex} + 1)$—a completely different entity in the scene, causing tearing and transform corruption."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Engine Solution (Total Span Validation):"
+        },
+        {
+          "type": "paragraph",
+          "text": "All Retiam renderers calculate `isMega` by checking the **total instance span**, not just `instanceCount`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const localStart = call.firstInstance ?? 0;\nconst isMega = (localStart + (call.instanceCount || 1)) > 16384;\nconst firstInstance = packInstanceIndex(stateIndex, localStart, isMega, call.isStroke ?? false);"
+        },
+        {
+          "type": "paragraph",
+          "text": "When the total span exceeds 16,384:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "`packInstanceIndex` switches to Mode 1.",
+            "Bit 31 is set to `1`.",
+            "`localIndex` bit-width expands from 14 bits to **18 bits** (up to **262,143 instances**).",
+            "Binary addition carries cannot reach Bit 18 until $i \\ge 262,144$, completely preventing state corruption."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-pass-discrimination-the-bit-30-revolution",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Pass Discrimination & The Bit 30 Revolution"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Legacy Problem (Bit 0):"
+        },
+        {
+          "type": "paragraph",
+          "text": "Previously, some shaders attempted to differentiate fill and stroke by using the least significant bit (`instance_index & 1u`)."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "In single-draw mode: Draw Call 0 had `firstInstance = 0` (even = Fill), Draw Call 1 had `firstInstance = 1` (odd = Stroke).",
+            "**Failure Under Instancing**: When rendering 1,000 instances of a path, instance $0$ was even (Fill), instance $1$ was odd (Stroke), instance $2$ was even (Fill)... Every adjacent instance inverted its visual styling!"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Bit 30 Solution:"
+        },
+        {
+          "type": "paragraph",
+          "text": "By reserving **Bit 30 (`0x40000000`)** exclusively as the `isStroke` flag:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Full Isolation**: Bit 30 is 16 bits above the Mode 0 local index boundary and 12 bits above the Mode 1 local index boundary. Hardware instance additions $0..262,143$ can **never** flip Bit 30.",
+            "**Fill Execution**: Fill draw call issues `firstInstance` with Bit 30 = 0. All $N$ instances render with fill.",
+            "**Stroke Execution**: Stroke draw call issues `firstInstance` with Bit 30 = 1. All $N$ instances render with stroke.",
+            "**2 Draw Calls for $N$ Vector Paths**: 50,000 vector shapes render fill and stroke in exactly 2 draw calls with zero style flipping."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-engine-wide-usage-across-renderers-passes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Engine-Wide Usage Across Renderers & Passes"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Component / File",
+            "Purpose",
+            "`firstInstance` Packing Strategy"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**[`MeshRenderer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/MeshRenderer.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Standard 3D meshes & primitives"
+                },
+                {
+                  "text": "`packInstanceIndex(stateIndex, localStart, isMega, false)`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`ModelRenderer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/ModelRenderer.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Complex 3D GLTF / OBJ models"
+                },
+                {
+                  "text": "`packInstanceIndex(stateIndex, localStart, isMega, false)`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`TriangulatedPathRenderer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/TriangulatedPathRenderer.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "2D/3D Fast Triangulated Vector Paths"
+                },
+                {
+                  "text": "`packInstanceIndex(stateIndex, localStart, isMega, call.isStroke)`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`PathRenderer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/PathRenderer.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Analytical SDF Stencil-and-Cover Paths"
+                },
+                {
+                  "text": "`packInstanceIndex(stateIndex, localStart, isMega, false)`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`PathGeometry.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Multi-contour stencil loops"
+                },
+                {
+                  "text": "`baseFirstInstance"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`MegaDrawBatchManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Single-draw-call multi-path batching"
+                },
+                {
+                  "text": "Fill: `packInstanceIndex(stateIndex, 0, false, false)` Stroke: `packInstanceIndex(stateIndex, 0, false, true)`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`ShadowPass.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ShadowPass.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "Light-space depth map rasterization"
+                },
+                {
+                  "text": "`pass.drawIndexed(indexCount, instanceCount, firstIndex, firstVertex, firstInstance)`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**[`Instanced.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts)**",
+                  "type": "text"
+                },
+                {
+                  "text": "GPU storage-buffer hardware instancing"
+                },
+                {
+                  "text": "Preserves `call.isStroke` while setting `instanceCount = N`"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7-mathematical-limits-boundary-summary",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Mathematical Limits & Boundary Summary"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Metric",
+            "Mode 0 (Standard)",
+            "Mode 1 (Mega-Instance)",
+            "Exceeded Action"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Max Entity States**",
+                  "type": "text"
+                },
+                {
+                  "text": "**65,535** (`0xFFFF`, 16 bits)"
+                },
+                {
+                  "text": "**4,095** (`0xFFF`, 12 bits)"
+                },
+                {
+                  "text": "Entity slots allocate in `GlobalStateAllocator`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Max Instances / Entity**",
+                  "type": "text"
+                },
+                {
+                  "text": "**16,383** (`0x3FFF`, 14 bits)"
+                },
+                {
+                  "text": "**262,143** (`0x3FFFF`, 18 bits)"
+                },
+                {
+                  "text": "Automatically promoted to Mode 1 if span $> 16,384$"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Bit 31 MSB Masking**",
+                  "type": "text"
+                },
+                {
+                  "text": "Guaranteed `0` (state masked with `0xFFFF`)"
+                },
+                {
+                  "text": "Guaranteed `1` (explicitly OR-ed `0x80000000`)"
+                },
+                {
+                  "text": "Mathematically proven zero bit overlap"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Bit 30 Pass Flag**",
+                  "type": "text"
+                },
+                {
+                  "text": "Dedicated (`0x40000000`)"
+                },
+                {
+                  "text": "Dedicated (`0x40000000`)"
+                },
+                {
+                  "text": "Masked out in `getStateIndex()`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Single Draw Call Capacity**",
+                  "type": "text"
+                },
+                {
+                  "text": "16,383 instances"
+                },
+                {
+                  "text": "262,143 instances"
+                },
+                {
+                  "text": "For $>262\\text{k}$, split into multiple draw calls"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-quick-cheat-sheet-for-engine-developers",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Quick Cheat Sheet for Engine Developers"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Encoding:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Single Entity Draw Call\nconst firstInstance = packInstanceIndex(stateIndex, 0, false, false);\n\n// 2. Stroke Draw Call\nconst strokeInstance = packInstanceIndex(stateIndex, 0, false, true);\n\n// 3. Hardware Instanced Batch (Span-Checked)\nconst isMega = (localStart + instanceCount) > 16384;\nconst firstInstance = packInstanceIndex(stateIndex, localStart, isMega, isStroke);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "WGSL Decoding:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let state_idx  = getStateIndex(instance_index); // Safe 0..65535 or 0..4095\nlet local_idx  = getLocalIndex(instance_index); // Safe 0..16383 or 0..262143\nlet is_stroke  = getIsStroke(instance_index);   // true if Bit 30 is set"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1167 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-render-frame-graph",
+  "title": "render / frame_graph API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "framegraph",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "FrameGraph"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/frame_graph/FrameGraph.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/frame_graph/FrameGraph.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FrameGraph",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class FrameGraph {\n    textures: VirtualTexture[];\n    buffers: VirtualBuffer[];\n    constructor(device: GPUDevice);\n    addPass(pass: Pass): void;\n    registerTexture(handle: TextureHandle, desc: TextureDesc, creator: Pass, isPersistent: boolean): void;\n    registerBuffer(handle: BufferHandle, desc: BufferDesc, creator: Pass, isPersistent: boolean): void;\n    aliasTexture(handle: TextureHandle, creator: Pass): TextureHandle;\n    aliasBuffer(handle: BufferHandle, creator: Pass): BufferHandle;\n    importPersistentTexture(texture: GPUTexture, handle?: TextureHandle): TextureHandle;\n    updatePersistentTexture(handle: TextureHandle, texture: GPUTexture): void;\n    importPersistentBuffer(buffer: GPUBuffer, handle?: BufferHandle): BufferHandle;\n    compile(): void;\n    isDirty: boolean;\n    execute(frameData: SceneData, canvasWidth: number, canvasHeight: number, adapter: GPUAdapter): void;\n    reset(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FrameGraph` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public textures: VirtualTexture[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public buffers: VirtualBuffer[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(private device: GPUDevice)",
+                    "—",
+                    "Implementation: ``. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addPass(pass: Pass): void",
+                    "—",
+                    "Implementation: `this.passes.push(pass);`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public registerTexture(handle: TextureHandle, desc: TextureDesc, creator: Pass, isPersistent: boolean)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.textures.push`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public registerBuffer(handle: BufferHandle, desc: BufferDesc, creator: Pass, isPersistent: boolean)",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.buffers.push`. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public aliasTexture(handle: TextureHandle, creator: Pass): TextureHandle",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `createTextureHandle`, `this.textures.push`; return paths including `newHandle`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public aliasBuffer(handle: BufferHandle, creator: Pass): BufferHandle",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `createBufferHandle`, `this.buffers.push`; return paths including `newHandle`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public importPersistentTexture(texture: GPUTexture, handle?: TextureHandle): TextureHandle",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `createTextureHandle`, `this.textures.push`; return paths including `handle`. [Source line 95](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L95)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updatePersistentTexture(handle: TextureHandle, texture: GPUTexture)",
+                    "—",
+                    "Implementation: `const rootIndex = this.textures[handle.index].root; this.textures[rootIndex].physical_texture = texture; this.textures[rootIndex].default_view = undefined;`. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public importPersistentBuffer(buffer: GPUBuffer, handle?: BufferHandle): BufferHandle",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `createBufferHandle`, `this.buffers.push`; return paths including `handle`. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public compile()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.compiledPasses`; construction of `Map`, `GraphBuilder`; calls to `pass.onSetup`, `version_map_texture.has`, `version_map_texture.get`, `version_map_buffer.has`, `version_map_buffer.get`, `pass.textureReads.push`, `this.aliasTexture`, `pass.textureCreates.push` and additional helpers; 7 explicit loops. [Source line 141](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L141)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isDirty: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 404](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L404)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public execute(frameData: SceneData, canvasWidth: number, canvasHeight: number, adapter: GPUAdapter)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.isDirty`, `this.last_width`, `this.last_height`; calls to `this.pool.clear`, `this.allocateResource`, `this.device.createCommandEncoder`, `this.pool.getTexture`, `rootRes.physical_texture.createView`, `this.pool.getTextureView`, `this.pool.getBuffer`, `commandEncoder.beginComputePass` and additional helpers; return paths including `rootRes.default_view`, `this.pool.getTextureView(rootRes.physical_index)`; 2 explicit loops. [Source line 405](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L405)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset()",
+                    "—",
+                    "Implementation: `this.pool.clear(); this.textures = []; this.buffers = []; this.passes = []; this.compiledPasses = [];`. [Source line 501](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L501)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FrameGraph.buildDAGAndCull: private buildDAGAndCull(): Pass[]",
+                    "Body operations (including nested callbacks): construction of `Set`; calls to `this.passes.filter`, `stack.pop`, `activePasses.has`, `activePasses.add`, `stack.push`, `activateCreator`, `ordered_pass.push`; return paths including `ordered_pass`; 4 explicit loops.",
+                    "[Line 218](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L218)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "FrameGraph.topologicalSort: private topologicalSort(activePasses: Pass[]): Pass[]",
+                    "Body operations (including nested callbacks): construction of `Set`, `Error`; calls to `pass_set.has`, `creator.outgoingNodes.push`, `connectEdge`, `queue.shift`, `sortedPasses.push`, `queue.push`; return paths including `sortedPasses`; rejection paths `new Error(\"FrameGraph compile failed: Cyclic dependency detected.\")`; 6 explicit loops.",
+                    "[Line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L248)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "FrameGraph.calculateLifetimes: private calculateLifetimes()",
+                    "Body operations (including nested callbacks): assignments to `this.textures[h.index].firstPassIndex`, `this.textures[h.index].lastPassIndex`, `this.buffers[h.index].firstPassIndex`, `this.buffers[h.index].lastPassIndex`; calls to `pass.textureCreates.forEach`, `pass.textureReads.forEach`, `pass.bufferCreates.forEach`, `pass.bufferReads.forEach`; 1 explicit loop.",
+                    "[Line 291](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L291)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "FrameGraph.allocateResource: private allocateResource(width: number, height: number)",
+                    "Body operations (including nested callbacks): construction of `Map`; calls to `getHash`, `free_map.get`, `free_map.delete`, `this.pool.acquireBuffer`, `this.pool.acquireTexture`, `free_map.set`, `pass.textureCreates.forEach`, `pass.bufferCreates.forEach` and additional helpers; 1 explicit loop.",
+                    "[Line 323](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/FrameGraph.ts#L323)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"FrameGraph compile failed: Cyclic dependency detected.\")"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graphbuilder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GraphBuilder"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/frame_graph/GraphBuilder.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/frame_graph/GraphBuilder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/GraphBuilder.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GraphBuilder",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class GraphBuilder {\n    graph: FrameGraph;\n    constructor(graph: FrameGraph, passNode: Pass);\n    createTexture(handle: TextureHandle, desc: TextureDesc, isPersistent?: boolean): void;\n    createBuffer(handle: BufferHandle, desc: BufferDesc, isPersistent?: boolean): void;\n    markUnculled(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `GraphBuilder` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(public graph: FrameGraph, private passNode: Pass)",
+                    "—",
+                    "Implementation: ``. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/GraphBuilder.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createTexture(handle: TextureHandle, desc: TextureDesc, isPersistent: boolean = false)",
+                    "—",
+                    "Implementation: `this.graph.registerTexture(handle, desc, this.passNode, isPersistent);`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/GraphBuilder.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createBuffer(handle: BufferHandle, desc: BufferDesc, isPersistent: boolean = false)",
+                    "—",
+                    "Implementation: `this.graph.registerBuffer(handle, desc, this.passNode, isPersistent);`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/GraphBuilder.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public markUnculled()",
+                    "—",
+                    "Implementation: `this.passNode.isUnculled = true;`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/GraphBuilder.ts#L36)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Pass"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/frame_graph/Pass.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/frame_graph/Pass.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "READ_PROPS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "WRITE_PROPS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CREATE_PROPS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "read",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "write",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "create",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Pass",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const READ_PROPS: unique symbol;\nexport declare const WRITE_PROPS: unique symbol;\nexport declare const CREATE_PROPS: unique symbol;\nexport declare function read(targetOrValue: any, contextOrPropertyKey: any): void;\nexport declare function write(targetOrValue: any, contextOrPropertyKey: any): void;\nexport declare function create(targetOrValue: any, contextOrPropertyKey: any): void;\nexport declare abstract class Pass {\n    label: string;\n    isDirty: boolean;\n    isUnculled: boolean;\n    textureCreates: TextureHandle[];\n    textureReads: TextureHandle[];\n    bufferCreates: BufferHandle[];\n    bufferReads: BufferHandle[];\n    writeTexture: TextureHandle[];\n    writeBuffer: BufferHandle[];\n    incomingEdges: number;\n    outgoingNodes: Pass[];\n    constructor(label: string);\n    get name(): string;\n    onSetup(builder: GraphBuilder): void;\n    abstract setup(builder: GraphBuilder): void;\n    abstract execute(context: RenderContext): void;\n}"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "read: Body operations (including nested callbacks): calls to `target[READ_PROPS].push`, `context.addInitializer`, `this[READ_PROPS].push`.",
+                "write: Body operations (including nested callbacks): calls to `target[WRITE_PROPS].push`, `context.addInitializer`, `this[WRITE_PROPS].push`.",
+                "create: Body operations (including nested callbacks): calls to `target[CREATE_PROPS].push`, `context.addInitializer`, `this[CREATE_PROPS].push`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Pass` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public isDirty: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isUnculled: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public textureCreates: TextureHandle[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public textureReads: TextureHandle[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufferCreates: BufferHandle[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufferReads: BufferHandle[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public writeTexture: TextureHandle[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public writeBuffer: BufferHandle[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public incomingEdges",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public outgoingNodes: Pass[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(public label: string)",
+                    "—",
+                    "Implementation: ``. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get name(): string",
+                    "—",
+                    "Implementation: `return this.label;`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "onSetup(builder: GraphBuilder): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.textureReads.push`, `this.bufferReads.push`, `this.writeTexture.push`, `this.writeBuffer.push`, `this.textureCreates.push`, `this.bufferCreates.push`, `this.setup`; 3 explicit loops. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "abstract setup(builder: GraphBuilder): void;",
+                    "—",
+                    "Abstract contract: a concrete subclass supplies this operation. [Source line 133](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L133)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "abstract execute(context: RenderContext): void;",
+                    "—",
+                    "Abstract contract: a concrete subclass supplies this operation. [Source line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts#L134)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rendercontext",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RenderContext"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/frame_graph/RenderContext.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/frame_graph/RenderContext.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RenderContext",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface RenderContext {\n    width: number;\n    height: number;\n    device: GPUDevice;\n    adapter: GPUAdapter;\n    commandEncoder: GPUCommandEncoder;\n    sceneData: SceneData;\n    getTexture(handle: TextureHandle): GPUTexture;\n    getTextureView(handle: TextureHandle): GPUTextureView;\n    getBuffer(handle: BufferHandle): GPUBuffer;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RenderContext` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "width: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 5](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L5)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "device: GPUDevice;",
+                    "—",
+                    "Required record/option field with declared type `GPUDevice`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "adapter: GPUAdapter;",
+                    "—",
+                    "Required record/option field with declared type `GPUAdapter`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "commandEncoder: GPUCommandEncoder;",
+                    "—",
+                    "Required record/option field with declared type `GPUCommandEncoder`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sceneData: SceneData;",
+                    "—",
+                    "Required record/option field with declared type `SceneData`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getTexture(handle: TextureHandle): GPUTexture;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getTextureView(handle: TextureHandle): GPUTextureView;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getBuffer(handle: BufferHandle): GPUBuffer;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/RenderContext.ts#L13)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resource",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Resource"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/frame_graph/Resource.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/frame_graph/Resource.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextureHandle",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BufferHandle",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "createTextureHandle",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "createBufferHandle",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Mode",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TextureSizeFunc",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BufferSizeFunc",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TextureDesc",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BufferDesc",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VirtualResourceBase",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VirtualTexture",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VirtualBuffer",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getHash",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TextureHandle {\n    id: number;\n    index: number;\n    __brand: 'texture';\n}\nexport interface BufferHandle {\n    id: number;\n    index: number;\n    __brand: 'buffer';\n}\nexport declare function createTextureHandle(): TextureHandle;\nexport declare function createBufferHandle(): BufferHandle;\nexport type Mode = \"fixed\" | \"relative\" | \"custom\";\nexport type TextureSizeFunc = (w: number, h: number) => {\n    width: number;\n    height: number;\n};\nexport type BufferSizeFunc = (w: number, h: number) => number;\ninterface TextureDescBase {\n    format: GPUTextureFormat;\n    usage: GPUTextureUsageFlags;\n    sampleCount?: number;\n}\nexport type TextureDesc = (TextureDescBase & {\n    mode: \"fixed\";\n    width: number;\n    height: number;\n}) | (TextureDescBase & {\n    mode: \"relative\";\n    scale: number;\n}) | (TextureDescBase & {\n    mode: \"custom\";\n    sizeFunc: TextureSizeFunc;\n});\ninterface BufferDescBase {\n    usage: GPUBufferUsageFlags;\n}\nexport type BufferDesc = (BufferDescBase & {\n    mode: \"fixed\";\n    size: number;\n}) | (BufferDescBase & {\n    mode: \"relative\";\n    scale: number;\n    bytePerPixel: number;\n}) | (BufferDescBase & {\n    mode: \"custom\";\n    sizeFunc: BufferSizeFunc;\n});\nexport interface VirtualResourceBase {\n    isPersistent: boolean;\n    creator: Pass | null;\n    root: number;\n    physical_index: number;\n    firstPassIndex: number;\n    lastPassIndex: number;\n}\nexport interface VirtualTexture extends VirtualResourceBase {\n    handle: TextureHandle;\n    desc?: TextureDesc;\n    physical_texture?: GPUTexture;\n    default_view?: GPUTextureView;\n}\nexport interface VirtualBuffer extends VirtualResourceBase {\n    handle: BufferHandle;\n    desc?: BufferDesc;\n    physical_buffer?: GPUBuffer;\n}\nexport declare function getHash(res: VirtualBuffer | VirtualTexture, canvasWidth: number, canvasHeight: number): string;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "createTextureHandle: Implementation: `return { id: ++_next_id, index: 0, __brand: 'texture' } as TextureHandle`.",
+                "createBufferHandle: Implementation: `return { id: ++_next_id, index: 0, __brand: 'buffer' } as BufferHandle`.",
+                "getHash: Body operations (including nested callbacks): calls to `parts.push`, `parts.join`, `desc.usage.toString`, `d.sizeFunc`, `alignedSize.toString`; return paths including `parts.join(\":\")`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TextureHandle` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "id: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 5](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L5)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "index: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "__brand: 'texture';",
+                    "—",
+                    "Required record/option field with declared type `'texture'`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L7)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BufferHandle` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "id: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "index: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "__brand: 'buffer';",
+                    "—",
+                    "Required record/option field with declared type `'buffer'`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L13)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VirtualResourceBase` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "isPersistent: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "creator: Pass | null;",
+                    "—",
+                    "Required record/option field with declared type `Pass | null`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "root: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "physical_index: number,",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "firstPassIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lastPassIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L61)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VirtualTexture` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "handle: TextureHandle;",
+                    "—",
+                    "Required record/option field with declared type `TextureHandle`. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "desc?: TextureDesc;",
+                    "—",
+                    "Optional record/option field with declared type `TextureDesc`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "physical_texture?: GPUTexture;",
+                    "—",
+                    "Optional record/option field with declared type `GPUTexture`. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "default_view?: GPUTextureView;",
+                    "—",
+                    "Optional record/option field with declared type `GPUTextureView`. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L68)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VirtualBuffer` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "handle: BufferHandle;",
+                    "—",
+                    "Required record/option field with declared type `BufferHandle`. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "desc?: BufferDesc;",
+                    "—",
+                    "Optional record/option field with declared type `BufferDesc`. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "physical_buffer?: GPUBuffer;",
+                    "—",
+                    "Optional record/option field with declared type `GPUBuffer`. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Resource.ts#L74)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resourcepool",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ResourcePool"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/frame_graph/ResourcePool.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/frame_graph/ResourcePool.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ResourcePool",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ResourcePool {\n    getTexture(physical_index: number): GPUTexture;\n    getTextureView(physical_index: number): GPUTextureView;\n    getBuffer(physical_index: number): GPUBuffer;\n    setTexture(physical_index: number, texture: GPUTexture): void;\n    setBuffer(physical_index: number, buffer: GPUBuffer): void;\n    acquireTexture(device: GPUDevice, desc: TextureDesc, canvasWidth: number, canvasHeight: number): number;\n    acquireBuffer(device: GPUDevice, desc: BufferDesc, canvasWidth: number, canvasHeight: number): number;\n    clear(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ResourcePool` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public getTexture(physical_index: number): GPUTexture",
+                    "—",
+                    "Implementation: `return this.textures[physical_index];`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getTextureView(physical_index: number): GPUTextureView",
+                    "—",
+                    "Implementation: `let view = this.textureViews[physical_index]; if (!view && this.textures[physical_index]) { view = this.textures[physical_index].createView(); this.textureViews[physical_index] = view; } return view!;`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBuffer(physical_index: number): GPUBuffer",
+                    "—",
+                    "Implementation: `return this.buffers[physical_index]`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTexture(physical_index: number, texture: GPUTexture): void",
+                    "—",
+                    "Implementation: `this.textures[physical_index] = texture; this.textureViews[physical_index] = null;`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setBuffer(physical_index: number, buffer: GPUBuffer): void",
+                    "—",
+                    "Implementation: `this.buffers[physical_index] = buffer;`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public acquireTexture(device: GPUDevice, desc: TextureDesc, canvasWidth: number, canvasHeight: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `desc.sizeFunc`, `device.createTexture`, `this.textures.push`; return paths including `index`. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public acquireBuffer(device: GPUDevice, desc: BufferDesc, canvasWidth: number, canvasHeight: number): number",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `desc.sizeFunc`, `GPUAllocator.safeCreateBuffer`, `this.buffers.push`; return paths including `index`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear()",
+                    "—",
+                    "Implementation: `Renderer.destroyBuffers(...this.textures); Renderer.destroyBuffers(...this.buffers); this.textures = []; this.textureViews = []; this.buffers = [];`. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts#L75)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

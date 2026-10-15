@@ -1,0 +1,222 @@
+{
+  "features/feature_dot": {
+    "description": "Compare fixed points, labeled points and a continuously moving tracer.",
+    "walkthrough": [
+      "Axes maps curve coordinates through c2p. Ordinary dots identify selected points; AnnotationDot and LabeledDot attach different kinds of explanation to a location.",
+      "The glowing tracer advances its parameter using elapsed time, while other dots stay at their chosen coordinates. Its motion comes from an updater, not from the initial reveal animation."
+    ],
+    "experiments": [
+      "Freeze the tracer’s parameter and change its glow radius. Compare an appearance change with movement along the curve."
+    ]
+  },
+  "features/feature_equation": {
+    "description": "Match vector-text characters across an anagram and an algebra step.",
+    "walkthrough": [
+      "The first transformation changes LISTEN to SILENT after decomposing the Text entities into characters. TransformMatchingText can associate matching glyphs even when their order changes.",
+      "The second transformation changes 3x = 9 to x = 3 and colors selected characters. This example uses vector Text rather than a LaTeX typesetter; the strings themselves supply the algebra."
+    ],
+    "experiments": [
+      "Replace the anagram with another pair containing repeated letters. Inspect how matching and unmatched characters move."
+    ]
+  },
+  "features/feature_number_plane": {
+    "description": "Plot two waves and label selected points on a coordinate grid.",
+    "walkthrough": [
+      "NumberPlane combines axes and grid lines. Its plotting helpers convert mathematical coordinates into scene geometry, so changing physical width differs from changing xRange.",
+      "The sine wave and damped wave share that coordinate mapping. Their reveal animations introduce already-defined curves and labels in a controlled order."
+    ],
+    "experiments": [
+      "Double the plane width without changing its coordinate ranges. Compare the waves’ displayed spacing with their mathematical period."
+    ]
+  },
+  "features/feature_plot_function": {
+    "description": "Compare an explicit curve with a sampled radial surface.",
+    "walkthrough": [
+      "The upper Axes plots a function of x; the lower ThreeDAxes hosts a SurfaceGraph3D. An orbit controller lets you inspect the spatial surface from another angle.",
+      "The surface callback handles radius zero explicitly. The curve’s fractional powers also need a valid input domain: negative bases can produce NaN for noninteger exponents. Keep domain validity separate from the staged view-style changes."
+    ],
+    "experiments": [
+      "Restrict the explicit curve to positive x, then change its exponent. Compare that geometry change with changing only the surface shading style."
+    ]
+  },
+  "features/feature_plot_implicit": {
+    "description": "Draw a two-dimensional relation and a three-dimensional torus without solving for a dependent coordinate.",
+    "walkthrough": [
+      "ImplicitCurve2DGPU receives a WGSL expression in x and y. Its zero set defines the visible curve, so the function need not be expressible as y = f(x).",
+      "ImplicitSurface3D evaluates a torus relation in three variables. The axes and staged view styles help you inspect the same zero set as a spatial surface."
+    ],
+    "experiments": [
+      "Change the torus major radius while holding the minor radius fixed. Compare the hole size with the thickness of the tube."
+    ]
+  },
+  "features/feature_plot_parametric": {
+    "description": "Sample a helix and a torus from parameter callbacks.",
+    "walkthrough": [
+      "ParametricCurve3D converts a single parameter into a Vec3. ParametricSurface3D converts two parameters into a Vec3; their ranges and segment counts control which geometry gets sampled.",
+      "The custom shader changes color and alpha on the surface. It changes the visible treatment of the existing geometry, while changing the callback changes the mesh itself."
+    ],
+    "experiments": [
+      "Increase the helix parameter range without changing its step. Then increase the torus segment count and compare extent with sampling density."
+    ]
+  },
+  "features/feature_polar_axes": {
+    "description": "Draw a rose curve and a spiral in polar coordinates.",
+    "walkthrough": [
+      "PolarAxes.plotPolar interprets the callback result as radius at an angle measured in radians. The rose oscillates in radius; the spiral increases radius with angle.",
+      "Each curve is created in sequence so its shape can be followed. A negative rose radius is meaningful in polar coordinates and does not represent an invalid Cartesian point."
+    ],
+    "experiments": [
+      "Change cos(4 * theta) to cos(3 * theta), then compare the petals over the same angular interval."
+    ]
+  },
+  "features/feature_primitive_shader_showcase": {
+    "description": "Combine mathematical geometry with gradient effects on its stroke and fill.",
+    "walkthrough": [
+      "The scene plots a wave and adds area and Riemann-rectangle representations. PathEffectGradient styles the contour; FillEffectLinearGradient styles filled regions.",
+      "A ValueTracker drives the wave’s function updates. That changes geometry, while the gradient effects change how the resulting geometry is shaded."
+    ],
+    "experiments": [
+      "Keep the tracker fixed and alter one gradient stop. Then restore the tracker animation to separate paint changes from changing curve shape."
+    ]
+  },
+  "features/feature_surface": {
+    "description": "Inspect a checkerboard Gaussian surface with an orbit camera.",
+    "walkthrough": [
+      "ParametricSurface3D samples a Gaussian bump over u and v. Its checkerboard colors make the grid of surface patches visible, and ThreeDAxes supplies a spatial reference.",
+      "The active example remains a static Gaussian after its waits. The proposed ripple and rotation updates are commented out, so they do not animate the visible surface."
+    ],
+    "experiments": [
+      "Enable just surface.updateFunction in the commented updater. Compare the resulting height changes with the original static bump before enabling rotation."
+    ]
+  },
+  "features/feature_threed_axes": {
+    "description": "Place a helix and a radial ripple on the same spatial axes.",
+    "walkthrough": [
+      "ThreeDAxes supplies the coordinate frame. A parametric callback creates the helix, while a height callback creates the ripple surface and handles its center without division by zero.",
+      "The axes and helix are drawn before the surface fades in. Orbiting the camera helps reveal how the curve sits relative to the surface rather than changing either mathematical definition."
+    ],
+    "experiments": [
+      "Change the helix’s vertical coefficient from 0.3 to 0.6. Compare its pitch with the unchanged ripple surface."
+    ]
+  },
+  "features/feature_vector_field_3d": {
+    "description": "Inspect a sampled vector field with two poles and a rotational component.",
+    "walkthrough": [
+      "The callback combines attraction toward two poles with a curl-like term. VectorField3D displays sampled arrows; this scene does not integrate particle trajectories.",
+      "The grouped axes and field rotate together while updateField refreshes the arrow data. Sampling and camera motion remain separate from the vector formula."
+    ],
+    "experiments": [
+      "Set the rotational term’s coefficient to zero. Compare arrow directions near the poles with the original swirling field."
+    ]
+  },
+  "features/feature_vector_field_fluid": {
+    "description": "Follow streamlines through an analytic, pointer-influenced vector field.",
+    "walkthrough": [
+      "VectorField2D and Streamlines2D share the same time-dependent callback. One shows local directions; the other makes longer motion through those directions easier to follow.",
+      "The pointer is unprojected through the camera and converted with axes.p2c. The formula is a prescribed field, rather than a Navier–Stokes solver evolving pressure and incompressibility."
+    ],
+    "experiments": [
+      "Freeze the time value in the callback and move the pointer. Then freeze the pointer position to isolate the time-dependent flow."
+    ]
+  },
+  "features/inspector_test_scene": {
+    "description": "Explore an entity fixture containing styled paths, typography and pointer handling.",
+    "walkthrough": [
+      "The scene creates several entities with different geometry and paint settings. The builder-generated hexagon has a click handler, providing an event target as well as a visible shape.",
+      "This source serves as an inspector fixture. The documentation preview runs the scene; the separate Studio inspector is not embedded in that preview."
+    ],
+    "experiments": [
+      "Change the hexagon’s join or cap settings, click it, and inspect the browser console message from its handler."
+    ]
+  },
+  "features/math_shape": {
+    "description": "Compare wireframe and fill on a box, sphere and torus.",
+    "walkthrough": [
+      "MathShape factories create spatial primitives with their own mesh topology. Positions separate them, while fill and stroke settings expose faces and edges together.",
+      "The updater rotates each shape using elapsed time. The orbit controller changes your view independently, making it possible to inspect the rotating geometry from a fixed or moving camera."
+    ],
+    "experiments": [
+      "Disable one shape’s fill while keeping its stroke. Compare the resulting wireframe with the filled neighboring primitives."
+    ]
+  },
+  "features/model_manim_shading_showcase": {
+    "description": "Compare solid and checkerboard treatments across spatial primitives.",
+    "walkthrough": [
+      "Box, Sphere, Cylinder and Torus supply different surfaces. Their shading options control color treatment; checkerboard colors reveal patches without changing the underlying mesh topology.",
+      "SDFText titles are marked as UI, while the models rotate in world space. This keeps the labels readable as the camera and models move."
+    ],
+    "experiments": [
+      "Enable checkerboard shading on a solid sphere. Compare the apparent surface structure with the same sphere’s unchanged silhouette."
+    ]
+  },
+  "features/noise_1d": {
+    "description": "Compare seven families and combinations of one-dimensional noise.",
+    "walkthrough": [
+      "The stacked curves sample white, Perlin, simplex, value and Worley noise, followed by fractal and ridged variants. Vertical offsets keep the curves readable.",
+      "Seed, sampling scale and time offset all affect the comparison. Hold those choices steady when investigating a generator instead of attributing every difference to its name."
+    ],
+    "experiments": [
+      "Freeze time and use the same input scale for Perlin and simplex. Then change only their seed and compare continuity."
+    ]
+  },
+  "features/noise_curl_2d": {
+    "description": "Turn scalar noise into a flowing two-dimensional vector field.",
+    "walkthrough": [
+      "The field combines macro and micro noise before sampleCurl2D produces directions. VectorField2D shows those directions as arrows rather than rendering the scalar noise as brightness.",
+      "The updater also changes axis ranges, affecting which part of the field is sampled. Fix the ranges when comparing the contribution of the two noise scales."
+    ],
+    "experiments": [
+      "Remove the micro-noise contribution and keep the axes fixed. Compare broad circulation with the original smaller variations."
+    ]
+  },
+  "features/noise_scalers": {
+    "description": "Reshape noise into quantized, remapped terrain heights.",
+    "walkthrough": [
+      "NoiseScaler wraps a Perlin source and applies quantization, output-range mapping and a power curve. SurfaceGraph3D samples the transformed values as heights.",
+      "The input offsets move through the noise field over time. Color stops expose height bands, so a stepped surface can be read independently of its motion."
+    ],
+    "experiments": [
+      "Reduce the number of quantization steps. Compare terrace spacing while leaving the output range and power curve unchanged."
+    ]
+  },
+  "features/noise": {
+    "description": "Build a moving terrain from several noise scales.",
+    "walkthrough": [
+      "A domain-warped Perlin component supplies broad terrain. Worley detail and smaller simplex samples add structure at other scales before the height values are combined.",
+      "The surface updater changes sample coordinates with time. This moves through a fixed procedural definition rather than loading successive mesh assets."
+    ],
+    "experiments": [
+      "Remove the smallest ripple contribution. Compare the terrain silhouette and local texture with the full combination."
+    ]
+  },
+  "features/polyhedra_prisms_showcase": {
+    "description": "Compare Platonic solids with prisms of different bases.",
+    "walkthrough": [
+      "MathShape factories produce a box, tetrahedron, octahedron and several prisms. Their positions and labels let you compare faces and edges without changing the camera.",
+      "Rotation and bobbing come from elapsed-time updates. The prism’s base definition determines topology; animation only changes its transform."
+    ],
+    "experiments": [
+      "Replace the triangular prism base with four sides. Inspect the new faces before changing its rotation speed."
+    ]
+  },
+  "features/timescale": {
+    "description": "Slow the scene clock while several animations overlap.",
+    "walkthrough": [
+      "Some play calls are intentionally not awaited, allowing text, movement and morphing to overlap. TracePath makes the model’s motion easier to compare across the timing changes.",
+      "animateTimeScale eases the scene clock toward a small positive rate and later back to one. Scene waits also follow that clock, so a short timeline wait can take much longer in wall time during slow motion."
+    ],
+    "experiments": [
+      "Change the slow-motion target from 0.02 to 0.2. Compare elapsed wall time while leaving animation durations unchanged."
+    ]
+  },
+  "features/track_animation_demo": {
+    "description": "Give a composite telemetry card its own staged creation animation.",
+    "walkthrough": [
+      "TelemetryCard extends Entity and attaches its frame, labels, beacon and sparkline as children. Its createAnim hook receives a TrackBuilder that describes how those pieces enter.",
+      "Each t.add call starts a stage; animations passed in that call run together. t.wait separates stages. Create invokes the composite hook, letting callers introduce the card without repeating its internal sequence."
+    ],
+    "experiments": [
+      "Move the sparkline Create into its own t.add stage. Compare the changed order with increasing its duration inside the existing parallel stage."
+    ]
+  }
+}

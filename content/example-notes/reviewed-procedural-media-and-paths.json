@@ -1,0 +1,208 @@
+{
+  "procedural/procedural": {
+    "description": "Build fish outlines from linked points and steer a large school.",
+    "walkthrough": [
+      "Each fish has a lightweight JavaScript chain of dot records and a visible Spline outline. The dots describe its internal spine; they are not invisible Entity objects. This keeps simulation data separate from the geometry the renderer actually draws.",
+      "The head moves toward a target. Following dots are constrained by segment distance and a maximum turn angle, then the outline is reconstructed around the spine. Those rules create swimming motion without a full rigid-body or fluid solver. Change spacing and turning constraints separately to distinguish body length from stiffness.",
+      "The hero fish follows the pointer. Smaller fish use procedural targets, with Noise supplying smooth variation. The orthographic camera and large scene scale make room for the school. Pointer coordinates must be converted through the scene camera before they can serve as world-space targets.",
+      "SCHOOL_COUNT is currently 2500. Every fish still requires CPU chain updates and outline reconstruction, so sharing draw infrastructure does not eliminate its simulation cost. The separate background instancing loop currently uses a count of one, despite comments describing a much larger cloud; measure the active code rather than its labels.",
+      "The noise seed makes that particular noise field repeatable, but the construction also uses Math.random for placement and size. A deterministic video requires seeding those inputs too and defining the state at restart. Otherwise identical noise does not imply identical initial fish.",
+      "Use a small school to tune the constraints, then scale up while measuring update time, geometry upload and GPU work separately. Retain the updater handle if the surrounding application will stop the simulation without destroying the scene, and release the visible splines with their owning scene."
+    ],
+    "experiments": [
+      "Reduce SCHOOL_COUNT to 25 and increase the maximum turn angle. Watch the spine bend before returning to the larger workload.",
+      "Keep the noise seed fixed and replace Math.random during initialization with a seeded generator. Restart twice and compare the initial school positions."
+    ]
+  },
+  "raymarch/raymarched_dynamic": {
+    "description": "Update a raymarched height function through a bound uniform buffer.",
+    "walkthrough": [
+      "RaymarchedPlot3D receives WGSL that reads a custom wave-properties struct. The CPU allocates and binds that struct’s buffer once.",
+      "The updater uploads time and wave values without rebuilding the shader. Uniform layout must agree with WGSL; changing a JavaScript array alone does not upload new values."
+    ],
+    "experiments": [
+      "Freeze time and change amplitude. Compare a static height adjustment with the original traveling wave."
+    ]
+  },
+  "raymarch/sdf_2d": {
+    "description": "Compare a catalog of two-dimensional distance functions.",
+    "walkthrough": [
+      "Each SDF2D card evaluates a WGSL distance helper such as circle, box or segment. VGroup arranges the cards and their labels.",
+      "The cards enter sequentially before ambient motion begins. Shape parameters define the distance field; reveal easing and position updates only control presentation."
+    ],
+    "experiments": [
+      "Change one rounded-box corner radius while keeping the other three fixed. Inspect the asymmetric result."
+    ]
+  },
+  "raymarch/sdf_test": {
+    "description": "Combine spatial distance fields with union, subtraction and intersection.",
+    "walkthrough": [
+      "SDFNode operations build expression trees before SDFEntity3D renders them. Smooth unions join offset spheres; subtraction cuts spherical voids from a box.",
+      "Operand transforms belong to the distance expression. Rotating the finished entity moves the combined object without changing how its operands relate."
+    ],
+    "experiments": [
+      "Reduce the smooth-union amount to zero. Compare the join between spheres with the original rounded connection."
+    ]
+  },
+  "recreation/ball_collision": {
+    "description": "Integrate bouncing particles against an analytic V-shaped boundary on the GPU.",
+    "walkthrough": [
+      "A ComputeKernel updates position and velocity records, then writes Instanced circle transforms. Line3D supplies the visible boundary but the kernel’s equations perform the collision response.",
+      "The active constants select 10,000 balls and a trail length of one. Older comments describing 150 balls with long trails do not match the running configuration."
+    ],
+    "experiments": [
+      "Lower NUM_BALLS to 100 and raise TRAIL_LEN to 20. Inspect individual bounce paths before testing larger counts."
+    ]
+  },
+  "recreation/deformed_frog": {
+    "description": "Deform a pixel-grid frog and its coordinate plane together.",
+    "walkthrough": [
+      "PixelGrid maps a small color matrix into tiles. NumberPlane uses matching coordinate bounds, providing a reference for the wave, conformal and swirl fields.",
+      "HomotopyAnimation applies each field to both targets. Deforming the plane alongside the frog makes the changed coordinate mapping visible."
+    ],
+    "experiments": [
+      "Remove the plane from the animation targets for one run. Compare a fixed reference grid with the shared deformation."
+    ]
+  },
+  "recreation/deformed_image": {
+    "description": "Warp an image mesh and a matching coordinate grid.",
+    "walkthrough": [
+      "MeshSprite subdivides the image surface so HomotopyAnimation can move more than its outer corners. NumberPlane supplies coordinate lines over the same area.",
+      "Wave, conformal and swirl fields move corresponding geometry together. Texture coordinates keep the image attached to the deformed mesh."
+    ],
+    "experiments": [
+      "Reduce mesh subdivisions and replay the swirl. Compare faceted deformation with the original smooth warp."
+    ]
+  },
+  "recreation/deformed_texture": {
+    "description": "Apply coordinate deformations to a textured world map.",
+    "walkthrough": [
+      "The source places an equirectangular map on MeshSprite and overlays a coordinate plane. Shared bounds align map features with the displayed coordinate lines.",
+      "These are planar field deformations, rather than automatic geographic projections preserving a named cartographic property. The formula determines which distances and angles change."
+    ],
+    "experiments": [
+      "Freeze at the strongest sinusoidal deformation and inspect the equator. Compare it with the undeformed map."
+    ]
+  },
+  "recreation/deformed_video": {
+    "description": "Keep video pixels playing while their display mesh deforms.",
+    "walkthrough": [
+      "Sprite supplies the video source; MeshSprite provides a subdivided surface. NumberPlane receives the same HomotopyAnimation fields.",
+      "Video time and geometric animation are separate clocks. Browser media restrictions or a failed video request can affect playback while the mesh animation still runs."
+    ],
+    "experiments": [
+      "Pause the video but keep the swirl animation. Compare changing pixels with moving geometry."
+    ]
+  },
+  "recreation/maze_game": {
+    "description": "A seeded maze rendered by a GPU shader with CPU grid rules, keyboard movement, levels and canvas-native UI.",
+    "walkthrough": [
+      "generatePuzzleMaze uses a seeded random source and writes a Uint32Array grid. The grid is the game’s logical map; the shader reads packed map data and visual parameters to render walls, paths, player and highlights. Using one rendered Shader surface avoids allocating an entity for every visible cell.",
+      "loadLevel selects grid size and seed, uploads the map and restores player/goal state. Grid indices, world coordinates and per-cell UVs are different spaces. cellToWorld and worldToCell define their conversion, while getPointLocalCellUV identifies a position inside one cell.",
+      "Keyboard listeners maintain heldKeys. updateDiscreteGridMovement consumes that input and checks logical wall rules, while playerPos provides smooth visual motion. This separation lets the shader show interpolated motion without changing which cells are legal.",
+      "writeUniformParams sends player, level and animation values into the GPU buffer. Pointer callbacks and canvas-native controls update the application state; the frame-wide shader then reflects that state. A shader effect does not itself decide whether a move is legal.",
+      "checkLevelCompletion triggers the victory state and bonus; updateVictoryCelebration supplies the visual effect and the next-level control advances the level. Test completion once per level so repeated frames at the goal do not award a bonus repeatedly.",
+      "The scene overrides destroy, calls super.destroy and removes its stored keyboard listeners. Inspect other owned GPU and application resources when adapting it to a host. Replay must restore held keys, level state, seed and visual counters as well as the engine timeline."
+    ],
+    "experiments": [
+      "Keep the seed fixed and restart to compare the same maze; change only the seed to obtain another map.",
+      "Compare a keyboard move with pointer highlighting at the same cell and inspect their world/grid conversion.",
+      "Change visual interpolation speed while keeping collision rules fixed, then test that the player never crosses a wall."
+    ]
+  },
+  "recreation/maze": {
+    "description": "Generate mazes and visualize routes between movable endpoints.",
+    "walkthrough": [
+      "Maze topology is generated on the CPU using one of four algorithms: recursive backtracker, Wilson’s, sidewinder or Aldous–Broder. Each cell stores wall bits and a generation-step index. GRID_SIZE is currently 50, so the active grid has 2500 cells; the nearby 20×20 comment is stale.",
+      "The GPU receives walls, cellSteps, distance values and a path mask. A custom Shader renders the whole grid from those buffers. It is a buffer-driven image rather than a scene containing one rectangle per cell. The packed uniform block mixes integer fields and floating-point colors; preserve byte offsets when editing its layout.",
+      "During construction, activeMaxStep reveals cells in generation order. The updater writes progress and requests a frame, then returns before distance relaxation. Increasing buildSpeed speeds up the presentation of already computed topology, not the maze-generation algorithm itself.",
+      "After construction, the wave compute shader repeatedly lowers each cell’s distance through reachable neighbors, with distance zero at the goal. Each frame dispatches fifteen relaxation rounds using 16×16 workgroups, then runs a trace shader that walks descending distances from the start. The in-place parallel relaxation should be understood as iterative convergence, not an immediate serial breadth-first result.",
+      "Start and goal circles are draggable. World positions are clamped to grid coordinates, and released handles ease toward cell centers. Changing the goal resets the distance field; moving only the start changes the traced route through the existing field. Those two interactions therefore require different work.",
+      "The panel changes algorithm, theme and regeneration settings. Regeneration replaces topology and resets its GPU state; restarting presentation alone is a different operation. When adapting the scene, destroy or reuse old buffers deliberately and remove the DOM panel/listeners with the host. Seed CPU random choices when a maze must replay identically in video."
+    ],
+    "experiments": [
+      "Keep the same maze and drag only the start, then drag the goal. Compare the immediate route change with the distance field’s reconvergence.",
+      "Lower the per-frame relaxation count from 15 to 1. Watch the field settle, then restore it before comparing algorithms."
+    ]
+  },
+  "render_targets/blur_animation_demo": {
+    "description": "Compare blur entrance, exit, pulse and focus transitions.",
+    "walkthrough": [
+      "Each RenderTarget isolates a small composition and exposes it through a sprite. The blur animation methods change the target’s filtering and visibility over time.",
+      "blurIn and blurOut serve entrance and exit roles; blurPulse is a temporary accent, while blurTo leaves a chosen focus state. They do not blur unrelated scene entities."
+    ],
+    "experiments": [
+      "Apply blurTo to one target while leaving neighboring targets sharp. Compare isolation with changing the whole scene."
+    ]
+  },
+  "render_targets/blur_demo": {
+    "description": "Compare sharp, fixed-blur and changing-blur offscreen content.",
+    "walkthrough": [
+      "Separate RenderTarget instances capture their own entities. Their sprites expose the target textures, including any configured blur.",
+      "The dynamic target changes blur radius while its contents move. Radius and iteration settings affect filtering cost and appearance independently of mesh motion."
+    ],
+    "experiments": [
+      "Freeze dynamic blur radius at zero, then at 20. Compare the same moving content under both settings."
+    ]
+  },
+  "shapes_paths_2d/builder_demo": {
+    "description": "Construct styled paths with a chain of Builder commands.",
+    "walkthrough": [
+      "Builder creates stars, rounded rectangles, splines, arrows and a compound cloud contour. build converts the accumulated commands into transformable scene entities.",
+      "The font-dependent badge adds an asynchronous resource requirement. This active example constructs shapes in code; it does not provide a pointer-based path-authoring tool."
+    ],
+    "experiments": [
+      "Change a spline control point and replay. Compare that geometry edit with changing only its stroke width."
+    ]
+  },
+  "shapes_paths_2d/chalk_demo": {
+    "description": "Compare procedural chalk stroke presets on paths and equations.",
+    "walkthrough": [
+      "The blackboard is a composition of ordinary geometry, labels and path effects. A Camera2DController allows inspection at a different scale. The dark clear color provides contrast; it does not by itself produce the chalk texture.",
+      "Three comparable curves use PathEffect.Handwritten, PathEffect.RoughChalk and PathEffect.FineChalk. Their options vary grain, density, jitter, pressure, wobble and coreRatio. Stroke width remains a paint setting, while the effect changes the coverage and variation within that stroke. These are procedural visual treatments, not a simulation of chalk particles contacting a board.",
+      "The cursive paths add pressure-like variation to loops and flourishes. Tex supplies vector paths for mathematical formulas, allowing the same stroke treatment on LaTeX geometry. SDFText is used for explanatory labels; its atlas-backed glyphs and the Tex/vector outlines are different rendering representations.",
+      "The circle, diameter, tangent and arrowhead demonstrate applying the effect to a construction diagram. The colored palette gives each wave a different seed. A seed changes its procedural pattern; a color changes its paint. Keep those inputs separate when matching a consistent handwriting style.",
+      "After 1,500 ms of inspection, five selected paths animate their visible interval until they disappear, reset t1 and t2 to zero, wait 400 ms, then reveal over 2,400 ms. These are path reveal fractions rather than pixel distances. The surrounding while(true) is commented out, so the active source performs this erase/reveal sequence once.",
+      "Use this technique for a narrated proof or classroom diagram. Keep labels legible, select a stroke width at the intended output resolution, and export a close-up to inspect fine grain. A shader preset can look different when downsampled, even though its underlying geometry and reveal timings are unchanged."
+    ],
+    "experiments": [
+      "Give all three curves the same stroke width, then set wobble to zero in one preset. Compare contour motion separately from grain.",
+      "Change only the final reveal duration. The drawing should take a different amount of time without changing its complete chalk pattern."
+    ]
+  },
+  "shapes_paths_2d/dynamic_stroke_demo": {
+    "description": "Compare sketch, calligraphic, brush and fluid stroke treatments.",
+    "walkthrough": [
+      "The left column applies five stroke treatments to similarly shaped cubic curves: Sketch, Calligraphic, Brush, Spontaneous and Fluid. Each has a fixed base stroke width and a different shader configuration. This provides a useful comparison of line character without changing the basic path construction.",
+      "PathEffect options control variations such as pressure, taper, ink density and irregularity. The visible line can broaden or thin along its length while the centerline stays the same. Do not confuse a shader-driven width profile with moving the Bézier control points or changing the path’s topology.",
+      "The right column applies related treatments to a circle, a looping gradient path and a signature-like flourish. A chained Gradient → DynamicStroke → Glow effect demonstrates combining color, width variation and surrounding light. Compare the chain one effect at a time so a glow halo does not hide what the stroke profile is doing.",
+      "The last path is introduced with Create over 2,500 ms using Rate.easeInOutCubic. Reveal progress and dynamic line weight act together: the former chooses the visible segment, while the latter styles that segment. The active run method contains this one awaited reveal rather than a loop rebuilding every path.",
+      "Use camera zoom to inspect caps and joins at wide parts of a curve. Round caps are selected for the showcase, and their appearance is affected by local width. Tight curves and large widths can make overlapping stroke regions more obvious, so inspect those cases before choosing an artistic preset for dense diagrams.",
+      "For an application or video, reuse a prepared effect for a deliberate style and measure the resulting render cost at output resolution. A visual label such as living calligraphy describes the treatment; it is not evidence of pointer pressure input or a physical ink solver in this scene."
+    ],
+    "experiments": [
+      "Remove Glow from the chained effect, then remove Gradient. Compare the same path to isolate halo, color and line weight.",
+      "Keep Create duration fixed and halve the base stroke width. Inspect the final cap and narrow parts at the same camera zoom."
+    ]
+  },
+  "shapes_paths_2d/fill_demo": {
+    "description": "Compare linear, radial and checkerboard fills during a border-to-fill reveal.",
+    "walkthrough": [
+      "Builder supplies the contours, while FillEffect selects the fill shader. The three panels combine those fills with different stroke effects.",
+      "DrawBorderThenFill introduces the outline before filling the region. The active example is a fill-effect gallery rather than a dedicated even-odd versus nonzero winding comparison."
+    ],
+    "experiments": [
+      "Use the same rectangle for all three fill effects. Compare shaders without differences in silhouette."
+    ]
+  },
+  "shapes_paths_2d/instanced_path_demo": {
+    "description": "Repeat an ornate vector petal through a moving spiral.",
+    "walkthrough": [
+      "Path provides shared fill and stroke geometry, and Instanced stores each petal’s transform and color. The golden-angle distribution spreads records across the composition.",
+      "The updater changes instance records rather than rebuilding the SVG contour for every petal. Draw-call and frame-rate claims depend on the selected path pipeline and actual workload."
+    ],
+    "experiments": [
+      "Reduce INSTANCE_COUNT to 100 and change the shared petal contour. Confirm all instances inherit the new silhouette."
+    ]
+  }
+}

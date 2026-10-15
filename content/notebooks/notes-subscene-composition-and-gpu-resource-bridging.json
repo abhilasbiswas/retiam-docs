@@ -1,0 +1,148 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-subscene-composition-and-gpu-resource-bridging",
+  "title": "SubScene Composition & GPU Resource Bridging Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SUBSCENE_COMPOSITION_AND_GPU_RESOURCE_BRIDGING.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SUBSCENE_COMPOSITION_AND_GPU_RESOURCE_BRIDGING.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SUBSCENE_COMPOSITION_AND_GPU_RESOURCE_BRIDGING.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [SubScene](/api-entities#subscene), [Complex](/api-math#complex), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Entity](/api-core-entity#entity), [SceneComposer](/api-core-scenecomposer#scenecomposer), [Text](/api-entities-composites-text#text), [Camera](/api-camera#camera), [Compute](/api-compute#compute), [Queue](/api-utils#utility), [State](/api-core#state), [Usage](/api-utils#gpu-utils), [Circle](/api-entities-primitives-2d#circle), [NumberPlane](/api-entities-composites-coordinates#numberplane), [Color](/api-math#color), [Vec3](/api-math-vector#vec3), [WHITE](/api-core#constants), [RED](/api-core#constants), [CYAN](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Complex multi-part animations (e.g. an explainer video with an interactive clock widget, a split-screen physics simulation, and independent timelines) are difficult to manage within a single monolithic scene graph."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides the [`SubScene`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/SubScene.ts) entity, which enables **Scene-in-Scene nesting**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Complete Encapsulation**: A sub-animation is authored as a standalone [`Scene`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts) with its own camera, animations, coordinate axes, and lifecycle.",
+            "**Hierarchical Scene Graph Mounting**: The `SubScene` wraps the child scene as a standard [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts), allowing it to be positioned, rotated, scaled, anchored (`nextTo`, `alignTo`), and animated via the master scene.",
+            "**GPU Resource Bridging**: Automatically shares the parent scene's WebGPU device, compute dispatch queues, state managers, and render pipelines, eliminating duplicate VRAM initialization."
+          ]
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "Master Scene",
+              "description": "SceneComposer / WebGPU device",
+              "children": [
+                {
+                  "label": "Master entities",
+                  "description": "Title text and background"
+                },
+                {
+                  "label": "SubScene",
+                  "description": "Entity wrapper",
+                  "children": [
+                    {
+                      "label": "Nested Scene",
+                      "description": "Own entities and camera",
+                      "children": [
+                        {
+                          "label": "GPU resource sharing",
+                          "description": "device · renderer · stateManager"
+                        },
+                        {
+                          "label": "Time synchronization",
+                          "description": "updateTime · invalidate"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-resource-bridging-mechanics-subscene-ts-src-engine-entities-subscene-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Resource Bridging Mechanics ([SubScene.ts](../src/engine/entities/SubScene.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a `SubScene` is added to a parent scene graph, its `update(t, dt)` cycle establishes the GPU bridge upon its first frame:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "if (parentScene && !this.isLinked) {\n    if (parentScene.composer) {\n        this.nestedScene.composer = parentScene.composer;\n        this.nestedScene.device = parentScene.composer.device;\n        this.nestedScene.compute = parentScene.composer.compute;\n        this.nestedScene.renderer = parentScene.composer.renderer;\n        this.nestedScene.stateManager = parentScene.composer.stateManager;\n    }\n    // Propagate render invalidation upwards\n    this.nestedScene.invalidate = () => parentScene.invalidate();\n    this.isLinked = true;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Key Bridged Subsystems"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Compute Dispatch Queue (`compute_queue`)**: GPU compute tasks requested by the child scene (such as Chaikin curve smoothing or instanced layout computation) are multiplexed into the parent's command encoder pass.",
+            "**Global State Allocator (`stateManager`)**: State uniform memory slabs (256-byte blocks) are allocated from the parent's unified GPU buffer pool.",
+            "**Invalidation Chaining**: When a child entity mutates its transform or color, `invalidate()` bubbles up to the parent `SceneComposer`, triggering a redraw without requiring polling.",
+            "**Time & Delta Propagation**: Each master tick advances the child's local clock:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "this.nestedScene.updateTime(dt);\n   this.nestedScene.update(this.nestedScene.time, this.nestedScene.dt);"
+        }
+      ]
+    },
+    {
+      "id": "3-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, SubScene, Circle, NumberPlane, Text, Color, Vec3 } from \"retiam\";\n\n// 1. Author independent child widget scene\nclass ClockWidgetScene extends Scene {\n    async run() {\n        const face = new Circle(2.0, { stroke: Color.WHITE, stroke_width: 0.1 });\n        const secondHand = new Circle(0.1, { fill: Color.RED });\n        this.add(face, secondHand);\n\n        this.always(({ time }) => {\n            secondHand.transform.position = new Vec3(\n                Math.cos(-time * 2.0) * 1.6,\n                Math.sin(-time * 2.0) * 1.6,\n                0\n            );\n        });\n    }\n}\n\n// 2. Author master presentation scene\nconst masterScene = new Scene({ canvas });\n\nconst header = new Text(\"DASHBOARD OVERVIEW\", { fontSize: 48, fill: Color.CYAN });\nheader.transform.position = [0, 4, 0];\nmasterScene.add(header);\n\n// 3. Mount child scene as an entity\nconst clockSubScene = new SubScene(new ClockWidgetScene());\nclockSubScene.transform.scale = 0.8;\nclockSubScene.transform.position = [5, 2, 0];\nmasterScene.add(clockSubScene);"
+        }
+      ]
+    }
+  ]
+}

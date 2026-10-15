@@ -1,0 +1,378 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-audio-system-architecture-and-api",
+  "title": "Retiam Audio System Architecture & Unified API Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/AUDIO_SYSTEM_ARCHITECTURE_AND_API.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/AUDIO_SYSTEM_ARCHITECTURE_AND_API.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/AUDIO_SYSTEM_ARCHITECTURE_AND_API.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Animation](/api-animation#animation), [Recorder](/api-recorder#recorder), [Scene](/api-core-scene#scene), [AudioPlugin](/api-audio#audioplugin), [IPlugin](/api-core#iplugin), [AudioManager](/api-audio#audiomanager), [AudioTimeline](/api-audio#audiotimeline), [AudioLoader](/api-audio#audioloader), [AudioAnalyzer](/api-audio#audioanalyzer), [Graph](/api-libs-graphs-graph#graph), [Camera](/api-camera#camera), [AudioListenerComponent](/api-audio-components#audiolistenercomponent), [Entity](/api-core-entity#entity), [SpatialAudioComponent](/api-audio-components#spatialaudiocomponent), [Compute](/api-compute#compute), [Component](/api-core#component), [Texture](/api-render-pipelines#resourcelayouts), [AudioPluginOptions](/api-audio#audioplugin), [AudioManagerConfig](/api-audio#audiomanager), [BGMOptions](/api-audio#audiomanager), [SoundEffectOptions](/api-animation#animoptions), [AnimOptions](/api-animation#animoptions), [VoiceoverOptions](/api-audio#audiomanager), [SpatialAudioOptions](/api-audio-components#spatialaudiocomponent)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In animation engines, audio requirements are fundamentally distinct from game engines or static media players:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Discrete & Scrubbable Time**: Animation timelines are non-linear, reversible, scrubbable, and time-scaled (`scene.time`, `scene.seekTo()`, `scene.timeScale`, `scene.pause()`), whereas the browser's hardware `AudioContext.currentTime` runs unconditionally forward in real-time seconds.",
+            "**Animation Choreography**: Voiceover speech dictates animation pacing, sound effects trigger on animation milestones, and background music must automatically duck when narration occurs.",
+            "**WebGPU Reactivity**: Audio frequencies and waveforms must stream directly to GPU uniform buffers and 1D spectrum textures for real-time shaders without costly CPU readback bottlenecks.",
+            "**Synchronized Video Export**: High-fidelity video rendering requires frame-synchronized audio muxing into MP4 and WebM files directly in the browser ([Recorder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/recorder/Recorder.ts)).",
+            "**Zero Core Bloat**: Mathematical, 3D, and shader scenes that do not require audio must remain 100% tree-shakeable with zero runtime overhead or premature `AudioContext` instantiation."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam implements a **Hybrid Plugin Architecture**: the core engine ([Scene.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts)) provides a lightweight, generic event contract, while the entire audio graph, timeline tracking, decoders, spatial audio components, and analyzers live modularly in `src/engine/audio/`."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph CoreEngine [\"1. Retiam Core Engine\"]\n        Scene[\"Scene.ts (Lifecycle & Events)\"]\n        Scene -->|emit 'seek'| Bus[\"Event Bus\"]\n        Scene -->|emit 'pause' / 'resume'| Bus\n        Scene -->|emit 'timescale'| Bus\n        Scene -->|emit 'anim:sound'| Bus\n    end\n\n    subgraph AudioSubsystem [\"2. Audio Plugin Subsystem\"]\n        AP[\"AudioPlugin.ts (IPlugin)\"]\n        AM[\"AudioManager.ts\"]\n        AT[\"AudioTimeline.ts\"]\n        AL[\"AudioLoader.ts (Cache)\"]\n        AA[\"AudioAnalyzer.ts\"]\n\n        AP --> AM\n        AM --> AT\n        AM --> AL\n        AM --> AA\n    end\n\n    subgraph AudioGraph [\"3. Multi-Bus Web Audio Graph\"]\n        BGM[\"BGM Bus (GainNode)\"] --> Master[\"Master Bus (GainNode)\"]\n        SFX[\"SFX Bus (GainNode)\"] --> Master\n        VO[\"Voiceover Bus (GainNode)\"] --> Master\n        Master --> Comp[\"DynamicsCompressor (Limiter)\"]\n        Comp --> Dest[\"AudioContext.destination (Speakers)\"]\n        Comp --> Stream[\"MediaStreamDestination (LiveRecorder)\"]\n    end\n\n    subgraph ECS3D [\"4. 3D Spatial Audio (ECS)\"]\n        Cam[\"Camera\"] --> ALC[\"AudioListenerComponent\"]\n        Ent[\"Entity 3D\"] --> SAC[\"SpatialAudioComponent (PannerNode)\"]\n        SAC --> SFX\n    end\n\n    subgraph WebGPUBridge [\"5. WebGPU Audio Reactivity\"]\n        AA -->|writeTexture| GPUTex[\"1D GPUTexture (r8unorm)\"]\n        GPUTex --> WGSL[\"WGSL Fragment & Compute Shaders\"]\n    end\n\n    Bus -.->|Auto-Hooks| AP"
+        }
+      ]
+    },
+    {
+      "id": "2-core-architectural-principles",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Architectural Principles"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Deterministic Timeline Synchronization (AudioTimeline.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Web Audio's `AudioBufferSourceNode` is a single-use node: once stopped, it cannot be resumed. `AudioTimeline` abstracts this by managing a virtual timeline registry:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Clip Scheduling**: Clips register `{ buffer, startTimeMs, durationMs, loop, volume, pitch }`.",
+            {
+              "text": "**Sub-Buffer Seek Offsets**: When `scene.seekTo(targetTimeMs)` is triggered:",
+              "children": [
+                "Any currently playing buffer sources are stopped with a 4ms micro-ramp to eliminate audible waveform DC-offset clicks and pops.",
+                "The timeline identifies which clips overlap with `targetTimeMs` and computes the exact sub-buffer offset:"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{offsetSeconds} = \\frac{(\\text{targetTimeMs} - \\text{clip.startTimeMs}) \\times \\text{clip.pitch}}{1000}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "New `AudioBufferSourceNode` instances are spawned with `source.start(0, offsetSeconds)` and a 4ms micro-fade attack.",
+            "**Dynamic Time Scaling**: When `scene.timeScale` changes (e.g. slow-motion or fast-forward), active sources immediately adjust their playback rate:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{source.playbackRate.value} = \\max(0.01, \\text{clip.pitch} \\times \\text{scene.timeScale})"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Browser Autoplay Compliance & Auto-Resync (AudioPlugin.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Browsers strictly enforce autoplay policies: `AudioContext` is created in `'suspended'` state and outputs console warnings if `source.start()` or `context.resume()` is called without a user gesture."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam solves this with a **zero-warning deferred startup**:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Deferred Playback**: If `this.context.state === 'suspended'`, `AudioTimeline` registers clip metadata but defers calling `source.start()`, producing zero console warnings.",
+            "**Comprehensive Auto-Unlock**: `AudioPlugin` attaches passive capture listeners (`pointerdown`, `touchstart`, `mousedown`, `keydown`, `click`) to the canvas, window, and parent iframe (when running inside Retiam Studio).",
+            "**Frame-Accurate Resync**: A `statechange` listener detects when the context becomes `'running'`. It immediately executes `timeline.seekTo(scene.time)`, beginning playback in exact frame-accurate synchronization with the running animation."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Multi-Bus Mixing & Master Dynamics Limiter (AudioManager.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "To eliminate digital clipping when multiple loud animations trigger sound effects simultaneously, the mixer graph routes through dedicated sub-busses:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`BGM Bus`**: Dedicated to continuous music loops with independent volume, fade-ins, and fade-outs.",
+            "**`SFX Bus`**: Polyphonic one-shots triggered by animations or collisions.",
+            "**`Voiceover Bus`**: Speech tracks that automatically duck the BGM bus by a configurable ratio (default 75%) and smoothly restore it when speech completes.",
+            "**`DynamicsCompressorNode`**: A master brickwall limiter ($\\text{threshold} = -3.0\\text{dB}$, $\\text{knee} = 12\\text{dB}$, $\\text{ratio} = 8:1$) ensuring studio-grade loudness without distortion."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. 3D Spatial Audio & Camera Listener ECS"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**[`AudioListenerComponent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/components/AudioListenerComponent.ts)**: Extends `Component` and attaches to the active `Camera`. Every frame, it synchronizes `Camera.position` and `Camera.forward`/`Camera.up` vectors to `AudioContext.listener`.",
+            "**[`SpatialAudioComponent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/audio/components/SpatialAudioComponent.ts)**: Extends `Component` and attaches to any `Entity`. It creates and positions a Web Audio `PannerNode` with HRTF binaural panning and exponential/inverse distance rolloff models."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. WebGPU Audio-Reactivity (AudioAnalyzer.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "`AudioAnalyzer` taps into the audio graph with an `AnalyserNode`:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Macro Bands**: Computes normalized `bass` (0–15%), `mid` (15–60%), `treble` (60–100%), and overall `rms` energy values $[0.0 - 1.0]$.",
+            "**1D GPU Texture Streaming**: Allocates a 1D `r8unorm` `GPUTexture` with width equal to `frequencyBinCount`. Every frame, `analyzer.updateSpectrumTexture(device)` uploads FFT bins via `device.queue.writeTexture` for direct sampling in WGSL shaders."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "F. Video Export Integration ([Recorder.ts](../src/engine/recorder/Recorder.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "When recording canvas output to MP4 or WebM:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "`AudioManager` provides a `MediaStreamAudioDestinationNode`.",
+            "`LiveRecorder` connects an `AudioEncoder` (AAC for MP4, Opus for WebM) via `MediaStreamTrackProcessor`.",
+            "Audio chunks are muxed alongside video chunks into `mp4-muxer` and `webm-muxer`, exporting complete, synchronized video files."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-configuration-options-interface",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Configuration & Options Interface"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "AudioPluginOptions / AudioManagerConfig"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface AudioPluginOptions {\n    /** Global master volume level (0.0 to 1.0). Default: 1.0 */\n    masterVolume?: number;\n    /** Default background music volume (0.0 to 1.0). Default: 0.5 */\n    bgmVolume?: number;\n    /** Default sound effect volume (0.0 to 1.0). Default: 1.0 */\n    sfxVolume?: number;\n    /** Default voiceover narration volume (0.0 to 1.0). Default: 1.0 */\n    voiceoverVolume?: number;\n    /** Sample rate for AudioContext (e.g. 48000). Default: hardware default */\n    sampleRate?: number;\n    /** Whether to auto-unlock AudioContext upon first user interaction. Default: true */\n    autoUnlock?: boolean;\n    /** Whether to auto-wire audio stream into LiveRecorder. Default: true */\n    autoAttachRecorder?: boolean;\n    /** Whether to pause audio when browser tab is hidden and resync when visible. Default: true */\n    autoPauseOnHidden?: boolean;\n    /** Whether to automatically attach AudioListenerComponent to scene.camera. Default: true */\n    autoAttachListener?: boolean;\n    /** Audio URLs or asset paths to preload into cache during initialization. */\n    preload?: string[];\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "BGMOptions"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface BGMOptions {\n    /** Volume multiplier (0.0 to 1.0). Default: 1.0 */\n    volume?: number;\n    /** Whether to loop playback indefinitely. Default: true */\n    loop?: boolean;\n    /** Fade-in duration in milliseconds. Default: 0 */\n    fadeInMs?: number;\n    /** Playback rate / pitch multiplier. Default: 1.0 */\n    pitch?: number;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "SoundEffectOptions ([AnimOptions.ts](../src/engine/animation/AnimOptions.ts))"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface SoundEffectOptions {\n    /** URL or local asset path to the audio file. */\n    src: string;\n    /** Playback volume (0.0 to 1.0). Default: 1.0 */\n    volume?: number;\n    /** Pitch / playback rate multiplier. Default: 1.0 */\n    pitch?: number;\n    /** Additional delay in milliseconds before triggering. Default: 0 */\n    delay?: number;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "VoiceoverOptions"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface VoiceoverOptions {\n    /** Speech playback volume (0.0 to 1.0). Default: 1.0 */\n    volume?: number;\n    /** Background music volume multiplier during speech. 0.25 = 75% ducking. Default: 0.25 */\n    duckingRatio?: number;\n    /** Fade duration for volume ducking in milliseconds. Default: 300ms */\n    fadeDurationMs?: number;\n    /** Additional padding in milliseconds after speech finishes before resolving. Default: 0 */\n    padEndMs?: number;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "SpatialAudioOptions"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface SpatialAudioOptions {\n    /** Audio URL or asset path. */\n    src: string;\n    /** Whether to loop playback. Default: true */\n    loop?: boolean;\n    /** Volume multiplier (0.0 to 1.0). Default: 1.0 */\n    volume?: number;\n    /** Distance within which volume is 100%. Default: 1 */\n    refDistance?: number;\n    /** Maximum distance after which sound no longer attenuates. Default: 10000 */\n    maxDistance?: number;\n    /** Rolloff factor describing how quickly sound fades with distance. Default: 1 */\n    rolloffFactor?: number;\n    /** Distance attenuation model ('inverse' | 'linear' | 'exponential'). Default: 'inverse' */\n    distanceModel?: DistanceModelType;\n    /** Panning model ('HRTF' for 3D binaural | 'equalpower'). Default: 'HRTF' */\n    panningModel?: PanningModelType;\n    /** Autoplay upon scene initialization. Default: true */\n    autoplay?: boolean;\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example-code",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage & Example Code"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 1: Basic Scene with BGM and Animation-Triggered SFX"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, createAnim, FadeOut, Color, Rate, AudioPlugin } from 'retiam';\n\nexport class SoundDemoScene extends Scene {\n    public async run() {\n        // 1. Activate the audio plugin\n        this.use(new AudioPlugin({ masterVolume: 0.85 }));\n\n        // 2. Play background music with fade-in\n        await this.audio.playBGM('assets/audio/synthwave.mp3', {\n            volume: 0.35,\n            loop: true,\n            fadeInMs: 2000\n        });\n\n        const circle = new Circle(4);\n        circle.paint.fill = new Color(0.1, 0.6, 1.0, 0.5);\n\n        // 3. Play animation with attached SFX\n        await this.play(createAnim(circle), {\n            duration: 1500,\n            rate_func: Rate.easeOutBack(),\n            sound: 'assets/audio/whoosh.mp3' // Automatically triggered via anim:sound event\n        });\n\n        await this.wait(500);\n\n        // 4. Standalone SFX trigger\n        this.audio.playSFX('assets/audio/pop.mp3', { pitch: 1.25 });\n\n        await this.play(new FadeOut(circle), { duration: 800 });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 2: Voiceover Narration with Automatic BGM Ducking"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Text, Write, AudioPlugin } from 'retiam';\n\nexport class LectureScene extends Scene {\n    public async run() {\n        this.use(new AudioPlugin());\n        this.audio.playBGM('assets/audio/ambient_study.mp3', { volume: 0.4 });\n\n        const equation = new Text(\"E = mc^2\");\n\n        // The voiceover automatically:\n        // 1. Ducks background music down to 20% (80% reduction) over 300ms\n        // 2. Plays speech on the voiceover bus\n        // 3. Resolves when speech finishes and smoothly restores BGM volume\n        await Promise.all([\n            this.play(new Write(equation), { duration: 2500 }),\n            this.audio.playVoiceover('assets/audio/explanation_einstein.mp3', {\n                duckingRatio: 0.20,\n                fadeDurationMs: 400\n            })\n        ]);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 3: Real-Time Audio-Reactive Spectrum & WebGPU Shaders"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, AudioPlugin, Rect, Color } from 'retiam';\n\nexport class VisualizerScene extends Scene {\n    public async run() {\n        this.composer.ALWAYS_UPDATE = true;\n        this.use(new AudioPlugin());\n\n        await this.audio.playBGM('assets/audio/electronic.mp3');\n\n        // 1. Create analyzer (64 frequency bins)\n        const analyzer = this.audio.createAnalyzer({ fftSize: 128 });\n\n        // 2. Stream FFT data to a 1D GPUTexture for custom shaders\n        const spectrumTexture = analyzer.createSpectrumTexture(this.device);\n\n        // 3. Visualizer Bars (16 bars)\n        const bars: Rect[] = [];\n        for (let i = 0; i < 16; i++) {\n            const bar = new Rect(1.2, 1.0);\n            bar.transform.position.set([-12 + i * 1.6, -5, 0]);\n            bar.paint.fill = new Color(0.2 + (i / 16) * 0.7, 0.4, 0.9, 0.85);\n            this.add(bar);\n            bars.push(bar);\n        }\n\n        // 4. Update loop: stream texture to GPU and animate bar scales\n        this.always(() => {\n            // Upload to GPU texture (sampled by WGSL shaders via textureSample)\n            analyzer.updateSpectrumTexture(this.device);\n\n            // Read macro bands for CPU animations\n            const data = analyzer.getFrequencyData();\n            for (let i = 0; i < 16; i++) {\n                const height = Math.max(0.2, (data[i * 2] / 255) * 8.0);\n                bars[i].transform.setScale(1.0, height, 1.0);\n            }\n\n            // Or use the one-line normalized bands getter:\n            const { bass } = this.audio.bands;\n            // e.g. pulse a light or scale an object: pulseCircle.setScale([1 + bass, 1 + bass, 1]);\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 4: 3D Spatial Audio on Moving Entities"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import {\n    Scene,\n    Sphere,\n    OrbitCameraController,\n    AudioPlugin,\n    SpatialAudioComponent\n} from 'retiam';\n\nexport class SpatialScene extends Scene {\n    public async run() {\n        // AudioListenerComponent is automatically attached to this.camera by default!\n        this.use(new AudioPlugin({ autoAttachListener: true }));\n\n        this.camera.position.set([0, 5, 30]);\n        new OrbitCameraController(this, this.camera);\n\n        // Moving 3D sound source\n        const drone = new Sphere(1.5);\n        drone.transform.position.set([-25, 0, 0]); // Start on the left\n\n        drone.addComponent(new SpatialAudioComponent({\n            src: 'assets/audio/drone_engine.mp3',\n            loop: true,\n            refDistance: 4,\n            maxDistance: 60,\n            rolloffFactor: 1.5,\n            panningModel: 'HRTF'\n        }));\n\n        this.add(drone);\n\n        // Move drone across the camera: sound naturally shifts from left ear to right ear!\n        await this.play(\n            drone.animate.position.set([25, 0, 0]),\n            { duration: 5000 }\n        );\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 5: Video Export with Muxed Audio Track"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { LiveRecorder } from 'retiam';\n\n// Inside your scene run() or recording trigger:\nconst recorder = new LiveRecorder(this.canvas, 'mp4');\n\n// Connect audio from the active plugin directly with one call:\nif (this.audio) {\n    this.audio.attachRecorder(recorder);\n}\n\nawait recorder.start();\n\n// ... execute animations ...\n\nawait recorder.stop(); // Automatically muxes video and stereo AAC/Opus audio into the file!"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 6: Procedural Sound Synthesis (Zero-Asset Audio)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides built-in methods to synthesize `AudioBuffer`s directly from raw amplitude numbers, harmonic frequencies, or math generator functions:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Pattern 1: Raw PCM amplitude numbers [-1.0 to 1.0] (Fundamental Primitive)\nconst rawBuffer = this.audio.createBuffer([0, 0.5, 1.0, 0.5, 0, -0.5, -1.0, -0.5]);\nthis.audio.timeline.addClip(rawBuffer, this.time, this.audio.sfxGain, { pitch: 1.5 });\n\n// Pattern 2: Additive Harmonic Frequencies & Chords (with exponential decay)\nconst chordBuffer = this.audio.createTone([\n    { freq: 440.00, amp: 1.0 }, // A4\n    { freq: 554.37, amp: 0.7 }, // C#5\n    { freq: 659.25, amp: 0.5 }  // E5\n], 1.5, 2.0); // 1.5s duration, 2.0 decay rate\nthis.audio.timeline.addClip(chordBuffer, this.time, this.audio.sfxGain);\n\n// Pattern 3: Mathematical Generator Function f(t) -> amplitude\nconst laserChirp = this.audio.createWave((t) => {\n    const freq = 880 * Math.exp(-8 * t) + 150;\n    const env = Math.exp(-6 * t);\n    return Math.sin(2 * Math.PI * freq * t) * env;\n}, 0.5);\nthis.audio.timeline.addClip(laserChirp, this.time, this.audio.sfxGain);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 7: Live In-Place Buffer Mutation (Real-Time Sound Modulation)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because `createBuffer()` returns an `AudioBuffer` directly connected to Web Audio, you can schedule it as a continuous loop and **mutate its raw channel samples in real-time** inside `scene.always()`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Allocate a short 0.25-second buffer (e.g. 12,000 samples at 48kHz)\nconst sampleRate = this.audio.context.sampleRate;\nconst bufferLength = Math.floor(sampleRate * 0.25);\nconst liveBuffer = this.audio.createBuffer(new Float32Array(bufferLength), sampleRate);\nconst channelData = liveBuffer.getChannelData(0);\n\n// 2. Play the buffer in a loop\nthis.audio.timeline.addClip(liveBuffer, 0, this.audio.bgmGain, {\n    volume: 0.35,\n    loop: true\n});\n\n// 3. Continuously rewrite samples in the frame loop (morphing frequency & harmonics)\nlet phase = 0;\nthis.always((t: number) => {\n    const timeSec = t * 0.001;\n    const currentFreq = 220 + Math.sin(timeSec * 2.0) * 100;\n    const phaseIncrement = (2 * Math.PI * currentFreq) / sampleRate;\n\n    for (let i = 0; i < bufferLength; i++) {\n        channelData[i] = Math.sin(phase) * 0.4;\n        phase += phaseIncrement;\n    }\n    phase = phase % (2 * Math.PI);\n});"
+        },
+        {
+          "type": "paragraph",
+          "text": "*See a complete running demonstration in [`dynamic_synth_demo.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/features/dynamic_synth_demo.ts).*"
+        }
+      ]
+    },
+    {
+      "id": "5-lifecycle-clean-disposal",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Lifecycle & Clean Disposal"
+        },
+        {
+          "type": "paragraph",
+          "text": "When scenes are reset (`scene.reset()`), seeked (`scene.seekTo()`), or destroyed (`scene.destroy()`):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Seeking**: Active `AudioBufferSourceNode` instances are gracefully stopped, and new nodes are scheduled with exact fractional offsets.",
+            "**Pausing / Resuming**: Timeline tracking stops and resumes in sync with `scene.pause()` and `scene.resume()`.",
+            "**Destruction**: `scene.destroy()` automatically unregisters all lifecycle listeners, cleans up window/canvas unlock listeners, frees `GPUTexture` spectrum textures, and safely closes the `AudioContext`."
+          ]
+        }
+      ]
+    }
+  ]
+}

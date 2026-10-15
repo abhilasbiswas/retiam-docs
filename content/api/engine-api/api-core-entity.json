@@ -1,0 +1,1578 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-core-entity",
+  "title": "Entity API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "entity",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Entity"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/Entity.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/Entity.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Entity: Base Scene Graph node for the Retiam engine. Represents any renderable shape, 3D model, light, text, or camera. Manages spatial transform, parent-child hierarchies, modular components, JSDoc properties, and animations."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "EntityEventMap",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EntityEventType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EntityOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Updater",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Entity",
+                    "Class",
+                    "Base Scene Graph node for the Retiam engine. Represents any renderable shape, 3D model, light, text, or camera. Manages spatial transform, parent-child hierarchies, modular components, JSDoc properties, and animations."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type EntityEventMap = InteractionEventMap;\nexport type EntityEventType = InteractionEventType;\nexport interface EntityOptions {\n    label?: string;\n    visible?: boolean;\n    zIndex?: number;\n    castShadow?: boolean;\n    receiveShadow?: boolean;\n    isPickable?: boolean;\n    layerMask?: number;\n    isUI?: boolean;\n    position?: Vec3Type;\n    rotation?: Vec3Type | Quaternion | number;\n    scale?: number | Vec3Type;\n    pivot?: Vec3Type;\n    t?: number;\n    t1?: number;\n    t2?: number;\n    anchor?: Vec3Type;\n    fill?: ColorLike;\n    stroke?: ColorLike;\n    strokeWidth?: number;\n    opacity?: number;\n    cap?: CapType;\n    startCap?: CapType;\n    endCap?: CapType;\n    joint?: JointType;\n    materialColor?: Color;\n    emColor?: Color;\n    emStrength?: number;\n    roughness?: number;\n    metallic?: number;\n    transmission?: number;\n    ior?: number;\n    frustumCull?: boolean;\n}\nexport type Updater = (() => void) | ((time: number, dt: number) => void);\nexport declare class Entity implements TransformFunctions<Entity> {\n    static seq_no: number;\n    static resetSeqNo(): void;\n    version: number;\n    id: number;\n    LABEL: string;\n    _zIndexExplicit: boolean;\n    get z_index(): number;\n    set z_index(value: number);\n    _setAutoZIndex(value: number): void;\n    VISIBILITY: boolean;\n    get isPickable(): boolean;\n    set isPickable(val: boolean);\n    CAST_SHADOW: boolean;\n    RECEIVE_SHADOW: boolean;\n    RT_ENABLE: boolean;\n    FRUSTUM_CULL: boolean;\n    scene: Scene | null;\n    parent: Entity | null;\n    getRoot(): Entity;\n    getScene(): Scene | null;\n    protected _worldMatrixDirty: boolean;\n    protected _worldMatrix: Mat4;\n    protected _worldTransformCache: {\n        matrix: Mat4;\n        offset: Vec3;\n    };\n    children: Entity[];\n    state: State;\n    get visible(): boolean;\n    set visible(bool: boolean);\n    updaters: Updater[];\n    updatableComponents: Component[];\n    geometryComponent: GeometryComponent | null;\n    rendererComponent: RendererComponent | null;\n    fragmentComponent: FragmentComponent | null;\n    interactionComponent: InteractionComponent | null;\n    static readonly UI_LAYER = 31;\n    isUI: boolean;\n    layerMask: number;\n    scissorClipRect: {\n        width: number;\n        height: number;\n        offsetX: number;\n        offsetY: number;\n    } | null;\n    protected _anchor: Vec3 | null;\n    _anchorNeedsUpdate: boolean;\n    createAnim?(t: TrackBuilder, options?: CreateOptions): Animation | void;\n    constructor(options?: EntityOptions);\n    applyOptions(options: EntityOptions): this;\n    setPosition(position: Vec3Type, anchor?: TransformOption): this;\n    setPositionXYZ(x: number, y: number, z: number): this;\n    get positionX(): number;\n    set positionX(x: number);\n    get positionY(): number;\n    set positionY(y: number);\n    get positionZ(): number;\n    set positionZ(z: number);\n    getPosition(anchor?: Vec3Type): Vec3;\n    setRotation(angle: Quaternion | Vec3Type | number, anchor?: TransformOption): this;\n    setRotationXYZ(x: number, y: number, z: number): this;\n    setRotationX(angle: number, anchor?: TransformOption): this;\n    setRotationY(angle: number, anchor?: TransformOption): this;\n    setRotationZ(angle: number, anchor?: TransformOption): this;\n    getRotation(_anchor?: Vec3Type): Quaternion;\n    setScale(scale: Vec3Type | number, anchor?: TransformOption): this;\n    getScale(_anchor?: Vec3Type): Vec3;\n    getScaleX(): number;\n    getScaleY(): number;\n    getScaleZ(): number;\n    shift(offset: Vec3Type, anchor?: TransformOption): this;\n    shiftWorld(offset: Vec3Type): this;\n    move(target: Vec3Type, anchor?: TransformOption): this;\n    rotate(angle: number | Quaternion | Vec3Type, anchor?: TransformOption): this;\n    rotateX(angle: number, anchor?: TransformOption): this;\n    rotateY(angle: number, anchor?: TransformOption): this;\n    rotateZ(angle: number, anchor?: TransformOption): this;\n    rotateWorld(angle: Quaternion | Vec3Type | number, pivot?: Vec3Type): this;\n    rotateWorldX(angle: number, pivot?: Vec3Type): this;\n    rotateWorldY(angle: number, pivot?: Vec3Type): this;\n    rotateWorldZ(angle: number, pivot?: Vec3Type): this;\n    scale(factor: number | Vec3Type, anchor?: TransformOption): this;\n    scaleWorld(factor: number | Vec3Type, anchor?: TransformOption): this;\n    setAnchor(anchor: Vec3Type): this;\n    getAnchor(): Vec3 | null;\n    setPivot(anchorWorld: Vec3Type): this;\n    getPivot(): Vec3;\n    setOffset(offset: Vec3Type): this;\n    getOffset(): Vec3;\n    syncOffset(newOffset: Vec3Type): this;\n    get t(): number;\n    set t(val: number);\n    get t1(): number;\n    set t1(val: number);\n    get t2(): number;\n    set t2(val: number);\n    setT(t: number): this;\n    setT1(t1: number): this;\n    setT2(t2: number): this;\n    get paint(): Paint;\n    set paint(paint: Paint);\n    get transform(): Transform;\n    set transform(transform: Transform);\n    get material(): Material;\n    set material(material: Material);\n    get anchor(): Vec3 | null;\n    set anchor(val: Vec3Type | null);\n    updateAnchor(): this;\n    invalidateAnchor(): void;\n    setAsUI(includeChildren?: boolean): this;\n    addLayer(layer: number, includeChildren?: boolean): this;\n    removeLayer(layer: number, includeChildren?: boolean): this;\n    setLayers(layers: number[], includeChildren?: boolean): this;\n    alwaysFaceCamera(anchor?: Vec3Type): this;\n    addComponent<T extends Component>(component: T): T;\n    getComponent<T extends Component>(type: abstract new (...args: any[]) => T): T | null;\n    getComponents<T extends Component>(type: abstract new (...args: any[]) => T): T[];\n    hasComponent<T extends Component>(type: abstract new (...args: any[]) => T): boolean;\n    removeComponent<T extends Component>(component: T | null): boolean;\n    removeComponentByType<T extends Component>(type: abstract new (...args: any[]) => T): number;\n    destroy(): void;\n    get animate(): Animator;\n    animateWith(options?: AnimOptions): Animator;\n    always(func: (time: number, dt: number, ctx: AlwaysContext) => any, options?: AlwaysOptions): AlwaysHandle;\n    always(func: (time: number, dt: number) => any, options?: AlwaysOptions): AlwaysHandle;\n    always(func: () => any, options?: AlwaysOptions): AlwaysHandle;\n    unregister(func: () => any): this;\n    unregister(func: (time: number, dt: number) => any): this;\n    invalidateTransform(): void;\n    add(...entities: Entity[]): Entity;\n    remove(...entities: Entity[]): Entity;\n    update(t: number, dt: number): void;\n    invalidate(): void;\n    getWorldTransform(): {\n        matrix: Mat4;\n        offset: Vec3;\n    };\n    getParentWorldMatrix(): Mat4 | undefined;\n    localToWorld(point: Vec3Type, dst?: Vec3): Vec3;\n    worldToLocal(point: Vec3Type, dst?: Vec3): Vec3;\n    getLocalAABB(): AABB;\n    getGroupLocalAABB(): AABB;\n    getBoundingBox(includeChildren?: boolean): AABB;\n    getWorldState(): State;\n    getBoundaryPoint(direction: Vec3Type): Vec3;\n    snapTo(target: Entity): this;\n    snapTo(target: Entity, anchor: Vec3Type): this;\n    snapTo(target: Entity, targetAnchor: Vec3Type, selfAnchor: Vec3Type): this;\n    snapTo(target: Entity, targetAnchor: Vec3Type, selfAnchor: Vec3Type, offset: Vec3Type): this;\n    center(): this;\n    nextTo(target: Entity | Vec3Type, direction?: Vec3Type, buff?: number): this;\n    alignTo(target: Entity | Vec3Type, direction?: Vec3Type): this;\n    setFill(color: ColorLike): this;\n    setStroke(strokeWidth: number, color?: ColorLike): this;\n    setStrokeColor(color: ColorLike): this;\n    setStrokeWidth(strokeWidth: number): this;\n    setOpacity(opacity: number): this;\n    setCap(cap: number): this;\n    setJoint(joint: number): this;\n    setColor(color: Color | number[] | Float32Array): this;\n    setRoughness(v: number): this;\n    setMetallic(v: number): this;\n    setTransmission(v: number): this;\n    setEmStrength(v: number): this;\n    setIor(v: number): this;\n    setSpecular(v: number): this;\n    setEvent<K extends InteractionEventType>(type: K, listener: InteractionEventMap[K]): this;\n    setDraggable(draggable: boolean, planeNormal?: Vec3): this;\n    dispose(): void;\n    clone(recursive?: boolean, entityMap?: Map<Entity, Entity>): this;\n    forSubNodes(fn: (ent: Entity) => void): void;\n    forSuperNodes(fn: (ent: Entity) => void, includeSelf?: boolean): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `EntityOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "label?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "visible?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "zIndex?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "castShadow?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "receiveShadow?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isPickable?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "layerMask?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isUI?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "position?: Vec3Type;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotation?: Vec3Type | Quaternion | number;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type | Quaternion | number`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scale?: number | Vec3Type;",
+                    "—",
+                    "Optional record/option field with declared type `number | Vec3Type`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pivot?: Vec3Type;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type`. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "t?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "t1?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "t2?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "anchor?: Vec3Type;",
+                    "—",
+                    "Optional record/option field with declared type `Vec3Type`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fill?: ColorLike;",
+                    "—",
+                    "Optional record/option field with declared type `ColorLike`. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stroke?: ColorLike;",
+                    "—",
+                    "Optional record/option field with declared type `ColorLike`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeWidth?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "opacity?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cap?: CapType;",
+                    "—",
+                    "Optional record/option field with declared type `CapType`. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startCap?: CapType;",
+                    "—",
+                    "Optional record/option field with declared type `CapType`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endCap?: CapType;",
+                    "—",
+                    "Optional record/option field with declared type `CapType`. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "joint?: JointType;",
+                    "—",
+                    "Optional record/option field with declared type `JointType`. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "materialColor?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "emColor?: Color;",
+                    "—",
+                    "Optional record/option field with declared type `Color`. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "emStrength?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "roughness?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "metallic?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "transmission?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ior?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frustumCull?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L74)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Entity` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static seq_no",
+                    "0",
+                    "Sequence counter for generating unique IDs. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static resetSeqNo(): void",
+                    "—",
+                    "Resets the entity sequence counter back to 0. Ensures deterministic entity IDs across live-reloads, test runs, and scene restarts. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public version: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L101)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public id: number",
+                    "Entity.seq_no++",
+                    "Unique numeric identifier for this entity instance. [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public LABEL: string",
+                    "\"entity\" + this.id.toString()",
+                    "Friendly display label, useful for logs and animation tracking. [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L111)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public _zIndexExplicit: boolean",
+                    "false",
+                    "Internal: Tracks whether the user explicitly set z_index [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get z_index(): number",
+                    "—",
+                    "Implementation: `return this._z_index;`. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L122)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set z_index(value: number)",
+                    "—",
+                    "Implementation: `this._z_index = value; this._zIndexExplicit = true; this.paint.z_index = value;`. [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public _setAutoZIndex(value: number)",
+                    "—",
+                    "Internal: Called by SceneComposer to assign auto z-index without marking as user-explicit [Source line 130](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L130)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public VISIBILITY",
+                    "true",
+                    "Controls whether the entity is rendered on screen. [Source line 140](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L140)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isPickable(): boolean",
+                    "—",
+                    "Implementation: `return this._isPickable;`. [Source line 143](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L143)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set isPickable(val: boolean)",
+                    "—",
+                    "Implementation: `this._isPickable = val;`. [Source line 146](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L146)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public CAST_SHADOW",
+                    "false",
+                    "Enables shadow casting in raster pipelines. [Source line 153](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L153)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public RECEIVE_SHADOW",
+                    "false",
+                    "Enables shadow reception in raster pipelines. [Source line 158](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L158)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public RT_ENABLE",
+                    "false",
+                    "Enables Ray Tracing processing for this entity. [Source line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L163)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public FRUSTUM_CULL",
+                    "true",
+                    "Enables automatic camera view frustum culling. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scene: Scene | null",
+                    "null",
+                    "Back-reference to the Scene this entity is currently attached to. [Source line 174](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L174)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public parent: Entity | null",
+                    "null",
+                    "Parent entity in the Scene Graph hierarchy. [Source line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L179)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getRoot(): Entity",
+                    "—",
+                    "Traverses up the scene graph hierarchy and returns the root ancestor entity. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScene(): Scene | null",
+                    "—",
+                    "Returns the Scene this entity or its root ancestor belongs to, or `null` if detached. [Source line 195](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L195)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected _worldMatrixDirty",
+                    "true",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 199](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L199)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected _worldMatrix",
+                    "new Mat4()",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 200](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L200)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected _worldTransformCache",
+                    "{ matrix: this._worldMatrix, offset: new Vec3() }",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 201](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L201)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public children: Entity[]",
+                    "[]",
+                    "Child entity nodes attached to this entity. [Source line 206](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L206)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public state: State",
+                    "new State()",
+                    "Unified state block (Paint, Transform, Material) synchronized to WebGPU buffers. Acts as the single authoritative source of truth for paint, transform, and material. [Source line 212](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L212)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get visible(): boolean",
+                    "—",
+                    "Implementation: `return this.VISIBILITY;`. [Source line 214](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L214)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set visible(bool: boolean)",
+                    "—",
+                    "Implementation: `this.VISIBILITY = bool;`. [Source line 217](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L217)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updaters: Updater[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 223](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L223)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updatableComponents: Component[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 224](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L224)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public geometryComponent: GeometryComponent | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 228](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L228)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rendererComponent: RendererComponent | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 229](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L229)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fragmentComponent: FragmentComponent | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 230](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L230)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public interactionComponent: InteractionComponent | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 231](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L231)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static readonly UI_LAYER",
+                    "31",
+                    "Global index dedicated exclusively for UI overlays [Source line 236](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L236)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isUI: boolean",
+                    "false",
+                    "Flag indicating whether this entity is processed as a UI element [Source line 239](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L239)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public layerMask: number",
+                    "1",
+                    "Bitmask defining which layers this entity exists on. Default is 1 (Layer 0). [Source line 245](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L245)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scissorClipRect: { width: number, height: number, offsetX: number, offsetY: number } | null",
+                    "null",
+                    "If set, this entity acts as a hardware clipping mask for all of its children. The dimensions are defined in local space. [Source line 251](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L251)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "protected _anchor: Vec3 | null",
+                    "null",
+                    "Protected extension field initialized with the expression in the initializer column. [Source line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L254)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public _anchorNeedsUpdate: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 255](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L255)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public createAnim?(t: TrackBuilder, options?: CreateOptions): Animation | void;",
+                    "—",
+                    "Override this method to provide a custom creation animation sequence for this entity. You can sequence and parallelize child animations using `t.add(...)` and `t.wait(ms)`, or return a standalone `Animation` directly. Param: t Dedicated TrackBuilder instance for scheduling sub-animations. Param: options Creation options passed from `new Create(entity, options)`. [Source line 281](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L281)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(options?: EntityOptions)",
+                    "—",
+                    "Implementation: `this.state.transform.onChange = () => this.invalidateTransform(); if (options) { this.applyOptions(options); }`. [Source line 283](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L283)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyOptions(options: EntityOptions): this",
+                    "—",
+                    "Applies a standardized configuration object to the entity's state. [Source line 295](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L295)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPosition(position: Vec3Type, anchor?: TransformOption): this;",
+                    "—",
+                    "Sets the 3D translation coordinates. Param: position A Vec3Type containing [x, y, z]. Param: anchor Optional local anchor or world pivot. [Source line 399](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L399)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPosition(position: Vec3Type, anchor?: TransformOption): this",
+                    "—",
+                    "Implementation: `if (anchor) { const pivot = this.resolveTargetPivot(anchor); if (pivot) this.setPivot(pivot); } const pos = Vec3.cast(position); this.transform.setPositionXYZ(pos.x, pos.y, pos.z); return this;`. [Source line 400](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L400)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPositionXYZ(x: number, y: number, z: number): this",
+                    "—",
+                    "Directly sets translation along X, Y, and Z axes. [Source line 410](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L410)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get positionX(): number",
+                    "—",
+                    "Reads the current X coordinate without allocating a Vec3 wrapper. [Source line 416](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L416)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set positionX(x: number)",
+                    "—",
+                    "Sets the X coordinate without allocating a Vec3 wrapper. [Source line 418](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L418)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get positionY(): number",
+                    "—",
+                    "Reads the current Y coordinate without allocating a Vec3 wrapper. [Source line 421](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L421)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set positionY(y: number)",
+                    "—",
+                    "Sets the Y coordinate without allocating a Vec3 wrapper. [Source line 423](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L423)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get positionZ(): number",
+                    "—",
+                    "Reads the current Z coordinate without allocating a Vec3 wrapper. [Source line 426](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L426)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set positionZ(z: number)",
+                    "—",
+                    "Sets the Z coordinate without allocating a Vec3 wrapper. [Source line 428](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L428)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPosition(anchor?: Vec3Type): Vec3",
+                    "—",
+                    "Returns the current position. Param: anchor If provided, returns the world-space position of that bounding-box edge instead. [Source line 434](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L434)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotation(angle: Quaternion | Vec3Type | number, anchor?: TransformOption): this",
+                    "—",
+                    "Sets the absolute rotation using a Quaternion, euler Vec3, or scalar angle (radians). Param: angle The rotation value. Param: anchor Optional local anchor or world pivot. [Source line 446](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L446)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationXYZ(x: number, y: number, z: number): this",
+                    "—",
+                    "Directly sets Euler rotations along X, Y, and Z axes (in radians). [Source line 455](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L455)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationX(angle: number, anchor?: TransformOption): this",
+                    "—",
+                    "Sets the rotation around the X axis in radians. Param: angle Angle in radians. Param: anchor Optional local anchor or world pivot. [Source line 465](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L465)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationY(angle: number, anchor?: TransformOption): this",
+                    "—",
+                    "Sets the rotation around the Y axis in radians. Param: angle Angle in radians. Param: anchor Optional local anchor or world pivot. [Source line 476](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L476)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotationZ(angle: number, anchor?: TransformOption): this",
+                    "—",
+                    "Sets the rotation around the Z axis in radians. Param: angle Angle in radians. Param: anchor Optional local anchor or world pivot. [Source line 487](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L487)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getRotation(_anchor?: Vec3Type): Quaternion",
+                    "—",
+                    "Returns the current rotation as a Quaternion. Param: _anchor Reserved – currently unused but kept for API symmetry. [Source line 497](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L497)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setScale(scale: Vec3Type | number, anchor?: TransformOption): this",
+                    "—",
+                    "Sets the absolute scale factors. Accepts a uniform scalar or a Vec3. Param: scale The uniform scale factor or scale vector. Param: anchor Optional local anchor or world pivot. [Source line 509](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L509)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScale(_anchor?: Vec3Type): Vec3",
+                    "—",
+                    "Returns the current scale as a Vec3. Param: _anchor Reserved – currently unused but kept for API symmetry. [Source line 519](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L519)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScaleX(): number",
+                    "—",
+                    "Returns the current X scale factor. [Source line 524](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L524)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScaleY(): number",
+                    "—",
+                    "Returns the current Y scale factor. [Source line 529](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L529)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScaleZ(): number",
+                    "—",
+                    "Returns the current Z scale factor. [Source line 534](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L534)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public shift(offset: Vec3Type, anchor?: TransformOption): this",
+                    "—",
+                    "Translates (shifts) the entity relative to its current position in local space. Param: offset Distance vector to shift. Param: anchor Optional local anchor or world pivot. [Source line 546](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L546)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public shiftWorld(offset: Vec3Type): this",
+                    "—",
+                    "Translates (shifts) the entity relative to the world coordinate system. Param: offset Distance vector to shift in world space. [Source line 557](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L557)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public move(target: Vec3Type, anchor?: TransformOption): this",
+                    "—",
+                    "Sets the absolute translation coordinate (alias for `setPosition` using a Vec3). Param: target Target position vector. Param: anchor Optional local anchor or world pivot. [Source line 568](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L568)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotate(angle: number | Quaternion | Vec3Type, anchor?: TransformOption): this",
+                    "—",
+                    "Applies an incremental rotation around an optional anchor or world pivot. Param: angle Angle in radians, Quaternion, or euler Vec3. Param: anchor Local anchor (e.g. UP, DL, [0, 0.5, 0]) or { pivot: [x,y,z] } for world coordinates. [Source line 621](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L621)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateX(angle: number, anchor?: TransformOption): this",
+                    "—",
+                    "Applies an incremental rotation around the X axis in radians. Param: angle Angle in radians. Param: anchor Optional local anchor or world pivot. [Source line 633](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L633)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateY(angle: number, anchor?: TransformOption): this",
+                    "—",
+                    "Applies an incremental rotation around the Y axis in radians. Param: angle Angle in radians. Param: anchor Optional local anchor or world pivot. [Source line 645](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L645)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateZ(angle: number, anchor?: TransformOption): this",
+                    "—",
+                    "Applies an incremental rotation around the Z axis in radians. Param: angle Angle in radians. Param: anchor Optional local anchor or world pivot. [Source line 657](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L657)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateWorld(angle: Quaternion | Vec3Type | number, pivot?: Vec3Type): this",
+                    "—",
+                    "Rotates around the world coordinate axes. Param: angle Angle in radians, Quaternion, or euler Vec3. Param: pivot Optional world coordinate pivot. [Source line 669](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L669)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateWorldX(angle: number, pivot?: Vec3Type): this",
+                    "—",
+                    "Rotates around the world X axis in radians. Param: angle Angle in radians. Param: pivot Optional world coordinate pivot. [Source line 680](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L680)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateWorldY(angle: number, pivot?: Vec3Type): this",
+                    "—",
+                    "Rotates around the world Y axis in radians. Param: angle Angle in radians. Param: pivot Optional world coordinate pivot. [Source line 691](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L691)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rotateWorldZ(angle: number, pivot?: Vec3Type): this",
+                    "—",
+                    "Rotates around the world Z axis in radians. Param: angle Angle in radians. Param: pivot Optional world coordinate pivot. [Source line 702](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L702)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scale(factor: number | Vec3Type, anchor?: TransformOption): this",
+                    "—",
+                    "Multiplies local scaling dimensions around an optional anchor or world pivot. Param: factor Scalar value or Vec3 scale factors. Param: anchor Local anchor (e.g. UP, DL, [0, 0.5, 0]) or { pivot: [x,y,z] } for world coordinates. [Source line 716](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L716)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scaleWorld(factor: number | Vec3Type, anchor?: TransformOption): this",
+                    "—",
+                    "Multiplies scaling dimensions in world space around an optional anchor or world pivot. Param: factor Scalar value or Vec3 scale factors. Param: anchor Local anchor or { pivot: [x,y,z] } for world coordinates. [Source line 729](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L729)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setAnchor(anchor: Vec3Type): this",
+                    "—",
+                    "Sets the bounding-box anchor point for this entity. [Source line 739](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L739)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getAnchor(): Vec3 | null",
+                    "—",
+                    "Returns the current anchor, or null if none is set. [Source line 745](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L745)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPivot(anchorWorld: Vec3Type): this",
+                    "—",
+                    "Shifts the local origin (offset) of this entity to a specific world coordinate. The visual position of the entity remains exactly the same, but future rotations and scales will naturally orbit around this new anchor. Correctly accounts for all parent transformations in the hierarchy. Param: anchorWorld The world coordinate to become the new pivot. [Source line 760](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L760)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPivot(): Vec3",
+                    "—",
+                    "Returns the current local offset (pivot) as a Vec3. [Source line 768](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L768)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setOffset(offset: Vec3Type): this",
+                    "—",
+                    "Sets the local offset (pivot) directly. [Source line 773](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L773)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getOffset(): Vec3",
+                    "—",
+                    "Returns the current local offset as a Vec3. [Source line 779](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L779)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncOffset(newOffset: Vec3Type): this",
+                    "—",
+                    "Synchronizes the internal local offset with a new anchor point without shifting world matrix. Param: newOffset The new local offset vector. [Source line 788](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L788)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t(): number",
+                    "—",
+                    "General animation parameter / progress [0.0 - 1.0] accessible in GPU shaders. [Source line 800](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L800)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t(val: number)",
+                    "—",
+                    "Implementation: `this.transform.t = val; this.invalidate();`. [Source line 801](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L801)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t1(): number",
+                    "—",
+                    "The first animation variable (t1) representing path/range start [0.0 - 1.0]. [Source line 809](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L809)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t1(val: number)",
+                    "—",
+                    "Implementation: `this.transform.t1 = val; this.invalidate();`. [Source line 810](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L810)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get t2(): number",
+                    "—",
+                    "The second animation variable (t2) representing path/range end [0.0 - 1.0]. [Source line 818](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L818)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set t2(val: number)",
+                    "—",
+                    "Implementation: `this.transform.t2 = val; this.invalidate();`. [Source line 819](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L819)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setT(t: number): this",
+                    "—",
+                    "Sets the general animation progress / parameter (t) [0.0 - 1.0]. If two arguments are provided (`setT(t2, t1)`), sets the draw range `[t1, t2]`. Directly updates GPU transform uniform buffer data. Param: t The animation parameter [0.0 - 1.0] (or end limit t2 if t1 is provided). Param: t1 Optional start limit t1 for setting draw range [t1, t2]. Returns: This Entity instance for chaining. [Source line 833](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L833)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setT1(t1: number): this",
+                    "—",
+                    "Sets the first animation variable (t1) [0.0 - 1.0] (e.g. path reveal start). Param: t1 The animation start limit. Returns: This Entity instance for chaining. [Source line 845](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L845)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setT2(t2: number): this",
+                    "—",
+                    "Sets the second animation variable (t2) [0.0 - 1.0] (e.g. path reveal end). Param: t2 The animation end limit. Returns: This Entity instance for chaining. [Source line 857](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L857)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get paint(): Paint",
+                    "—",
+                    "Gets the style, stroke, and fill color properties. [Source line 869](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L869)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set paint(paint: Paint)",
+                    "—",
+                    "Implementation: `this.state.paint.set(paint); this.invalidate();`. [Source line 870](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L870)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get transform(): Transform",
+                    "—",
+                    "Gets the coordinate transform properties. [Source line 878](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L878)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set transform(transform: Transform)",
+                    "—",
+                    "Implementation: `this.state.transform.set(transform); this.invalidateTransform(); this.invalidate();`. [Source line 879](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L879)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get material(): Material",
+                    "—",
+                    "Gets the shader rendering material properties. [Source line 888](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L888)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set material(material: Material)",
+                    "—",
+                    "Implementation: `this.state.material.set(material); this.invalidate();`. [Source line 889](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L889)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get anchor(): Vec3 | null",
+                    "—",
+                    "Implementation: `return this._anchor;`. [Source line 898](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L898)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set anchor(val: Vec3Type | null)",
+                    "—",
+                    "Implementation: `if (val) { this._anchor = Vec3.cast(val); this.invalidateAnchor(); } else { this._anchor = null; }`. [Source line 899](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L899)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateAnchor(): this",
+                    "—",
+                    "Calculates the anchor offset and applies it to the Transform [Source line 911](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L911)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public invalidateAnchor()",
+                    "—",
+                    "Queues the anchor for recalculation on the next frame loop [Source line 924](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L924)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setAsUI(includeChildren: boolean = true): this",
+                    "—",
+                    "Flags this entity as a UI element. It will automatically be assigned to the UI Layer, and the Scene will ensure a dedicated orthographic camera is ready for it. [Source line 939](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L939)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addLayer(layer: number, includeChildren: boolean = true): this",
+                    "—",
+                    "Adds this entity to a specific layer without removing it from others. [Source line 951](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L951)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removeLayer(layer: number, includeChildren: boolean = true): this",
+                    "—",
+                    "Removes this entity from a specific layer. [Source line 958](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L958)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setLayers(layers: number[], includeChildren: boolean = true): this",
+                    "—",
+                    "Overwrites the mask completely to put the entity ONLY on the specified layers. [Source line 965](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L965)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public alwaysFaceCamera(anchor: Vec3Type = ORIGIN): this",
+                    "—",
+                    "Continuously rotates the entity so that its front (+Z face) always points toward the active camera (Billboarding). Param: anchor The local bounding box anchor to pivot around (e.g. ORIGIN, DOWN). Defaults to ORIGIN. [Source line 981](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L981)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addComponent<T extends Component>(component: T): T",
+                    "—",
+                    "Adds a modular [[Component]] to this entity. Param: component Component to attach. [Source line 1023](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1023)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getComponent<T extends Component>(type: abstract new (...args: any[]) => T): T | null",
+                    "—",
+                    "Retrieves the first component matching the specified type. Param: type The component class constructor. [Source line 1051](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1051)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getComponents<T extends Component>(type: abstract new (...args: any[]) => T): T[]",
+                    "—",
+                    "Retrieves all components matching the specified type. Param: type The component class constructor. [Source line 1069](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1069)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public hasComponent<T extends Component>(type: abstract new (...args: any[]) => T): boolean",
+                    "—",
+                    "Checks whether the entity has a component of the given type. Param: type The component class constructor. [Source line 1082](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1082)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removeComponent<T extends Component>(component: T | null): boolean",
+                    "—",
+                    "Removes a component from the entity, triggering its cleanup. Param: component Component to detach. [Source line 1091](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1091)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public removeComponentByType<T extends Component>(type: abstract new (...args: any[]) => T): number",
+                    "—",
+                    "Removes all components of the specified type. Param: type The component class constructor. Returns: The number of components removed. [Source line 1134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1134)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Destroys this entity, triggering cleanups on all components and recursive child nodes. [Source line 1150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get animate(): Animator",
+                    "—",
+                    "Helper mapping property transitions into an [[Animator]] scheduler. Often written as `entity.animate.shift(...)`. [Source line 1162](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1162)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public animateWith(options?: AnimOptions): Animator",
+                    "—",
+                    "Helper creating an [[Animator]] scheduler configured with custom animation options (e.g. fps, interval, duration). Usage: `entity.animateWith({ fps: 12 }).shift(...)` [Source line 1170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1170)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public always(func: (time: number, dt: number, ctx: AlwaysContext) => any, options?: AlwaysOptions): AlwaysHandle;",
+                    "—",
+                    "Registers a callback to run on every frame update step. Supports optional execution options (interval, delay, duration, times, phase, priority, conditions). Param: func Update listener callback. Return `false` to automatically unregister. Param: options Timing, phase, condition, and execution options. Returns: An `AlwaysHandle` to pause, resume, reset, or stop the callback. [Source line 1182](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1182)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public always(func: (time: number, dt: number) => any, options?: AlwaysOptions): AlwaysHandle;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 1183](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1183)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public always(func: () => any, options?: AlwaysOptions): AlwaysHandle;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 1184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public always(func: (...args: any[]) => any, options?: AlwaysOptions): AlwaysHandle",
+                    "—",
+                    "Implementation: `if (!this._alwaysRegistry) { this._alwaysRegistry = new AlwaysRegistry('update'); } return this._alwaysRegistry.add(func, options);`. [Source line 1185](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1185)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public unregister(func: () => any): this;",
+                    "—",
+                    "Unregisters a callback from the update loop. Param: funcOrHandle The registered callback function or the `AlwaysHandle` returned by `always()`. [Source line 1197](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1197)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public unregister(func: (time: number, dt: number) => any): this;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 1198](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1198)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public unregister(funcOrHandle: ((...args: any[]) => any) | AlwaysHandle): this",
+                    "—",
+                    "Implementation: `if (this._alwaysRegistry) { this._alwaysRegistry.remove(funcOrHandle); } const idx = this.updaters.indexOf(funcOrHandle as any); if (idx !== -1) { this.updaters.splice(idx, 1); } return this;`. [Source line 1199](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1199)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public invalidateTransform()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._worldMatrixDirty`, `this.state.transform.version`; calls to `this.children[i].invalidateTransform`, `this.getScene`, `sc.composer.invalidate`, `this.parent.invalidateAnchor`; 1 explicit loop. [Source line 1210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1210)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add(...entities: Entity[]): Entity",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `e.parent.remove`, `e.invalidateTransform`, `this.children.push`, `this.invalidateAnchor`; return paths including `this`; 1 explicit loop. [Source line 1226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1226)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(...entities: Entity[]): Entity",
+                    "—",
+                    "Detaches one or more child entities from this node. [Source line 1253](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1253)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number)",
+                    "—",
+                    "Runs update cycles across local listeners, attached components, and child nodes. Param: t Running scene time in milliseconds. Param: dt Elapsed delta time in milliseconds. [Source line 1272](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1272)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public invalidate()",
+                    "—",
+                    "Marks state cache dirty, forcing updates to GPU buffers. [Source line 1319](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1319)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getWorldTransform(): { matrix: Mat4, offset: Vec3 }",
+                    "—",
+                    "Accumulates nested parent local matrices to compute world coordinates and offset. Uses a Zero-Allocation Top-Down evaluation cache. [Source line 1335](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1335)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getParentWorldMatrix(): Mat4 | undefined",
+                    "—",
+                    "Computes the effective world transform matrix of this entity's parent, correctly incorporating the parent's hierarchical transforms and offset. Returns undefined if this entity has no parent. [Source line 1359](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1359)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public localToWorld(point: Vec3Type, dst?: Vec3): Vec3",
+                    "—",
+                    "Converts a 3D point from entity local geometry space to world space, taking into account this entity's offset, transform, and all parent transforms. [Source line 1372](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1372)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public worldToLocal(point: Vec3Type, dst?: Vec3): Vec3",
+                    "—",
+                    "Converts a 3D point from world space to entity local geometry space, taking into account all parent transforms, this entity's transform, and offset. [Source line 1384](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1384)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getLocalAABB(): AABB",
+                    "—",
+                    "Extracts purely the local geometric size of this specific entity instance. [Source line 1396](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1396)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getGroupLocalAABB(): AABB",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `AABB`, `Vec3`, `Mat4`; calls to `Mat4.identity`, `Mat4.translation`, `localMat.mul`, `Entity._scratchMatPool.push`, `parentMat.mul`, `node.getLocalAABB`, `localAABB.isEmpty`, `groupAABB.expandByAABB` and additional helpers; return paths including `groupAABB`; 2 explicit loops. [Source line 1467](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1467)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBoundingBox(includeChildren: boolean = true): AABB",
+                    "—",
+                    "Computes the absolute bounding box of this entity AND all its children in World Space. Param: includeChildren Controls whether children bounds are grouped. [Source line 1504](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1504)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getWorldState(): State",
+                    "—",
+                    "Ascends the scene graph hierarchy to compute the absolute world state (Transforms, Paints, Materials). [Source line 1538](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1538)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBoundaryPoint(direction: Vec3Type): Vec3",
+                    "—",
+                    "Retrieves a point on the physical boundary of the entity's bounding box. Param: direction The direction vector mapping the anchor (e.g. UP, DOWN, LEFT, UL). [Source line 1565](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1565)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public snapTo(target: Entity): this;",
+                    "—",
+                    "Snaps this entity's center to another entity's center. [Source line 1572](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1572)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public snapTo(target: Entity, anchor: Vec3Type): this;",
+                    "—",
+                    "Snaps this entity to another entity, aligning the same edge on both. Param: target The entity to snap to. Param: anchor Edge to align on both entities (e.g. LEFT, UP, DL). [Source line 1578](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1578)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public snapTo(target: Entity, targetAnchor: Vec3Type, selfAnchor: Vec3Type): this;",
+                    "—",
+                    "Snaps this entity to another entity, aligning different edges. Param: target The entity to snap to. Param: targetAnchor Point on the TARGET entity's bbox to align to. Param: selfAnchor Point on THIS entity's bbox to align. [Source line 1585](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1585)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public snapTo(target: Entity, targetAnchor: Vec3Type, selfAnchor: Vec3Type, offset: Vec3Type): this;",
+                    "—",
+                    "Snaps this entity to another entity, aligning different edges with an offset. Param: target The entity to snap to. Param: targetAnchor Point on the TARGET entity's bbox to align to. Param: selfAnchor Point on THIS entity's bbox to align. Param: offset World-space offset applied after alignment. [Source line 1593](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1593)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public snapTo(target: Entity, targetAnchor: Vec3Type = ORIGIN, selfAnchor?: Vec3Type, offset?: Vec3Type): this",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `target.getBoundaryPoint`, `this.getBoundaryPoint`, `targetPos.sub`, `Vec3.cast`, `this.transform.shiftWorld`; return paths including `this`. [Source line 1594](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1594)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public center(): this",
+                    "—",
+                    "Center positions the Bounding Box of the entity to the coordinates system center [0, 0, 0]. [Source line 1615](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1615)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public nextTo(target: Entity | Vec3Type, direction: Vec3Type = RIGHT, buff: number = 0.5): this",
+                    "—",
+                    "Positions this entity adjacent to another target in a given direction (Manim-Style). Param: target Anchor entity or coordinate point. Param: direction Placement direction (e.g. RIGHT, UP). Param: buff Clear margin distance. [Source line 1628](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1628)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public alignTo(target: Entity | Vec3Type, direction: Vec3Type = UP): this",
+                    "—",
+                    "Aligns the specified edge bounds of this entity with the corresponding edge of a target. Param: target Alignment target coordinate or entity. Param: direction Target alignment edge direction (e.g. UP, LEFT). [Source line 1649](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1649)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFill(color: ColorLike): this",
+                    "—",
+                    "Sets the fill color. Accepts Color or ColorLike (e.g. hex string). [Source line 1674](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1674)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStroke(strokeWidth: number, color?: ColorLike): this",
+                    "—",
+                    "Sets the stroke width and optionally color. Accepts Color or ColorLike. [Source line 1676](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1676)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStrokeColor(color: ColorLike): this",
+                    "—",
+                    "Implementation: `this.paint.setStrokeColor(color); return this;`. [Source line 1677](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1677)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStrokeWidth(strokeWidth: number): this",
+                    "—",
+                    "Implementation: `this.paint.setStrokeWidth(strokeWidth); return this;`. [Source line 1678](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1678)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setOpacity(opacity: number): this",
+                    "—",
+                    "Sets the paint opacity [0-1]. [Source line 1681](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1681)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setCap(cap: number): this",
+                    "—",
+                    "Sets the stroke cap style. [Source line 1683](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1683)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setJoint(joint: number): this",
+                    "—",
+                    "Sets the stroke joint style. [Source line 1685](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1685)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setColor(color: Color | number[] | Float32Array): this",
+                    "—",
+                    "Sets the material base color. [Source line 1692](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1692)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRoughness(v: number): this",
+                    "—",
+                    "Sets the material roughness [0-1]. [Source line 1694](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1694)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMetallic(v: number): this",
+                    "—",
+                    "Sets the material metallic level [0-1]. [Source line 1696](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1696)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTransmission(v: number): this",
+                    "—",
+                    "Sets the material light transmission [0-1]. [Source line 1698](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1698)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setEmStrength(v: number): this",
+                    "—",
+                    "Sets the material emissive strength. [Source line 1700](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1700)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setIor(v: number): this",
+                    "—",
+                    "Sets the material index of refraction. [Source line 1702](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1702)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSpecular(v: number): this",
+                    "—",
+                    "Sets the material specular reflectivity [0-1]. [Source line 1704](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1704)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setEvent<K extends InteractionEventType>(type: K, listener: InteractionEventMap[K]): this",
+                    "—",
+                    "Sets event listeners mapping modular pointers and interaction updates. Param: type Event type identifier (e.g. pointerdown, pointermove, pointerup, pointerover, pointerout, click, dblclick, wheel, dragstart, drag, dragend). Param: listener Callback handler corresponding to the event type. [Source line 1716](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1716)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setDraggable(draggable: boolean, planeNormal?: Vec3): this",
+                    "—",
+                    "Sets pointer dragging status. Param: draggable Active draggable flag. Param: planeNormal Dragging constraints plane normal vector. [Source line 1747](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1747)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dispose(): void",
+                    "—",
+                    "Destroys this entity: removes it from its parent scene graph, calls `onDestroy()` on every component, and clears all component and child references. After calling `dispose()` the entity must not be used again. [Source line 1764](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1764)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clone(recursive: boolean = true, entityMap = new Map<Entity, Entity>()): this",
+                    "—",
+                    "Clones this entity instance, replicating hierarchies, paints, transforms, and sharing heavy VRAM buffers. Param: recursive If true, clones all child entities recursively. If false, creates a shallow clone with no children. [Source line 1797](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1797)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forSubNodes(fn: (ent: Entity) => void)",
+                    "—",
+                    "Implementation: `fn(this); for (const child of this.children) { child.forSubNodes(fn); }`. [Source line 1917](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1917)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forSuperNodes(fn: (ent: Entity) => void, includeSelf: boolean = true)",
+                    "—",
+                    "Implementation: `if (includeSelf) { fn(this); } let p = this.parent; while (p) { fn(p); p = p.parent; }`. [Source line 1923](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1923)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Entity.resolveTargetPivot: private resolveTargetPivot(options?: TransformOption): Vec3 | undefined",
+                    "Resolves an AnchorOrPivot into an absolute World Space coordinate. - Bare Vec3Type → treated as continuous local anchor via `getBoundaryPoint()` - `{ anchor: Vec3Type }` → explicit continuous local anchor - `{ pivot: Vec3Type }` → absolute world coordinate (used directly) Body operations (including nested callbacks): calls to `isOptions`, `Vec3.cast`, `this.resolveLocalAnchor`; return paths including `undefined`, `Vec3.cast(options.pivot)`, `this.resolveLocalAnchor(options.anchor)`.",
+                    "[Line 362](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L362)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Entity.resolveLocalAnchor: private resolveLocalAnchor(anchor: Vec3Type): Vec3",
+                    "Maps a continuous local bounding-box anchor to its current World Space coordinate. The anchor is in [-1, 1] range per axis, mapped via `aabb.getBoundaryPoint()`. Implementation: `const localAABB = this.getLocalAABB(); const localPt = localAABB.getBoundaryPoint(anchor); return this.localToWorld(localPt);`.",
+                    "[Line 386](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L386)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Entity._applyAnchorOffset: private _applyAnchorOffset(target: Vec3, anchorOpt?: TransformOption): Vec3",
+                    "Adjusts a target position so that the specified anchor of the entity lands at the target, rather than the entity's local origin. Uses continuous bounding-box mapping via getBoundaryPoint(). Body operations (including nested callbacks): calls to `isOptions`, `this.getLocalAABB`, `localAABB.getBoundaryPoint`, `this.transform._matrix.transformVector`, `target.sub`; return paths including `target`, `target.sub(worldAnchor)`.",
+                    "[Line 581](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L581)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Entity._syncDirectComponentSlots: private _syncDirectComponentSlots(): void",
+                    "Body operations (including nested callbacks): assignments to `this.geometryComponent`, `this.rendererComponent`, `this.fragmentComponent`, `this.interactionComponent`; 1 explicit loop.",
+                    "[Line 1108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts#L1108)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [TransformFunctions](/api-animation#animationfunctions)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

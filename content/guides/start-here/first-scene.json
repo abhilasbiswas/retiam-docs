@@ -1,0 +1,122 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "first-scene",
+  "title": "Your first scene",
+  "group": "Start here",
+  "summary": "Build a scene, add a shape, and compose its appearance, movement and exit with awaited animations.",
+  "prerequisites": [
+    "[Installation](/installation#create-a-consumer-application)"
+  ],
+  "outcome": "A circle that appears, moves across the canvas and fades out.",
+  "sections": [
+    {
+      "id": "create-place-reveal-move",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Create, place, reveal, move"
+        },
+        {
+          "type": "paragraph",
+          "text": "A Scene is a script and local entity graph. Its constructor does not create a GPU device. `start(canvas)` creates and attaches a composer when needed and launches `run()`. Place GPU-dependent setup inside `run()`, where the scene has a device, renderer and camera."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-firstscene"
+        }
+      ]
+    },
+    {
+      "id": "understand-the-sequence",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Understand the sequence"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "The circle’s geometry is created in local space; moving the entity changes its transform.",
+            "`this.add(circle)` establishes scene ownership. `play()` also registers the roots of entities referenced by recognized animations, but explicit ownership makes composite scenes easier to reason about.",
+            "Each awaited play waits for its animations to resolve. Passing several targets to one play runs them together.",
+            "Durations and wait values are milliseconds. The position uses arbitrary world units chosen to match the camera.",
+            "`FadeOut` changes appearance; visibility, scene attachment and GPU lifetime are separate concerns. Use the explicit removal or cleanup API when the object is no longer needed."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "experiment",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Experiment"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Change radius from 1 to 1.8, then change the camera’s orthoScale to 16.",
+            "Replace easeInOutCubic with linear to compare timing.",
+            "Pass two circles’ animators to one play to see concurrency.",
+            "Turn off Preserve State before rerunning when you want the camera and timeline to start from scratch."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "launch-outside-the-playground",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Launch outside the playground"
+        },
+        {
+          "type": "paragraph",
+          "text": "In an external npm project, save the scene with explicit retiam imports and a default class export. Use the [installation host](/installation#create-a-consumer-application) to preview it and select it for CLI rendering. The documentation runs the same kind of scene through a CDN-loaded engine; your project resolves the installed npm package."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Create, FadeOut, Rate, CameraModel, hex } from \"retiam\";\n// Paste the default-exported scene class into its own module.\n// In the application entry:\nimport FirstScene from \"./FirstScene\";\nconst canvas = document.querySelector<HTMLCanvasElement>(\"canvas\")!;\nconst scene = new FirstScene();\nawait scene.start(canvas);"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [Circle](/api-entities-primitives-2d#circle), [Create](/api-animation-creation#create), [Animator](/api-animation#animator)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Once the scene looks right, continue with [video rendering](/export#cli-preview-and-final-render). Use [independent scene export](/export#standalone-embeds) when the result should remain interactive on another website."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Coordinates, units and colors](/coordinates-colors)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "difficulty": "beginner",
+  "estimatedMinutes": 15
+}

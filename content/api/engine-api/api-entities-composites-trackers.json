@@ -1,0 +1,221 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-entities-composites-trackers",
+  "title": "entities / composites / trackers API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "valuetrackers",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ValueTrackers"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/trackers/ValueTrackers.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/trackers/ValueTrackers.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/ValueTrackers.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ValueTracker",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ValueTracker extends Entity {\n    constructor(initialValue?: number);\n    get value(): number;\n    set value(v: number);\n    animateValue(targetValue: number): import(\"../../../..\").Animator;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ValueTracker` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(initialValue: number = 0)",
+                    "—",
+                    "Implementation: `super(); this.VISIBILITY = false; // Never render this entity this.value = initialValue;`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/ValueTrackers.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get value(): number",
+                    "—",
+                    "Gets the current animated value [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/ValueTrackers.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set value(v: number)",
+                    "—",
+                    "Sets the value instantaneously [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/ValueTrackers.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public animateValue(targetValue: number)",
+                    "—",
+                    "Syntactic sugar for animating the value. Under the hood, this uses the existing proxy `Animator` to interpolate `t1`. Usage: await scene.play(tracker.animateValue(10)) [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/ValueTrackers.ts#L31)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "alwaysredraw",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "alwaysRedraw"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/trackers/alwaysRedraw.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/trackers/alwaysRedraw.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/alwaysRedraw.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "alwaysRedraw: Creates a wrapper entity that continuously evaluates and rebuilds its child every frame using the provided creator function. Optimized to recycle WebGPU buffers and suspend evaluation when the scene is static."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "alwaysRedraw",
+                    "Function",
+                    "Creates a wrapper entity that continuously evaluates and rebuilds its child every frame using the provided creator function. Optimized to recycle WebGPU buffers and suspend evaluation when the scene is static."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare function alwaysRedraw(creator: () => Entity): Entity;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "alwaysRedraw: Body operations (including nested callbacks): construction of `Entity`; calls to `creator`, `wrapper.add`, `wrapper.always`, `wrapper.getScene`, `recycleGPUResources`, `wrapper.remove`, `currentChild.destroy`; return paths including `wrapper`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "recycleGPUResources: function recycleGPUResources(oldEnt: Entity, newEnt: Entity)",
+                    "Recursively transfers heavy WebGPU buffers and pipeline caches from an old entity to a newly created entity. This prevents VRAM thrashing and GC pauses. Body operations (including nested callbacks): calls to `oldEnt.getComponent`, `newEnt.getComponent`, `key.toLowerCase().includes`, `key.toLowerCase`, `recycleGPUResources`; 2 explicit loops.",
+                    "[Line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/trackers/alwaysRedraw.ts#L13)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

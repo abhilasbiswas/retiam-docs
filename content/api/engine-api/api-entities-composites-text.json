@@ -1,0 +1,3343 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-entities-composites-text",
+  "title": "entities / composites / text API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Code"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/Code.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/Code.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "parsePrismHTML: Professional HTML DOM-based Tokenizer powered by Prism.js. Parses Prism's HTML output via DOMParser to resolve nested CSS token classes and theme colors."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CodeTheme",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ONE_DARK_THEME",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DRACULA_THEME",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MONOKAI_THEME",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VS_CODE_THEME",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CodeToken",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CodeOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "StyledToken",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "parsePrismHTML",
+                    "Function",
+                    "Professional HTML DOM-based Tokenizer powered by Prism.js. Parses Prism's HTML output via DOMParser to resolve nested CSS token classes and theme colors."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tokenizeCode",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Code",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface CodeTheme {\n    background: Color;\n    headerBackground: Color;\n    text: Color;\n    lineNumber: Color;\n    keyword: Color;\n    string: Color;\n    function: Color;\n    comment: Color;\n    number: Color;\n    operator: Color;\n    type: Color;\n    highlight: Color;\n}\nexport declare const ONE_DARK_THEME: CodeTheme;\nexport declare const DRACULA_THEME: CodeTheme;\nexport declare const MONOKAI_THEME: CodeTheme;\nexport declare const VS_CODE_THEME: CodeTheme;\nexport interface CodeToken {\n    type: 'keyword' | 'string' | 'function' | 'comment' | 'number' | 'operator' | 'type' | 'text';\n    content: string;\n}\nexport interface CodeOptions extends EntityOptions {\n    language?: string;\n    theme?: CodeTheme;\n    fontSize?: number;\n    showLineNumbers?: boolean;\n    showWindowHeader?: boolean;\n    title?: string;\n    padding?: number;\n    tabSize?: number;\n    titlePosition?: 'left' | 'center' | 'right';\n    windowStyle?: 'mac' | 'windows';\n    showBackground?: boolean;\n    cornerRadius?: number | [\n        number,\n        number,\n        number,\n        number\n    ];\n    startLineNumber?: number;\n}\nexport interface StyledToken {\n    type: CodeToken['type'];\n    content: string;\n    color: Color;\n}\nexport declare function parsePrismHTML(code: string, language?: string, theme?: CodeTheme): StyledToken[][];\nexport declare function tokenizeCode(code: string, language?: string): CodeToken[][];\nexport declare class Code extends VectorEntity {\n    static codeFont: any;\n    static loadFont(source?: FontSource): Promise<any>;\n    fontSize: number;\n    showLineNumbers: boolean;\n    showWindowHeader: boolean;\n    title: string;\n    padding: number;\n    tabSize: number;\n    titlePosition: 'left' | 'center' | 'right';\n    windowStyle: 'mac' | 'windows';\n    showBackground: boolean;\n    cornerRadius: number | [\n        number,\n        number,\n        number,\n        number\n    ];\n    startLineNumber: number;\n    backgroundRect: Rect | null;\n    headerRect: Rect | null;\n    lineElements: Text[];\n    lineGroups: Text[][];\n    lineNumberElements: Text[];\n    highlightRect: Rect | null;\n    highlightBlocks: Rect[];\n    scrollGroup: Entity;\n    constructor(code?: string, options?: CodeOptions);\n    getActiveFont(): any;\n    get code(): string;\n    set code(val: string);\n    setCode(code: string): this;\n    get theme(): CodeTheme;\n    set theme(t: CodeTheme);\n    setTheme(t: CodeTheme): this;\n    rebuild(): void;\n    toPaths(): Path[];\n    getSubEntities(): VectorEntity[];\n    highlightLine(lineNum: number, color?: Color): Rect | null;\n    clearHighlight(): void;\n    highlightBlock(startLine: number, endLine: number, color?: Color): Rect | null;\n    clearHighlightBlocks(): void;\n    highlightText(targetText: string, color?: Color, occurrence?: number): Rect | null;\n    markDeletedLine(lineNum: number, color?: Color): Rect | null;\n    markDeletedText(targetText: string, color?: Color, occurrence?: number): Rect | null;\n    showErrorLine(lineNum: number, color?: Color): Path | null;\n    showErrorText(targetText: string, color?: Color, occurrence?: number): Path | null;\n    focusOn(startLine: number, endLine: number): void;\n    clearFocus(): void;\n    addTooltip(lineNum: number, content: string, color?: Color): Entity | null;\n    addCursor(lineNum: number, colIndex: number, color?: Color): Rect | null;\n    scrollToLine(lineNum: number): void;\n    extractText(targetText: string, occurrence?: number, removeOriginal?: boolean): Entity | null;\n    extractTextByIndices(lineNum: number, startCol: number, endCol: number, removeOriginal?: boolean): Entity | null;\n    getScrollAnimation(lineNum: number, options?: AnimOptions): StateAnimation;\n}"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "parsePrismHTML: Body operations (including nested callbacks): construction of `DOMParser`, `Set`; calls to `language.toLowerCase`, `Prism.highlight`, `parser.parseFromString`, `doc.getElementById`, `text.split`, `parts.forEach`, `lines.push`, `resolveColor` and additional helpers; return paths including `{ type: 'keyword', color: theme.keyword }`, `{ type: 'string', color: theme.string }`, `{ type: 'function', color: theme.function }`; 1 explicit loop.",
+                "tokenizeCode: Implementation: `return parsePrismHTML(code, language, ONE_DARK_THEME).map(line => line.map(t => ({ type: t.type, content: t.content })) );`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CodeTheme` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "background: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "headerBackground: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "text: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lineNumber: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "keyword: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "string: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "function: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "comment: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "number: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "operator: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "type: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "highlight: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L40)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CodeToken` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "type: 'keyword' | 'string' | 'function' | 'comment' | 'number' | 'operator' | 'type' | 'text';",
+                    "—",
+                    "Required record/option field with declared type `'keyword' | 'string' | 'function' | 'comment' | 'number' | 'operator' | 'type' | 'text'`. [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "content: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 105](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L105)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CodeOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "language?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "theme?: CodeTheme;",
+                    "—",
+                    "Optional record/option field with declared type `CodeTheme`. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L110)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fontSize?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L111)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "showLineNumbers?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "showWindowHeader?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "title?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L114)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "padding?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L115)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tabSize?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 116](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L116)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "titlePosition?: 'left' | 'center' | 'right';",
+                    "—",
+                    "Optional record/option field with declared type `'left' | 'center' | 'right'`. [Source line 117](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L117)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "windowStyle?: 'mac' | 'windows';",
+                    "—",
+                    "Optional record/option field with declared type `'mac' | 'windows'`. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "showBackground?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cornerRadius?: number | [number, number, number, number];",
+                    "—",
+                    "Optional record/option field with declared type `number | [number, number, number, number]`. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startLineNumber?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L121)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `StyledToken` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "type: CodeToken['type'];",
+                    "—",
+                    "Required record/option field with declared type `CodeToken['type']`. [Source line 125](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L125)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "content: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 126](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L126)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "color: Color;",
+                    "—",
+                    "Required record/option field with declared type `Color`. [Source line 127](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L127)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Code` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static codeFont: any",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 211](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L211)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async loadFont(source: FontSource = defaultCodeFontUrl): Promise<any>",
+                    "—",
+                    "Implementation: `if (this.codeFont && source === defaultCodeFontUrl) return this.codeFont; this.codeFont = await FontLoader.vector(source); return this.codeFont;`. [Source line 213](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L213)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fontSize: number",
+                    "22",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 222](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L222)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public showLineNumbers: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 223](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L223)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public showWindowHeader: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 224](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L224)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public title: string",
+                    "\"script.ts\"",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 225](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L225)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public padding: number",
+                    "24",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L226)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public tabSize: number",
+                    "4",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 227](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L227)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public titlePosition: 'left' | 'center' | 'right'",
+                    "'center'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 228](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L228)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public windowStyle: 'mac' | 'windows'",
+                    "'mac'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 229](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L229)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public showBackground: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 230](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L230)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cornerRadius: number | [number, number, number, number]",
+                    "8",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 231](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L231)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public startLineNumber: number",
+                    "1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 232](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L232)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public backgroundRect: Rect | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 234](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L234)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public headerRect: Rect | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 235](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L235)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lineElements: Text[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 236](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L236)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lineGroups: Text[][]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 237](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L237)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lineNumberElements: Text[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 238](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L238)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public highlightRect: Rect | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 239](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L239)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public highlightBlocks: Rect[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 240](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L240)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scrollGroup: Entity",
+                    "new Entity()",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 241](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L241)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(code: string = \"\", options: CodeOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._code`, `this._language`, `this._theme`, `this.fontSize`, `this.showLineNumbers`, `this.showWindowHeader`, `this.title`, `this.padding` and other instance fields; calls to `this.rebuild`. [Source line 243](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L243)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getActiveFont(): any",
+                    "—",
+                    "Implementation: `return Code.codeFont || Text.font;`. [Source line 264](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L264)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get code(): string",
+                    "—",
+                    "Implementation: `return this._code;`. [Source line 268](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L268)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set code(val: string)",
+                    "—",
+                    "Implementation: `this._code = val; this.rebuild();`. [Source line 269](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L269)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setCode(code: string): this",
+                    "—",
+                    "Implementation: `this.code = code; return this;`. [Source line 274](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L274)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get theme(): CodeTheme",
+                    "—",
+                    "Implementation: `return this._theme;`. [Source line 279](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L279)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set theme(t: CodeTheme)",
+                    "—",
+                    "Implementation: `this._theme = t; this.rebuild();`. [Source line 280](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L280)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTheme(t: CodeTheme): this",
+                    "—",
+                    "Implementation: `this.theme = t; return this;`. [Source line 285](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L285)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rebuild()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.lineElements`, `this.lineGroups`, `this.lineNumberElements`, `this.highlightRect`, `this.highlightBlocks`, `this.scrollGroup`, `this.backgroundRect`, `this.headerRect`; construction of `Entity`, `Rect`, `Vec3`, `Circle`, `Path`; calls to `this.children.slice().forEach`, `this.children.slice`, `this.remove`, `c.destroy`, `parsePrismHTML`, `this.getActiveFont`, `font.getAdvanceWidth`, `tokenizedLines.forEach` and additional helpers; return paths including `font.getAdvanceWidth(str, this.fontSize)`, `str.length * (this.fontSize * 0.6)`. [Source line 290](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L290)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Extracts all child vector paths for animations / morphing. [Source line 495](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L495)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Implementation: `return this.lineElements.length > 0 ? this.lineElements : [this];`. [Source line 499](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L499)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public highlightLine(lineNum: number, color?: Color): Rect | null",
+                    "—",
+                    "Highlights a single line or range of lines (1-indexed). [Source line 506](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L506)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearHighlight()",
+                    "—",
+                    "Clears current line highlight. [Source line 542](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L542)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public highlightBlock(startLine: number, endLine: number, color?: Color): Rect | null",
+                    "—",
+                    "Highlights a block of code spanning multiple lines (1-indexed). This creates a new highlight rect that persists alongside other block highlights. [Source line 554](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L554)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearHighlightBlocks()",
+                    "—",
+                    "Clears all highlighted blocks. [Source line 599](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L599)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public highlightText(targetText: string, color?: Color, occurrence: number = 1): Rect | null",
+                    "—",
+                    "Highlights a specific substring in the code. Param: targetText The text to highlight. Param: color The highlight color. Param: occurrence Which occurrence of the text to highlight (1-indexed, default is 1). Returns: The Rect created for the highlight, or null if not found. [Source line 667](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L667)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public markDeletedLine(lineNum: number, color?: Color): Rect | null",
+                    "—",
+                    "Draws a strikethrough path across a specific line. [Source line 701](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L701)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public markDeletedText(targetText: string, color?: Color, occurrence: number = 1): Rect | null",
+                    "—",
+                    "Draws a strikethrough path across a specific substring. [Source line 725](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L725)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public showErrorLine(lineNum: number, color?: Color): Path | null",
+                    "—",
+                    "Draws a red squiggly error line beneath a specific line. [Source line 762](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L762)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public showErrorText(targetText: string, color?: Color, occurrence: number = 1): Path | null",
+                    "—",
+                    "Draws a red squiggly error line beneath a specific substring. [Source line 789](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L789)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public focusOn(startLine: number, endLine: number)",
+                    "—",
+                    "Dims all lines except those in the specified range to focus the viewer's attention. Param: startLine 1-indexed start line Param: endLine 1-indexed end line [Source line 812](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L812)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clearFocus()",
+                    "—",
+                    "Clears the focus effect, returning all lines to full opacity. [Source line 844](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L844)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addTooltip(lineNum: number, content: string, color?: Color): Entity | null",
+                    "—",
+                    "Adds a tooltip pointing to the right side of the specified line. Param: lineNum 1-indexed line number Param: content Tooltip text Param: color Background color of the tooltip [Source line 862](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L862)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addCursor(lineNum: number, colIndex: number, color?: Color): Rect | null",
+                    "—",
+                    "Adds a blinking cursor at the specified line and column index. Param: lineNum 1-indexed line number Param: colIndex 0-indexed column character index Param: color Cursor color [Source line 931](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L931)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scrollToLine(lineNum: number)",
+                    "—",
+                    "Shifts all lines vertically so the specified line is in view. Useful for animating a scrolling effect in a long file. Param: lineNum 1-indexed line number [Source line 977](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L977)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public extractText(targetText: string, occurrence: number = 1, removeOriginal: boolean = false): Entity | null",
+                    "—",
+                    "Extracts a specific substring from the code as a separate Entity, maintaining exact style and position. Optionally hides the original text. Param: targetText The text to extract. Param: occurrence Which occurrence to extract (1-indexed, default is 1). Param: removeOriginal If true, hides the original text characters. Returns: The extracted Entity containing the text, or null if not found. [Source line 995](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L995)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public extractTextByIndices(lineNum: number, startCol: number, endCol: number, removeOriginal: boolean = false): Entity | null",
+                    "—",
+                    "Extracts a substring from the code by line and column indices as a separate Entity, maintaining exact style and position. Optionally hides the original text. Param: lineNum 1-indexed line number. Param: startCol 0-indexed starting column character index. Param: endCol 0-indexed ending column character index (exclusive). Param: removeOriginal If true, hides the original text characters. Returns: The extracted Entity containing the text, or null if out of bounds. [Source line 1039](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L1039)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getScrollAnimation(lineNum: number, options: AnimOptions = {}): StateAnimation",
+                    "—",
+                    "Creates an animation that smoothly scrolls the code to the target line. Param: lineNum 1-indexed line number Param: options Animation options (e.g., duration, easing) Returns: A StateAnimation targeting the new scroll position [Source line 1166](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L1166)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.language || \"typescript\"",
+                    "[Line 246](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L246)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.theme || ONE_DARK_THEME",
+                    "[Line 247](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L247)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fontSize || 22",
+                    "[Line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L248)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.showLineNumbers ?? true",
+                    "[Line 249](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L249)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.showWindowHeader ?? true",
+                    "[Line 250](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L250)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.title || \"script.ts\"",
+                    "[Line 251](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L251)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.padding || 24",
+                    "[Line 252](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L252)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.tabSize || 4",
+                    "[Line 253](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L253)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.titlePosition || 'center'",
+                    "[Line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L254)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.windowStyle || 'mac'",
+                    "[Line 255](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L255)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.showBackground ?? true",
+                    "[Line 256](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L256)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.cornerRadius ?? 12",
+                    "[Line 257](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L257)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.startLineNumber ?? 1",
+                    "[Line 258](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L258)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "resolveColor: function resolveColor(classes: string[]): { type: CodeToken['type']; color: Color }",
+                    "Body operations (including nested callbacks): return paths including `{ type: 'keyword', color: theme.keyword }`, `{ type: 'string', color: theme.string }`, `{ type: 'function', color: theme.function }`; 1 explicit loop.",
+                    "[Line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L145)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "walk: function walk(node: Node, classList: string[])",
+                    "Body operations (including nested callbacks): construction of `Set`; calls to `text.split`, `parts.forEach`, `lines.push`, `resolveColor`, `lines[lines.length - 1].push`, `el.className.split(/\\s+/).filter`, `el.className.split`, `el.childNodes.forEach` and additional helpers.",
+                    "[Line 175](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L175)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Code.getSubstringMetrics: private getSubstringMetrics(targetText: string, occurrence: number = 1)",
+                    "Body operations (including nested callbacks): calls to `this._code.split`, `line.indexOf`, `this.getActiveFont`, `font.getAdvanceWidth`, `getStrWidth`, `String`, `lines[foundLine].substring(0, foundCol).replace`, `lines[foundLine].substring` and additional helpers; return paths including `null`, `font.getAdvanceWidth(str, this.fontSize)`, `str.length * (this.fontSize * 0.6)`; 2 explicit loops.",
+                    "[Line 607](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L607)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Code.generateSquiggle: private generateSquiggle(width: number): string",
+                    "Body operations (including nested callbacks): return paths including `d`; 1 explicit loop.",
+                    "[Line 742](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L742)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Code._performExtraction: private _performExtraction(foundLine: number, startCol: number, endCol: number, startX: number, lineY: number, removeOriginal: boolean): Entity",
+                    "Body operations (including nested callbacks): construction of `Entity`, `Color`, `Text`, `Vec3`; calls to `parsePrismHTML`, `this.getActiveFont`, `font.getAdvanceWidth`, `tokenOrigText.replace`, `' '.repeat`, `getStrWidth`, `textStr.trim`, `tokenOrigText.substring` and additional helpers; return paths including `font.getAdvanceWidth(str, this.fontSize)`, `str.length * (this.fontSize * 0.6)`, `extractedGroup`; 2 explicit loops.",
+                    "[Line 1075](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Code.ts#L1075)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "markuptext",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MarkupText"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/MarkupText.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/MarkupText.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "tokenizeMarkup: Tokenizes a rich-text markup string containing plain text, inline math ($...$), block math ($$...$$), and explicit newlines into semantic tokens. Supports escaped dollar signs (\\$ to represent a literal '$').",
+                "MarkupLine: Line container within a [[MarkupText]] entity. Properly positioned in the scene graph at the line's baseline.",
+                "MarkupText: Vector composite entity that lays out mixed prose text and LaTeX mathematical expressions with automatic word-wrapping, flow layout, and sub-pixel baseline alignment. Uses {@link Text} for prose and {@link Tex} for mathematical expressions, ensuring unified shader styling and stroke animatability."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MarkupTextAlign",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupTextOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupTokenType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupToken",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tokenizeMarkup",
+                    "Function",
+                    "Tokenizes a rich-text markup string containing plain text, inline math ($...$), block math ($$...$$), and explicit newlines into semantic tokens. Supports escaped dollar signs (\\$ to represent a literal '$')."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupLine",
+                    "Class",
+                    "Line container within a [[MarkupText]] entity. Properly positioned in the scene graph at the line's baseline."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupText",
+                    "Class",
+                    "Vector composite entity that lays out mixed prose text and LaTeX mathematical expressions with automatic word-wrapping, flow layout, and sub-pixel baseline alignment. Uses {@link Text} for prose and {@link Tex} for mathematical expressions, ensuring unified shader styling and stroke animatability."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type MarkupTextAlign = 'left' | 'center' | 'right' | 'justify';\nexport interface MarkupTextOptions extends EntityOptions, ShaderConfigOptions {\n    fontSize?: number;\n    font?: OpentypeFont | FontStyle;\n    texStyle?: TexStyle;\n    maxWidth?: number;\n    lineHeight?: number;\n    paragraphGap?: number;\n    align?: MarkupTextAlign;\n    wordSpacing?: number;\n    mathPadding?: number;\n}\nexport type MarkupTokenType = 'word' | 'space' | 'inline_math' | 'block_math' | 'newline' | 'paragraph_break';\nexport interface MarkupToken {\n    type: MarkupTokenType;\n    value: string;\n}\nexport declare function tokenizeMarkup(input: string): MarkupToken[];\nexport declare class MarkupLine extends VectorEntity {\n    toPaths(): Path[];\n}\nexport declare class MarkupText extends VectorEntity implements IRaycastable {\n    fontSize: number;\n    texStyle: TexStyle;\n    maxWidth?: number;\n    lineHeight: number;\n    paragraphGap?: number;\n    align: MarkupTextAlign;\n    wordSpacing?: number;\n    mathPadding: number;\n    strokeShader?: PathEffect | string;\n    fillShader?: FillEffect | string;\n    customFont?: OpentypeFont;\n    fontStyle?: FontStyle;\n    _isDecomposed: boolean;\n    textRuns: Text[];\n    mathEntities: Tex[];\n    lineGroups: MarkupLine[];\n    constructor(text?: string, options?: MarkupTextOptions);\n    getActiveFont(): OpentypeFont | undefined;\n    get rawText(): string;\n    set rawText(val: string);\n    get text(): string;\n    set text(val: string);\n    setText(text: string): this;\n    setFont(font: OpentypeFont | FontStyle): this;\n    setFontSize(fontSize: number): this;\n    setMaxWidth(maxWidth: number | undefined): this;\n    setAlign(align: MarkupTextAlign): this;\n    setTexStyle(style: TexStyle): this;\n    rebuild(): this;\n    getMath(): Tex[];\n    getMath(index: number): Tex | null;\n    getTextRuns(): Text[];\n    getLines(): MarkupLine[];\n    decompose(): this;\n    splitWords(options?: TextSplitOptions): VectorEntity[];\n    toPaths(): Path[];\n    getSubEntities(): VectorEntity[];\n    getGroupAnimator(staggerMs?: number): GroupAnimator;\n    raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): RaycastHit | null;\n}"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "tokenizeMarkup: Body operations (including nested callbacks): calls to `input.startsWith`, `tokens.push`, `input.indexOf`, `input.substring`, `formula.trim`; return paths including `tokens`; 5 explicit loops."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MarkupTextOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fontSize?: number;",
+                    "—",
+                    "Font size in world units for prose and mathematical expressions. Default: 0.8 [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "font?: OpentypeFont | FontStyle;",
+                    "—",
+                    "Vector font for prose words (OpentypeFont instance, FontStyle name, or path). [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "texStyle?: TexStyle;",
+                    "—",
+                    "Typographic font style for LaTeX mathematical formulas: - 'default': Standard Computer Modern TeX font. - 'excalifont': Handwritten Excalidraw math font. - 'virgil': Handwritten Virgil math font. Default: 'default' [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxWidth?: number;",
+                    "—",
+                    "Maximum width in world units for automatic word-wrapping. If undefined or Infinity, lines only break on explicit newlines or block math '$$...$$'. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lineHeight?: number;",
+                    "—",
+                    "Line height multiplier relative to fontSize (e.g. 1.4 means lineHeight = fontSize * 1.4). Default: 1.4 [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "paragraphGap?: number;",
+                    "—",
+                    "Vertical gap spacing between paragraphs (double newlines '\\n\\n') and around display equations. Default: fontSize * 0.5 [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "align?: MarkupTextAlign;",
+                    "—",
+                    "Horizontal alignment of lines within the wrapping boundary: 'left' | 'center' | 'right' | 'justify'. Default: 'left' [Source line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L71)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "wordSpacing?: number;",
+                    "—",
+                    "Spacing between consecutive words in world units. If omitted, automatically derived from the font's space glyph advance width. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "mathPadding?: number;",
+                    "—",
+                    "Horizontal padding between inline math formulas and adjacent text words. Default: 0.08 [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L83)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MarkupToken` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "type: MarkupTokenType;",
+                    "—",
+                    "Required record/option field with declared type `MarkupTokenType`. [Source line 95](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L95)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "value: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L96)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MarkupLine` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `const paths: Path[] = []; this.forEachPath(p => paths.push(p)); return paths;`. [Source line 226](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L226)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MarkupText` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public fontSize: number",
+                    "0.8",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 242](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L242)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public texStyle: TexStyle",
+                    "'default'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 243](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L243)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxWidth?: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 244](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L244)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lineHeight: number",
+                    "1.4",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 245](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L245)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public paragraphGap?: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 246](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L246)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public align: MarkupTextAlign",
+                    "'left'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 247](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L247)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public wordSpacing?: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L248)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public mathPadding: number",
+                    "0.08",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 249](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L249)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokeShader?: PathEffect | string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 251](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L251)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fillShader?: FillEffect | string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 252](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L252)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customFont?: OpentypeFont",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L254)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fontStyle?: FontStyle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 255](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L255)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public _isDecomposed: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 256](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L256)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public textRuns: Text[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 258](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L258)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public mathEntities: Tex[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 259](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L259)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lineGroups: MarkupLine[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 260](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L260)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(text: string = \"\", options: MarkupTextOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`, `this.fontSize`, `this.texStyle`, `this.maxWidth`, `this.lineHeight`, `this.paragraphGap`, `this.align`, `this.wordSpacing` and other instance fields; calls to `this.resolveStringFont`, `text.substring`, `this.rebuild`. [Source line 262](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L262)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getActiveFont(): OpentypeFont | undefined",
+                    "—",
+                    "Implementation: `return this.customFont || Text.font;`. [Source line 308](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L308)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get rawText(): string",
+                    "—",
+                    "Implementation: `return this._rawText;`. [Source line 312](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L312)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set rawText(val: string)",
+                    "—",
+                    "Implementation: `this._rawText = val; this.rebuild();`. [Source line 313](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L313)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get text(): string",
+                    "—",
+                    "Implementation: `return this._rawText;`. [Source line 318](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L318)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set text(val: string)",
+                    "—",
+                    "Implementation: `this._rawText = val; this.rebuild();`. [Source line 319](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L319)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setText(text: string): this",
+                    "—",
+                    "Implementation: `this.rawText = text; return this;`. [Source line 324](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L324)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFont(font: OpentypeFont | FontStyle): this",
+                    "—",
+                    "Implementation: `if (typeof font === 'string') { this.fontStyle = font; this.resolveStringFont(font); this.rebuild(); } else { this.customFont = font; this.fontStyle = undefined; this.rebuild(); } return this;`. [Source line 329](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L329)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFontSize(fontSize: number): this",
+                    "—",
+                    "Implementation: `this.fontSize = fontSize; this.rebuild(); return this;`. [Source line 342](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L342)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setMaxWidth(maxWidth: number | undefined): this",
+                    "—",
+                    "Implementation: `this.maxWidth = maxWidth; this.rebuild(); return this;`. [Source line 348](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L348)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setAlign(align: MarkupTextAlign): this",
+                    "—",
+                    "Implementation: `this.align = align; this.rebuild(); return this;`. [Source line 354](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L354)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTexStyle(style: TexStyle): this",
+                    "—",
+                    "Implementation: `this.texStyle = style; this.rebuild(); return this;`. [Source line 360](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L360)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rebuild(): this",
+                    "—",
+                    "Rebuilds line flow layout, word wrapping, and baseline-aligned entities. [Source line 419](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L419)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getMath(): Tex[];",
+                    "—",
+                    "Returns an array of all compiled {@link Tex} formula entities within this markup text. If an index is provided, returns that specific formula entity. [Source line 691](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L691)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getMath(index: number): Tex | null;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 692](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L692)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getMath(index?: number): Tex[] | Tex | null",
+                    "—",
+                    "Implementation: `if (index === undefined) { return this.mathEntities.slice(); } if (index < 0 || index >= this.mathEntities.length) return null; return this.mathEntities[index];`. [Source line 693](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L693)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getTextRuns(): Text[]",
+                    "—",
+                    "Returns an array of all {@link Text} runs within this markup text. [Source line 704](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L704)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getLines(): MarkupLine[]",
+                    "—",
+                    "Returns an array of all line container entities. [Source line 711](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L711)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public decompose(): this",
+                    "—",
+                    "Decomposes all child Text and Tex components into individual character and symbol Path entities. [Source line 718](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L718)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitWords(options?: TextSplitOptions): VectorEntity[]",
+                    "—",
+                    "Splits this MarkupText into an array of separate word Text entities and inline Tex entities, maintaining exact scene graph positions and visual reading order. [Source line 734](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L734)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Returns all primitive {@link Path} entities across all text words and math formulas in exact visual reading order. [Source line 760](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L760)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Returns all sub-vector entities in visual reading order. Used by introducer animations like [[DrawBorderThenFill]] and [[Write]]. [Source line 770](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L770)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getGroupAnimator(staggerMs: number = 60): GroupAnimator",
+                    "—",
+                    "Returns a GroupAnimator instance staggered across all vector paths in reading order. [Source line 786](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L786)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance: number = 0.05): RaycastHit | null",
+                    "—",
+                    "Raycasts synchronously against the bounding box of this markup text. [Source line 793](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L793)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.fill ?? Color.WHITE",
+                    "[Line 263](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L263)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fontSize ?? 0.8",
+                    "[Line 267](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L267)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.texStyle ?? 'default'",
+                    "[Line 268](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L268)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.lineHeight ?? 1.4",
+                    "[Line 270](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L270)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.align ?? 'left'",
+                    "[Line 272](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L272)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.mathPadding ?? 0.08",
+                    "[Line 274](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L274)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MarkupText.resolveStringFont: private resolveStringFont(fontName: string)",
+                    "Body operations (including nested callbacks): assignments to `this.customFont`; calls to `FontCache.getVector`, `FontLoader.vector(fontName).then((loaded) => { this.customFont = loaded; this.rebuild(); }).catch`, `FontLoader.vector(fontName).then`, `FontLoader.vector`, `this.rebuild`.",
+                    "[Line 289](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L289)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupText.getTextAdvance: private getTextAdvance(text: string): number",
+                    "Implementation: `const font = this.getActiveFont(); if (font && typeof font.getAdvanceWidth === 'function') { return font.getAdvanceWidth(text, this.fontSize); } return text.length * (this.fontSize * 0.55);`.",
+                    "[Line 366](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L366)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupText.getSpaceWidth: private getSpaceWidth(): number",
+                    "Body operations (including nested callbacks): calls to `this.getActiveFont`, `font.getAdvanceWidth`; return paths including `this.wordSpacing`, `font.getAdvanceWidth(' ', this.fontSize)`, `this.fontSize * 0.28`.",
+                    "[Line 374](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L374)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupText.createInlineTex: private createInlineTex(latex: string): Tex",
+                    "Implementation: `return new Tex(latex, { fontSize: this.fontSize, fontStyle: this.texStyle, display: false, strokeShader: this.strokeShader, fillShader: this.fillShader, fill: this.paint.fill });`.",
+                    "[Line 383](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L383)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupText.createBlockTex: private createBlockTex(latex: string): Tex",
+                    "Implementation: `return new Tex(latex, { fontSize: this.fontSize, fontStyle: this.texStyle, display: true, strokeShader: this.strokeShader, fillShader: this.fillShader, fill: this.paint.fill });`.",
+                    "[Line 394](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L394)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MarkupText.getTexMetrics: private getTexMetrics(tex: Tex): { width: number; leftBearing: number; ascent: number; descent: number }",
+                    "Implementation: `const aabb = tex.getGroupLocalAABB(); const width = Math.max(0, aabb.max.x - aabb.min.x); return { width, leftBearing: aabb.min.x, ascent: Math.max(0, aabb.max.y), descent: Math.max(0, -aabb.min.y) };`.",
+                    "[Line 405](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/MarkupText.ts#L405)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity), [IRaycastable](/api-core#interfaces)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdftext",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SDFText"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/SDFText.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/SDFText.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SDFChar",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SDFTextOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SDFText",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class SDFChar extends VectorEntity implements IRaycastable {\n    geo: TextGeometry;\n    constructor(char: string, fontSize: number, font: Font);\n    toPaths(): Path[];\n    raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): RaycastHit | null;\n}\nexport interface SDFTextOptions extends EntityOptions {\n    fontSize?: number;\n    font?: Font | FontStyle;\n}\nexport declare class SDFText extends VectorEntity implements IRaycastable {\n    chars: (SDFChar | null)[];\n    fontSize: number;\n    _isDecomposed: boolean;\n    font: Font;\n    fontStyle?: FontStyle;\n    get z_index(): number;\n    set z_index(value: number);\n    constructor(text: string, options?: SDFTextOptions);\n    setFont(font: Font | FontStyle): this;\n    get rawText(): string;\n    set rawText(val: string);\n    get text(): string;\n    set text(val: string);\n    setText(text: string): this;\n    rebuild(): void;\n    decompose(): this;\n    split(separator?: SplitSeparator, options?: TextSplitOptions): SDFText[];\n    splitWords(options?: TextSplitOptions): SDFText[];\n    splitLines(options?: TextSplitOptions): SDFText[];\n    splitChars(options?: TextSplitOptions): SDFText[];\n    splitRanges(ranges: [\n        number,\n        number\n    ][], options?: TextSplitOptions): SDFText[];\n    getChar(index: number): SDFChar | null;\n    setChar(index: number, newChar: string): this;\n    insert(index: number, char: string): this;\n    delete(index: number): this;\n    getGroupAnimator(staggerMs?: number): GroupAnimator;\n    getSubEntities(): VectorEntity[];\n    toPaths(): Path[];\n    raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): Promise<RaycastHit | null>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SDFChar` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public geo: TextGeometry",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(char: string, fontSize: number, font: Font)",
+                    "—",
+                    "Implementation: `super(); this.geo = this.addComponent(new TextGeometry(font)); this.geo.fontSize = fontSize; this.addComponent(new TextFragment(font)); this.addComponent(new MeshRenderer()); this.geo.setText(char);`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `return [];`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance: number = 0.05): RaycastHit | null",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `Raycaster.rayPlaneIntersect`, `localOrigin.add`, `localDir.scale`, `worldMatrix.transformPoint`, `localHit.add`, `worldHit.sub(ray.origin).length`, `worldHit.sub`; return paths including `{ entity: this, point: worldHit, distance }`, `null`; 1 explicit loop. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L38)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SDFTextOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fontSize?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "font?: Font | FontStyle;",
+                    "—",
+                    "Optional record/option field with declared type `Font | FontStyle`. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L78)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SDFText` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public chars: (SDFChar | null)[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fontSize: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public _isDecomposed: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public font!: Font",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fontStyle?: FontStyle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "override get z_index(): number",
+                    "—",
+                    "Override z_index to propagate to child SDFChar entities. SDFText itself is a non-rendering container — the actual rendering is done by child SDFChar(s). Without propagation, children get tiny auto-incremented z values and render behind other scene entities. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "override set z_index(value: number)",
+                    "—",
+                    "Implementation: `super.z_index = value; if (this.mergedChar) { this.mergedChar.z_index = value; } for (const ch of this.chars) { if (ch) ch.z_index = value; }`. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(text: string, options?: SDFTextOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`, `this.fontSize`, `this.fontStyle`, `this.font`, `this.LABEL`; calls to `this.resolveStringFont`, `text.substring`, `this.rebuild`. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFont(font: Font | FontStyle): this",
+                    "—",
+                    "Changes the MSDF font dynamically and rebuilds the text. [Source line 154](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L154)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rawText(): string",
+                    "—",
+                    "Implementation: `return this._rawText;`. [Source line 167](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L167)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rawText(val: string)",
+                    "—",
+                    "Implementation: `this._rawText = val; this.rebuild();`. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get text(): string",
+                    "—",
+                    "Implementation: `return this._rawText;`. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L172)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set text(val: string)",
+                    "—",
+                    "Implementation: `this._rawText = val; this.rebuild();`. [Source line 173](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L173)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setText(text: string): this",
+                    "—",
+                    "Implementation: `this.rawText = text; return this;`. [Source line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L178)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rebuild()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.chars`, `this.mergedChar`, `this.mergedChar.z_index`, `this._anchorNeedsUpdate`; calls to `this.chars.forEach`, `this.remove`, `char.destroy`, `this.mergedChar.destroy`, `this.buildSplitText`, `this.buildMergedText`, `this.invalidate`, `this.updateAnchor` and additional helpers; 1 explicit loop. [Source line 183](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L183)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public decompose(): this",
+                    "—",
+                    "Decomposes the merged text geometry into individual character SDFChar entities. Automatically invoked on-demand when accessing individual glyphs. [Source line 304](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L304)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public split(separator: SplitSeparator = ' ', options?: TextSplitOptions): SDFText[]",
+                    "—",
+                    "Splits this SDFText entity into multiple independent SDFText entities (e.g. by words, lines, regex, or character index ranges), with 100% position, styling, and MSDF font preservation. Param: separator Delimiter pattern: ' ' (words), '\\n' (lines), '' (chars), RegExp, or [[start, end]]. Defaults to ' '. Param: options Additional options such as including delimiters or in-place scene replacement. Returns: An array containing the newly created SDFText entities. [Source line 319](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L319)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitWords(options?: TextSplitOptions): SDFText[]",
+                    "—",
+                    "Splits this SDFText entity into word SDFText entities, preserving exact positions. [Source line 326](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L326)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitLines(options?: TextSplitOptions): SDFText[]",
+                    "—",
+                    "Splits this SDFText entity into line SDFText entities, preserving exact line positions. [Source line 333](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L333)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitChars(options?: TextSplitOptions): SDFText[]",
+                    "—",
+                    "Splits this SDFText entity into individual character SDFText entities. [Source line 340](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L340)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitRanges(ranges: [number, number][], options?: TextSplitOptions): SDFText[]",
+                    "—",
+                    "Splits this SDFText entity according to explicit character index intervals [[start, end], ...]. [Source line 347](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L347)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getChar(index: number): SDFChar | null",
+                    "—",
+                    "Implementation: `if (!this._isDecomposed) this.decompose(); if (index < 0 || index >= this.chars.length) return null; return this.chars[index];`. [Source line 351](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L351)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setChar(index: number, newChar: string): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`, `this.chars[index]`; construction of `SDFChar`; calls to `arr.join`, `this.decompose`, `newChar.trim`, `targetEntity.geo.setText`, `newEnt.paint.set`, `newEnt.transform.setScale`, `this.chars[index - 1]!.transform.getScale`, `this.add` and additional helpers; return paths including `this`. [Source line 357](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L357)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public insert(index: number, char: string): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`; construction of `SDFChar`; calls to `arr.splice`, `arr.join`, `this.decompose`, `char.trim`, `newEnt.paint.set`, `newEnt.transform.setScale`, `this.chars[index - 1]!.transform.getScale`, `this.add` and additional helpers; return paths including `this`. [Source line 399](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L399)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public delete(index: number): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`; calls to `arr.splice`, `arr.join`, `this.decompose`, `this.remove`, `target.destroy`, `this.chars.splice`, `this.updateLayoutFrom`; return paths including `this`. [Source line 430](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L430)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getGroupAnimator(staggerMs: number = 100): GroupAnimator",
+                    "—",
+                    "Implementation: `const activeNodes = this.chars.filter((c): c is SDFChar => c !== null); return new GroupAnimator(activeNodes, staggerMs);`. [Source line 450](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L450)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Implementation: `if (!this._isDecomposed) this.decompose(); return this.chars.filter((c): c is SDFChar => c !== null);`. [Source line 455](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L455)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `return [];`. [Source line 459](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L459)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance: number = 0.05): Promise<RaycastHit | null>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `this.getGroupLocalAABB`, `aabb.isEmpty`, `localOrigin.add(localDir.scale(Math.max(0, tmin))).add`, `localOrigin.add`, `localDir.scale`, `worldMatrix.transformPoint`, `worldHitPoint.sub(ray.origin).length`, `worldHitPoint.sub`; return paths including `null`, `{ entity: this, point: worldHitPoint, distance }`. [Source line 461](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L461)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.fill ?? Color.WHITE",
+                    "[Line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L112)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.stroke ?? Color.NONE",
+                    "[Line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L113)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.strokeWidth ?? 0.0",
+                    "[Line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L114)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fontSize || 8",
+                    "[Line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L121)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.font || Font.default",
+                    "[Line 128](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L128)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SDFText.resolveStringFont: private resolveStringFont(fontName: string)",
+                    "Body operations (including nested callbacks): assignments to `this.font`; calls to `fontName.toLowerCase`, `FontLoader.msdf(fontName).then((loaded) => { this.font = loaded; this.rebuild(); }).catch`, `FontLoader.msdf(fontName).then`, `FontLoader.msdf`, `this.rebuild`.",
+                    "[Line 135](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L135)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SDFText.buildSplitText: private buildSplitText()",
+                    "Body operations (including nested callbacks): construction of `SDFChar`; calls to `this.chars.push`, `this.font.getCharInfo`, `this.font.getKerning`, `char.trim`, `this.add`; 1 explicit loop.",
+                    "[Line 212](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L212)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SDFText.buildMergedText: private buildMergedText()",
+                    "Implementation: `this.mergedChar = new SDFChar(this._rawText, this.fontSize, this.font); this.mergedChar.layerMask = this.layerMask; this.mergedChar.isUI = this.isUI; this.add(this.mergedChar);`.",
+                    "[Line 256](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L256)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SDFText.updateLayoutFrom: private updateLayoutFrom(startIndex: number)",
+                    "Body operations (including nested callbacks): assignments to `this.chars[i]!.transform.position`; calls to `this.font.getCharInfo`, `this.font.getKerning`, `this.invalidate`, `this.getScene`, `scene.invalidate`; 1 explicit loop.",
+                    "[Line 263](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts#L263)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VectorEntity](/api-core-vectorentity#vectorentity), [IRaycastable](/api-core#interfaces), [EntityOptions](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tex",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Tex"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/Tex.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/Tex.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TexStyle",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TexOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TexSplitOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Tex",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type TexStyle = 'default' | 'excalifont' | 'virgil';\nexport interface TexOptions extends TextOptions {\n    fontStyle?: TexStyle;\n    style?: TexStyle;\n    display?: boolean;\n}\nexport interface TexSplitOptions {\n    replace?: boolean;\n    centerOrigins?: boolean;\n}\nexport declare class Tex extends VectorEntity {\n    fontSize: number;\n    isSplit: boolean;\n    fontStyle: TexStyle;\n    strokeShader?: PathEffect | string;\n    fillShader?: FillEffect | string;\n    display: boolean;\n    constructor(cmd?: string, options?: TexOptions);\n    setFontStyle(fontStyle: TexStyle): this;\n    setStyle(style: TexStyle): this;\n    setLatex(cmd: string): this;\n    setText(text: string): this;\n    rebuild(): void;\n    decompose(): this;\n    getPaths(): Path[];\n    split(options?: TexSplitOptions): Path[];\n    getGroupAnimator(staggerMs?: number): GroupAnimator;\n    getSubEntities(): VectorEntity[];\n    toPaths(): Path[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TexOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fontStyle?: TexStyle;",
+                    "—",
+                    "Typographic font style for LaTeX formulas: - 'default': Standard Computer Modern TeX font. - 'excalifont': Handwritten Excalidraw font for numbers, letters, Greek symbols, and operators. - 'virgil': Handwritten Virgil font for numbers, letters, Greek symbols, and operators. Default: 'default' [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "style?: TexStyle;",
+                    "—",
+                    "Alias for `fontStyle`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "display?: boolean;",
+                    "—",
+                    "Whether to format in display mode (true) or compact inline text mode (false). Default: true [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L44)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TexSplitOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "replace?: boolean;",
+                    "—",
+                    "If true, removes the original Tex entity from its scene/parent and inserts the split Path entities in its exact position in the scene graph. Default: true (if the entity has a parent or scene attached) [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "centerOrigins?: boolean;",
+                    "—",
+                    "If true, centers each resulting Path's local origin (transform.position) at its geometric bounding box center, so subsequent rotations and scaling occur around the symbol's own center. Default: true [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L61)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Tex` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public fontSize: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 119](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L119)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isSplit: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fontStyle: TexStyle",
+                    "'default'",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L121)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokeShader?: PathEffect | string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L122)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fillShader?: FillEffect | string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public display: boolean",
+                    "true",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 125](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L125)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(cmd: string = \"\", options?: TexOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.fontSize`, `this.strokeShader`, `this.fillShader`, `this.fontStyle`, `this.display`, `this.LABEL`; calls to `cmd.substring`, `this.setLatex`. [Source line 130](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L130)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFontStyle(fontStyle: TexStyle): this",
+                    "—",
+                    "Switches the font style ('default', 'excalifont', or 'virgil') and rebuilds the formula geometry. [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setStyle(style: TexStyle): this",
+                    "—",
+                    "Alias for {@link setFontStyle}. [Source line 161](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L161)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setLatex(cmd: string): this",
+                    "—",
+                    "Implementation: `this._latexStr = cmd; this.rebuild(); return this;`. [Source line 176](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L176)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setText(text: string): this",
+                    "—",
+                    "Implementation: `return this.setLatex(text);`. [Source line 182](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L182)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rebuild()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPaths`, `this.mergedRenderer`, `this.splitRenderer`; construction of `SVG`, `SVGPath`; calls to `this.remove`, `this.mergedRenderer.destroy`, `this.splitRenderer.destroy`, `this.latexToSvg`, `rawSvg.includes`, `rawSvg.replace`, `attrs.replace`, `ent.children.forEach` and additional helpers; return paths including a template-literal expression (see source). [Source line 186](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L186)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public decompose(): this",
+                    "—",
+                    "Implementation: `if (this.isSplit) return this; this.isSplit = true; this.rebuild(); return this;`. [Source line 304](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L304)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPaths(): Path[]",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._cachedPaths`; calls to `this.decompose`, `paths.push`, `ent.children.forEach`, `traverse`; return paths including `this._cachedPaths`, `[]`, `paths`. [Source line 311](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L311)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public split(options?: TexSplitOptions): Path[]",
+                    "—",
+                    "Splits this Tex mathematical equation into an array of independent Path entities (one per mathematical symbol/stroke), with 100% position, styling, and scene hierarchy preservation. Param: options Configuration options for in-place scene replacement and origin centering. Returns: An array of independent Path entities representing the mathematical symbols. [Source line 340](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L340)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getGroupAnimator(staggerMs: number = 100): GroupAnimator",
+                    "—",
+                    "Implementation: `const paths = this.getPaths(); return new GroupAnimator(paths, staggerMs);`. [Source line 448](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L448)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Implementation: `return this.getPaths();`. [Source line 453](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L453)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `return this.getPaths();`. [Source line 457](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L457)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.fill ?? Color.WHITE",
+                    "[Line 132](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L132)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fontSize || 48",
+                    "[Line 136](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L136)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fontStyle || options.style || 'default'",
+                    "[Line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L139)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fontStyle || options.style",
+                    "[Line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L139)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.display ?? true",
+                    "[Line 140](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L140)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.centerOrigins ?? true",
+                    "[Line 346](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L346)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.replace ?? (this.parent !== null || this.scene !== null)",
+                    "[Line 402](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L402)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Tex.latexToSvg: private latexToSvg(latex: string): string",
+                    "Implementation: `const { adaptor, html } = MathJaxEngine.get(this.fontStyle); const node = html.convert(latex, { display: this.display, em: 16, ex: 8, containerWidth: .80 * .16 }); return adaptor.outerHTML(node);`.",
+                    "[Line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L165)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Tex.bakeAndFlattenTransforms: private bakeAndFlattenTransforms(entity: Entity, parentMatrix: Mat4)",
+                    "Body operations (including nested callbacks): construction of `Path`, `Vec3`; calls to `parentMatrix.mul`, `this.bakeAndFlattenTransforms`, `localMat.transformPoint`, `geo.refreshCompute`, `path.transform.init`, `parent.children.indexOf`, `entity.transform.init`; 3 explicit loops.",
+                    "[Line 241](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts#L241)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "texfontpatcher",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TexFontPatcher"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/TexFontPatcher.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/TexFontPatcher.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TexFontPatcher.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "TexFontPatcher: Utility for patching MathJax SVG font definitions with custom vector fonts such as Excalifont and Virgil (Excalidraw handwritten fonts)."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TexFontPatcher",
+                    "Class",
+                    "Utility for patching MathJax SVG font definitions with custom vector fonts such as Excalifont and Virgil (Excalidraw handwritten fonts)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class TexFontPatcher {\n    static patchExcalifont(svg: any): void;\n    static patchVirgil(svg: any): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TexFontPatcher` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static patchExcalifont(svg: any): void",
+                    "—",
+                    "Injects Excalifont vector outlines and glyph metrics into a MathJax SVG output instance. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TexFontPatcher.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static patchVirgil(svg: any): void",
+                    "—",
+                    "Injects Virgil vector outlines and glyph metrics into a MathJax SVG output instance. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TexFontPatcher.ts#L25)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TexFontPatcher.applyGlyphs: private static applyGlyphs( svg: any, normalGlyphs: Record<number, any>, italicGlyphs: Record<number, any> ): void",
+                    "Body operations (including nested callbacks): calls to `Number`; 2 explicit loops.",
+                    "[Line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TexFontPatcher.ts#L29)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "text",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Text"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/Text.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/Text.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Text",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TextOptions extends EntityOptions, ShaderConfigOptions {\n    fontSize?: number;\n    font?: OpentypeFont | FontStyle;\n    fontFamily?: string;\n    textAlign?: string;\n    fontWeight?: string;\n}\nexport declare class Text extends VectorEntity implements IRaycastable {\n    chars: (Path | null)[];\n    fontSize: number;\n    _isDecomposed: boolean;\n    strokeShader?: PathEffect | string;\n    fillShader?: FillEffect | string;\n    customFont?: OpentypeFont;\n    fontStyle?: FontStyle;\n    static font: OpentypeFont;\n    static is_loaded: boolean;\n    static loadFonts(fontUrl: string): Promise<any>;\n    constructor(text: string, options?: TextOptions);\n    setFont(font: OpentypeFont | FontStyle): this;\n    get rawText(): string;\n    set rawText(val: string);\n    get text(): string;\n    set text(val: string);\n    getActiveFont(): OpentypeFont | undefined;\n    getPaths(): Path[];\n    setText(text: string): this;\n    rebuild(): void;\n    decompose(): this;\n    split(separator?: SplitSeparator, options?: TextSplitOptions): Text[];\n    splitWords(options?: TextSplitOptions): Text[];\n    splitLines(options?: TextSplitOptions): Text[];\n    splitChars(options?: TextSplitOptions): Text[];\n    splitRanges(ranges: [\n        number,\n        number\n    ][], options?: TextSplitOptions): Text[];\n    getChar(index: number): Path | null;\n    setChar(index: number, newChar: string): this;\n    insert(index: number, char: string): this;\n    delete(index: number): this;\n    getGroupAnimator(staggerMs?: number): GroupAnimator;\n    getSubEntities(): VectorEntity[];\n    toPaths(): Path[];\n    raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance?: number): Promise<RaycastHit | null>;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TextOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fontSize?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "font?: OpentypeFont | FontStyle;",
+                    "—",
+                    "Optional record/option field with declared type `OpentypeFont | FontStyle`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fontFamily?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "textAlign?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fontWeight?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L30)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Text` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public chars: (Path | null)[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fontSize: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public _isDecomposed: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokeShader?: PathEffect | string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fillShader?: FillEffect | string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customFont?: OpentypeFont",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fontStyle?: FontStyle",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static font: OpentypeFont",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static is_loaded",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async loadFonts(fontUrl: string): Promise<any>",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.font`, `this.is_loaded`; calls to `import`, `fetch`, `res.arrayBuffer`, `opentype.parse`; return paths including `this.font`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(text: string, options?: TextOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`, `this.fontSize`, `this.strokeShader`, `this.fillShader`, `this.fontStyle`, `this.customFont`, `this.LABEL`; calls to `this.resolveStringFont`, `text.substring`, `this.rebuild`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFont(font: OpentypeFont | FontStyle): this",
+                    "—",
+                    "Changes the font dynamically and rebuilds the vector paths. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rawText(): string",
+                    "—",
+                    "Implementation: `return this._rawText;`. [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L122)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rawText(val: string)",
+                    "—",
+                    "Implementation: `this._rawText = val; this.rebuild();`. [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get text(): string",
+                    "—",
+                    "Implementation: `return this._rawText;`. [Source line 128](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L128)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set text(val: string)",
+                    "—",
+                    "Implementation: `this._rawText = val; this.rebuild();`. [Source line 129](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L129)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getActiveFont(): OpentypeFont | undefined",
+                    "—",
+                    "Implementation: `return this.customFont || Text.font;`. [Source line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L134)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPaths(): Path[]",
+                    "—",
+                    "Implementation: `if (!this._isDecomposed) this.decompose(); return this.chars.filter((c): c is Path => c !== null);`. [Source line 138](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L138)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setText(text: string): this",
+                    "—",
+                    "Implementation: `this.rawText = text; return this;`. [Source line 143](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L143)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rebuild()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.chars`, `this.mergedPath`; calls to `this.chars.forEach`, `this.remove`, `char.destroy`, `this.mergedPath.destroy`, `this.getActiveFont`, `this.buildSplitText`, `this.buildMergedText`, `this.invalidate` and additional helpers. [Source line 148](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L148)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public decompose(): this",
+                    "—",
+                    "Decomposes the merged text geometry into individual character Path entities. Automatically invoked on-demand when accessing individual glyphs. [Source line 283](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L283)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public split(separator: SplitSeparator = ' ', options?: TextSplitOptions): Text[]",
+                    "—",
+                    "Splits this Text entity into multiple independent Text entities (e.g. by words, lines, regex, or character index ranges), with 100% position, styling, and shader preservation. Param: separator Delimiter pattern: ' ' (words), '\\n' (lines), '' (chars), RegExp, or [[start, end]]. Defaults to ' '. Param: options Additional options such as including delimiters or in-place scene replacement. Returns: An array containing the newly created Text entities. [Source line 298](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L298)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitWords(options?: TextSplitOptions): Text[]",
+                    "—",
+                    "Splits this Text entity into word Text entities, preserving exact positions. [Source line 305](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L305)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitLines(options?: TextSplitOptions): Text[]",
+                    "—",
+                    "Splits this Text entity into line Text entities, preserving exact line positions. [Source line 312](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L312)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitChars(options?: TextSplitOptions): Text[]",
+                    "—",
+                    "Splits this Text entity into individual character Text entities. [Source line 319](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L319)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public splitRanges(ranges: [number, number][], options?: TextSplitOptions): Text[]",
+                    "—",
+                    "Splits this Text entity according to explicit character index intervals [[start, end], ...]. [Source line 326](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L326)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getChar(index: number): Path | null",
+                    "—",
+                    "Implementation: `if (!this._isDecomposed) this.decompose(); if (index < 0 || index >= this.chars.length) return null; return this.chars[index];`. [Source line 330](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L330)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setChar(index: number, newChar: string): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`, `this.chars[index]`; calls to `arr.join`, `this.decompose`, `newChar.trim`, `this.getActiveFont()!.charToGlyph`, `this.getActiveFont`, `targetEntity.setVertices`, `newGlyph.getPath(0, 0, this.fontSize).toPathData`, `newGlyph.getPath` and additional helpers; return paths including `this`. [Source line 336](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L336)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public insert(index: number, char: string): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`; calls to `arr.splice`, `arr.join`, `this.decompose`, `char.trim`, `this.getActiveFont()!.charToGlyph`, `this.getActiveFont`, `this.createCharPath`, `newEnt.paint.set` and additional helpers; return paths including `this`. [Source line 374](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L374)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public delete(index: number): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rawText`; calls to `arr.splice`, `arr.join`, `this.decompose`, `this.remove`, `target.destroy`, `this.chars.splice`, `this.updateLayoutFrom`; return paths including `this`. [Source line 401](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L401)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getGroupAnimator(staggerMs: number = 100): GroupAnimator",
+                    "—",
+                    "Implementation: `const activeNodes = this.chars.filter((c): c is Path => c !== null); return new GroupAnimator(activeNodes, staggerMs);`. [Source line 421](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L421)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Implementation: `return this.getPaths();`. [Source line 426](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L426)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toPaths(): Path[]",
+                    "—",
+                    "Implementation: `return this.getPaths();`. [Source line 430](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L430)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async raycast(ray: Ray, localOrigin: Vec3, localDir: Vec3, worldMatrix: Mat4, hitTolerance: number = 0.05): Promise<RaycastHit | null>",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `this.getGroupLocalAABB`, `aabb.isEmpty`, `localOrigin.add(localDir.scale(Math.max(0, tmin))).add`, `localOrigin.add`, `localDir.scale`, `worldMatrix.transformPoint`, `worldHitPoint.sub(ray.origin).length`, `worldHitPoint.sub`; return paths including `null`, `{ entity: this, point: worldHitPoint, distance }`. [Source line 434](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L434)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.fill ?? Color.WHITE",
+                    "[Line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L63)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fontSize || 48",
+                    "[Line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L69)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Text.resolveStringFont: private resolveStringFont(fontName: string)",
+                    "Body operations (including nested callbacks): assignments to `this.customFont`; calls to `FontCache.getVector`, `FontLoader.vector(fontName).then((loaded) => { this.customFont = loaded; this.rebuild(); }).catch`, `FontLoader.vector(fontName).then`, `FontLoader.vector`, `this.rebuild`.",
+                    "[Line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L84)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Text.buildSplitText: private buildSplitText()",
+                    "Body operations (including nested callbacks): calls to `this.getActiveFont`, `this.chars.push`, `activeFont.charToGlyph`, `activeFont.getKerningValue`, `char.trim`, `this.createCharPath`, `this.add`; 1 explicit loop.",
+                    "[Line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L165)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Text.buildMergedText: private buildMergedText()",
+                    "Body operations (including nested callbacks): assignments to `this.mergedPath`, `this.mergedPath.layerMask`, `this.mergedPath.isUI`; construction of `Path`; calls to `this.getActiveFont`, `this._rawText.split`, `activeFont.getPath`, `path.toPathData`, `this.mergedPath.transform.setScale`, `this.add`; 1 explicit loop.",
+                    "[Line 202](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L202)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Text.createCharPath: private createCharPath(glyph: OpentypeGlyph): Path",
+                    "Body operations (including nested callbacks): construction of `Path`; calls to `glyph.getPath`, `glyphPath.toPathData`, `charPathEntity.transform.setScale`, `charPathEntity.paint.set`; return paths including `charPathEntity`.",
+                    "[Line 229](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L229)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "Text.updateLayoutFrom: private updateLayoutFrom(startIndex: number)",
+                    "Body operations (including nested callbacks): assignments to `this.chars[i]!.transform.position`; calls to `this.getActiveFont`, `activeFont.charToGlyph`, `activeFont.getKerningValue`, `this.invalidate`, `this.getScene`, `scene.invalidate`; 1 explicit loop.",
+                    "[Line 244](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts#L244)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [EntityOptions](/api-core-entity#entity), [VectorEntity](/api-core-vectorentity#vectorentity), [IRaycastable](/api-core#interfaces)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "textsplitter",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TextSplitter"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/TextSplitter.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/TextSplitter.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "tokenizeText: Parses raw text into tokens based on separator and options.",
+                "computeTextCharPositions: Calculates local character coordinates for an OpenType-based Text entity.",
+                "computeSDFTextCharPositions: Calculates local character coordinates for an MSDF-based SDFText entity.",
+                "splitEntity: Core engine that splits a Text or SDFText entity into an array of independent entities, with 100% position, styling, and shader preservation."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextSplitOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SplitSeparator",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CharLayoutMetric",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SplitToken",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tokenizeText",
+                    "Function",
+                    "Parses raw text into tokens based on separator and options."
+                  ]
+                },
+                {
+                  "cells": [
+                    "computeTextCharPositions",
+                    "Function",
+                    "Calculates local character coordinates for an OpenType-based Text entity."
+                  ]
+                },
+                {
+                  "cells": [
+                    "computeSDFTextCharPositions",
+                    "Function",
+                    "Calculates local character coordinates for an MSDF-based SDFText entity."
+                  ]
+                },
+                {
+                  "cells": [
+                    "splitEntity",
+                    "Function",
+                    "Core engine that splits a Text or SDFText entity into an array of independent entities, with 100% position, styling, and shader preservation."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TextSplitOptions {\n    includeDelimiters?: boolean;\n    replace?: boolean;\n}\nexport type SplitSeparator = string | RegExp | [\n    number,\n    number\n][];\nexport interface CharLayoutMetric {\n    index: number;\n    char: string;\n    x: number;\n    y: number;\n}\nexport interface SplitToken {\n    text: string;\n    startIndex: number;\n    endIndex: number;\n}\nexport declare function tokenizeText(rawText: string, separator?: SplitSeparator, options?: TextSplitOptions): SplitToken[];\nexport declare function computeTextCharPositions(textEntity: any): CharLayoutMetric[];\nexport declare function computeSDFTextCharPositions(sdfEntity: any): CharLayoutMetric[];\nexport declare function splitEntity<T extends VectorEntity>(source: T, separator?: SplitSeparator, options?: TextSplitOptions): T[];"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "tokenizeText: Body operations (including nested callbacks): construction of `RegExp`; calls to `rawText.substring`, `tokens.push`, `regex.exec`, `lineRegex.exec`, `separator.flags.includes`, `rawText.indexOf`; return paths including `tokens`; 6 explicit loops.",
+                "computeTextCharPositions: Body operations (including nested callbacks): construction of `Error`; calls to `textEntity.getActiveFont`, `metrics.push`, `font.charToGlyph`, `font.getKerningValue`; return paths including `metrics`; rejection paths `new Error(\"Text font is not loaded. Ensure Text.loadFonts() has resolved before splitting.\")`; 1 explicit loop.",
+                "computeSDFTextCharPositions: Body operations (including nested callbacks): calls to `metrics.push`, `font.getCharInfo`, `font.getKerning`; return paths including `metrics`; 1 explicit loop.",
+                "splitEntity: Body operations (including nested callbacks): construction of `ctor`; calls to `tokenizeText`, `computeTextCharPositions`, `computeSDFTextCharPositions`, `subEntity.paint.set`, `subEntity.transform.data.set`, `source.transform._matrix.mul`, `subEntity.transform.position.set`, `resultEntities.push` and additional helpers; return paths including `resultEntities`; 3 explicit loops."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TextSplitOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "includeDelimiters?: boolean;",
+                    "—",
+                    "Whether delimiter characters (e.g. whitespace, commas) should be included as distinct entities in the resulting array. Default: false (delimiters are omitted as entities, but their spatial gap is preserved) [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "replace?: boolean;",
+                    "—",
+                    "If true, removes the original entity from its scene/parent and inserts the split sub-entities in its exact position in the scene graph. Default: true (if the entity has a parent or scene attached) [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L21)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CharLayoutMetric` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "index: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "char: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "x: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "y: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L30)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SplitToken` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "text: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "startIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "endIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L36)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.replace ?? (source.parent !== null || source.scene !== null)",
+                    "[Line 350](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/TextSplitter.ts#L350)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"Text font is not loaded. Ensure Text.loadFonts() has resolved before splitting.\")"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VectorEntity](/api-core-vectorentity#vectorentity)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excalifontmathjaxdata",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "excalifontMathJaxData"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/excalifontMathJaxData.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/excalifontMathJaxData.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/excalifontMathJaxData.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GlyphMetricData",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EXCALIFONT_NORMAL_GLYPHS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EXCALIFONT_ITALIC_GLYPHS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface GlyphMetricData {\n    p: string;\n    h: number;\n    d: number;\n    w: number;\n}\nexport declare const EXCALIFONT_NORMAL_GLYPHS: Record<number, GlyphMetricData>;\nexport declare const EXCALIFONT_ITALIC_GLYPHS: Record<number, GlyphMetricData>;"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `GlyphMetricData` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "p: string;",
+                    "—",
+                    "Required record/option field with declared type `string`. [Source line 3](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/excalifontMathJaxData.ts#L3)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "h: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 4](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/excalifontMathJaxData.ts#L4)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "d: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 5](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/excalifontMathJaxData.ts#L5)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "w: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/excalifontMathJaxData.ts#L6)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "virgilmathjaxdata",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "virgilMathJaxData"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/entities/composites/text/virgilMathJaxData.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/entities/composites/text/virgilMathJaxData.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/virgilMathJaxData.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VIRGIL_NORMAL_GLYPHS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VIRGIL_ITALIC_GLYPHS",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const VIRGIL_NORMAL_GLYPHS: Record<number, GlyphMetricData>;\nexport declare const VIRGIL_ITALIC_GLYPHS: Record<number, GlyphMetricData>;"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

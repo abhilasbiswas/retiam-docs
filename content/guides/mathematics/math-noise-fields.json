@@ -1,0 +1,103 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "math-noise-fields",
+  "title": "Math utilities, noise and spatial fields",
+  "group": "Mathematics",
+  "summary": "Use vectors, matrices, noise and spatial fields to describe motion and procedural geometry.",
+  "sections": [
+    {
+      "id": "vector-and-matrix-foundations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Vector and matrix foundations"
+        },
+        {
+          "type": "paragraph",
+          "text": "Vec2/Vec3, Point, Quaternion, Mat3/Mat4 and AABB provide engine-native mathematics and typed-array views. Some operations mutate and return the receiver while others produce a new object. Read the specific method contract before reusing a scratch vector. Singular matrix inversion and zero quaternion inversion are explicit failure cases."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Vec2](/api-math-vector#vec2), [Vec3](/api-math-vector#vec3), [Point](/api-math-vector#point), [Quaternion](/api-math-vector#quaternion), [Mat3](/api-math-vector#mat3), [Mat4](/api-math-vector#mat4), [AABB](/api-math#aabb)."
+        }
+      ]
+    },
+    {
+      "id": "fourier-reconstruction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Fourier reconstruction"
+        },
+        {
+          "type": "paragraph",
+          "text": "FourierTransform computes discrete Fourier coefficients for sampled 2D complex coordinates and supports epicycle reconstruction. Sample a path consistently, choose coefficient ordering intentionally and balance truncation against visible detail. A finite set of coefficients approximates the source, with ringing and sampling artifacts near sharp corners."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [FourierTransform](/api-math#fouriertransform)."
+        }
+      ]
+    },
+    {
+      "id": "noise-generators",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Noise generators"
+        },
+        {
+          "type": "paragraph",
+          "text": "The math/noise directory contains seeded procedural noise implementations and utilities. Choose a generator based on its dimensionality, continuity, repeatability and output range. A seed stabilizes the noise field; the sampling coordinate determines whether it stays attached to local geometry or moves through world space."
+        },
+        {
+          "type": "paragraph",
+          "text": "Noise used for static geometry should remain in the same coordinate system across frames. For motion, animate a coordinate/phase smoothly instead of selecting a new unrelated random field every frame."
+        },
+        {
+          "type": "paragraph",
+          "text": "All noise classes and their exact sample/seed methods appear in the math/noise API."
+        }
+      ]
+    },
+    {
+      "id": "compose-spatial-maps",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compose spatial maps"
+        },
+        {
+          "type": "paragraph",
+          "text": "The fields subsystem constructs deformation functions for geometry and animation. Apply maps in a documented order; function composition is generally non-commutative. Track whether a function returns an absolute point or a displacement. A custom mapping must preserve finite coordinates and receive adequate subdivision to show curvature."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Field](/api-math-fields#standardfields), [SubdivisionEngine](/api-utils#subdivisionengine)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One seeded Perlin source is sampled as one scalar curve."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-noise"
+        }
+      ]
+    }
+  ]
+}

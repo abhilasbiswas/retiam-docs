@@ -1,0 +1,109 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "transparency-post",
+  "title": "Transparency, antialiasing and post-processing",
+  "group": "GPU implementation",
+  "summary": "Choose transparency, antialiasing and image passes that fit the scene and its rendering requirements.",
+  "sections": [
+    {
+      "id": "per-pixel-linked-list-transparency",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Per-pixel linked-list transparency"
+        },
+        {
+          "type": "paragraph",
+          "text": "PPLL OIT records fragment nodes in GPU storage with per-pixel head pointers, then resolves the collected layers in depth order. PPLL_GLOBAL and PPLL_LOCAL select supported storage/resolve strategies. Node capacity and max_layers bound the work; overflowing capacity cannot preserve arbitrary numbers of translucent layers."
+        },
+        {
+          "type": "paragraph",
+          "text": "Enable PPLL when intersecting translucent geometry makes ordinary blending inadequate, then verify memory usage at final resolution. It adds storage and resolve work and is not a universal replacement for opaque depth rendering."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PPLL_Method](/api-render#renderconfig), [PPLLManager](/api-render-ppll-oit#ppllmanager), [RenderConfig](/api-render#renderconfig)."
+        }
+      ]
+    },
+    {
+      "id": "antialiasing-choices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Antialiasing choices"
+        },
+        {
+          "type": "paragraph",
+          "text": "RenderConfig separates AA_Function, AA scale and sample_count. SSAA increases render resolution before resolving; multisampling changes sample storage/coverage. They have different cost profiles. The default configuration uses SSAA, AA = 2 and sample_count = 4. Large outputs multiply the cost, so begin with a small preview and increase quality for the final capture."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [AntiAliasingPass](/api-render-passes#antialiasingpass), [AA_Method](/api-render#renderconfig)."
+        }
+      ]
+    },
+    {
+      "id": "blur-and-full-screen-shaders",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Blur and full-screen shaders"
+        },
+        {
+          "type": "paragraph",
+          "text": "BlurPass implements separable filtering with intermediate targets. PostProcessPass applies a full-screen shader to an input handle and exposes presentationOutput. Scene blur animations and camera depth of field are different mechanisms: blur changes an image or entity effect, while ray-trace depth of field samples a lens/focal plane."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [BlurPass](/api-render-passes#blurpass), [PostProcessPass](/api-render-passes#postprocesspass), [BlurIn](/api-animation#blurin), [BlurOut](/api-animation#blurout), [BlurPulse](/api-animation#blurpulse), [BlurTarget](/api-animation#blurtarget), [BlurTo](/api-animation#blurto)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One luminance pass demonstrates post-processing without a multipass showcase."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-post-process"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Plugins and engine extensions](/plugins)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[FrameGraph and custom render passes](/frame-graph)"
+  ]
+}

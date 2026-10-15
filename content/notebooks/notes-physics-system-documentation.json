@@ -1,0 +1,255 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-physics-system-documentation",
+  "title": "Retiam 3D Physics System Documentation",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/physics_system_documentation.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/physics_system_documentation.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/physics_system_documentation.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Entity](/api-core-entity#entity), [Component](/api-core#component), [Scene](/api-core-scene#scene), [Physics3D](/api-libs-physics-3d#physics3d), [Quaternion](/api-math-vector#quaternion), [State](/api-core#state), [ModelRenderer](/api-components-renderers#modelrenderer), [Shapes](/api-render-pipelines#pipeline), [Sphere](/api-entities-primitives-3d#sphere), [Color](/api-math#color), [RED](/api-core#constants), [Box](/api-entities-primitives-3d#box), [GRAY](/api-core#constants), [Cylinder](/api-entities-primitives-3d#cylinder), [Math3D](/api-math#math3d), [MathShape3D](/api-entities-composites-geometry#mathshape3d), [Group](/api-core#group)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam integrates **Rapier3D (WASM)** to deliver deterministic, high-performance 3D rigid-body physics directly synchronized with Retiam's Entity-Component-System (ECS) scene graph and WebGPU rendering pipeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "The physics engine supports over **600+ simultaneous dynamic physical bodies at 60 FPS**, handling collisions, friction, restitution, kinematic animation, compound shapes, and geometric surface simulations."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n    A[\"Retiam Scene\"] --> B[\"Physics3D World\\n(Rapier3D WASM)\"]\n    B --> C[\"Step Simulation\\n(dt = 1/60s)\"]\n    C --> D[\"Synchronize Rigid Body Transforms\\n(Translation & Quaternion)\"]\n    D --> E[\"Entity State Buffer (GPU)\\n(worldState.transform)\"]\n    E --> F[\"WebGPU Render Passes\\n(ModelRenderer / Raytrace)\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-core-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Architecture"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "[Physics3D.ts](../src/engine/physics/Physics3D.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The central physics manager attached to a `Scene`. It manages the Rapier `World`, rigid body pool, collider creation, step updates, raycasting, and synchronization."
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "import { Scene } from \"retiam\";\nimport { Physics3D } from \"retiam/physics\";\n\nconst scene = new Scene();\nconst physics = new Physics3D(scene, {\n    gravity: [0, -9.81, 0] // Default gravity vector\n});"
+        }
+      ]
+    },
+    {
+      "id": "3-rigid-body-types-options",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Rigid Body Types & Options"
+        },
+        {
+          "type": "paragraph",
+          "text": "Entities are registered in the physics world using `physics.add(entity, options)`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Body Type",
+            "Description",
+            "Use Cases"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`'dynamic'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Full physical simulation driven by gravity, forces, impulses, and collisions."
+                },
+                {
+                  "text": "Spheres, tumbling cubes, debris, projectiles"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'static'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Immovable barrier; does not move when hit by dynamic bodies."
+                },
+                {
+                  "text": "Ground floors, walls, Pachinko pegs, funnels, boundaries"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'kinematicPosition'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Moved manually by setting `entity.transform.position`; pushes dynamic bodies out of the way."
+                },
+                {
+                  "text": "Moving platforms, elevators, rotating fans"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'kinematicVelocity'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Moved via linear/angular velocity; pushes dynamic bodies."
+                },
+                {
+                  "text": "Conveyor belts, motorized wheels"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Configuration Interface ([Physics3DTypes.ts](../src/engine/physics/Physics3DTypes.ts))"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "export interface PhysicsBodyOptions {\n    type?: 'dynamic' | 'static' | 'kinematicPosition' | 'kinematicVelocity';\n    shape?: 'box' | 'sphere' | 'cylinder' | 'capsule' | 'trimesh' | 'convexHull';\n    \n    // Physical attributes\n    mass?: number;               // Default: 1.0 kg (dynamic)\n    friction?: number;           // Default: 0.5 (Coulomb friction coefficient)\n    restitution?: number;        // Default: 0.0 (Bounciness [0.0 = clay, 1.0 = superball])\n    linearDamping?: number;      // Default: 0.0 (Air resistance on translation)\n    angularDamping?: number;     // Default: 0.0 (Air resistance on rotation)\n    \n    // Initial kinematics\n    velocity?: [number, number, number];        // Initial linear velocity vector [vx, vy, vz]\n    angularVelocity?: [number, number, number]; // Initial spin [wx, wy, wz]\n    \n    // Shape dimensions (auto-detected if omitted)\n    size?: [number, number, number]; // Half-extents for box\n    radius?: number;                 // Radius for sphere/cylinder/capsule\n    height?: number;                 // Height for cylinder/capsule\n    \n    // Continuous Collision Detection (CCD)\n    ccd?: boolean; // Prevents fast-moving bodies from tunneling through thin walls\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-supported-collider-shapes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Supported Collider Shapes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam auto-infers collider geometries from primitive entities or creates custom geometric colliders:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "// 1. Sphere (Auto-inferred from Sphere primitive)\nconst ball = new Sphere(0.5, 16, 16, { materialColor: Color.RED });\nphysics.add(ball, { type: 'dynamic', restitution: 0.8, friction: 0.2 });\n\n// 2. Box / Boundary (Auto-inferred from Box primitive)\nconst wall = new Box(10, 4, 0.5, { materialColor: Color.GRAY });\nphysics.add(wall, { type: 'static', restitution: 0.4 });\n\n// 3. Cylinder / Pachinko Peg\nconst peg = new Cylinder(0.3, 0.3, 4.0, { radialSegments: 16 });\nphysics.add(peg, { type: 'static', shape: 'cylinder' });\n\n// 4. Custom Math3D / Arbitrary TriMesh\nconst mathSurface = new MathShape3D(mesh, { fill: new Color(0.1, 0.5, 1.0, 0.4) });\nphysics.add(mathSurface, { type: 'static', shape: 'trimesh' });"
+        }
+      ]
+    },
+    {
+      "id": "5-forces-impulses-velocity-control",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Forces, Impulses & Velocity Control"
+        },
+        {
+          "type": "paragraph",
+          "text": "Apply dynamic forces and impulses at runtime:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "const comp = physics.get(myEntity);\n\n// Apply an instantaneous impulse (e.g. jump, explosion)\ncomp.applyImpulse([0, 15, 0]);\n\n// Apply a rotational torque impulse\ncomp.applyTorqueImpulse([0, 5, 0]);\n\n// Direct velocity setting\ncomp.setLinvel([0, 10, -5]);\ncomp.setAngvel([1, 2, 0]);"
+        }
+      ]
+    },
+    {
+      "id": "6-collision-filtering-events",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Collision Filtering & Events"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Collision Groups & Masks"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "// Group 1 collides with Group 2, but ignores Group 3\nphysics.add(player, {\n    collisionGroups: 0x00010002 // Member of 1, interacts with 2\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Event Callbacks"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "physics.onCollision((entityA, entityB, started) => {\n    if (started) {\n        console.log(`Collision started between ${entityA.LABEL} and ${entityB.LABEL}`);\n    }\n});"
+        }
+      ]
+    },
+    {
+      "id": "7-performance-best-practices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Performance Best Practices"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Use Primitive Colliders Over TriMeshes**: Spheres, Boxes, and Capsules compute in $<10\\text{ ns}$ per pair, whereas TriMeshes require BVH traversal.",
+            "**Enable CCD Only for Fast Projectiles**: Continuous Collision Detection (`ccd: true`) is essential for bullets or fast balls, but can be disabled for general debris.",
+            "**Recycle Off-Screen Entities**: When dynamic entities leave the active gameplay arena, remove them with `physics.remove(entity)` to maintain a steady 60 FPS."
+          ]
+        }
+      ]
+    }
+  ]
+}

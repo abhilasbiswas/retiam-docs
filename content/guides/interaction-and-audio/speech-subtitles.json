@@ -1,0 +1,143 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "speech-subtitles",
+  "title": "Speech synthesis, narration and subtitles",
+  "group": "Interaction and audio",
+  "summary": "Generate narration, align speech cues and subtitles, and prepare the required services and audio assets.",
+  "sections": [
+    {
+      "id": "provider-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Provider architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "TTSClient coordinates ITTSProvider implementations; TTS is a global convenience facade. KokoroWebGPUProvider runs model inference locally with WebGPU/WASM fallback. MsEdgeTTSProvider uses a Node path or a server-backed HTTP synthesis endpoint. Edge speech is a network dependency; Kokoro can work offline only after the model and assets are available locally."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Provider",
+            "Setup",
+            "Tradeoff"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "kokoro",
+                "Download/preload model weights and voice assets",
+                "Local inference startup and memory cost"
+              ]
+            },
+            {
+              "cells": [
+                "msedge",
+                "Vite synthesis plugin or a compatible endpoint",
+                "Remote synthesis and network availability"
+              ]
+            },
+            {
+              "cells": [
+                "custom ITTSProvider",
+                "Implement initialization, voices and synthesis contracts",
+                "Application controls caching and transport"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [TTSClient](/api-libs-tts-core#ttsclient), [TTS](/api-libs-tts-core#ttsclient), [ITTSProvider](/api-libs-tts-providers#ittsprovider), [KokoroWebGPUProvider](/api-libs-tts-providers#kokorowebgpuprovider), [MsEdgeTTSProvider](/api-libs-tts-providers#msedgettsprovider)."
+        }
+      ]
+    },
+    {
+      "id": "narrate-a-scene",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Narrate a scene"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { speak, Subtitles } from \"retiam/tts\";\nconst subtitles = new Subtitles({ fontSize: 0.5, showBackdrop: true });\nthis.add(subtitles);\nawait speak(this, \"Watch the circle become a square.\", {\n  provider: \"kokoro\", voice: \"af_heart\", subtitles, duckingRatio: 0.2\n});"
+        },
+        {
+          "type": "paragraph",
+          "text": "The high-level speak helper prepares synthesis, coordinates scene timing and optionally subtitles/emphasis. Speak as an Animation exposes prepareAudio for precomputation. TTSClient.speak and TTS.speak return synthesized audio and durationMs; read the helper’s contract before assuming every speak function blocks in the same way."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Speak](/api-libs-tts-animations#speak), [SpeakOptions](/api-libs-tts-animations#speak), [TTSGenerateOptions](/api-libs-tts-core#types), [TTSAudioResult](/api-libs-tts-core#types)."
+        }
+      ]
+    },
+    {
+      "id": "voice-selection-caching-and-timing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Voice selection, caching and timing"
+        },
+        {
+          "type": "paragraph",
+          "text": "Voice catalogs and lookup helpers are provider-specific. Choose a voice ID from the current catalog and freeze the generated audio for reproducible exports. TTSCache keeps synthesized utterances; speed, pitch, provider and voice influence cache identity. Boundary timestamps can be estimated rather than true forced alignment, so inspect subtitle synchronization with the actual utterance."
+        },
+        {
+          "type": "paragraph",
+          "text": "TTSAudio encodes PCM/WAV and provides duration/sample information. Streaming yields progressive chunks and is useful for interactive playback; full pre-synthesis is simpler for a fixed video timeline."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [TTSCache](/api-libs-tts-core#ttscache), [TTSAudio](/api-libs-tts-core#ttsaudio), [VoiceInfo](/api-libs-tts-core#types), [TTSStreamChunk](/api-libs-tts-core#types)."
+        }
+      ]
+    },
+    {
+      "id": "subtitles-and-safe-layout",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Subtitles and safe layout"
+        },
+        {
+          "type": "paragraph",
+          "text": "Subtitles is an Entity-based caption composite using MSDF text with optional backdrop and layout controls. Place it using its documented offset/position methods and the appropriate UI layer/camera. Captions rendered through the GPU are included in framebuffer capture; a DOM caption overlay has different capture behavior."
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep readable line lengths and enough bottom margin. Check captions at the target video aspect ratio, not only the square default playground viewport."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Subtitles](/api-libs-tts-components#subtitles), [SubtitlesOptions](/api-libs-tts-components#subtitles), [TTSNarrationComponent](/api-libs-tts-components#ttsnarrationcomponent)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One synthesized sentence drives one subtitle component."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-tts-subtitles"
+        }
+      ]
+    }
+  ]
+}

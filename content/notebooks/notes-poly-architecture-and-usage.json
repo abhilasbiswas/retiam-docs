@@ -1,0 +1,353 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-poly-architecture-and-usage",
+  "title": "Poly (Polygon & Polyline) Architecture, GPU Compute Extrusion & Usage",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/POLY_ARCHITECTURE_AND_USAGE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/POLY_ARCHITECTURE_AND_USAGE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/POLY_ARCHITECTURE_AND_USAGE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Poly](/api-entities-primitives-2d#poly), [Compute](/api-compute#compute), [Usage](/api-utils#gpu-utils), [Path](/api-entities-primitives-2d#path), [SVG](/api-entities-composites-svg#svg), [Input](/api-camera#camera), [Point](/api-math-vector#point), [Vec2](/api-math-vector#vec2), [Fill](/api-core#fill), [Triangle](/api-entities-primitives-2d#triangle), [Complex](/api-math#complex), [Entity](/api-core-entity#entity), [PolyGeometry](/api-components-geometry#polygeometry), [PolyFragment](/api-components-fragment#polyfragment), [MeshRenderer](/api-components-renderers#meshrenderer), [Pass](/api-render-frame-graph#pass), [Shader](/api-entities-primitives-2d#shader), [PathEffect](/api-material#patheffect), [Arc](/api-entities-primitives-2d#arc), [Code](/api-entities-composites-text#code), [Scene](/api-core-scene#scene), [Color](/api-math#color), [Write](/api-animation#write), [Animation](/api-animation#animation)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an exhaustive, bit-by-bit technical breakdown of the **`Poly` (Polygon & Polyline) Subsystem** in the Retiam WebGPU Engine. It covers GPU compute stroke extrusion, non-zero & even-odd winding stencil fills, analytical rounded corner mathematics, raycasting, and zero-allocation dynamic vertex streaming."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "While [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) is designed for complex SVG vector curves with cubic/quadratic béziers and analytical SDF raymarching, [`Poly`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Poly.ts) is Retiam's dedicated **high-performance linear geometry engine**:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Feature",
+            "`Path` (Vector Curves)",
+            "`Poly` (Polygons & Polylines)"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Input Format**",
+                  "type": "text"
+                },
+                {
+                  "text": "SVG Path Strings (`M`, `C`, `Q`, `A`, `Z`)"
+                },
+                {
+                  "text": "Point Arrays (`Vec2[]`) or Raw `Float32Array`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Stroke Generation**",
+                  "type": "text"
+                },
+                {
+                  "text": "GPU Analytical SDF (Cardano Cubic Roots)"
+                },
+                {
+                  "text": "**GPU Compute Ribbon Extrusion** (`mesh_generator.wgsl`)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Fill Strategy**",
+                  "type": "text"
+                },
+                {
+                  "text": "Parabolic Stencil + Cover"
+                },
+                {
+                  "text": "**GPU Triangle Mesh + Dual Stencil Winding**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Primary Use Case**",
+                  "type": "text"
+                },
+                {
+                  "text": "Complex typography, logos, vector icons"
+                },
+                {
+                  "text": "**Real-time physics trails, charts, waveforms, regular polygons, dynamic lasers**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Per-Frame Update Cost**",
+                  "type": "text"
+                },
+                {
+                  "text": "Intermediate quadratic subdivision"
+                },
+                {
+                  "text": "**Zero-allocation `setRawVertices(Float32Array)` upload**"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    A[\"Point Data (Vec2[] or Float32Array)\"] --> B[\"Poly Entity\"]\n    B --> C[\"PolyGeometry.prepare()\"]\n    \n    subgraph \"GPU Compute Passes (Global Compute Dispatch)\"\n        C --> D[\"scene.compute.generateMesh (mesh_generator.wgsl)\"]\n        C --> E[\"scene.compute.generateTriangeleMesh (polygon_mesh.wgsl)\"]\n        D --> F[\"stroke_vertex_buffer (Triangle Strip + UV + Distance d)\"]\n        E --> G[\"fill_vertex_buffer (Triangle Fan/Mesh)\"]\n    end\n    \n    subgraph \"Render Passes (PolyFragment & MeshRenderer)\"\n        G --> H[\"1. fill_stencil: Even-Odd / Non-Zero Winding\"]\n        H --> I[\"2. fill_cover: Shading Fill Colors/Gradients\"]\n        F --> J[\"3. stroke: Anti-Aliased Ribbon Shading + Trimming (t1..t2)\"]\n        I --> K[\"4. clear: Reset Stencil Bitmask\"]\n        J --> K\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-gpu-compute-stroke-extrusion-architecture-polygeometry-ts-src-engine-components-geometry-polygeometry-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. GPU Compute Stroke Extrusion Architecture ([PolyGeometry.ts](../src/engine/components/geometry/PolyGeometry.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Instead of computing stroke offsets and miter joins on the CPU (which incurs heavy JS overhead and GC pressure for large polylines), `PolyGeometry` delegates stroke generation directly to **WebGPU Compute Shaders**:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Compute Dispatches in prepare():"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. GPU Ribbon Mesh & Joint Generation:\nlet strokeOutput = scene.compute.generateMesh(\n    this.vertex_buffer,\n    width,\n    joint_type,\n    this.stroke_vertex_buffer,\n    this.total_len_buffer,\n    this.isClosed,\n    num_vertices\n);\nscene.addCompute(...strokeOutput.commands);\n\n// 2. GPU Triangle Fill Generation:\nlet fillOutput = scene.compute.generateTriangeleMesh(\n    this.vertex_buffer,\n    this.fill_vertex_buffer,\n    num_vertices\n);\nscene.addCompute(...fillOutput.commands);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. The 4 Pass Configurations in PolyGeometry:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**`fill_stencil`**: Renders the GPU triangle mesh into the stencil buffer with either `Invert` (Even-Odd) or `Increment/Decrement` (Non-Zero) operations.",
+            "**`fill_cover`**: Renders the filled geometry testing the stencil buffer values.",
+            "**`stroke`**: Renders the extruded compute triangle strip with parameterized `uv` (for write-on animations) and local distance `d` (for sub-pixel anti-aliasing).",
+            "**`clear`**: Resets the stencil bitmask over the bounding quad."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-shader-shading-parametric-trimming-polyfragment-ts-src-engine-components-fragment-polyfragment-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Shader Shading & Parametric Trimming ([PolyFragment.ts](../src/engine/components/fragment/PolyFragment.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `stroke` fragment shader evaluates anti-aliasing, join bevels, custom path effects, and timeline trimming in a single unified pass:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let uv = input.uv;\nlet t = uv.x / max(uv.y, 1e-6); // Normalized parametric position along the curve (0.0 to 1.0)\nvar w = 1.0;\nvar y = input.d.y;\nvar x = input.d.x;\n\n// 1. Joint Distance & Corner Rounding:\nvar r = sqrt(x * x + y * y);\nif (x < -y && x != 0.0) { r = 0.0; }\n\n// 2. Sub-Pixel Anti-Aliasing:\nr = sdAaX((r - w), AA * 1.5);\n\n// 3. Parametric Timeline Trimming (Start time t1, End time t2):\nlet t1 = state.t1;\nlet t2 = state.t2;\nvar cut_off = min(sdAa(t1 - t), select(sdAa(t - t2), 1.0, t2 > 0.999));\ncut_off = min(cut_off, r);\n\nif (t2 <= 0.0 || t1 >= 1.0 || t2 <= t1 || cut_off <= 0.0) { discard; }\n\n// 4. Procedural PathEffect & Final Output:\nvar stroke = pathEffect(t, total_arc_len[0], r, paint.stroke) * cut_off;\nfinalColor = vec4f(stroke.xyz, 1.0) * stroke.w * paint.opacity;"
+        }
+      ]
+    },
+    {
+      "id": "4-analytical-rounded-corner-mathematics-poly-regular-src-engine-entities-primitives-2d-poly-ts-l61",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Analytical Rounded Corner Mathematics ([Poly.regular](../src/engine/entities/primitives/2d/Poly.ts#L61))"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Poly.regular(sides, radius, { cornerRadius })` constructs arbitrary $N$-sided regular polygons with exact analytical corner rounding arcs:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Corner Vertex (curr)\n                  ▲\n                 / \\\n   Tangent (t1) /   \\ Tangent (t2)\n        ●───────     ───────●\n       /         Arc         \\\n      /       (Center cx,cy)  \\\n     /                         \\\n  prev                         next"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Mathematical Formulation:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Half-Angle at Vertex**:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\theta = \\arccos\\left(\\mathbf{v}_{\\text{prev}} \\cdot \\mathbf{v}_{\\text{next}}\\right), \\quad \\phi = \\frac{\\theta}{2}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Tangent Point Offset Distance**:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "math",
+          "tex": "d = \\frac{r_{\\text{corner}}}{\\tan(\\phi)}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Arc Center Distance along Bisector**:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{b} = \\frac{\\mathbf{v}_{\\text{prev}} + \\mathbf{v}_{\\text{next}}}{\\|\\mathbf{v}_{\\text{prev}} + \\mathbf{v}_{\\text{next}}\\|}, \\quad \\mathbf{C} = \\mathbf{p}_{\\text{curr}} + \\mathbf{b} \\cdot \\frac{r_{\\text{corner}}}{\\sin(\\phi)}"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Overlap Protection Clamping**:"
+          ],
+          "start": 4
+        },
+        {
+          "type": "math",
+          "tex": "r_{\\text{max}} = \\frac{L_{\\text{edge}}}{2 \\tan(\\pi / N)}, \\quad r_{\\text{corner}} = \\min(r_{\\text{corner}}, \\, 0.999 \\cdot r_{\\text{max}})"
+        }
+      ]
+    },
+    {
+      "id": "5-practical-usage-code-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Practical Usage & Code Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 1: Regular Hexagon with Rounded Corners"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Poly, Color } from \"retiam\";\n\nexport class HexagonScene extends Scene {\n    public async run() {\n        this.camera.position.set([0, 0, 100]);\n\n        // Regular 6-sided hexagon with radius 30 and rounded corner radius 8\n        const hex = Poly.regular(6, 30, {\n            cornerRadius: 8,\n            fill: new Color(0.1, 0.5, 0.9, 0.7),\n            stroke: new Color(1.0, 1.0, 1.0, 1.0),\n            stroke_width: 3.0\n        });\n        this.add(hex);\n\n        this.always(() => {\n            hex.transform.rotation.z = this.time * 0.001;\n            this.invalidate();\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 2: Real-Time Dynamic Waveform Visualizer (Zero-Allocation Streaming)"
+        },
+        {
+          "type": "paragraph",
+          "text": "For real-time audio oscilloscopes or sensor charts, stream raw vertex data without allocating JavaScript arrays:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Poly, Color } from \"retiam\";\n\nexport class WaveformScene extends Scene {\n    public async run() {\n        const SAMPLES = 500;\n        const rawPoints = new Float32Array(SAMPLES * 2);\n\n        // Initialize Polyline\n        const waveform = new Poly([], {\n            stroke: new Color(0.2, 1.0, 0.6, 1.0),\n            stroke_width: 2.5,\n            isClosed: false\n        });\n        this.add(waveform);\n\n        this.always(() => {\n            const time = this.time * 0.003;\n\n            // Stream x, y coordinates directly into the Float32Array:\n            for (let i = 0; i < SAMPLES; i++) {\n                const x = (i - SAMPLES / 2) * 0.5;\n                const y = Math.sin(time + i * 0.05) * 15.0 + Math.sin(time * 2.0 + i * 0.1) * 5.0;\n                rawPoints[i * 2 + 0] = x;\n                rawPoints[i * 2 + 1] = y;\n            }\n\n            // Zero-allocation update to GPU:\n            waveform.setRawVertices(rawPoints, false);\n            this.invalidate();\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 3: Progressive Write-On Laser / Trimming Animation"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Poly, Color } from \"retiam\";\n\nexport class LaserScene extends Scene {\n    public async run() {\n        const starPoints = [\n            { x: 0, y: 30 }, { x: 9, y: 9 }, { x: 30, y: 9 },\n            { x: 14, y: -4 }, { x: 20, y: -25 }, { x: 0, y: -12 },\n            { x: -20, y: -25 }, { x: -14, y: -4 }, { x: -30, y: 9 },\n            { x: -9, y: 9 }\n        ];\n\n        const star = new Poly(starPoints as any, {\n            stroke: new Color(1.0, 0.2, 0.4, 1.0),\n            stroke_width: 4.0,\n            isClosed: true\n        });\n        this.add(star);\n\n        // Animate stroke trimming from t1 to t2:\n        this.always(() => {\n            const t = (this.time * 0.0008) % 2.0;\n            star.state.t1 = Math.max(0.0, t - 1.0); // trailing edge\n            star.state.t2 = Math.min(1.0, t);       // leading edge\n            this.invalidate();\n        });\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "6-built-in-raycasting-conversion-capabilities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Built-In Raycasting & Conversion Capabilities"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Analytical Raycasting (`poly.raycast()`)**:",
+              "children": [
+                "Checks AABB bounding box first.",
+                "Evaluates point-in-polygon containment (`Raycaster.pointInPolygon`) for filled shapes.",
+                "Evaluates distance-to-segment proximity (`Raycaster.distToSegmentSq`) with stroke width padding for outline clicks."
+              ]
+            },
+            {
+              "text": "**GPU Arc Length Readback (`poly.getTotalLength()`)**:",
+              "children": [
+                "Reads the exact physical length from `total_len_buffer` computed during the GPU extrusion pass."
+              ]
+            },
+            {
+              "text": "**Conversion to SVG Path (`poly.toPaths()`)**:",
+              "children": [
+                "Converts the polyline into a standard `Path` entity preserving transformation hierarchies."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

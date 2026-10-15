@@ -1,0 +1,659 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-physics2d-system-documentation",
+  "title": "Retiam 2D Physics System Documentation",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/PHYSICS2D_SYSTEM_DOCUMENTATION.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/PHYSICS2D_SYSTEM_DOCUMENTATION.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/PHYSICS2D_SYSTEM_DOCUMENTATION.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Entity](/api-core-entity#entity), [Component](/api-core#component), [Scene](/api-core-scene#scene), [VectorEntity](/api-core-vectorentity#vectorentity), [Circle](/api-entities-primitives-2d#circle), [Rect](/api-entities-primitives-2d#rect), [Poly](/api-entities-primitives-2d#poly), [Physics2D](/api-libs-physics-2d#physics2d), [IPhysics2DBackend](/api-libs-physics-2d-backends#iphysics2dbackend), [Planck2DBackend](/api-libs-physics-2d-backends#planck2dbackend), [Rapier2DBackend](/api-libs-physics-2d-backends#rapier2dbackend), [RigidBody2DComponent](/api-libs-physics-2d-components#rigidbody2dcomponent), [SoftBody2DComponent](/api-libs-physics-2d-components#softbody2dcomponent), [Pipeline](/api-render-pipelines#pipeline), [RegularPolygon](/api-libs-shapes-2d#regularpolygon), [Rigid2DOptions](/api-libs-physics-2d#physics2dtypes), [Spring](/api-entities-primitives-2d#spring), [Collision2DEvent](/api-libs-physics-2d#physics2dtypes), [Flash](/api-libs-highlights-finish#flash), [Color](/api-math#color), [Cross](/api-libs-shapes-2d#cross), [Vec3](/api-math-vector#vec3), [Vec2](/api-math-vector#vec2)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam includes a high-performance, cross-engine 2D physics subsystem designed for games, scientific visualizations, and dynamic motion graphics. It provides a unified, engine-agnostic API that transparently drives either:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Planck.js (Box2D)**: Pure TypeScript/JavaScript deterministic constraint solver.",
+            "**Rapier2D (WASM)**: SIMD-accelerated WebAssembly physics engine."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Both backends seamlessly integrate with Retiam's Entity-Component-System (ECS) scene graph and WebGPU vector rendering pipeline."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    A[\"Retiam Scene / VectorEntity\\n(Circle, Rect, Poly)\"] --> B[\"Physics2D Manager\\n(Retiam Facade)\"]\n    B --> C[\"Unified Backend Interface\\n(IPhysics2DBackend)\"]\n    C -->|backend: 'planck'| D[\"Planck2DBackend\\n(Box2D JS)\"]\n    C -->|backend: 'rapier'| E[\"Rapier2DBackend\\n(Rapier WASM)\"]\n    D & E --> F[\"Physics Step Update\\n(Collision, Solvers, Joints)\"]\n    F --> G[\"ECS Synchronization\\n(RigidBody2DComponent / SoftBody2DComponent)\"]\n    G --> H[\"WebGPU Vector Pipeline\\n(worldState.transform / Poly Vertex Buffers)\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-core-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Architecture"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "[Physics2D.ts](../libs/physics/2d/Physics2D.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The central manager attached to a `Scene`. It creates the backend instance, manages rigid bodies, spring lattices, constraints, collision dispatching, and pointer interactions."
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "import { Scene } from \"retiam\";\nimport { Physics2D } from \"retiam/physics\";\n\nconst scene = new Scene();\n\n// Initialize 2D Physics with Rapier or Planck\nconst physics = new Physics2D(scene, {\n    backend: \"rapier\",        // 'rapier' (WASM) or 'planck' (Box2D)\n    gravity: [0, -9.8],       // [gx, gy] in m/s^2\n    autoStep: true            // Automatically stepped in Scene render loop\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Engine Parameter Unification: Harmonic Oscillator Formulation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Previously, Planck and Rapier used incompatible parameters for elastic constraints:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Planck / Box2D** uses natural oscillation frequency $f$ (`frequencyHz`) and damping ratio $\\zeta$ (`dampingRatio`).",
+            "**Rapier** natively expects absolute stiffness $k$ (spring constant) and viscous damping coefficient $c$."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam unifies both engines around standard harmonic oscillator physics:"
+        },
+        {
+          "type": "math",
+          "tex": "k = m \\, (2\\pi f)^2"
+        },
+        {
+          "type": "math",
+          "tex": "c = 2 \\, m \\, (2\\pi f) \\, \\zeta"
+        },
+        {
+          "type": "paragraph",
+          "text": "where $m = \\frac{m_1 m_2}{m_1 + m_2}$ is the effective reduced mass of the connected bodies. This guarantees identical spring behavior regardless of which backend is selected."
+        }
+      ]
+    },
+    {
+      "id": "3-rigid-bodies-motion-types",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Rigid Bodies & Motion Types"
+        },
+        {
+          "type": "paragraph",
+          "text": "Entities are added to the simulation using `physics.add(entity, options)`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Motion Type",
+            "Description",
+            "Use Cases"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`'dynamic'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Driven by gravity, contact forces, impulses, and constraints."
+                },
+                {
+                  "text": "Balls, falling crates, debris, ragdolls"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'static'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Immovable barrier; unaffected by forces or collisions."
+                },
+                {
+                  "text": "Floors, boundaries, pegs, ramps, obstacles"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'kinematic'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Positioned programmatically or via velocity; pushes dynamic objects."
+                },
+                {
+                  "text": "Elevators, moving platforms, conveyor belts"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Automatic Geometry Inference"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam automatically infers collider shapes from vector primitives:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`Circle`**: Creates a 2D circular collider with matching radius.",
+            "**`Rect`**: Creates an axis-aligned box collider using width and height.",
+            "**`Poly` / `RegularPolygon`**: Extracts vertices, handles concave decomposition or convex hulls, and sets up matching polygonal colliders."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Configuration Interface ([Physics2DTypes.ts](../libs/physics/2d/Physics2DTypes.ts))"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "export interface Rigid2DOptions {\n    motion?: 'dynamic' | 'static' | 'kinematic'; // Default: 'dynamic'\n    density?: number;        // Fixture density. Default: 1.0\n    mass?: number;           // Explicit mass override in kg\n    friction?: number;       // Friction coefficient. Default: 0.3\n    restitution?: number;    // Restitution / bounciness (0.0 to 1.0). Default: 0.2 (0.6 for circles)\n    isSensor?: boolean;      // Non-colliding trigger sensor. Default: false\n    lockRotation?: boolean;  // Locks angular rotation. Default: false\n    linearDamping?: number; // Linear drag. Default: 0.0\n    angularDamping?: number;// Rotational drag. Default: 0.0\n    ccd?: boolean;           // Continuous Collision Detection (prevents tunneling). Default: false\n    gravityScale?: number;   // Per-body gravity multiplier. Default: 1.0\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-interactive-mouse-dragging",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Interactive Mouse Dragging"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam 2D physics includes built-in pointer interaction via `physics.enableMouseDrag(options)`."
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "physics.enableMouseDrag({\n    frequencyHz: 6.0,   // Spring tightness for pulling bodies\n    dampingRatio: 0.6,  // Damping to prevent uncontrolled oscillations\n    maxForce: 1500      // Maximum pulling force multiplier\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "How It Works"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Listens to `pointerdown`, `pointermove`, and `pointerup` on the canvas.",
+            "Performs a point query or raycast against active physics fixtures.",
+            "Dynamically creates a ground-anchored spring joint constraint connected to the selected body at the click point.",
+            "Updates the anchor position as the mouse moves, allowing users to grab, drag, swing, and fling bodies.",
+            "Destroys the spring constraint on `pointerup`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-collision-events-contact-listeners",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Collision Events & Contact Listeners"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides dual-level collision reporting: both a global event dispatcher and entity-level component callbacks."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n    A[\"Physical Contact Occurs\\n(Rapier EventQueue / Planck ContactListener)\"] --> B[\"Physics2D Dispatcher\"]\n    B --> C[\"Global Event\\nphysics.on('collisionStart', evt)\"]\n    B --> D[\"Entity A Component Hook\\ncompA.onCollisionStart(entityB, evt)\"]\n    B --> E[\"Entity B Component Hook\\ncompB.onCollisionStart(entityA, evt)\"]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Global Listener"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "physics.on('collisionStart', (event: Collision2DEvent) => {\n    console.log(`Collision between ${event.entityA.LABEL} and ${event.entityB.LABEL}`);\n});\n\nphysics.on('collisionEnd', (event: Collision2DEvent) => {\n    console.log('Bodies separated');\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Entity-Level Listener"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "const bumper = new Circle(1.2);\nconst bodyComp = physics.add(bumper, 'static');\n\nbodyComp.onCollisionStart((otherEntity, event) => {\n    // Flash color or trigger particle effects on contact\n    bumper.paint.fill = new Color(1.0, 0.9, 0.2, 1.0);\n});\n\nbodyComp.onCollisionEnd((otherEntity, event) => {\n    bumper.paint.fill = new Color(0.3, 0.4, 0.5, 1.0);\n});"
+        }
+      ]
+    },
+    {
+      "id": "6-2d-soft-bodies-deformable-meshes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. 2D Soft Bodies & Deformable Meshes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam supports real-time deformable soft bodies and elastic mass-spring lattices via `physics.addSoftBody(entity, options)`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Radial Soft Body Blobs (shape: 'radial')"
+        },
+        {
+          "type": "paragraph",
+          "text": "Used for squishy deformable polygons (`Poly`, `Poly.regular(N, radius)`):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Instantiates circular colliders at polygon vertices + an internal central hub particle.",
+            {
+              "text": "Interconnects particles using a triangulated spoke-wheel topology:",
+              "children": [
+                "**Perimeter Ring Springs**: Maintain the outer closed polygon boundary.",
+                "**Rim-Anchored Hub Spokes**: Radial springs connected to the surface of the central hub at exact angles $\\alpha_i$, creating angular restoring stiffness that prevents tangential sliding or vertex bunching.",
+                "**Triangulated Cross Spokes**: Connects each perimeter particle to adjacent hub rim anchors, eliminating vertex inversion modes and guaranteeing 100% elastic shape recovery under extreme squishing."
+              ],
+              "ordered": true
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "const jelly = Poly.regular(8, 2.0);\njelly.transform.position = new Vec3(0, 10, 0);\n\nphysics.addSoftBody(jelly, {\n    shape: 'radial',\n    frequencyHz: 6.5,   // Elasticity / squishiness\n    dampingRatio: 0.15,  // Jiggle damping\n    friction: 0.4,\n    restitution: 0.6\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Grid Lattice Cloth & Curtains (shape: 'grid')"
+        },
+        {
+          "type": "paragraph",
+          "text": "Used for deformable sheets, hanging curtains, and elastic trampolines:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Creates a 2D $M \\times N$ matrix of particle colliders.",
+            {
+              "text": "Interconnects particles with:",
+              "children": [
+                "**Structural & Shear Springs**: Horizontal, vertical, and cross-diagonal springs.",
+                "**Bending Resistance Springs**: Connects particles 2 grid steps away ($r \\pm 2, c \\pm 2$) to eliminate sharp creases, prevent accordion folding, and maintain planar recovery."
+              ],
+              "ordered": true
+            },
+            "Supports anchor pinning: `'top-edge'`, `'corners'`, an array of indices, or a predicate function."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "const curtain = new Poly([\n    new Vec2(-3, 2.25),\n    new Vec2(3, 2.25),\n    new Vec2(3, -2.25),\n    new Vec2(-3, -2.25)\n], { isClosed: true });\n\nphysics.addSoftBody(curtain, {\n    shape: 'grid',\n    columns: 5,\n    rows: 4,\n    frequencyHz: 4.5,\n    dampingRatio: 0.25,\n    pinned: 'top-edge' // Top row is locked in place\n});"
+        }
+      ]
+    },
+    {
+      "id": "7-zero-gap-contact-alignment-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Zero-Gap Contact Alignment Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "In physics engines, soft bodies are approximated using an array of circular colliders of radius $r$ (`particleRadius`). This introduces a fundamental geometric challenge:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "[Traditional Approach - Floating Gap]\nVisual Vertex = Collider Center\n------------------------------------------------------\n     (•) Collider Center = Visual Vertex\n    /   \\\n   |  r  |  Collider Perimeter (Collision Surface)\n    \\___/\n====================================================== Floor Surface\n     ↑ Gap of size r where object appears to float!"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Retiam Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Outward Normal Expansion ([`SoftBody2DComponent.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/components/SoftBody2DComponent.ts))**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "During the ECS update pass, each visual vertex is offset outward from its particle center along the outward surface normal by exactly $+r$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{v}_{\\text{visual}} = \\mathbf{v}_{\\text{center}} + \\hat{\\mathbf{n}} \\cdot r"
+        },
+        {
+          "type": "paragraph",
+          "text": "This expands the visual polygon to lie flush with the **outer contact surface** of the physical circle colliders."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Inward Rest Geometry Compensation ([`Physics2D.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/2d/Physics2D.ts))**:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "When radial particles are instantiated, they are placed inward by $r$. Combined with the $+r$ outward expansion in the component, the resting geometry matches the author's specified dimensions with mathematical precision."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Result**:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Soft bodies rest flush on floors, obstacles, and against adjacent stacked bodies with **zero visible gap**."
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "[Retiam Zero-Gap Contact Alignment]\nVisual Vertex = Collider Center + (Normal * r)\n------------------------------------------------------\n     (•) Collider Center\n    /   \\\n   |  r  |  \n   \\__V__/  Visual Vertex == Collision Surface\n====================================================== Floor Surface\n     No gap! Visual mesh directly touches contact surface."
+        }
+      ]
+    },
+    {
+      "id": "8-joints-constraints-system",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Joints & Constraints System"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a comprehensive suite of 2D physical constraints:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Joint Type",
+            "Method",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Revolute**",
+                  "type": "text"
+                },
+                {
+                  "text": "`physics.addRevoluteJoint(eA, eB, opts)`"
+                },
+                {
+                  "text": "Pin/hinge joint allowing rotation around an anchor point. Supports limits and motors."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Distance**",
+                  "type": "text"
+                },
+                {
+                  "text": "`physics.addDistanceJoint(eA, eB, opts)`"
+                },
+                {
+                  "text": "Enforces a constant distance between two anchor points."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Spring**",
+                  "type": "text"
+                },
+                {
+                  "text": "`physics.addSpringJoint(eA, eB, opts)`"
+                },
+                {
+                  "text": "Damped elastic harmonic oscillator between two bodies (`frequencyHz`, `dampingRatio`)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Visual Spring**",
+                  "type": "text"
+                },
+                {
+                  "text": "`physics.addSpring(eA, eB, opts)`"
+                },
+                {
+                  "text": "Creates both a physical spring joint and an animated visual `Spring` coil entity."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Fixed**",
+                  "type": "text"
+                },
+                {
+                  "text": "`physics.addFixedJoint(eA, eB, opts)`"
+                },
+                {
+                  "text": "Welds two bodies together, locking relative translation and rotation."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Prismatic**",
+                  "type": "text"
+                },
+                {
+                  "text": "`physics.addPrismaticJoint(eA, eB, opts)`"
+                },
+                {
+                  "text": "Slider / piston allowing linear movement along a single axis with optional limits and motor."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Rope**",
+                  "type": "text"
+                },
+                {
+                  "text": "`physics.addRopeJoint(eA, eB, opts)`"
+                },
+                {
+                  "text": "Enforces a maximum separation distance between two bodies while allowing slack."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Visual Spring Entity Example"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "const bobA = new Circle(0.6);\nconst bobB = new Circle(0.6);\n\n// Creates physical spring AND procedural rendered spring coil\nconst { joint, visual } = physics.addSpring(bobA, bobB, {\n    frequencyHz: 3.0,\n    dampingRatio: 0.1,\n    coils: 10,\n    radius: 0.4,\n    style: 'coil', // 'coil' | 'helix' | 'line'\n    stroke: new Color(0.9, 0.6, 0.2, 1.0)\n});"
+        }
+      ]
+    },
+    {
+      "id": "9-dedicated-example-demos",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "9. Dedicated Example Demos"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides dedicated standalone demonstration scenes in `examples/demos/physics/`:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**[`physics2d_mouse_drag.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/physics/physics2d_mouse_drag.ts)**:",
+              "children": [
+                "Interactive pointer grabbing, stretching, and tossing.",
+                "Stacked pyramid of dynamic crates, rolling balls, and interactive seesaws."
+              ]
+            },
+            {
+              "text": "**[`physics2d_collisions.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/physics/physics2d_collisions.ts)**:",
+              "children": [
+                "Pinball/Plinko bumper board with reactive impact listeners and flash lighting.",
+                "Ball recycling funnels and sensor triggers."
+              ]
+            },
+            {
+              "text": "**[`physics2d_softbody.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/physics/physics2d_softbody.ts)**:",
+              "children": [
+                "Squishy translucent 8-sided and 6-sided jelly blobs.",
+                "Pinned cloth curtain hanging from a structural mounting rod.",
+                "Zero-gap contact alignment with obstacle pegs and floor.",
+                "Click-to-spawn soft body generator."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "To run any demo, open the Retiam Studio Viewer:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "http://localhost:5173/studio/viewer.html?demo=physics/physics2d_softbody"
+        }
+      ]
+    },
+    {
+      "id": "10-best-practices-performance-guidelines",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "10. Best Practices & Performance Guidelines"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Choose the Right Backend**:",
+              "children": [
+                "Use **`'rapier'`** when simulating hundreds of dynamic bodies or complex compound shapes where WASM SIMD execution excels.",
+                "Use **`'planck'`** when zero-dependency, pure JavaScript execution or exact Box2D parity is required."
+              ]
+            },
+            {
+              "text": "**Soft Body Tuning**:",
+              "children": [
+                "For stable jelly polygons, use `frequencyHz` between `5.0` and `8.0` with `dampingRatio` between `0.15` and `0.3`.",
+                "Avoid setting `frequencyHz > 15.0` on soft bodies without increasing `velocityIterations` / solver sub-steps."
+              ]
+            },
+            {
+              "text": "**Continuous Collision Detection (CCD)**:",
+              "children": [
+                "Enable `ccd: true` on fast, small dynamic objects (e.g., pinball projectiles) to prevent tunneling through thin barriers."
+              ]
+            },
+            {
+              "text": "**Collision Groups & Layers**:",
+              "children": [
+                "Use `collisionGroups` bitmasks to filter out unnecessary collision pairs (e.g., particles within the same soft body that are already constrained by structural springs)."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "limitations",
+  "title": "Current behavior and compatibility notes",
+  "group": "Production quality",
+  "summary": "Check the current implementation boundaries and differences between historical examples and supported behavior.",
+  "sections": [
+    {
+      "id": "source-takes-precedence",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Source takes precedence"
+        },
+        {
+          "type": "paragraph",
+          "text": "This page records concrete differences between current implementation and older notes or comments. They are documentation findings; the engine code is not changed by this documentation update."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Area",
+            "Current behavior"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "always callback",
+                "Receives time, dt, context. A single dt-like name still receives absolute time."
+              ]
+            },
+            {
+              "cells": [
+                "hex helper",
+                "Pass alpha separately; Color.fromHex handles 4/8-digit RGBA strings."
+              ]
+            },
+            {
+              "cells": [
+                "Paint",
+                "Public option/property is strokeWidth. setClip takes Vec2 spatial clipping bounds."
+              ]
+            },
+            {
+              "cells": [
+                "Camera",
+                "Use model/CameraModel. fov is consumed as radians despite the literal constructor default 45."
+              ]
+            },
+            {
+              "cells": [
+                "Raster projections",
+                "FISHEYE and VR360 fall back in getProjectionMatrix; enum presence is not full raster support."
+              ]
+            },
+            {
+              "cells": [
+                "Camera.frame",
+                "Immediate framing; no frameAnimated method in the current class."
+              ]
+            },
+            {
+              "cells": [
+                "TrackBuilder",
+                "add(...animations) advances a relative playhead; no timestamp argument."
+              ]
+            },
+            {
+              "cells": [
+                "ValueTracker",
+                "animateValue is the public scalar animation helper; no animate.setValue method."
+              ]
+            },
+            {
+              "cells": [
+                "Plot calculus",
+                "getTangentLine(x, graph, options); Riemann x range/dx are separate arguments."
+              ]
+            },
+            {
+              "cells": [
+                "Raymarch plot",
+                "Exported name is RaymarchedPlot3D; filename remains RaymarchPlot3D.ts."
+              ]
+            },
+            {
+              "cells": [
+                "z_index",
+                "Also applies a projected depth bias; large values can clip geometry."
+              ]
+            },
+            {
+              "cells": [
+                "MSDF cache",
+                "Cache key distinguishes charset length, not charset contents or textureSize."
+              ]
+            },
+            {
+              "cells": [
+                "Automaton trace",
+                "Selects the first target per symbol; multiple stored targets do not implement NFA execution."
+              ]
+            },
+            {
+              "cells": [
+                "Mask compatibility",
+                "Renderer/pass combinations matter; analytical path content and fast mega batches require visual verification."
+              ]
+            },
+            {
+              "cells": [
+                "SDFEntity3D material",
+                "Set material fields after construction; the forwarded material getter needs the child volume to exist."
+              ]
+            },
+            {
+              "cells": [
+                "ParametricModel",
+                "Function returns Vec3 and constructor uses options, not range tuples."
+              ]
+            },
+            {
+              "cells": [
+                "Graph",
+                "addNode(id, options), not an object containing id."
+              ]
+            },
+            {
+              "cells": [
+                "BarChart",
+                "Data uses category, not label."
+              ]
+            },
+            {
+              "cells": [
+                "Physics",
+                "Construct with Scene; add(entity, options); motion uses static/dynamic/kinematic."
+              ]
+            },
+            {
+              "cells": [
+                "3D soft bodies",
+                "Jolt source exists but controller/barrel do not route/export it; addSoftBody rejects unsupported backends."
+              ]
+            },
+            {
+              "cells": [
+                "Physics auto-step",
+                "2D uses one fixed step per scene update; 3D scales scene.dt again by timeScale."
+              ]
+            },
+            {
+              "cells": [
+                "alwaysRedraw",
+                "Reuses compatible GPU resources but factories still allocate JavaScript objects."
+              ]
+            },
+            {
+              "cells": [
+                "Fonts",
+                "Current font generation/resolution is in-browser; no server/msdf-server.ts or msdf-server npm script."
+              ]
+            },
+            {
+              "cells": [
+                "Audio",
+                "Use Scene.audio instance methods such as playBGM, not an AudioManager.playMusic static facade."
+              ]
+            },
+            {
+              "cells": [
+                "CLI snapshot",
+                "PNG viewport screenshots after wall-clock delays; seconds for --times, no --format option. These are approximate preview captures rather than deterministic offline keyframes."
+              ]
+            },
+            {
+              "cells": [
+                "CLI render",
+                "Serves the calling project’s index.html; the host must load the scene selected by ?file=. Duration is milliseconds; --out selects a directory, no implemented -b flag."
+              ]
+            },
+            {
+              "cells": [
+                "CLI export",
+                "The completed scene bundle runs independently; this checkout’s export entry and aliases still expect a repository src/engine layout. External npm export needs a package-based entry."
+              ]
+            },
+            {
+              "cells": [
+                "CLI dependencies",
+                "Puppeteer/ws/cli-progress imports exceed what the root manifest explicitly declares."
+              ]
+            },
+            {
+              "cells": [
+                "Performance",
+                "Pooling and batching reduce cost; historical benchmark figures do not establish universal zero-GC or FPS guarantees."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

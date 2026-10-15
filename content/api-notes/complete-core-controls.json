@@ -1,0 +1,93 @@
+{
+  "AlwaysTask.stop": {
+    "description": "Stop future execution of this updater and remove its AbortSignal listener. Calling stop again has no effect.",
+    "notes": ["This does not destroy the entity or undo mutations made by previous callbacks. reset only resets counters and delay; it does not turn a stopped task back on."]
+  },
+  "AlwaysTask.pause": {"description": "Mark this updater paused while retaining its running state and accumulated timing. Other scene tasks can continue."},
+  "AlwaysTask.resume": {"description": "Clear the paused flag. A stopped task remains stopped because resume does not change isRunning."},
+  "AlwaysTask.reset": {"description": "Reset invocation count, elapsed time and interval accumulation, and restore the configured nonnegative initial delay.", "notes": ["The paused/running flags and callback closure state are retained. Reset your simulation state separately when replay should begin from its original values."]},
+  "Entity.invalidateTransform": {
+    "description": "Mark cached world transforms dirty, update their version and propagate that invalidation through children.",
+    "notes": ["The attached composer is invalidated when the world transform becomes dirty. The parent anchor is also invalidated so bounds-dependent alignment can be measured again. This is transform-cache invalidation, not a replacement for rebuilding changed geometry."]
+  },
+  "Entity.getGroupLocalAABB": {
+    "description": "Measure this entity and its visible descendants in the root entity’s local coordinate system.",
+    "returnsDescription": "A new AABB enclosing transformed descendant bounds. An empty group falls back to a point at local origin.",
+    "notes": ["The root’s own transform and offset are excluded; descendants contribute their transforms and offsets. Invisible branches are skipped. Use world bounds when comparing independently transformed objects in a scene."],
+    "example": "labs/lab-transforms"
+  },
+  "Entity.forSubNodes": {
+    "description": "Visit this entity first, then recursively visit children in their array order.",
+    "parameters": {"fn": "Synchronous callback receiving each Entity, including this root. Visibility does not filter this traversal."},
+    "notes": ["The method returns no cancellation handle and does not wait for an async callback. Avoid mutating the children array during traversal unless you account for the resulting visit order."]
+  },
+  "Entity.forSuperNodes": {
+    "description": "Walk from this entity up its parent chain toward the root.",
+    "parameters": {"fn": "Synchronous callback receiving each visited Entity.", "includeSelf": "Visit this entity before its ancestors; defaults to true. False begins with the parent."},
+    "notes": ["A detached entity with includeSelf false produces no visits. This walks ownership parents, not class inheritance."]
+  },
+  "Material.setShadingStyle": {
+    "description": "Select the material’s shading model and mark its packed GPU data changed.",
+    "parameters": {"v": "A ShadingStyle value or its numeric representation. Use the enum for a readable choice."},
+    "returnsDescription": "The same Material for chaining.",
+    "notes": ["Choosing a style does not configure all its parameters. Use setGooch or setCel to set the corresponding values together."]
+  },
+  "Material.setGooch": {
+    "description": "Select Gooch shading and set its warm/cool coefficients.",
+    "parameters": {"warm": "Warm contribution coefficient; defaults to 0.45.", "cool": "Cool contribution coefficient; defaults to 0.45."},
+    "returnsDescription": "The same Material.",
+    "notes": ["The packed coefficients share slots with CEL parameters. Reading goochWarm on a CEL material returns the shared celBands slot, rather than a separate stored Gooch preset."]
+  },
+  "Material.setCel": {
+    "description": "Select cel shading and set lighting bands and rim contribution.",
+    "parameters": {"bands": "Band-count parameter for quantized lighting; defaults to 3.", "rimStrength": "Rim lighting coefficient; defaults to 0.6."},
+    "returnsDescription": "The same Material.",
+    "notes": ["celBands and rimStrength share packed storage with goochWarm and goochCool. Switching styles does not retain two independent parameter sets."]
+  },
+  "Material.clone": {"description": "Create a material copy through Material.copy.", "returnsDescription": "A separate Material containing the copied packed values and set-mask state. Later changes to its numeric material data do not mutate the original."},
+  "Scene.addAnim": {
+    "description": "Add prepared animations to the scene queue, or defer insertion until the next update if the composer is currently rendering.",
+    "parameters": {"anim": "One or more Animation instances. This queue operation does not apply play options or provide a completion promise."},
+    "notes": ["Use Scene.play for ordinary awaited choreography. Direct queue management requires handling the animation’s preparation, completion and cancellation yourself."]
+  },
+  "Scene.removeAnim": {"description": "Queue removal of one animation and request a frame.", "parameters": {"anim": "The scheduled Animation instance to detach on an update."}, "notes": ["Queue removal alone does not settle an awaited completion promise. Use the animation’s stop/cancellation behavior when interrupting a play."]},
+  "Scene.updateTime": {
+    "description": "Advance this scene’s millisecond clock using a supplied delta or frame_interval, scaled by timeScale.",
+    "parameters": {"dt": "Optional unscaled delta in milliseconds. When omitted, uses the scene’s frame_interval."},
+    "notes": ["The scaled value becomes scene.dt and is added to scene.time. This updates timing; it does not by itself step animations or submit a frame."]
+  },
+  "Scene.update": {
+    "description": "Step one scene frame, processing updater phases, scheduled animations and child entities in a defined order.",
+    "parameters": {"t": "Current scene time in milliseconds.", "dt": "Scaled frame delta in milliseconds."},
+    "notes": ["The order is pre updaters → queued animation insertion/removal → animations → update updaters → entities → post updaters. Post is suitable for a camera following an entity that just moved.", "Render and compute queues are cleared at the beginning of the update. Produce this frame’s commands from the appropriate update path; adding them once before a later update does not retain them forever."],
+    "example": "labs/pg-scene-update"
+  },
+  "Scene.continue": {"description": "Request ten frame updates and invalidate the scene. This requests rendering activity; it does not clear isPaused or resume awaited choreography."},
+  "Scene.clearColor": {
+    "description": "Set the attached composer’s clear color. Before attachment, this method currently does nothing.",
+    "parameters": {"color": "Background Color; the composer stores its RGB premultiplied by alpha."},
+    "notes": ["The background belongs to the composer shared by its scenes. This method does not directly invalidate an otherwise idle composer; request a frame after a live background change."],
+    "example": "labs/pg-firstscene"
+  },
+  "Scene.setBackgroundColor": {"description": "Set the attached composer’s background through the same clearColor operation.", "parameters": {"color": "Background Color whose alpha is applied during composer storage."}, "notes": ["No composer means no change. The method has the same attachment and invalidation constraints as Scene.clearColor."]},
+  "Scene.isFinished": {
+    "description": "Check that the animation queue and requested frame-update count are empty.",
+    "returnsDescription": "True when neither of those has remaining work.",
+    "notes": ["This is not a promise that every application timer, asset request, updater or async run continuation has finished. Choose an explicit duration/completion boundary for video capture."]
+  },
+  "Scene.enableFrameFeedback": {"description": "Enable frame feedback on this scene’s initialized renderer.", "returnsDescription": "The FrameFeedbackFeature for configuring retained image history.", "notes": ["This needs renderer attachment. Feedback is image accumulation across frames, distinct from keeping an entity alive or looping an animation."]},
+  "Scene.addCompute": {
+    "description": "Append compute dispatches to this frame’s scene queue.",
+    "parameters": {"compute_commands": "One or more ComputeCommand records containing pipeline, bindings and dispatch sizes."},
+    "notes": ["Scene.update clears the queue on its next frame. Generate recurring dispatches in an updater, and request rendering when otherwise idle. Adding commands does not directly invalidate the scene."],
+    "example": "labs/pg-add-compute"
+  },
+  "Scene.printTime": {"description": "Log the current scene clock to the console in milliseconds. It neither advances time nor requests a render."},
+  "Scene.isSafari": {"description": "Apply the current user-agent heuristic: a lowercased string must include safari and exclude chrome.", "returnsDescription": "Whether that string matches the heuristic.", "notes": ["This requires browser navigator and is not a feature-support test. Prefer testing the actual browser capability when an application needs WebGPU, codecs or audio support."]},
+  "SceneComposer.isSafari": {"description": "Apply the same browser user-agent heuristic as Scene.isSafari.", "returnsDescription": "True for a user-agent containing safari but not chrome; this is not proof of GPU or codec support."},
+  "VideoData.setPlaybackRate": {
+    "description": "Set the underlying HTML video playback multiplier, clamped between 0.0625 and 16.",
+    "parameters": {"rate": "Playback multiplier: 1 is normal speed and 2 is twice normal speed."},
+    "notes": ["This changes media playback rate without seeking or changing scene.timeScale. Keep the video and scene clocks coordinated when deterministic seeking/export is required."]
+  }
+}

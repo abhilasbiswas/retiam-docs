@@ -1,0 +1,1303 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-cli-commands-and-tooling-reference",
+  "title": "Retiam CLI Commands & Tooling Reference",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/CLI_COMMANDS_AND_TOOLING_REFERENCE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/CLI_COMMANDS_AND_TOOLING_REFERENCE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/CLI_COMMANDS_AND_TOOLING_REFERENCE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [Component](/api-core#component), [Usage](/api-utils#gpu-utils), [Path](/api-entities-primitives-2d#path), [Tex](/api-entities-composites-text#tex), [Axes](/api-entities-composites-coordinates#axes), [GlowDot](/api-entities-primitives-2d#dot), [Circle](/api-entities-primitives-2d#circle), [Rect](/api-entities-primitives-2d#rect), [Morph](/api-animation-transform#morph), [Physics2D](/api-libs-physics-2d#physics2d), [Math3D](/api-math#math3d), [Model](/api-entities-primitives-3d#model), [Color](/api-math#color), [Rate](/api-animation#rate), [SDFText](/api-entities-composites-text#sdftext), [VBox](/api-entities-layout#vbox), [Create](/api-animation-creation#create), [Write](/api-animation#write), [FadeIn](/api-animation#fadein), [Circumscribe](/api-libs-highlights-boundary#circumscribe), [FourierTransform](/api-math#fouriertransform), [Camera](/api-camera#camera), [Frustum](/api-math#frustum)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The **Retiam CLI** (`bin/cli.js`) provides an agent-native, developer-friendly command-line suite for authoring, linting, snapshotting, rendering, and exporting WebGPU mathematical and cinematic animation scenes."
+        }
+      ]
+    },
+    {
+      "id": "table-of-contents",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Table of Contents"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "1. Executive Summary \\& Architecture",
+            "2. Global CLI Syntax \\& Help Navigation",
+            "[3. Command: `render`](#3-command-render)",
+            "[4. Command: `snapshot`](#4-command-snapshot)",
+            "[5. Command: `scaffold` (alias: `init`)](#5-command-scaffold-alias-init)",
+            "[6. Command: `lint`](#6-command-lint)",
+            "[7. Command: `export`](#7-command-export)",
+            "8. Agent-Native Automation \\& `--json` API",
+            "[9. Command Quick-Reference Matrix](#9-command-quick-reference-matrix)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-executive-summary-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Executive Summary & Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "The Retiam CLI operates on an **Agent-Native Architecture**, meaning every command is designed for both human developers and autonomous AI coding agents:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Multi-Channel Help**: `--help` and `-h` are supported globally and on every individual subcommand (`retiam render --help`, `retiam help snapshot`, etc.).",
+            "**Deterministic Exit Codes**: All commands return `0` on success and non-zero on failure, enabling robust scripting and CI/CD pipeline integration.",
+            "**Structured Machine-Readable Output (`--json`)**: Commands (`lint`, `snapshot`, `scaffold`) emit strictly typed JSON payloads when passed `--json`, enabling AI agents to read AST errors, visual keyframe paths, and scaffold status without parsing terminal logs.",
+            "**Current Working Directory Resolution**: Scene files are resolved relative to `process.cwd()`, allowing commands to be executed anywhere within project workspaces."
+          ]
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "npx retiam [command]",
+              "children": [
+                {
+                  "label": "scaffold",
+                  "description": "scaffold.js: TypeScript template generator"
+                },
+                {
+                  "label": "lint",
+                  "description": "lint.js: static scene analysis with the TypeScript AST"
+                },
+                {
+                  "label": "snapshot",
+                  "description": "snapshot.js: Vite + Puppeteer capture the WebGPU canvas"
+                },
+                {
+                  "label": "render",
+                  "description": "render.js: Vite + Puppeteer + WebSocket + FFmpeg"
+                },
+                {
+                  "label": "export",
+                  "description": "export.js: Vite library build for a standalone web component"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-global-cli-syntax-help-navigation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Global CLI Syntax & Help Navigation"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "General Command Pattern"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam <command> [file] [options]\nnpx retiam [file] [options]               # Direct shortcut for render"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Help Invocations"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides comprehensive documentation directly in the shell:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# 1. Master help displaying manuals for ALL subcommands\nnpx retiam --help\nnpx retiam -h\nnpx retiam help\n\n# 2. Targeted help for a single subcommand\nnpx retiam render --help\nnpx retiam snapshot --help\nnpx retiam scaffold --help\nnpx retiam lint --help\nnpx retiam export --help\n\n# 3. Subcommand help routing syntax\nnpx retiam help render\nnpx retiam help snapshot\nnpx retiam help scaffold\nnpx retiam help lint\nnpx retiam help export"
+        }
+      ]
+    },
+    {
+      "id": "3-command-render",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Command: render"
+        },
+        {
+          "type": "paragraph",
+          "text": "Render an animation scene to high-definition video (MP4/WebM) using hardware WebGPU acceleration and an FFmpeg pipeline."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Usage"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam render [file] [options]\nnpx retiam [file] [options]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Arguments"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Argument",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`[file]`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`src/main.ts`"
+                },
+                {
+                  "text": "Path to the target scene TypeScript file (e.g. `src/scenes/AStarScene.ts` or `MyScene.ts`)."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Options"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Flag",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`-w, --width <px>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`1920`"
+                },
+                {
+                  "text": "Video frame width in pixels."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`-h, --height <px>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`1080`"
+                },
+                {
+                  "text": "Video frame height in pixels."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`-f, --fps <num>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`60`"
+                },
+                {
+                  "text": "Rendering frame rate (frames per second)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`-d, --duration <ms>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0` (auto)"
+                },
+                {
+                  "text": "Maximum rendering duration limit in milliseconds."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`-o, --out <dir>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`./outputs/video`"
+                },
+                {
+                  "text": "Output directory where rendered videos will be saved."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--raytrace [true",
+                  "type": "text"
+                },
+                {
+                  "text": "false]`"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`false`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--no-raytrace`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Explicitly disable raytracing."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--denoiser <format>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`'none'`"
+                },
+                {
+                  "text": "Denoiser pipeline (`'none'`, `'spatial'`, `'oidn'`, `'native'`)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--raw`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Export native raw HDR frame buffer data without compression."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--replay <file.json>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Replay recorded camera and pointer interactions from JSON."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--help`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Display render manual and exit."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "When using `-h`, if followed by a numeric value (e.g. `-h 720`), it specifies the video height. If invoked without a number (e.g. `retiam render -h`), it displays the help manual."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Internal Architecture"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Server Initialization**: Boots an ephemeral local Vite development server to serve and transpile engine and scene modules.",
+            "**Headless Browser**: Spawns a Puppeteer instance configured with `--enable-unsafe-webgpu` and `--enable-experimental-web-platform-features`.",
+            "**WebSocket Frame Streaming**: Establishes a local WebSocket pipe between the browser render loop and Node.js.",
+            "**FFmpeg Multiplexing**: Streams raw RGBA frame buffers into an `ffmpeg` child process encoding with `libx264` (`-pix_fmt yuv420p`) at high bitrate (`20M`).",
+            "**Output**: Writes timestamped MP4 video into the `./outputs/video` directory (e.g., `outputs/video/output_1790493851990.mp4`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Examples"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# Render a specific scene at standard 1080p 60fps (saved to ./outputs/video)\nnpx retiam render src/scenes/AStarScene.ts\n\n# Render in 4K resolution with custom frame rate\nnpx retiam render MyScene.ts -w 3840 -h 2160 -f 60\n\n# Render to custom output directory\nnpx retiam render MyScene.ts -o ./custom_videos\n\n# Render with hardware raytracing enabled\nnpx retiam render src/scenes/GlassScene.ts --raytrace true --denoiser spatial\n\n# Limit render to 15 seconds\nnpx retiam render MyScene.ts -d 15000"
+        }
+      ]
+    },
+    {
+      "id": "4-command-snapshot",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Command: snapshot"
+        },
+        {
+          "type": "paragraph",
+          "text": "Capture deterministic, multi-timestamp PNG/WebP keyframe snapshots of a scene without rendering a full video. Ideal for visual regression testing, fast layout debugging, and AI agent feedback loops."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Usage"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam snapshot <file> [options]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Arguments"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Argument",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`<file>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "*(Required)*"
+                },
+                {
+                  "text": "Path to the target scene TypeScript file."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Options"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Flag",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`--times <sec,sec,...>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`1.0, 2.5`"
+                },
+                {
+                  "text": "Comma-separated list of timeline seconds to capture."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`-w, --width <px>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`1280`"
+                },
+                {
+                  "text": "Snapshot image width in pixels."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`-h, --height <px>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`720`"
+                },
+                {
+                  "text": "Snapshot image height in pixels."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`-o, --out <dir>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`./outputs/snapshot`"
+                },
+                {
+                  "text": "Output directory where captured images will be saved."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--json`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Emit structured JSON output containing captured image paths."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--help`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Display snapshot manual and exit."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Examples"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# Capture default keyframes (1.0s and 2.5s)\nnpx retiam snapshot src/scenes/AStarScene.ts\n\n# Capture specific multi-phase timeline beats in 1080p\nnpx retiam snapshot MyScene.ts --times 1.0,3.5,7.0,12.0 -w 1920 -h 1080\n\n# Machine-readable output for automated agent verification\nnpx retiam snapshot MyScene.ts --times 5.0 --json"
+        }
+      ]
+    },
+    {
+      "id": "5-command-scaffold-alias-init",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Command: scaffold (alias: init)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Generate production-ready, syntactically and structurally valid Retiam animation scenes directly in the current working directory."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Usage"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam scaffold [file] [options]\nnpx retiam init [file] [options]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Arguments"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Argument",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`[file]`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`NewScene.ts`"
+                },
+                {
+                  "text": "Target file name or path. Defaults to `NewScene.ts` in the current working directory."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Options"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Flag",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`-t, --template <name>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`math`"
+                },
+                {
+                  "text": "Template to generate (`math`, `geometry`, `physics`, `3d`, `minimal`)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`-f, --force`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Overwrite the target file if it already exists."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--json`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Output structured JSON metadata for agents."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--help, -h`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Display scaffold manual and exit."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Available Templates"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**`math`** *(default)*: Obsidian dark theme (`#080C14`), LaTeX formula rendering (`Tex`), 2D coordinate system (`Axes`), function graph (`Plot`), glow focal point (`GlowDot`), circumscribe highlighting, and equation morphing.",
+            "**`geometry`**: Vector graphics with glassmorphic styling, shape creation (`Circle`, `Rect`), stroke and fill colors, and shape-to-shape morphing (`Morph`).",
+            "**`physics`**: 2D rigid-body dynamics (`Physics2D`), static floor/boundaries, bouncing bodies with coefficient of restitution, and dynamic motion loop.",
+            "**`3d`**: Procedural 3D mesh (`Math3D.createSphere`), smooth normal shading (`computeSmoothShading`), PBR model (`Model`), emissive material properties, and orbit rotation loop (`this.always`).",
+            "**`minimal`**: Clean starter skeleton with camera setup, dark background, and an empty `run()` lifecycle ready for rapid custom authoring."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Dependency Resolution"
+        },
+        {
+          "type": "paragraph",
+          "text": "Templates import core engine primitives from `\"retiam\"` and official extension libraries from their dedicated sub-paths:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Color, hex, Rate, SDFText, Tex, Axes, Plot, GlowDot, VBox, Create, Write, FadeIn, Morph } from \"retiam\";\nimport { Circumscribe } from \"retiam/highlights\";\nimport { Physics2D } from \"retiam/physics\";"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "In the Retiam workspace, `tsconfig.json` paths and `vite.config.ts` aliases map `\"retiam\"` to `./src/index.ts` and `\"retiam/*\"` to `./libs/*/index.ts`.",
+            "In external projects, Node and bundlers resolve `\"retiam\"` and sub-paths from `package.json` exports (`\"retiam/highlights\"`, `\"retiam/physics\"`, etc.)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Examples"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# Generate default math explainer scene (creates ./NewScene.ts)\nnpx retiam scaffold\n\n# Generate named scene in current directory\nnpx retiam scaffold FourierTransform.ts --template math\n\n# Generate 3D PBR mesh scene, overwriting existing file\nnpx retiam scaffold OrbitScene.ts --template 3d --force\n\n# Generate minimal scene with JSON output for agents\nnpx retiam scaffold AgentScene.ts --template minimal --json"
+        }
+      ]
+    },
+    {
+      "id": "6-command-lint",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Command: lint"
+        },
+        {
+          "type": "paragraph",
+          "text": "Static analyzer and AST validator designed to detect runtime hazards, race conditions, and animation timing bugs before rendering."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Usage"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam lint <file> [options]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Arguments"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Argument",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`<file>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "*(Required)*"
+                },
+                {
+                  "text": "Path to the scene TypeScript file to statically analyze."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Options"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Flag",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`--json`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Output structured machine-readable JSON with errors, warnings, and suggested fixes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--help, -h`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Display lint manual and exit."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Static Checks Performed"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Scene Class Contract**: Ensures the default export extends `Scene` and contains a `public async run(): Promise<void>` method.",
+            "**Un-awaited Async Timing Races**: Detects missing `await` keywords on `this.play(...)` and `this.wait(...)` calls that cause overlapping animations or premature scene termination.",
+            "**Dangling Entities**: Identifies entities instantiated (e.g. `new SDFText(...)`, `new Circle(...)`) that were never attached to the scene graph via `this.add(...)`.",
+            "**API Hallucination Detection**: Flags foreign APIs commonly hallucinated by LLMs trained on Python Manim or Three.js (e.g. `Three.Mesh`, `self.play()`, `new THREE.Vector3()`).",
+            "**Camera Frustum Sanity**: Flags extreme world coordinates exceeding standard camera visibility bounds (> 50 units)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Examples"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# Run human-readable linter\nnpx retiam lint src/scenes/AStarScene.ts\n\n# Run agent linter with JSON response\nnpx retiam lint src/scenes/AStarScene.ts --json"
+        }
+      ]
+    },
+    {
+      "id": "7-command-export",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Command: export"
+        },
+        {
+          "type": "paragraph",
+          "text": "Compile a Retiam scene into a self-contained, zero-dependency standalone JavaScript bundle packaged as a custom Web Component (`<retiam-scene>`)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Usage"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam export [file] [outputDir] [options]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Arguments"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Argument",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`[file]`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`src/main.ts`"
+                },
+                {
+                  "text": "Source scene file to bundle."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`[outputDir]`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`outputs/embed`"
+                },
+                {
+                  "text": "Destination folder for the bundled JavaScript distribution."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Options"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Flag",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`-o, --out <dir>`",
+                  "type": "text"
+                },
+                {
+                  "text": "`string`"
+                },
+                {
+                  "text": "`outputs/embed`"
+                },
+                {
+                  "text": "Destination folder for the bundled JavaScript distribution."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`--help, -h`",
+                  "type": "text"
+                },
+                {
+                  "text": "`flag`"
+                },
+                {
+                  "text": "-"
+                },
+                {
+                  "text": "Display export manual and exit."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Web Embedding Guide"
+        },
+        {
+          "type": "paragraph",
+          "text": "Once exported, embed the generated script on any static web page, blog, or documentation site:"
+        },
+        {
+          "type": "code",
+          "language": "html",
+          "code": "<!DOCTYPE html>\n<html>\n<head>\n    <title>Interactive Retiam Scene</title>\n</head>\n<body>\n    <!-- 1. Include bundled script -->\n    <script type=\"module\" src=\"./outputs/embed/myscene.js\"></script>\n\n    <!-- 2. Declare Web Component anywhere in DOM -->\n    <retiam-scene style=\"width: 100%; height: 600px; display: block;\"></retiam-scene>\n</body>\n</html>"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Examples"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# Export scene to default outputs/embed/\nnpx retiam export src/scenes/AStarScene.ts\n\n# Export scene to custom public documentation directory\nnpx retiam export src/scenes/AStarScene.ts ./public/interactive-embeds"
+        }
+      ]
+    },
+    {
+      "id": "8-agent-native-automation-json-api",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Agent-Native Automation & --json API"
+        },
+        {
+          "type": "paragraph",
+          "text": "When integrating Retiam with autonomous coding agents (such as Google Antigravity, Claude, or Codex) or automated CI testing suites, pass the `--json` flag to receive structured JSON responses."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. retiam lint --json Response Schema"
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"file\": \"src/scenes/MyScene.ts\",\n  \"valid\": false,\n  \"stats\": {\n    \"totalPlays\": 6,\n    \"totalWaits\": 2,\n    \"totalEntities\": 8,\n    \"hasRunMethod\": true\n  },\n  \"errors\": [\n    {\n      \"line\": 42,\n      \"message\": \"Missing 'await' before 'this.play()'. Animations must be awaited to prevent timing races.\",\n      \"rule\": \"await-play-wait\"\n    }\n  ],\n  \"warnings\": [\n    {\n      \"line\": 15,\n      \"message\": \"Entity 'titleText' is created but never added to scene via this.add().\",\n      \"rule\": \"unadded-entity\"\n    }\n  ],\n  \"suggestedFixes\": [\n    \"Add 'await' before this.play() on line 42\",\n    \"Call this.add(titleText) on line 15\"\n  ]\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. retiam snapshot --json Response Schema"
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"status\": \"success\",\n  \"scene\": \"src/scenes/AStarScene.ts\",\n  \"resolution\": \"1920x1080\",\n  \"snapshots\": [\n    {\n      \"timestamp\": 1.0,\n      \"path\": \"/Users/user/project/snapshots/snapshot_1.0s.png\",\n      \"width\": 1920,\n      \"height\": 1080\n    },\n    {\n      \"timestamp\": 2.5,\n      \"path\": \"/Users/user/project/snapshots/snapshot_2.5s.png\",\n      \"width\": 1920,\n      \"height\": 1080\n    }\n  ]\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. retiam scaffold --json Response Schema"
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"status\": \"success\",\n  \"file\": \"MyScene.ts\",\n  \"absolutePath\": \"/Users/user/project/MyScene.ts\",\n  \"className\": \"MyScene\",\n  \"template\": \"math\"\n}"
+        }
+      ]
+    },
+    {
+      "id": "9-command-quick-reference-matrix",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "9. Command Quick-Reference Matrix"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Command",
+            "Primary Input",
+            "Default Target",
+            "Default Output Location",
+            "Output Format",
+            "`--json`",
+            "Primary Use Case"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`render`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Scene TS file"
+                },
+                {
+                  "text": "`src/main.ts`"
+                },
+                {
+                  "text": "`./outputs/video/`"
+                },
+                {
+                  "text": "MP4 / WebM video"
+                },
+                {
+                  "text": "❌"
+                },
+                {
+                  "text": "Production video creation"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`snapshot`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Scene TS file"
+                },
+                {
+                  "text": "*(Required)*"
+                },
+                {
+                  "text": "`./outputs/snapshot/`"
+                },
+                {
+                  "text": "PNG / WebP images"
+                },
+                {
+                  "text": "✅"
+                },
+                {
+                  "text": "Visual inspection & keyframing"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`scaffold`**",
+                  "type": "text"
+                },
+                {
+                  "text": "File path"
+                },
+                {
+                  "text": "`./NewScene.ts`"
+                },
+                {
+                  "text": "Current Working Dir"
+                },
+                {
+                  "text": "TypeScript scene"
+                },
+                {
+                  "text": "✅"
+                },
+                {
+                  "text": "Boilerplate & template setup"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`lint`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Scene TS file"
+                },
+                {
+                  "text": "*(Required)*"
+                },
+                {
+                  "text": "Terminal / stdout"
+                },
+                {
+                  "text": "Terminal / JSON"
+                },
+                {
+                  "text": "✅"
+                },
+                {
+                  "text": "AST sanity & async race checks"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`export`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Scene TS file"
+                },
+                {
+                  "text": "`src/main.ts`"
+                },
+                {
+                  "text": "`./outputs/embed/`"
+                },
+                {
+                  "text": "Standalone JS module"
+                },
+                {
+                  "text": "❌"
+                },
+                {
+                  "text": "Web component site embedding"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

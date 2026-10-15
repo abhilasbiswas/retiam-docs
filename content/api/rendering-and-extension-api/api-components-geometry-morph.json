@@ -1,0 +1,648 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-components-geometry-morph",
+  "title": "components / geometry / morph API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dualcontouringprocessor",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "DualContouringProcessor"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/morph/DualContouringProcessor.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/morph/DualContouringProcessor.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/DualContouringProcessor.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "DualContouringProcessor",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class DualContouringProcessor implements IMorphProcessor {\n    process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DualContouringProcessor` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; calls to `buildMeshBVH`, `this.extractTriangles`, `extendAABB`, `this.computeSDF`; return paths including `{ meshA, meshB, vertexCount: maxVertices, indicesCount: 0, customData: { sdfA, sdfB, res: R, boundsMin: aabbMin, cellSize } }`; 5 explicit loops. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/DualContouringProcessor.ts#L7)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.sdfResolution || 48",
+                    "[Line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/DualContouringProcessor.ts#L8)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "DualContouringProcessor.computeSDF: private computeSDF(px: number, py: number, pz: number, bvh: any): number",
+                    "Body operations (including nested callbacks): calls to `stack.pop`, `this.pointTriangleDistSq`, `stack.push`, `this.isInsideRaycast`; return paths including `1.0`, `dist`; 2 explicit loops.",
+                    "[Line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/DualContouringProcessor.ts#L67)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "DualContouringProcessor.isInsideRaycast: private isInsideRaycast(px: number, py: number, pz: number, bvh: any): boolean",
+                    "Body operations (including nested callbacks): calls to `stack.pop`, `this.rayIntersectsTriangle`, `stack.push`; return paths including `(intersections % 2) !== 0`; 2 explicit loops.",
+                    "[Line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/DualContouringProcessor.ts#L98)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "DualContouringProcessor.rayIntersectsTriangle: private rayIntersectsTriangle(px: number, py: number, pz: number, tri: any[]): boolean",
+                    "Body operations (including nested callbacks): return paths including `false`, `t > 1e-7`.",
+                    "[Line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/DualContouringProcessor.ts#L120)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "DualContouringProcessor.pointTriangleDistSq: private pointTriangleDistSq(px: number, py: number, pz: number, tri: any[]): number",
+                    "Body operations (including nested callbacks): return paths including `ap[0] ** 2 + ap[1] ** 2 + ap[2] ** 2`, `bp[0] ** 2 + bp[1] ** 2 + bp[2] ** 2`, `(p[0] - closest[0]) ** 2 + (p[1] - closest[1]) ** 2 + (p[2] - closest[2]) ** 2`.",
+                    "[Line 142](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/DualContouringProcessor.ts#L142)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "DualContouringProcessor.extractTriangles: private extractTriangles(mesh: WebGPUMesh): any[]",
+                    "Body operations (including nested callbacks): calls to `tris.push`; return paths including `tris`; 1 explicit loop.",
+                    "[Line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/DualContouringProcessor.ts#L179)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "morphprocessor",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MorphProcessor"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/morph/MorphProcessor.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/morph/MorphProcessor.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/MorphProcessor.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MorphResult",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "IMorphProcessor",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface MorphResult {\n    meshA: WebGPUMesh;\n    meshB: WebGPUMesh;\n    vertexCount: number;\n    indicesCount: number;\n    customData: any;\n}\nexport interface IMorphProcessor {\n    process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MorphResult` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "meshA: WebGPUMesh;",
+                    "—",
+                    "Required record/option field with declared type `WebGPUMesh`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/MorphProcessor.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "meshB: WebGPUMesh;",
+                    "—",
+                    "Required record/option field with declared type `WebGPUMesh`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/MorphProcessor.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertexCount: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/MorphProcessor.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "indicesCount: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/MorphProcessor.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "customData: any;",
+                    "—",
+                    "Required record/option field with declared type `any`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/MorphProcessor.ts#L11)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `IMorphProcessor` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/MorphProcessor.ts#L15)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "naiveprocessor",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "NaiveProcessor"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/morph/NaiveProcessor.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/morph/NaiveProcessor.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/NaiveProcessor.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "NaiveProcessor",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class NaiveProcessor implements IMorphProcessor {\n    process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `NaiveProcessor` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult",
+                    "—",
+                    "Implementation: `return { meshA, meshB, vertexCount: Math.min(meshA.vertices.length, meshB.vertices.length) / 3, indicesCount: Math.min(meshA.indices?.length || 0, meshB.indices?.length || 0), customData: null };`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/NaiveProcessor.ts#L8)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdfvolumetricprocessor",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SdfVolumetricProcessor"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/morph/SdfVolumetricProcessor.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/morph/SdfVolumetricProcessor.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SdfVolumetricProcessor.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "CACHED_MARCHING_CUBES_TRI_TABLE",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SdfVolumetricProcessor",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const CACHED_MARCHING_CUBES_TRI_TABLE: Int32Array;\nexport declare class SdfVolumetricProcessor implements IMorphProcessor {\n    process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SdfVolumetricProcessor` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; calls to `buildMeshBVH`, `this.extractTriangles`, `extendAABB`, `this.computeSDF`; long return expressions shown in the linked implementation; 4 explicit loops. [Source line 267](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SdfVolumetricProcessor.ts#L267)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.sdfResolution || 48",
+                    "[Line 268](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SdfVolumetricProcessor.ts#L268)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SdfVolumetricProcessor.computeSDF: private computeSDF(px: number, py: number, pz: number, bvh: any): number",
+                    "Body operations (including nested callbacks): calls to `stack.pop`, `this.pointTriangleDistSq`, `stack.push`, `this.isInsideRaycast`; return paths including `1.0`, `dist`; 2 explicit loops.",
+                    "[Line 342](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SdfVolumetricProcessor.ts#L342)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SdfVolumetricProcessor.isInsideRaycast: private isInsideRaycast(px: number, py: number, pz: number, bvh: any): boolean",
+                    "Body operations (including nested callbacks): calls to `stack.pop`, `this.rayIntersectsTriangle`, `stack.push`; return paths including `(intersections % 2) !== 0`; 2 explicit loops.",
+                    "[Line 384](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SdfVolumetricProcessor.ts#L384)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SdfVolumetricProcessor.rayIntersectsTriangle: private rayIntersectsTriangle(px: number, py: number, pz: number, tri: any[]): boolean",
+                    "Body operations (including nested callbacks): return paths including `false`, `t > 1e-7`.",
+                    "[Line 417](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SdfVolumetricProcessor.ts#L417)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SdfVolumetricProcessor.pointTriangleDistSq: private pointTriangleDistSq(px: number, py: number, pz: number, tri: any[]): number",
+                    "Body operations (including nested callbacks): return paths including `ap[0] ** 2 + ap[1] ** 2 + ap[2] ** 2`, `bp[0] ** 2 + bp[1] ** 2 + bp[2] ** 2`, `(p[0] - closest[0]) ** 2 + (p[1] - closest[1]) ** 2 + (p[2] - closest[2]) ** 2`.",
+                    "[Line 445](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SdfVolumetricProcessor.ts#L445)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SdfVolumetricProcessor.extractTriangles: private extractTriangles(mesh: WebGPUMesh): any[]",
+                    "Body operations (including nested callbacks): calls to `tris.push`; return paths including `tris`; 1 explicit loop.",
+                    "[Line 499](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SdfVolumetricProcessor.ts#L499)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "swarmprocessor",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SwarmProcessor"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/components/geometry/morph/SwarmProcessor.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/components/geometry/morph/SwarmProcessor.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SwarmProcessor.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SwarmProcessor",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class SwarmProcessor implements IMorphProcessor {\n    process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SwarmProcessor` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public process(meshA: WebGPUMesh, meshB: WebGPUMesh, options: MorphOptions): MorphResult",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Uint32Array`; calls to `this.sampleSurface`, `updateBounds`, `this.spatialSort`, `this.applyPermutation`; return paths including `{ meshA: sampledA, meshB: sampledB, vertexCount: particleCount, indicesCount: 0, customData: null }`; 3 explicit loops. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SwarmProcessor.ts#L7)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.particleCount || 20000",
+                    "[Line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SwarmProcessor.ts#L8)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SwarmProcessor.applyPermutation: private applyPermutation(mesh: WebGPUMesh, perm: Uint32Array, count: number)",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; calls to `newVerts.set`, `mesh.vertices.subarray`, `newNorms.set`, `mesh.normals.subarray`, `newUvs.set`, `mesh.uvs.subarray`, `mesh.vertices.set`, `mesh.normals.set` and additional helpers; 1 explicit loop.",
+                    "[Line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SwarmProcessor.ts#L54)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SwarmProcessor.sampleSurface: private sampleSurface(mesh: WebGPUMesh, targetCount: number): WebGPUMesh",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; return paths including `out`; 3 explicit loops.",
+                    "[Line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SwarmProcessor.ts#L70)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SwarmProcessor.spatialSort: private spatialSort(mesh: WebGPUMesh, bounds: any)",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; calls to `expandBits`, `indices.sort`, `newVerts.set`, `mesh.vertices.subarray`, `newNorms.set`, `mesh.normals.subarray`, `newUvs.set`, `mesh.uvs.subarray` and additional helpers; return paths including `v`, `{ i, morton }`; 1 explicit loop.",
+                    "[Line 136](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/morph/SwarmProcessor.ts#L136)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

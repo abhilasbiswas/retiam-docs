@@ -1,0 +1,203 @@
+{
+  "features/anchor": {
+    "description": "Compare a transformed vertex’s world coordinate with a bounds-anchor query, then rotate a child around the chosen world point.",
+    "walkthrough": [
+      "A rectangle is attached to another rectangle, so its local vertex must pass through the parent transform. `Entity.localToWorld` produces the blue marker’s world coordinate.",
+      "The red marker calls getPosition with that vector, whose argument is interpreted as a bounds anchor. That is a different contract from supplying a world point. The following rotation uses `{ pivot: p }` to state the world-space reference explicitly."
+    ],
+    "experiments": [
+      "Use the dedicated transform lab to compare a normalized local anchor with a world pivot.",
+      "Change the parent placement and verify that the converted vertex coordinate follows it."
+    ]
+  },
+  "features/delay_demo": {
+    "walkthrough": [
+      "Pointer movement updates a current target position. `Delay` samples clones of that vector, preventing later mutations from rewriting recorded history.",
+      "Five probes read positions from 100 to 500 milliseconds earlier. The white circle follows the current pointer while the colored circles follow interpolated historical values."
+    ],
+    "experiments": [
+      "Move the pointer rapidly, then stop and watch the followers settle at different times.",
+      "Increase the delay capacity and probe offsets together to create a longer visible trail."
+    ]
+  },
+  "features/dynamic_plot": {
+    "description": "Zoom a sine plot across changing numeric ranges while the physical axes stay the same size.",
+    "walkthrough": [
+      "The graph samples sin(5x) on axes whose initial ranges are small. Width and height describe the physical scene region, separately from the numeric range.",
+      "The updater changes both axis ranges by several orders of magnitude. dynamicGrid adapts subdivisions as the mathematical scale changes; the function itself remains the same."
+    ],
+    "experiments": [
+      "Disable dynamicGrid and compare the readability of the same zoom cycle.",
+      "Change the sine frequency while keeping the zoom function fixed."
+    ]
+  },
+  "features/dynamic_surface_3d": {
+    "description": "Animate a sampled radial ripple while changing its coordinate range and orbiting the three-dimensional view.",
+    "walkthrough": [
+      "`SurfaceGraph3D` samples a time-dependent radial ripple on ThreeDAxes. A heatmap makes height variation readable alongside the geometric shape.",
+      "The grid has 75 segments in each parameter direction. The updater changes the axes’ X and Z ranges while requesting redraws, and the orbit controller exposes the surface from different angles."
+    ],
+    "experiments": [
+      "Reduce the segment counts and inspect the tradeoff between sampling detail and update work.",
+      "Remove time from the ripple expression to compare a static surface under changing framing."
+    ]
+  },
+  "features/feature_brace": {
+    "walkthrough": [
+      "The equation is centered and the camera moves closer before the annotation appears. `Tex.getPaths` exposes the rendered glyph paths used to choose a subset.",
+      "`Brace` measures the selected first five paths and places a downward brace. getText creates a caption attached to that annotation; the caption is authored text, so it should be checked against the selected glyphs after an equation changes."
+    ],
+    "experiments": [
+      "Change the selected glyph slice and compare which part of the equation the brace covers.",
+      "Adjust sharpness and inspect how the brace’s curved ends change."
+    ]
+  },
+  "features/feature_plot": {
+    "walkthrough": [
+      "Sine and cosine graphs read the same phase and frequency trackers. Their styling distinguishes a gradient-filled path from a dashed comparison curve.",
+      "Entity updaters resample both graphs, while alwaysRedraw regenerates the displayed formula. The sequence animates phase, then frequency, then returns both trackers to their initial values."
+    ],
+    "experiments": [
+      "Change only phase and inspect the horizontal shift without changing the number of oscillations.",
+      "Change only frequency and compare the wavelength of both functions."
+    ]
+  },
+  "features/feature_vector_field": {
+    "walkthrough": [
+      "The default exported scene displays a time-dependent planar field on Axes. Its formula combines rotation with sinusoidal perturbations.",
+      "normalize keeps arrow lengths consistent while the field direction changes. updateField evaluates the current formula with the supplied time; the same source also contains a spatial field scene when its exported class is selected."
+    ],
+    "experiments": [
+      "Turn normalization off and compare how arrow length now expresses magnitude.",
+      "Increase xStep and yStep to inspect the same field with fewer sampled arrows."
+    ]
+  },
+  "features/implicit2d": {
+    "description": "Fill and animate an implicit heart curve by updating its sampled scalar field.",
+    "walkthrough": [
+      "The heart is defined by an implicit function, and operator `<` selects the region where its value is negative. Fill and stroke make both the interior and the boundary visible.",
+      "A time-dependent beat rescales the function’s coordinates before evaluation. updateCurve rebuilds the sampled region as that mathematical input changes."
+    ],
+    "experiments": [
+      "Change the operator and inspect which side of the boundary is filled.",
+      "Reduce resolution and compare the edge detail against the update cost."
+    ]
+  },
+  "features/introducer_showcase": {
+    "walkthrough": [
+      "This is a staged gallery. sectionTitle briefly introduces a family, the scene presents several targets, and exit fades them before removing them. Follow one section at a time: each target has comparable geometry, while the entrance operation changes how it arrives. Camera coordinates and shape sizes are larger than those in the first-scene guide.",
+      "The first group compares state-based entrances: SlideIn varies direction, SpinIn varies the rotation axis, GrowFromEdge chooses a fixed boundary, and clipping/reveal effects control the visible portion. These animations can change transforms or reveal state without replacing the underlying shape. Direction vectors are scene-space choices; angle values are radians and duration values are milliseconds.",
+      "The next group compares multi-part introductions such as WaveIn, CascadeIn, StaggerWrite and ScatterAssemble. Child order and lag affect what you see. In the ShimmerIn example, several circle children have emissive material settings, so the bright sweep depends on both the animation and material configuration.",
+      "The custom group isolates options that are easy to confuse: EraseIn varies cursorWidth and whether the fill appears at the end; TraceBack varies fillDelay; TelegraphThenReveal displays a small preliminary state before the main reveal. MaterializeFrom is applied to a parent with strip children. Copy the small target construction as well as the animation call when trying one of these effects.",
+      "The Typewriter section runs operation arrays rather than a single transform interpolation. It compares cursor shapes, then types, pauses, deletes and replaces text. charDelay and cursorBlinkMs are milliseconds; jitter modifies typing rhythm, and randomSeed makes a chosen jitter sequence repeatable. keepCursor controls the cursor after the operation sequence has finished.",
+      "The final grid runs many entrances together. Its factory list repeats some animation families with different targets and options, so the grid is a composition example rather than a count of unique APIs. Reuse this structure for a gallery, but reduce the target count when teaching one effect and remove or destroy retired objects according to their ownership."
+    ],
+    "experiments": [
+      "In the EraseIn comparison, give every target the same cursorWidth and vary only fillAtEnd. Watch the interior after the outline has appeared.",
+      "In the Typewriter sequence, set jitter to zero and retain the same delays. Then restore jitter with a fixed randomSeed and compare repeated runs."
+    ]
+  },
+  "features/mat_folding_procedural": {
+    "walkthrough": [
+      "The mat is one ParametricModel sampled with 96 segments along its length and 48 across its width, producing 4,753 grid vertices. Its initial callback describes a flat 14 by 7 surface. Checkerboard colors make deformation easier to read, and an OrbitCameraController lets you inspect the folds from another angle.",
+      "evalFold maps a grid coordinate and progress t to a new Vec3. The four modes use different constructions: a roll follows a curved profile, a book fold rotates part of the sheet, an accordion alternates folds, and the diagonal fold measures distance from a crease axis before rotating the flap. The connectivity of the original grid stays the same.",
+      "An always callback advances animTime using the millisecond delta. It converts the repeating 0 → 1 → 0 triangle wave through Rate.easeInOutCubic, changes the mode after a whole cycle, and updates the model’s parametric positions. This is prescribed vertex motion: no cloth forces, collision constraints or automatic Morph matching determine the shape.",
+      "The HTML panel exposes the same inputs. Scrubbing chooses manualT and disables automatic oscillation; mode buttons select the mapping. The percentage label describes fold progress, not simulation time. Set t to a fixed value before comparing mesh resolution, otherwise both motion and sampling change at once.",
+      "More segments improve the sampled crease and curve, while increasing CPU evaluation and GPU uploads. The source’s 60 FPS badge is a label, not a measurement or guarantee. Measure frame time on the target device, and retain a stable grid topology when animation only needs positions to change.",
+      "The scene also creates DOM controls and keeps JavaScript state outside the mesh. When integrating the technique into an application, own those controls alongside the scene, remove their listeners on teardown, and reset animTime, manualT and mode selection when defining restart behavior."
+    ],
+    "experiments": [
+      "Pause oscillation, choose the book fold and scrub from 0% to 100%. Orbit to view the same crease from the side.",
+      "Reduce uSegments and vSegments together, then inspect a nearly closed diagonal fold. Compare visible faceting and frame cost at the same progress value."
+    ]
+  },
+  "features/move_vs_moveto_demo": {
+    "description": "Place scaled rectangles with a bounds anchor, then attach corners using snapTo. The current source demonstrates move and snapTo rather than a moveTo comparison.",
+    "walkthrough": [
+      "The first rectangle is doubled in size and moved so its RIGHT anchor meets a target position. A vertical guide makes that alignment visible.",
+      "The remaining rectangles use snapTo to match their UL corners with preceding DR corners. Their scale is set before alignment, so the chosen points reflect transformed bounds."
+    ],
+    "experiments": [
+      "Remove the scale changes and compare the resulting corner alignment.",
+      "Change the source and target corner directions independently in snapTo."
+    ]
+  },
+  "features/multi_scene_isolation": {
+    "description": "Select between two exported Scene classes in one source module. The documentation viewer runs each selected class in its own fresh frame.",
+    "walkthrough": [
+      "SceneA contains a rotating box and torus. SceneB contains a rotating circle whose update also changes scale. Use the scene selector to choose the exported class.",
+      "The current SceneB callback calls Transform.scale repeatedly, which multiplies scale on every update. Use setScale when implementing an absolute breathing size; this distinction matters when copying the example."
+    ],
+    "experiments": [
+      "Select SceneB and replace its scale call with setScale to compare absolute size with cumulative multiplication.",
+      "Change one scene’s background and verify that the other exported scene keeps its own setup."
+    ]
+  },
+  "features/parametric_2d": {
+    "description": "Draw a two-dimensional spiral from separate x(t) and y(t) parameter functions.",
+    "walkthrough": [
+      "Separate x(t) and y(t) functions describe a planar spiral. Axes map their numeric output into the scene, while tRange chooses how much of the trajectory is sampled.",
+      "Two hundred samples approximate the curve over two full angular turns. `Create` reveals the resulting geometry; it does not change the mathematical function during playback."
+    ],
+    "experiments": [
+      "Halve the parameter range and predict how much of the spiral remains.",
+      "Reduce samples and inspect the approximation around tighter bends."
+    ]
+  },
+  "features/parametric_3d": {
+    "description": "Orbit a closed spatial curve whose X and Z coordinates trace a circle while its Y coordinate oscillates five times around that route.",
+    "walkthrough": [
+      "The three coordinate functions use 3 cos(t), 0.5 cos(5t) and 3 sin(t). The Y component oscillates rather than increasing steadily, so the current source produces a wavy closed ring rather than a rising helix.",
+      "Three hundred samples represent the route and a glow path effect styles its stroke. The orbit camera reveals the height variation that a front view can hide."
+    ],
+    "experiments": [
+      "Replace the Y function with 0.5*t to make an actual rising helix.",
+      "Change the frequency five while preserving the circular X and Z functions."
+    ]
+  },
+  "features/typewriter_showcase": {
+    "walkthrough": [
+      "The active source currently runs the type → delete → retype example. Most other showcase sections, including the cursor gallery and final card, are commented out. An empty centered Text at fontSize 3.6 is the live target, viewed with the camera at z = 30.",
+      "One Typewriter receives five operations. It types “Hello, World!” with a 68 ms character delay, pauses for 800 ms, deletes six trailing characters at 42 ms each, types “Retiam!” at 74 ms each, and holds the result for 1,000 ms. Deleting six removes “World!” and retains the prefix.",
+      "The type operations use jitter and explicit randomSeed values. The delay establishes the pace; jitter perturbs individual steps within that rhythm. A seed helps reproduce that schedule. Keep font loading settled before comparing typing runs, because Text must build its glyph outlines as the string changes.",
+      "The pipe cursor blinks every 480 ms and keepCursor is false. Cursor lifetime is distinct from the final Text content: the letters remain when typing finishes, while the cursor is retired. Awaiting Scene.play waits for the complete operation sequence rather than for the first character.",
+      "Use this pattern for a caption that corrects itself or a terminal-style explanation. For video authoring, make every pause part of the operation array or scene clock. If you enable a commented gallery section, also bring back its target placement and cleanup; it was designed for a different layout, not simply as an extra line in this compact preview."
+    ],
+    "experiments": [
+      "Change the delete count from 6 to 5. Notice the retained W before the replacement and use that to understand trailing deletion.",
+      "Set both type operations’ jitter to zero, then change cursorBlinkMs to 0. Compare fixed typing cadence with a solid cursor without changing the text."
+    ]
+  },
+  "font/google_font": {
+    "walkthrough": [
+      "The Text options name Fredericka the Great as the font source. This is a built-in alias: FontResolver first requests /src/assets/fonts/FrederickatheGreat-Regular.ttf. The documentation includes that file, so this example does not need Google Fonts to render its original lettering.",
+      "writeAnim reveals a two-line label. The line break, font metrics and fontSize affect the resulting geometry and its measured bounds. The camera is placed at z = 100, and Camera2DController lets you pan or zoom to inspect the outlines.",
+      "If the local alias cannot be fetched, the resolver falls back to the Google Fonts service. A different, unrecognized family name uses that service directly. In your own application, host the selected font explicitly when you need offline rendering, and verify that its URL returns font bytes rather than the application's HTML fallback."
+    ],
+    "experiments": [
+      "Replace Fredericka the Great with the bundled firacode alias and compare the lettering, line spacing and bounds.",
+      "Use an explicit locally hosted font URL, then inspect the network response to verify the binary file is served."
+    ]
+  },
+  "geometry_raytracing_3d/cornell_box": {
+    "walkthrough": [
+      "The scene enables ray tracing and loads the bundled OBJ model before applying a scale and translation. A stationary scene gives progressive rendering a stable view.",
+      "If model loading fails, the fallback creates reflective spheres with different material settings. The object called glassSphere currently sets transmission to zero, so its name alone does not establish a transmitting glass material."
+    ],
+    "experiments": [
+      "Keep the camera still and compare the image as rendering accumulates.",
+      "Inspect the fallback material settings and enable transmission deliberately when experimenting with glass."
+    ]
+  },
+  "interaction/interaction_event": {
+    "description": "Drag and hover a pickable three-dimensional model while callbacks change its emissive and base colors.",
+    "walkthrough": [
+      "The mesh becomes a pickable Model with an InteractionComponent. The component enables dragging and registers separate hover and drag lifecycle callbacks.",
+      "Hover raises emission strength; dragging changes the base color until drag end restores it. Each behavior has a different event trigger, so the visual response shows which interaction state is active."
+    ],
+    "experiments": [
+      "Hover without dragging, then drag outside the original sphere position and inspect the different feedback.",
+      "Change only emission strength, preserving the base color, to distinguish glow from color tint."
+    ]
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-mathematical-foundations-fields-and-noise",
+  "title": "Mathematical Foundations, Spatial Fields & Noise Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/MATHEMATICAL_FOUNDATIONS_FIELDS_AND_NOISE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/MATHEMATICAL_FOUNDATIONS_FIELDS_AND_NOISE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/MATHEMATICAL_FOUNDATIONS_FIELDS_AND_NOISE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Noise](/api-math-noise#noise), [Transform](/api-core-transform#transform), [FourierTransform](/api-math#fouriertransform), [SVG](/api-entities-composites-svg#svg), [Compute](/api-compute#compute), [ISpatialField](/api-math-fields#spatialfield), [Field](/api-math-fields#standardfields), [PerlinNoise](/api-math-noise#perlinnoise), [SimplexNoise](/api-math-noise#simplexnoise), [WorleyNoise](/api-math-noise#worleynoise), [ValueNoise](/api-math-noise#valuenoise), [WhiteNoise](/api-math-noise#whitenoise), [Color](/api-math#color), [Brace](/api-entities-composites-geometry#brace), [Arrow](/api-entities-composites-geometry#arrow), [Arrow3D](/api-entities-composites-geometry#arrow3d), [PixelGrid](/api-entities-composites-geometry#pixelgrid), [BooleanOps](/api-entities-composites-geometry#booleanops), [Union](/api-entities-composites-geometry#booleanops), [Difference](/api-entities-composites-geometry#booleanops), [Intersection](/api-entities-composites-geometry#booleanops)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-mathematical-core",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Mathematical Core"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam is engineered from the ground up for rigorous mathematical animations, scientific simulations, and procedural graphics. Its mathematical architecture spans four major components:"
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "Mathematical core",
+              "children": [
+                {
+                  "label": "Discrete Fourier transform",
+                  "description": "Epicycles and complex numbers"
+                },
+                {
+                  "label": "Spatial vector fields",
+                  "description": "Three-dimensional and conformal fields"
+                },
+                {
+                  "label": "Procedural noise",
+                  "description": "Perlin, Simplex, Worley and fBm"
+                },
+                {
+                  "label": "Geometric composites",
+                  "description": "Braces, vectors and pixel grids"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-discrete-fourier-transform-epicycles-fouriertransform-ts-src-engine-math-fouriertransform-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Discrete Fourier Transform & Epicycles ([FourierTransform.ts](../src/engine/math/FourierTransform.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "To recreate the iconic mathematical animations pioneered by 3Blue1Brown—where arbitrary drawn shapes or SVG paths are traced by a chain of rotating epicycle circles—Retiam implements a high-performance DFT engine."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Mathematical Formulation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given a sequence of $N$ complex numbers $z_k = x_k + i y_k$ sampled along any closed or open 2D path, the Discrete Fourier Transform evaluates the complex coefficients $c_n$:"
+        },
+        {
+          "type": "math",
+          "tex": "c_n = \\frac{1}{N} \\sum_{k=0}^{N-1} z_k \\cdot e^{-i \\frac{2\\pi n k}{N}} \\quad \\text{for } n \\in \\left[-\\frac{N}{2}, \\frac{N}{2}\\right]"
+        },
+        {
+          "type": "paragraph",
+          "text": "The continuous parametric curve $Z(t)$ is reconstructed at phase $t \\in [0, 1]$ via the Fourier series:"
+        },
+        {
+          "type": "math",
+          "tex": "Z(t) = c_0 + \\sum_{n \\neq 0} c_n \\cdot e^{i 2\\pi n t}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Epicycle Sorting Modes"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`magnitude` (Default)**: Sorts harmonic coefficients in descending order of their radius $|c_n|$. The largest dominant circles rotate at the base of the chain, while high-frequency micro-variations refine the tip.",
+            "**`frequency`**: Orders harmonics by alternating frequencies ($0, +1, -1, +2, -2, \\dots$).",
+            "**`none`**: Retains standard DFT array layout."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Sample points from any SVG or vector path\nconst pathPoints = path.getSampledPoints(500);\n\n// Compute Fourier coefficients\nconst dft = new FourierTransform(pathPoints, 100, 'magnitude');\n\n// Evaluate epicycle vector chain at phase t = 0.45\nconst epicycles = dft.getEpicycles(0.45);\n// epicycles[0] is the base circle; epicycles[N-1].tip is the drawing pen coordinate"
+        }
+      ]
+    },
+    {
+      "id": "3-spatial-fields-conformal-mapping-spatialfield-ts-src-engine-math-fields-spatialfield-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Spatial Fields & Conformal Mapping ([SpatialField.ts](../src/engine/math/fields/SpatialField.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Vector fields in Retiam are represented by the [`ISpatialField`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/fields/SpatialField.ts#L15-L40) interface, mapping $\\mathbb{R}^3 \\times [0, 1] \\to \\mathbb{R}^3$:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Core Capabilities"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Zero-Allocation Buffer Evaluation**: For high-performance particle swarms and dense vector grids, `evaluateBuffer` mutates continuous `Float32Array` buffers directly without allocating intermediate objects:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "field.evaluateBuffer(vertexData, 3, vertexCount, time);"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Piping & Composition**: Fields can be chained sequentially:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const combinedField = fieldA.pipe(fieldB, fieldC);"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Temporal Blending**: Linearly interpolates two vector fields over time factor $\\alpha$:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const blended = fieldA.blend(fieldB, 0.5);"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Spatial Falloff Masks**: Localizes field influences within a spherical radius using `smoothstep`, `linear`, or `gaussian` decay:"
+          ],
+          "start": 4
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const localizedField = swirlField.withFalloff({\n       center: [0, 0, 0],\n       radius: 4.0,\n       falloff: 'smoothstep'\n   });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Standard Field Types ([StandardFields.ts](../src/engine/math/fields/StandardFields.ts))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Conformal Mappings**: Maps complex functions $f(z)$ while strictly preserving angles (Cauchy-Riemann equations $\\frac{\\partial u}{\\partial x} = \\frac{\\partial v}{\\partial y}$ and $\\frac{\\partial u}{\\partial y} = -\\frac{\\partial v}{\\partial x}$).",
+            "**Vortex / Swirl Fields**: Rotates space around a singularity with angular velocity proportional to $1 / r^k$.",
+            "**Source / Sink Fields**: Divergent or convergent radial vector flow fields.",
+            "**Electric Dipole Fields**: Exact electrostatic field generated by positive and negative point charges."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-procedural-noise-subsystem",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Procedural Noise Subsystem"
+        },
+        {
+          "type": "paragraph",
+          "text": "Located in [`src/engine/math/noise/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/noise):"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Noise Generators"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`PerlinNoise`**: Classic Improved Perlin gradient noise with quintic Hermite smoothing ($6t^5 - 15t^4 + 10t^3$) avoiding lattice directional artifacts.",
+            "**`SimplexNoise`**: Higher dimensional simplex lattice noise ($O(N^2)$ evaluation complexity vs $O(2^N)$ for Perlin).",
+            {
+              "text": "**`WorleyNoise` (Cellular Noise)**: Computes distances to pseudo-random Poisson feature points:",
+              "children": [
+                "$F_1$: Distance to nearest cell point (Voronoi cell interior).",
+                "$F_2 - F_1$: Cell boundaries (stone textures, biological membranes, water caustics)."
+              ]
+            },
+            "**`ValueNoise`**: Cubic interpolated lattice value noise.",
+            "**`WhiteNoise`**: Fast pseudo-random white noise."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Fractal Brownian Motion (fBm) & Turbulence"
+        },
+        {
+          "type": "paragraph",
+          "text": "All noise generators implement multi-octave fractal synthesis:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{fBm}(\\mathbf{x}) = \\sum_{i=0}^{\\text{octaves}-1} \\text{gain}^i \\cdot \\text{noise}\\left(\\mathbf{x} \\cdot \\text{lacunarity}^i\\right)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Domain Warping**: Feeding one noise function into another to generate fluid-like marble, atmospheric clouds, and turbulent smoke:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{q} = \\big(\\text{fBm}(\\mathbf{p}), \\text{fBm}(\\mathbf{p} + \\vec{\\delta})\\big)"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Color} = \\text{fBm}(\\mathbf{p} + 4.0 \\cdot \\mathbf{q})"
+        }
+      ]
+    },
+    {
+      "id": "5-mathematical-composite-entities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Mathematical Composite Entities"
+        },
+        {
+          "type": "paragraph",
+          "text": "Located in [`src/engine/entities/composites/geometry/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`Brace`**: Manim-style curly bracket attached to entities or coordinate ranges. Automatically calculates curved Bézier tips and provides a dedicated anchor point for LaTeX text labels.",
+            "**`Arrow` & `Arrow3D`**: Vectors with automatic scale-independent heads that maintain optimal visual proportions regardless of arrow shaft thickness.",
+            "**`PixelGrid`**: Displays 2D numeric matrices or convolution filters as discrete, animated pixel grids with value labels, borders, and heatmaps.",
+            "**`BooleanOps`**: Evaluates 2D constructive polygon operations (Union, Difference, Intersection, XOR) on arbitrary polygonal paths."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,436 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-effects",
+  "title": "Effects API",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/EFFECTS.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/EFFECTS.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/EFFECTS.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [PathEffect](/api-material#patheffect), [FillEffect](/api-material#filleffect), [Builder](/api-utils#builder), [Color](/api-math#color), [TracePath](/api-entities-primitives-3d#tracepath), [Complex](/api-math#complex), [SVG](/api-entities-composites-svg#svg), [Circle](/api-entities-primitives-2d#circle), [Poly](/api-entities-primitives-2d#poly), [Path](/api-entities-primitives-2d#path), [Entity](/api-core-entity#entity), [Rect](/api-entities-primitives-2d#rect), [Ellipse](/api-entities-primitives-2d#ellipse), [Line3D](/api-entities-primitives-3d#line3d), [Fill](/api-core#fill)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam features a composable, fluent builder API for generating custom WGSL fragment shaders for both strokes (`PathEffect`) and fills (`FillEffect`). These effects are injected directly into the rendering pipeline, allowing complex, performant procedural styling without manually writing WGSL."
+        }
+      ]
+    },
+    {
+      "id": "overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "The effects system uses a **Builder Pattern**. You can chain multiple effects sequentially. Under the hood, the engine compiles the chain into uniquely-named WGSL helper functions, passing the output of each stage as the input to the next."
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "import { PathEffect, FillEffect, Color } from \"retiam\";\n\n// 1. Single effect\nconst dashed = PathEffect.Dashed(0.5, 0.3);\n\n// 2. Chained effects (Order matters!)\nconst trail = PathEffect.Dashed([1, 1, 2, 1], 0, true)\n                        .Glow(0.005)\n                        .Taper(0, 1)\n                        .Comet(1);\n\n// 3. Applying to entities\nconst trace = new TracePath({\n    target: dot,\n    shader: trail // Can be passed to any entity that accepts `shader`\n});"
+        }
+      ]
+    },
+    {
+      "id": "patheffect-strokes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PathEffect (Strokes)"
+        },
+        {
+          "type": "paragraph",
+          "text": "`PathEffect` manipulates the stroke of lines, paths, and parametric curves. It provides control over color, alpha, thickness, and patterns along the path length (`t`)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Standard Effects"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`Solid()`",
+                  "type": "text"
+                },
+                {
+                  "text": "The default crisp, solid line."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Gradient(colors)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Interpolates between an array of `Color` objects along the path length."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Dashed(dash, gap, offset?, anchorEnd?)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Simple dash-gap pattern based on world-space lengths."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Dashed(pattern[], offset?, anchorEnd?)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Complex dash pattern array (e.g. `[on, off, on, off]`). Odd-length arrays auto-double per SVG spec."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`DotDash(dot, dash, gap, offset?, anchorEnd?)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Alternating dot-dash pattern."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "**Note on Anchoring:** `Dashed` and `DotDash` support an `anchorEnd` boolean parameter. When `true`, the pattern distance is measured from the **tail** (end) of the path instead of the head. This is essential for dynamic paths (like `TracePath`) to prevent the dashes from \"swimming\" or shifting as the path grows."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Width & Falloff Effects"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`Glow(coreRatio)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Softens the stroke edges, leaving a solid core and a soft falloff."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Taper(startLen, endLen)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Smoothly ramps the stroke width from thin to full at the start/end regions."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Wave(amp, freq)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Sinusoidal width modulation that creates a wavy stroke edge."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Comet(fadeLength)`",
+                  "type": "text"
+                },
+                {
+                  "text": "A trail effect that tapers width and fades alpha toward the tail (t=0). Ideal for `TracePath`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`FadeEnds(inLen, outLen)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Fades the stroke alpha smoothly at both endpoints."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Opacity(alpha)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Simple alpha multiplier for translucent strokes."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "filleffect-fills",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "FillEffect (Fills)"
+        },
+        {
+          "type": "paragraph",
+          "text": "`FillEffect` manipulates the interior fill of 2D primitives like `Circle`, `Poly`, and closed `Path`s. It operates on local 2D spatial coordinates (`localPos`)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Patterns & Gradients"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`Solid()`",
+                  "type": "text"
+                },
+                {
+                  "text": "The default solid fill."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`GradientLinear(colors, sx, sy, ex, ey)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Linear gradient between two points in local space."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`GradientRadial(colors, cx, cy, r)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Radial gradient expanding from a center point."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Checkerboard(c1, c2, size)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Classic checkerboard pattern."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Stripes(c1, c2, size, angle)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Directional stripe pattern at any angle (in degrees)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Dots(dotColor, bgColor, r, spacing)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Polka-dot grid layout."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Color & Alpha Adjustments"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`Vignette(intensity, radius)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Radial darkening effect toward the edges."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Tint(color, strength)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Color overlay blending."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Opacity(alpha)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Simple alpha multiplier."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "standalone-combining-cascading",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Standalone Combining & Cascading"
+        },
+        {
+          "type": "paragraph",
+          "text": "Multiple effect instances can be combined into a single unified chain using `PathEffect.combine()` and `FillEffect.combine()`:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "// Cascades gradient -> glow -> dashed into one single compiled shader\nconst cascadedStroke = PathEffect.combine([\n    PathEffect.Gradient([new Color(0, 1, 1), new Color(1, 0, 1)]),\n    PathEffect.Glow(0.3),\n    PathEffect.Dashed(0.5, 0.2)\n]);\n\n// Cascades checkerboard -> linear gradient\nconst cascadedFill = FillEffect.combine([\n    FillEffect.Checkerboard(new Color(0.2, 0.2, 0.2), new Color(0.3, 0.3, 0.3), 0.5),\n    FillEffect.GradientLinear([new Color(1, 0, 0, 0.5), new Color(0, 0, 1, 0.5)], 0, 0, 1, 1)\n]);\n\n// Both compile to WGSL strings standalone (no Entity required):\nconst strokeWgsl = cascadedStroke.compile();\nconst fillWgsl = cascadedFill.compile();"
+        }
+      ]
+    },
+    {
+      "id": "integration-with-path-and-primitives",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Integration with Path and Primitives"
+        },
+        {
+          "type": "paragraph",
+          "text": "When creating a `Path`, `Rect`, `Circle`, `Ellipse`, or `SVG`, you pass effects directly via `strokeShader` and `fillShader`. Both accept a single effect or an array of effects to cascade automatically:"
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "const path = new Path(\"M 0 0 L 10 0\", {\n    strokeShader: [\n        PathEffect.Gradient([new Color(0, 1, 1), new Color(1, 0, 1)]),\n        PathEffect.Dashed(0.5, 0.2)\n    ],\n    fillShader: FillEffect.GradientRadial(\n        [new Color(1, 1, 0, 0.8), new Color(1, 0, 0, 0)],\n        0, 0, 2\n    )\n});"
+        }
+      ]
+    },
+    {
+      "id": "custom-wgsl-integration",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Custom WGSL Integration"
+        },
+        {
+          "type": "paragraph",
+          "text": "Entities that accept a `shader` parameter (like `TracePath`, `Path`, `Line3D`) accept either a compiled `PathEffect`/`FillEffect` instance, or a raw WGSL string for fully custom behavior."
+        },
+        {
+          "type": "paragraph",
+          "text": "If providing raw WGSL:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Path Shaders** must implement: `fn pathEffect(t: f32, total_arc_len: f32, w: f32, col: vec4f) -> vec4f`",
+            "**Fill Shaders** must implement: `fn fillEffect(localPos: vec2f, col: vec4f) -> vec4f`"
+          ]
+        }
+      ]
+    }
+  ]
+}

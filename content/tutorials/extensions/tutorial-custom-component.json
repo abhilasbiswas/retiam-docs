@@ -1,0 +1,127 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tutorial-custom-component",
+  "title": "Create and use a custom component",
+  "group": "Extending Retiam",
+  "summary": "Build an attachable rotation behavior, then pause and remove it without recreating its entity.",
+  "prerequisites": [
+    "[Entities and ownership](/entities)",
+    "[Lifecycle and resources](/lifecycle-resources)"
+  ],
+  "outcome": "A rotating tile with a component that can pause, resume and detach.",
+  "difficulty": "intermediate",
+  "estimatedMinutes": 20,
+  "sections": [
+    {
+      "id": "result",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "What you will build"
+        },
+        {
+          "type": "paragraph",
+          "text": "A Turntable component updates the transform of any compatible entity. The scene owns the tile; the component owns its behavior. Click the tile to toggle enabled in the complete lab."
+        }
+      ]
+    },
+    {
+      "id": "behavior",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Implement the update contract"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "class Turntable extends Component {\n  constructor(public radiansPerSecond = 0.7) { super(); }\n  update(_time: number, dt: number) {\n    this.entity.rotate(this.radiansPerSecond * dt / 1000);\n  }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "update receives elapsed time and delta time in milliseconds. Convert dt to seconds for a speed specified in radians per second. Use the supplied delta instead of assuming a fixed frame rate."
+        }
+      ]
+    },
+    {
+      "id": "attach",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Attach and control one instance"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const behavior = tile.addComponent(new Turntable());\nbehavior.enabled = false; // Preserve attachment and state.\nbehavior.enabled = true;\ntile.removeComponent(behavior); // Invoke onDestroy and detach."
+        },
+        {
+          "type": "paragraph",
+          "text": "addComponent sets entity before calling onInit. The entity may still be detached from a scene, so onInit cannot assume a device or composer exists. Pass dependencies explicitly or wait for attachment. enabled controls update calls; it does not allocate another component."
+        }
+      ]
+    },
+    {
+      "id": "complete",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Try the complete component"
+        },
+        {
+          "type": "example",
+          "example": "labs/workshop-component"
+        },
+        {
+          "type": "paragraph",
+          "text": "The lab enables continuous updates so the component receives frames while the scene has no scheduled animation. Setting enabled to false freezes rotation. Removing a component also removes it from the optimized update list."
+        }
+      ]
+    },
+    {
+      "id": "cleanup",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Release owned work"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use onInit for subscriptions that only require the entity. Retain listener removers and task handles, then release them in onDestroy. The uniform-shader lesson shows a BufferOwner component for allocations. Changing plain behavior parameters needs no shader rebuild; GPU-facing components must maintain their version and shaderVersion contracts. See [Component](/api-core#component)."
+        }
+      ]
+    },
+    {
+      "id": "practice-and-next",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Practice and continue"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Reverse radiansPerSecond.",
+            "Replace the click toggle with removeComponent, then attach a fresh instance.",
+            "Attach the same behavior type to two different tiles using separate instances."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Check the result: A disabled component should stop rotating while remaining queryable. If all frames stop, inspect continuous rendering and invalidation."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Write a custom shader](/tutorial-custom-shader). Use the [tutorial index](/tutorials) to choose another project."
+        }
+      ]
+    }
+  ]
+}

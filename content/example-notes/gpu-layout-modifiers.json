@@ -1,0 +1,222 @@
+{
+  "compute_shaders/shader_plasma": {
+    "description": "Paint an animated plasma effect with a fragment Shader on a rectangular surface.",
+    "walkthrough": [
+      "The quad supplies UV coordinates; the WGSL fragment body recenters them and corrects for the viewport aspect ratio. Four warped sine-wave layers contribute glowing rings, and view.time is converted from milliseconds to seconds.",
+      "Shader supplies the surrounding rendering contract, including finalColor. This demo does not dispatch a ComputeKernel: use it when each visible pixel can be calculated independently from UV and time."
+    ],
+    "experiments": [
+      "Change the loop limit from 5 to 3 and compare the number of overlapping ring layers.",
+      "Replace 0.05 / abs(d) with 0.05 / max(abs(d), 0.01) to limit the brightness near a ring."
+    ]
+  },
+  "compute_shaders/shader_raymarchedhallway": {
+    "description": "Build a repeating tunnel inside a fragment shader and shade it by marching distance.",
+    "walkthrough": [
+      "userFunctions defines a box distance field repeated through fract(p). The fragment body casts a ray for each UV coordinate, advances by the field distance, and stops after 80 steps, a close hit, or a distance of 50.",
+      "The virtual camera inside the shader is separate from the Retiam camera viewing the quad. Rotating rd.xy requires constructing a new vec3 in WGSL; assigning directly to a multi-component swizzle is not supported."
+    ],
+    "experiments": [
+      "Reduce the iteration limit and compare distant detail and missed intersections.",
+      "Change the box half-size from 0.15 to 0.25 and watch the tunnel become denser."
+    ]
+  },
+  "render_targets/feedback_demo": {
+    "description": "Display the previous frame inside the current frame to create a recursive mirror.",
+    "walkthrough": [
+      "RenderTarget with type feedback captures the completed scene image. The update callback waits until feedback.texture exists, then creates a smaller Sprite and a border in the upper corner.",
+      "That Sprite becomes part of the next captured image, producing the nested mirror. The source also replaces the Sprite texture when the feedback resource changes. The moving dots make the one-frame delay visible."
+    ],
+    "experiments": [
+      "Change the mirror dimensions from 0.35 to 0.6 of the canvas to enlarge the recursion.",
+      "Move the mirror toward the center and compare the image nesting."
+    ]
+  },
+  "render_targets/gbuffer_demo": {
+    "description": "Inspect synthetic albedo, normal and position textures in three side-by-side panels.",
+    "walkthrough": [
+      "A gbuffer RenderTarget allocates the attachments. Three ComputeKernel instances write checkerboard albedo, hemisphere normals and hemisphere positions; Res declares each texture and the shared uniform buffer.",
+      "These are test patterns, not textures captured from scene geometry. Normals and positions are encoded from their signed ranges into display colors. A complete deferred renderer would additionally populate the buffers from geometry and run a lighting pass."
+    ],
+    "experiments": [
+      "Change the checker frequency from 8 to 4 to make the albedo pattern easier to compare.",
+      "Display the encoded normal as a constant vector and compare its flat color with the hemisphere."
+    ]
+  },
+  "render_targets/offscreen_demo": {
+    "description": "Render a separate 2D view into a texture displayed on a 3D screen.",
+    "walkthrough": [
+      "The offscreen RenderTarget owns the captured dots and border through capture(). Those entities are not added to the main scene; they render into a 512 by 512 image using the target camera.",
+      "A Sprite samples that image and is parented to the TV casing. Orbiting the main camera changes the view of the TV while the captured dots continue moving in their own coordinate system. This pattern works for minimaps and secondary camera feeds."
+    ],
+    "experiments": [
+      "Change the target dimensions and compare sharpness at the same on-screen size.",
+      "Replace one captured dot with a Rect to see how scene geometry becomes texture content."
+    ]
+  },
+  "render_targets/persistent_demo": {
+    "description": "Accumulate moving brush marks on a texture that retains its previous pixels.",
+    "walkthrough": [
+      "The persistent target loads the previous color attachment instead of clearing it every frame. Three captured Circle brushes trace different Lissajous curves while their colors change; the main scene shows the target through a Sprite.",
+      "Click inside the scene and press C to call clear(). Pausing freezes the updates without deleting the accumulated drawing. This is an accumulation surface, so transparent marks can build up over time."
+    ],
+    "experiments": [
+      "Change one brush alpha to 0.1 and compare the color after repeated passes.",
+      "Change the frequency 3.01 to 3.0 and compare whether the first brush closes its path."
+    ]
+  },
+  "render_targets/pingpong_demo": {
+    "description": "Step Conway's Game of Life by alternating reads and writes between two GPU textures.",
+    "walkthrough": [
+      "The source seeds texture A with random cells, then creates fixed A-to-B and B-to-A kernels. Every third update it reads the current state, counts eight wrapped neighbors, and writes the next generation into the other texture.",
+      "The two Sprites overlap at the same position; visibility selects the texture containing the newest generation. The code alternates explicit kernels rather than calling swap(). Keeping input and output separate avoids reading pixels that the same dispatch is currently changing."
+    ],
+    "experiments": [
+      "Set the seed probability to 0.1 to compare a sparse starting population.",
+      "Change the frameCounter interval from 3 to 10 to inspect individual generations."
+    ]
+  },
+  "render_targets/storage_demo": {
+    "description": "Write a procedural plasma image directly into a storage texture and display it as a Sprite.",
+    "walkthrough": [
+      "A storage RenderTarget supplies storageView for compute writes and texture for sampling. A 16-byte uniform buffer carries time and image size; the shader combines four sine fields and converts the result into phase-shifted RGB.",
+      "The 512-pixel image is dispatched in 8 by 8 workgroups, then queued through Scene.addCompute. The example size divides evenly by eight. If you choose another size, add an invocation bounds check before textureStore."
+    ],
+    "experiments": [
+      "Change SIZE to 256 and compare resolution while keeping the displayed Sprite size fixed.",
+      "Replace one sine term with a constant to identify its contribution to the pattern."
+    ]
+  },
+  "layout/arrange_ripple": {
+    "description": "Send scale, color and jump pulses outward across a grid of cloned circles.",
+    "walkthrough": [
+      "Arrange creates 49 independently colored circles and positions them in a seven by seven grid. Each ripple uses distance from ORIGIN to delay the response spatially, so nearby circles react before distant ones.",
+      "Three awaited phases compare a scale pulse, a jump with a white color peak, and a damped magenta pulse. The second caption says Gold, but the actual colorPeak in the source is Color.WHITE; follow the option value when modifying that phase."
+    ],
+    "experiments": [
+      "Move origin to a corner of the grid and compare the wavefront.",
+      "Increase damping and watch how much motion reaches the outer circles."
+    ]
+  },
+  "layout/arrange_wave": {
+    "description": "Move a row of bars through a continuously evaluated spatial wave.",
+    "walkthrough": [
+      "Arrange lays out 60 Rect clones with fixed spacing. onUpdate combines sine and cosine terms using elapsed time and the child index, assigns each bar's Y position, and maps that height to a cyan-to-magenta color.",
+      "Despite the spectrum-bar appearance, the source translates bars of constant height. It does not read audio or change bar height. Use this as a pattern for procedural per-child updates, with layout supplying the stable X coordinates."
+    ],
+    "experiments": [
+      "Change i * 0.22 to i * 0.5 to shorten the wavelength across the row.",
+      "Assign a scale from waveY instead of position.y to turn the displacement wave into a height visualization."
+    ]
+  },
+  "layout/mask": {
+    "description": "Reveal a video through animated text-shaped coverage.",
+    "walkthrough": [
+      "SDFText spells Hello and becomes the mask shape; a video Sprite supplies the visible content. Mask combines the two, while a red Circle behind it makes the clipped boundary easy to see.",
+      "The update callback scales the mask between zero and its original size. The source comment mentions a circle, but the active mask is text. The circle is background geometry, not the clipping shape."
+    ],
+    "experiments": [
+      "Replace SDFText with Circle to compare a geometric aperture with a glyph aperture.",
+      "Change the sine range so the mask never reaches zero and observe the minimum visible area."
+    ]
+  },
+  "layout/mask_view": {
+    "description": "Clip a bundled nature video to a stationary word and inspect it with an orbit camera.",
+    "walkthrough": [
+      "SDFText supplies the word Nature; Mask applies its coverage to the video Sprite. The black background helps the letter silhouettes stand out.",
+      "The mask scaling callback is commented out, so this scene remains stationary apart from video playback and camera interaction. It loads /res/media/nature.mp4, not a live webcam stream."
+    ],
+    "experiments": [
+      "Drag inside the scene to examine the masked plane from another viewing angle.",
+      "Enable the commented scaling assignment and compare animated coverage with the stationary version."
+    ]
+  },
+  "modernize/circles": {
+    "description": "Orbit a cloud of 1,000 translucent circles moving through three-dimensional positions.",
+    "walkthrough": [
+      "Each circle receives a random radius, color, orbital radius and angular speed. An always callback computes its XYZ position from scene time and invalidates the scene so the moving cloud keeps rendering.",
+      "The example stresses overlapping transparency and changing depth. It does not assign an explicit z_index to each particle. Restart generates another random cloud, so use a seeded generator if you need reproducible comparisons."
+    ],
+    "experiments": [
+      "Reduce the loop count to 100 to inspect individual overlaps.",
+      "Set fill alpha to 1 and compare opaque depth relationships with the translucent cloud."
+    ]
+  },
+  "modifiers/dash_demo": {
+    "description": "Split curved paths into geometric dashes and animate the dash phase.",
+    "walkthrough": [
+      "Two paths use different dashArray patterns and round caps. DashModifier creates separate stroke contours, so cap geometry applies at each dash endpoint.",
+      "CustomAnimation drives positive and negative dashOffset values, producing opposite marching directions. The path shape stays fixed; only the phase of the dash pattern travels along it."
+    ],
+    "experiments": [
+      "Switch CapType.ROUND to CapType.SQUARE and compare the endpoints.",
+      "Change dashArray to [0.2, 0.2] and compare an even dotted rhythm with the Morse-like pattern."
+    ]
+  },
+  "modifiers/offset_demo": {
+    "description": "Compare a shield contour with an animated inset and outset.",
+    "walkthrough": [
+      "The gray shield preserves the original SVG path. A second copy adds OffsetModifier and animates distance between -0.6 and 0.8, while the label reports the current signed value.",
+      "Offset changes the evaluated boundary rather than applying a uniform transform scale. Curvature, corners and narrow regions therefore respond differently from a simple resize; the original copy gives you a stable comparison."
+    ],
+    "experiments": [
+      "Hold distance at a small positive value and inspect the spacing around the curved tip.",
+      "Replace the shield with a concave polygon to inspect the behavior around inward corners."
+    ]
+  },
+  "modifiers/pucker_bloat_demo": {
+    "description": "Turn a diamond into a pinched star or rounded flower by changing edge tension.",
+    "walkthrough": [
+      "PuckerBloatModifier starts at zero on a four-point closed path. The animation sweeps amount through negative and positive values; the labels and colors identify the current state.",
+      "Watch the original corner endpoints while the contour between them changes. This helps distinguish a deformation of the path from a scale or rotation of the entire entity."
+    ],
+    "experiments": [
+      "Reduce the magnitude from 0.75 to 0.25 to examine a subtler deformation.",
+      "Replace the diamond with a six-point polygon and compare the number of lobes."
+    ]
+  },
+  "modifiers/resample_demo": {
+    "description": "Visualize arc-length sampling with marker dots on an evaluated curve.",
+    "walkthrough": [
+      "The upper path is an unchanged reference. The lower copy uses ResampleModifier, and getEvaluatedContours returns the resulting packed contour points; a Dot is drawn at every sampled vertex.",
+      "The animation increases the count from six to 48. The marker update removes and recreates dots to make the topology visible; that is useful for teaching, but reuse marker entities when optimizing a production visualization."
+    ],
+    "experiments": [
+      "Freeze count at 8 and compare long curved sections with tightly bending sections.",
+      "Increase count to 96 and compare fidelity with the extra geometry and marker work."
+    ]
+  },
+  "modifiers/round_corners_demo": {
+    "description": "Compare corner fillets on a star and a hexagon.",
+    "walkthrough": [
+      "Both paths begin with sharp corners and a RoundCornersModifier radius of zero. A shared animation increases then decreases the radius; the hexagon uses 1.5 times the star's value.",
+      "The softened corners belong to evaluated path geometry. The shapes retain their transforms and the labels report the actual radius, making this a useful comparison before using rounded contours in an icon or diagram."
+    ],
+    "experiments": [
+      "Give both shapes the same radius to compare how their different angles affect the result.",
+      "Hold the radius at zero and then at 0.35 to inspect the contour at each endpoint."
+    ]
+  },
+  "modifiers/sketch_pen_demo": {
+    "description": "Separate rough path geometry from the pressure-like appearance of a sketch stroke.",
+    "walkthrough": [
+      "The first two rectangles share the same seed. One disables strokeShader; the other applies PathEffect.Sketch, allowing you to compare the same rough geometry with different width treatment.",
+      "The lower strokes compare bias and variation values. toExcalidraw produces the bowed and doubled contours, while the path effect shapes the pen width along each stroke. This scene is a static comparison rather than a line-boil animation."
+    ],
+    "experiments": [
+      "Set variation to zero on every stroke and compare their widths at different bias values.",
+      "Change both rectangle seeds together, keeping them equal so the comparison remains fair."
+    ]
+  },
+  "modifiers/smooth_demo": {
+    "description": "Smooth a stepped polyline while retaining an untouched reference above it.",
+    "walkthrough": [
+      "The lower Path applies SmoothModifier with a small simplification tolerance. The animation changes smoothness from zero toward 0.95 and back; the label shows the current factor.",
+      "Simplification and smoothing affect different aspects of the contour. Tolerance controls removal of redundant points, while smoothness softens the retained bends. Neither changes the entity's position or camera framing."
+    ],
+    "experiments": [
+      "Increase tolerance while holding smoothness at zero to isolate point reduction.",
+      "Hold tolerance at 0.01 and compare smoothness values of 0, 0.5 and 0.95."
+    ]
+  }
+}

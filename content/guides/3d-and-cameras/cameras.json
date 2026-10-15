@@ -1,0 +1,123 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "cameras",
+  "title": "Camera projection, motion and controllers",
+  "group": "3D and cameras",
+  "summary": "Choose a projection, frame a composition and animate or interactively control the camera.",
+  "sections": [
+    {
+      "id": "set-an-intentional-camera",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Set an intentional camera"
+        },
+        {
+          "type": "paragraph",
+          "text": "Camera extends Entity and uses transform position/rotation. fov is used as radians by projection calculations; the constructor’s literal default is 45, so set a sensible radian FOV explicitly for a new perspective composition. lookAt accepts a point or Entity. Orthographic projection uses orthoScale and aspect ratio."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-camerascene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Camera](/api-camera#camera), [CameraModel](/api-camera#camera), [FrameOptions](/api-camera#camera), [CameraMove](/api-animation-camera#cameramove), [CameraLookAt](/api-animation-camera#cameralookat), [CameraOrbit](/api-animation-camera#cameraorbit), [CameraDollyZoom](/api-animation-camera#cameradollyzoom)."
+        }
+      ]
+    },
+    {
+      "id": "interactive-camera",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compare camera projections"
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-camera"
+        }
+      ]
+    },
+    {
+      "id": "projection-capabilities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Projection capabilities"
+        },
+        {
+          "type": "paragraph",
+          "text": "PERSPECTIVE, ORTHOGRAPHIC and TWO_POINT have raster projection paths. FISHEYE and VR360 are enum values but getProjectionMatrix falls back to perspective for them; ray-generation behavior belongs to the ray-trace shaders and must be tested independently. The enum alone is not a promise of five complete raster projections."
+        },
+        {
+          "type": "paragraph",
+          "text": "toOrtho and toPerspective preserve subject framing across projection changes at a selected distance. Lens shift adjusts the projection center. Near/far planes and reversed depth precision interact with the renderer’s depth conventions; do not replace the projection matrix with a conventional depth matrix without changing the matching pipeline."
+        }
+      ]
+    },
+    {
+      "id": "controller-lifecycles-and-units",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Controller lifecycles and units"
+        },
+        {
+          "type": "paragraph",
+          "text": "CameraController, OrbitCameraController and Camera2DController provide different interaction models. Register a single controller for the intended input mode and dispose its listeners when the host changes. Controller methods such as Camera2DController.moveTo/zoomTo/zoomToFit/shake use seconds, while its Animator integration uses AnimOptions milliseconds."
+        },
+        {
+          "type": "paragraph",
+          "text": "Camera2DController adds bounded panning, inertia, cursor-anchored zoom, touch gestures, deadzones, damping and target following. Bounds can account for the full viewport. SyncFromCamera restores the controller’s internal targets after an external camera change."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [CameraController](/api-camera#cameracontroller), [OrbitCameraController](/api-camera#orbitcameracontroller), [Camera2DController](/api-camera#camera2dcontroller), [Camera2DAnimator](/api-camera#camera2dcontroller)."
+        }
+      ]
+    },
+    {
+      "id": "depth-of-field",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Depth of field"
+        },
+        {
+          "type": "paragraph",
+          "text": "aperture and focusDist are used by ray-trace depth-of-field calculations. They are distinct from a post-process blur. Frame can update focusDist to the subject’s center. Larger blur effects and a thin focal plane need enough samples and suitable denoising to avoid confusing sampling noise with intended focus."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [3D geometry and materials](/three-d)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Transforms, anchors and pivots](/transforms)"
+  ]
+}

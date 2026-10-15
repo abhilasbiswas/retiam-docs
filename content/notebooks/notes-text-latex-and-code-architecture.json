@@ -1,0 +1,397 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-text-latex-and-code-architecture",
+  "title": "Text, Typography, LaTeX & Code Presentation Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/TEXT_LATEX_AND_CODE_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/TEXT_LATEX_AND_CODE_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/TEXT_LATEX_AND_CODE_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Text](/api-entities-composites-text#text), [Code](/api-entities-composites-text#code), [Field](/api-math-fields#standardfields), [Input](/api-camera#camera), [SDFText](/api-entities-composites-text#sdftext), [Tex](/api-entities-composites-text#tex), [SVG](/api-entities-composites-svg#svg), [FontStyle](/api-font#types), [TexStyle](/api-entities-composites-text#tex), [FontResolver](/api-font#fontresolver), [FontLoader](/api-font#fontloader), [TexFontPatcher](/api-entities-composites-text#texfontpatcher), [Pipeline](/api-render-pipelines#pipeline), [TextGeometry](/api-components-geometry#textgeometry), [TextFragment](/api-components-fragment#textfragment), [Font](/api-font#font), [Mode](/api-render-frame-graph#resource), [SDFChar](/api-entities-composites-text#sdftext), [Write](/api-animation#write), [Typewriter](/api-animation-creation#typewriter), [Excalidraw](/api-style-excalidraw#excalidraw), [Color](/api-math#color), [Path](/api-entities-primitives-2d#path), [SVGPath](/api-entities-composites-svg#svgpath)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-system-rationale",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & System Rationale"
+        },
+        {
+          "type": "paragraph",
+          "text": "High-quality mathematical explanations and computer science educational animations require three distinct typographic rendering pipelines:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Multi-Channel Signed Distance Field (MSDF) Text**: Crystal-sharp text at any scale, camera distance, or rotation without texture pixelation.",
+            "**Mathematical LaTeX Formulas**: Full TeX/LaTeX equation parsing, layout, and conversion into animated vector contours.",
+            "**Syntax-Highlighted Code Blocks**: Syntax tokenization, themes, window chrome, and line-level animation mechanics."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  I[\"Typographic input\"] --> T[\"Text<br/>Vector Bézier; font: FontStyle\"]\n  I --> S[\"SDFText<br/>MSDF GPU; font: FontStyle\"]\n  I --> X[\"Tex<br/>MathJax / SVG; fontStyle: TexStyle\"]\n  I --> C[\"Code<br/>Prism tokens\"]\n  T --> F[\"FontResolver.resolve<br/>Local → CDN → Google\"]\n  S --> M[\"FontLoader.msdf<br/>WASM atlas and IndexedDB\"]\n  X --> P[\"TexFontPatcher<br/>MathJax glyph patch injection\"]\n  F --> R[\"Retiam WebGPU render pipeline\"]\n  M --> R\n  P --> R\n  C --> R"
+        }
+      ]
+    },
+    {
+      "id": "2-multi-channel-signed-distance-field-msdf-text",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Multi-Channel Signed Distance Field (MSDF) Text"
+        },
+        {
+          "type": "paragraph",
+          "text": "MSDF text rendering is implemented in:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`src/engine/entities/composites/text/SDFText.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts)",
+            "[`src/engine/components/geometry/TextGeometry.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TextGeometry.ts)",
+            "[`src/engine/components/fragment/TextFragment.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/fragment/TextFragment.ts)",
+            "[`src/engine/font/Font.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/Font.ts)",
+            "[`src/engine/font/FontLoader.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontLoader.ts)"
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "For the comprehensive autonomous in-browser WebAssembly generation, two-tier caching, Brotli WOFF2 decompression, and contour-winding sanitizing architecture, refer to [`FONT_SYSTEM_ARCHITECTURE.md`](/notes-font-system-architecture)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The MSDF Advantage"
+        },
+        {
+          "type": "paragraph",
+          "text": "Unlike standard monochrome SDFs which produce rounded corners when magnified, MSDF packs three independent distance fields into the RGB channels (representing signed distance to the closest edge curves)."
+        },
+        {
+          "type": "paragraph",
+          "text": "In the fragment shader ([`TextFragment.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/fragment/TextFragment.ts)), the true signed distance is retrieved via the median operator with screen-space hardware derivative anti-aliasing:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn median(r: f32, g: f32, b: f32) -> f32 {\n    return max(min(r, g), min(max(r, g), b));\n}\n\nlet pxRange = prop.pxRange;\nlet sz = vec2f(textureDimensions(font_texture, 0));\n\n// Hardware derivatives for Screen-Space anti-aliasing\nlet uv = input.texCoord * sz;\nlet dx = dpdxFine(uv);\nlet dy = dpdyFine(uv);\nlet toPixels = pxRange * inverseSqrt(dot(dx, dx) + dot(dy, dy));\n\nlet msdf = textureSample(font_texture, font_sampler, input.texCoord);\nlet sigDist = median(msdf.r, msdf.g, msdf.b) - 0.5;\n\nlet edgeWidth = AA / toPixels;\nvar alpha = smoothstep(-edgeWidth, edgeWidth, sigDist);"
+        },
+        {
+          "type": "paragraph",
+          "text": "This guarantees razor-sharp glyph corners at any camera zoom, rotation, or 4K resolution."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Merged vs. Split Execution Modes"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Merged Mode (`isSplit: false`)**: Merges all characters in the string into a single quad-batch buffer. Maximises throughput for long labels and paragraphs.",
+            {
+              "text": "**Split Mode (`isSplit: true`)**: Decomposes the string into individual [`SDFChar`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts) child entities:",
+              "children": [
+                "Enables per-glyph animations (such as [`Write`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Write.ts), [`Typewriter`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/creation/Typewriter.ts), and staggered fades).",
+                "Each `SDFChar` supports interactive mouse raycasting (`raycast()` implementation) for cursor hover and click events.",
+                "Automatically propagates `z_index` and `layerMask` to prevent glyphs from falling behind other scene elements."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-5-built-in-font-shortcuts-for-text-sdftext-fontstyle",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2.5 Built-in Font Shortcuts for Text & SDFText (FontStyle)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Both [`Text`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts) and [`SDFText`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts) accept a `font` option typed as `OpentypeFont | FontStyle`. Passing a plain `FontStyle` string bypasses `FontLoader` entirely — the engine resolves, decompresses, and caches the font on first use via [`FontResolver`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/font/FontResolver.ts)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Available built-in aliases"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Alias string",
+            "Font",
+            "Style"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`'roboto'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Roboto Regular"
+                },
+                {
+                  "text": "Clean sans-serif"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'excalifont'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Excalifont Regular"
+                },
+                {
+                  "text": "Handwritten Excalidraw style"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'virgil'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Virgil"
+                },
+                {
+                  "text": "Whiteboard handwritten style"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'fredericka'` / `'Fredericka the Great'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Fredericka the Great"
+                },
+                {
+                  "text": "Decorative engraved serif"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Text, SDFText } from \"retiam\";\n\n// ─── Text (Vector Bézier Outline) ────────────────────────────────────────\nnew Text(\"Standard\",        { font: \"roboto\",               fontSize: 1.2 });\nnew Text(\"Hand-drawn\",      { font: \"excalifont\",           fontSize: 1.2 });\nnew Text(\"Whiteboard\",      { font: \"virgil\",               fontSize: 1.2 });\nnew Text(\"Engraved\",        { font: \"Fredericka the Great\", fontSize: 1.2 });\n\n// ─── SDFText (GPU Multi-Channel Distance Field) ───────────────────\n// Exactly the same aliases; SDFText internally calls FontLoader.msdf().\nnew SDFText(\"Standard MSDF\",   { font: \"roboto\",     fontSize: 1.2 });\nnew SDFText(\"Sketchy MSDF\",    { font: \"excalifont\", fontSize: 1.2 });\nnew SDFText(\"Virgil MSDF\",     { font: \"virgil\",     fontSize: 1.2 });\nnew SDFText(\"Decorative MSDF\", { font: \"fredericka\", fontSize: 1.2 });"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "`FontStyle` is an open type: any Google Font family name (e.g. `\"Cinzel Decorative\"`) or font URL also works. Only the four aliases above are bundled; any other string is resolved through `FontResolver` as a Google Font or remote URL."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "`Tex` does **not** use `FontStyle`. For formula font control see §3.1 below."
+        }
+      ]
+    },
+    {
+      "id": "3-mathematical-latex-typesetting-tex-ts-src-engine-entities-composites-text-tex-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Mathematical LaTeX Typesetting ([Tex.ts](../src/engine/entities/composites/text/Tex.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides native LaTeX typesetting via a headless MathJax engine:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const formula = new Tex(\"\\\\int_0^1 x^2 \\\\, dx = \\\\frac{1}{3}\", {\n    fontSize: 1.45,\n    fill: Color.fromHex(\"#38BDF8\")\n});\nscene.add(formula);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.1 TexStyle — Built-in Handwritten Formula Fonts"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Tex` accepts a `fontStyle?: TexStyle` option to switch the entire formula to a handwritten glyph set:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export type TexStyle = 'default' | 'excalifont' | 'virgil';"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Value",
+            "Look",
+            "Implementation"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`'default'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Standard Computer Modern TeX"
+                },
+                {
+                  "text": "MathJax default SVG font tables"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'excalifont'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Excalidraw handwritten"
+                },
+                {
+                  "text": "Vector glyphs injected via `TexFontPatcher.patchExcalifont()`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'virgil'`",
+                  "type": "text"
+                },
+                {
+                  "text": "Whiteboard handwritten"
+                },
+                {
+                  "text": "Vector glyphs injected via `TexFontPatcher.patchVirgil()`"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Default Computer Modern\nnew Tex(\"x = \\\\frac{-b \\\\pm \\\\sqrt{b^2 - 4ac}}{2a}\", {\n    fontSize: 1.45, fontStyle: \"default\"\n});\n\n// Excalidraw hand-drawn math\nnew Tex(\"e^{i\\\\pi} + 1 = 0\", {\n    fontSize: 1.35, fontStyle: \"excalifont\"\n});\n\n// Virgil whiteboard math\nnew Tex(\"\\\\sum_{k=0}^{\\\\infty} \\\\frac{x^k}{k!} = e^x\", {\n    fontSize: 1.45, fontStyle: \"virgil\"\n});"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Each `TexStyle` runs in its own isolated MathJax document (`excalifontDoc`, `virgilDoc`, `defaultDoc`). This prevents prototype pollution when multiple `Tex` entities with different styles coexist in the same scene. Font patches are applied at document-creation time by cloning glyph entries in MathJax's internal SVG font variant tables."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.2 Conversion Pipeline"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**MathJax Compilation**: The LaTeX string is compiled into an SVG document using `mathjax-full` with full TeX packages (`AllPackages`).",
+            "**SVG Path Ingestion**: The resulting SVG glyph paths are parsed and normalized.",
+            "**World Coordinate Scaling**: SVG pixel coordinates are converted into Retiam world-space units via $s = \\text{fontSize} / 1000.0$.",
+            "**Vector Path Generation**: Paths are ingested as [`SVGPath`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/svg/SVGPath.ts) and [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) instances.",
+            "**Symbol Splitting**: When `split: true` is configured, each mathematical glyph (e.g. integral sign $\\int$, superscript, fraction bar, denominator) is generated as an independent vector entity. This enables formula transitions such as [`TransformMatchingTex`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingTex.ts)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-syntax-highlighted-code-blocks-code-ts-src-engine-entities-composites-text-code-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Syntax-Highlighted Code Blocks ([Code.ts](../src/engine/entities/composites/text/Code.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Code` composite entity provides educational code presentations:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const codeBlock = new Code({\n    code: `function fibonacci(n: number): number {\n    if (n <= 1) return n;\n    return fibonacci(n - 1) + fibonacci(n - 2);\n}`,\n    language: 'typescript',\n    theme: 'dracula',\n    lineNumbers: true,\n    fontSize: 0.35,\n    title: \"fibonacci.ts\"\n});\nscene.add(codeBlock);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Features & Styling Subsystems"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**PrismJS Tokenizer**: Supports syntax parsing for TypeScript, JavaScript, Python, C, C++, Rust, Bash, JSON, CSS, and HTML/Markup.",
+            {
+              "text": "**Curated Themes**:",
+              "children": [
+                "`ONE_DARK_THEME` (Atom / One Dark)",
+                "`DRACULA_THEME` (Dracula)",
+                "`MONOKAI_THEME` (Sublime Monokai)",
+                "`VS_CODE_THEME` (VS Code Dark Modern)"
+              ]
+            },
+            "**Window Chrome**: Optional macOS-style header bar with realistic close, minimize, and zoom traffic light buttons and centered window title.",
+            "**Interactive Line Highlighting**:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Animates focus to lines 2 and 3 while dimming others:\n   await codeBlock.highlightLines([2, 3], { duration: 600 });"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Token Diff Animations**: Smoothly transitions code changes line-by-line using token matching and fade/move animations."
+          ],
+          "start": 5
+        }
+      ]
+    }
+  ]
+}

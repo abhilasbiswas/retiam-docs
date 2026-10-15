@@ -1,0 +1,925 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-control",
+  "title": "control API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "inputrecorder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "InputRecorder"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/control/InputRecorder.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/control/InputRecorder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "RecordedInputEvent: Event structure layout representing a single captured DOM input event during recording.",
+                "InputRecorder: Captures low-level user interactions (mouse clicks, pointer movements, mouse wheel scrolls, keyboard keys) in normalized coordinate spaces and saves them to a downloadable JSON payload. Enabling headless playback reproduction."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RecordedInputEvent",
+                    "Interface",
+                    "Event structure layout representing a single captured DOM input event during recording."
+                  ]
+                },
+                {
+                  "cells": [
+                    "InputRecorder",
+                    "Class",
+                    "Captures low-level user interactions (mouse clicks, pointer movements, mouse wheel scrolls, keyboard keys) in normalized coordinate spaces and saves them to a downloadable JSON payload. Enabling headless playback reproduction."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface RecordedInputEvent {\n    time: number;\n    type: string;\n    data: {\n        key?: string;\n        code?: string;\n        button?: number;\n        clientX?: number;\n        clientY?: number;\n        deltaX?: number;\n        deltaY?: number;\n        ctrlKey?: boolean;\n        altKey?: boolean;\n        shiftKey?: boolean;\n    };\n}\nexport declare class InputRecorder {\n    constructor(scene: Scene);\n    destroy(): void;\n    toggleRecording(): void;\n    startRecording(): void;\n    stopRecording(): void;\n    update(t: number, dt: number): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RecordedInputEvent` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "time: number;",
+                    "—",
+                    "Relative timestamp offset in milliseconds when the event occurred. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "type: string;",
+                    "—",
+                    "The DOM event type name (e.g. keydown, pointermove, wheel). [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "data: {\n        key?: string;\n        code?: string;\n        button?: number;\n        clientX?: number; // Normalized X (0.0 to 1.0)\n        clientY?: number; // Normalized Y (0.0 to 1.0)\n        deltaX?: number;\n        deltaY?: number;\n        ctrlKey?: boolean;\n        altKey?: boolean;\n        shiftKey?: boolean;\n    };",
+                    "—",
+                    "Event details payload. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `InputRecorder` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(scene: Scene)",
+                    "—",
+                    "Creates a new InputRecorder, registering the global shortcut triggers. Param: scene Active scene instance. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Cleans up all listeners and releases resources without triggering downloads. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toggleRecording()",
+                    "—",
+                    "Toggles the active recording state. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public startRecording()",
+                    "—",
+                    "Starts recording, wiping previous states and binding event listeners. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public stopRecording()",
+                    "—",
+                    "Stops recording, unbinding events, and triggers a local file download. [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number)",
+                    "—",
+                    "Frame update hook. Param: t Running scene time in milliseconds. Param: dt Elapsed frame delta time in milliseconds. [Source line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L180)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "InputRecorder.recordEvent: private recordEvent(type: string, eventData: any)",
+                    "Implementation: `this.events.push({ time: this.scene.time - this.recordingStartTime, type, data: eventData });`.",
+                    "[Line 105](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L105)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InputRecorder.bindRecordingEvents: private bindRecordingEvents()",
+                    "Body operations (including nested callbacks): assignments to `this.boundListeners.keydown`, `this.boundListeners.keyup`, `this.boundListeners.pointerdown`, `this.boundListeners.pointerup`, `this.boundListeners.pointermove`, `this.boundListeners.wheel`; calls to `canvas.getBoundingClientRect`, `this.recordEvent`, `getNormalizedCoords`, `window.addEventListener`, `canvas.addEventListener`, `document.addEventListener`; return paths including `{ x: (clientX - rect.left) / (rect.width || 1), y: (clientY - rect.top) / (rect.height || 1) }`.",
+                    "[Line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L113)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InputRecorder.unbindRecordingEvents: private unbindRecordingEvents()",
+                    "Body operations (including nested callbacks): assignments to `this.boundListeners`; calls to `window.removeEventListener`, `this.canvas.removeEventListener`, `document.removeEventListener`.",
+                    "[Line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L164)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InputRecorder.downloadJSON: private downloadJSON()",
+                    "Body operations (including nested callbacks): calls to `encodeURIComponent`, `document.createElement`, `downloadAnchor.setAttribute`, `document.body.appendChild`, `downloadAnchor.click`, `downloadAnchor.remove`.",
+                    "[Line 185](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InputRecorder.ts#L185)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interactionmanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "InteractionManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/control/InteractionManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/control/InteractionManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "InteractionManager: Manages standard mouse pointer events, click detection, mesh hovering, ray-plane dragging calculations, and triggers target callbacks for entities containing the [[InteractionComponent]]."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "InteractionManager",
+                    "Class",
+                    "Manages standard mouse pointer events, click detection, mesh hovering, ray-plane dragging calculations, and triggers target callbacks for entities containing the [[InteractionComponent]]."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class InteractionManager {\n    constructor(scene: Scene);\n    reset(): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `InteractionManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(scene: Scene)",
+                    "—",
+                    "Creates a new InteractionManager. Param: scene Active scene instance. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset(): void",
+                    "—",
+                    "Clears active pointer, drag, and hover states. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene.interactionManager`; calls to `this.canvas.removeEventListener`. [Source line 114](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L114)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "InteractionManager.initEvents: private initEvents()",
+                    "Body operations (including nested callbacks): calls to `this.canvas.addEventListener`.",
+                    "[Line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L92)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.getRay: private getRay(e: { clientX: number, clientY: number }): Ray",
+                    "Implementation: `const viewProj = this.scene.default_view.getViewProjection(); return Raycaster.getRayFromMouse(e.clientX, e.clientY, this.canvas, viewProj);`.",
+                    "[Line 126](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L126)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.getInteractionTarget: private getInteractionTarget(entity: Entity): { entity: Entity, component: InteractionComponent } | null",
+                    "Recursively climbs the scenegraph to find an entity configured with the Interactive Component Implementation: `let curr: Entity | null = entity; while (curr) { const comp = curr.getComponent(InteractionComponent); if (comp) { return { entity: curr, component: comp }; } curr = curr.parent; } return null;`.",
+                    "[Line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L134)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.handlePointerDown: private handlePointerDown(e: PointerEvent)",
+                    "Body operations (including nested callbacks): assignments to `this.globalPointerDownPos`, `this.pointerDownTarget`, `this.activeDraggedEntity`, `this.dragPlanePoint`, `this.dragPlaneNormal`, `this.dragOffset`; calls to `performance.now`, `this.getRay`, `Raycaster.cast`, `this.triggerGlobalEvents`, `this.getInteractionTarget`, `comp.onPointerDown`, `hit.point.clone`, `comp.dragPlaneNormal.normalize` and additional helpers.",
+                    "[Line 146](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L146)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.handlePointerMove: private handlePointerMove(e: PointerEvent)",
+                    "Body operations (including nested callbacks): assignments to `this.activeDraggedEntity.transform.position`, `this.hoveredEntity`; calls to `this.getRay`, `this.activeDraggedEntity.getComponent`, `this.intersectRayPlane`, `intersection.add`, `comp.onDrag`, `this.scene.invalidate`, `Raycaster.cast`, `this.triggerGlobalEvents` and additional helpers.",
+                    "[Line 204](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L204)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.handlePointerUp: private handlePointerUp(e: PointerEvent)",
+                    "Body operations (including nested callbacks): assignments to `this.activeDraggedEntity`, `this.lastClickTarget`, `this.lastClickTime`, `this.pointerDownTarget`, `this.lastGlobalClickTime`, `this.globalPointerDownPos`; calls to `this.activeDraggedEntity.getComponent`, `comp.onDragEnd`, `this.triggerPointerUpOnHover`, `this.getRay`, `Raycaster.cast`, `this.triggerGlobalEvents`, `this.getInteractionTarget`, `performance.now` and additional helpers.",
+                    "[Line 254](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L254)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.triggerPointerOut: private triggerPointerOut(e: PointerEvent)",
+                    "Implementation: `if (this.hoveredEntity) { const comp = this.hoveredEntity.getComponent(InteractionComponent); if (comp && comp.onPointerOut) { comp.onPointerOut(e); } this.hoveredEntity = null; }`.",
+                    "[Line 332](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L332)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.triggerPointerUpOnHover: private triggerPointerUpOnHover(e: PointerEvent)",
+                    "Implementation: `if (this.hoveredEntity) { const comp = this.hoveredEntity.getComponent(InteractionComponent); if (comp && comp.onPointerUp) { const hit = this.pointerDownTarget?.hit; comp.onPointerUp(e, hit); } }`.",
+                    "[Line 342](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L342)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.intersectRayPlane: private intersectRayPlane(ray: Ray, planePoint: Vec3, planeNormal: Vec3): Vec3 | null",
+                    "Body operations (including nested callbacks): calls to `ray.direction.dot`, `planePoint.sub(ray.origin).dot`, `planePoint.sub`, `ray.origin.add`, `ray.direction.scale`; return paths including `null`, `ray.origin.add(ray.direction.scale(t))`.",
+                    "[Line 352](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L352)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "InteractionManager.triggerGlobalEvents: private triggerGlobalEvents(eventType: ScenePointerEventType, e: PointerEvent | WheelEvent, ray: Ray, hit: RaycastHit | null)",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `hit.point.clone`, `this.intersectRayPlane`, `handler.listener`; 1 explicit loop.",
+                    "[Line 364](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/InteractionManager.ts#L364)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "playercontrols",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PlayerControls"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/control/PlayerControls.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/control/PlayerControls.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PlayerControls",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "interface State {\n    PAUSED: boolean;\n    TIME: number;\n    PLAY_STATE_PAUSED: boolean;\n    SEEK_MODE: boolean;\n    SEEK_IN_PROGRESS: boolean;\n    MAX_DURATION: number;\n    BUSY: boolean;\n}\nexport declare class PlayerControls {\n    state: State;\n    constructor(scene: Scene);\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PlayerControls` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "state: State",
+                    "{\n        PAUSED: false,\n        TIME: 0,\n        PLAY_STATE_PAUSED: true,\n        SEEK_MODE: false,\n        SEEK_IN_PROGRESS: false,\n        MAX_DURATION: 10000,\n        BUSY: false\n    }",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(scene: Scene)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.canvas`, `this.scene.onAfterReset`; calls to `this.injectStyles`, `this.wrapCanvas`, `this.createControls`, `this.bindEvents`, `this.scene.always`, `this.scene.onAfterReset.bind`, `originalOnAfterReset`. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy()",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.resizeObserver.disconnect`, `window.removeEventListener`, `document.removeEventListener`, `this.wrapper.parentElement.removeChild`, `clearTimeout`, `this.scene.unregister`. [Source line 444](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L444)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PlayerControls.wrapCanvas: private wrapCanvas()",
+                    "Body operations (including nested callbacks): assignments to `this.wrapper`, `this.wrapper.className`, `this.resizeObserver`; construction of `ResizeObserver`; calls to `document.createElement`, `document.body.appendChild`, `window.addEventListener`, `this.resizeObserver.observe`, `setTimeout`.",
+                    "[Line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L75)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.injectStyles: private injectStyles()",
+                    "Body operations (including nested callbacks): calls to `document.getElementById`, `document.createElement`, `document.head.appendChild`.",
+                    "[Line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L89)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.createControls: private createControls()",
+                    "Body operations (including nested callbacks): assignments to `this.overlay`, `this.overlay.className`, `this.timeline`, `this.timeline.type`, `this.timeline.className`, `this.timeline.min`, `this.timeline.max`, `this.timeline.value` and other instance fields; calls to `document.createElement`, `topRow.appendChild`, `this.setPauseIcon`, `leftGroup.appendChild`, `this.setFullscreenIcon`, `bottomRow.appendChild`, `this.overlay.appendChild`, `this.wrapper.appendChild`.",
+                    "[Line 221](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L221)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.setPlayIcon: private setPlayIcon()",
+                    "Body operations (including nested callbacks): assignments to `this.playPauseBtn.dataset.icon`, `this.playPauseBtn.innerHTML`.",
+                    "[Line 274](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L274)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.setPauseIcon: private setPauseIcon()",
+                    "Body operations (including nested callbacks): assignments to `this.playPauseBtn.dataset.icon`, `this.playPauseBtn.innerHTML`.",
+                    "[Line 284](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L284)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.setFullscreenIcon: private setFullscreenIcon()",
+                    "Body operations (including nested callbacks): assignments to `this.fullscreenBtn.dataset.icon`, `this.fullscreenBtn.innerHTML`.",
+                    "[Line 294](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L294)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.setExitFullscreenIcon: private setExitFullscreenIcon()",
+                    "Body operations (including nested callbacks): assignments to `this.fullscreenBtn.dataset.icon`, `this.fullscreenBtn.innerHTML`.",
+                    "[Line 304](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L304)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.pause: private pause()",
+                    "Implementation: `if (this.state.BUSY) { console.log(\"work in progress\"); return; } this.scene.pause(); this.setPlayIcon(); this.state.PAUSED = true;`.",
+                    "[Line 314](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L314)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.resume: private resume()",
+                    "Implementation: `if (this.state.BUSY) { console.log(\"work in progress\"); return; } this.scene.resume(); this.setPauseIcon(); this.state.PAUSED = false;`.",
+                    "[Line 324](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L324)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.seekModeOn: private seekModeOn()",
+                    "Implementation: `if (this.state.BUSY) { console.log(\"work in progress\"); return; } this.state.PLAY_STATE_PAUSED = this.state.PAUSED; this.pause(); this.state.SEEK_MODE = true;`.",
+                    "[Line 334](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L334)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.seekModeOff: private seekModeOff()",
+                    "Implementation: `this.state.SEEK_MODE = false; if (!this.state.BUSY && !this.state.PLAY_STATE_PAUSED) { this.resume(); }`.",
+                    "[Line 344](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L344)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.seek: private async seek(time: number)",
+                    "Body operations (including nested callbacks): assignments to `this.pendingSeekTime`, `this.state.BUSY`; calls to `this.scene.seekTo`, `this.updateUI`, `this.pause`, `this.resume`; 1 explicit loop.",
+                    "[Line 351](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L351)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.bindEvents: private bindEvents()",
+                    "Body operations (including nested callbacks): calls to `this.playPauseBtn.addEventListener`, `this.restartBtn.addEventListener`, `this.timeline.addEventListener`, `this.fullscreenBtn.addEventListener`, `document.addEventListener`, `this.overlay.addEventListener`.",
+                    "[Line 429](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L429)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.togglePlayPause: private togglePlayPause()",
+                    "Implementation: `if (!this.state.BUSY) { if (this.state.PAUSED) { this.resume(); } else { this.pause(); } } else { console.log(\"wait, work in progress\"); } this.triggerActivity();`.",
+                    "[Line 466](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L466)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.triggerActivity: private triggerActivity()",
+                    "Body operations (including nested callbacks): assignments to `this.wrapper.style.cursor`, `this.hideTimeout`; calls to `this.overlay.classList.remove`, `clearTimeout`, `setTimeout`, `this.overlay.classList.add`.",
+                    "[Line 479](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L479)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.handleMouseLeave: private handleMouseLeave()",
+                    "Implementation: `if (!(this.scene as any).PAUSED) { this.overlay.classList.add(\"hidden\"); this.wrapper.style.cursor = \"none\"; }`.",
+                    "[Line 492](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L492)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.toggleFullscreen: private toggleFullscreen()",
+                    "Body operations (including nested callbacks): calls to `this.canvas.requestFullscreen().catch`, `this.canvas.requestFullscreen`, `document.exitFullscreen`.",
+                    "[Line 499](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L499)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.updateUI: private updateUI()",
+                    "Body operations (including nested callbacks): assignments to `this.state.MAX_DURATION`; calls to `parseInt`, `this.updateTimeText`, `this.updateTimelineProgressFill`.",
+                    "[Line 510](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L510)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.updateTimelineProgressFill: private updateTimelineProgressFill(time: number)",
+                    "Body operations (including nested callbacks): assignments to `this.timeline.max`, `this.timeline.value`, `this.timeline.style.background`; calls to `this.state.MAX_DURATION.toString`, `time.toString`, `parseInt`.",
+                    "[Line 523](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L523)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.updateTimeText: private updateTimeText(time: number)",
+                    "Body operations (including nested callbacks): assignments to `this.timeDisplay.innerText`, `this.lastTimeText`; calls to `this.formatTime`.",
+                    "[Line 536](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L536)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "PlayerControls.formatTime: private formatTime(ms: number): string",
+                    "Body operations (including nested callbacks): calls to `seconds.toString().padStart`, `seconds.toString`; return paths including a template-literal expression (see source).",
+                    "[Line 544](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/PlayerControls.ts#L544)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "menu",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "menu"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/control/menu.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/control/menu.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SliderControlOption: Configuration for a slider control.",
+                "ControlPanelOptions: Configuration for the entire ControlPanel."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SliderControlOption",
+                    "Interface",
+                    "Configuration for a slider control."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ControlOption",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ControlPanelOptions",
+                    "Interface",
+                    "Configuration for the entire ControlPanel."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ControlPanel",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "interface ControlOptionBase {\n    label: string;\n    onChange: (value: any) => void;\n}\nexport interface SliderControlOption extends ControlOptionBase {\n    type: 'slider';\n    value: number;\n    min?: number;\n    max?: number;\n    step?: number;\n}\nexport type ControlOption = SliderControlOption;\nexport interface ControlPanelOptions {\n    title?: string;\n    parent?: HTMLElement;\n    controls: ControlOption[];\n}\nexport declare class ControlPanel {\n    constructor(options: ControlPanelOptions);\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SliderControlOption` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "type: 'slider';",
+                    "—",
+                    "Required record/option field with declared type `'slider'`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "value: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "min?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "max?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "step?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L17)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ControlPanelOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "title?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "parent?: HTMLElement;",
+                    "—",
+                    "Optional record/option field with declared type `HTMLElement`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "controls: ControlOption[];",
+                    "—",
+                    "Required record/option field with declared type `ControlOption[]`. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L27)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ControlPanel` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options: ControlPanelOptions)",
+                    "—",
+                    "Creates an interactive control panel and adds it to the DOM. Param: options - Configuration for the panel and its controls. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Removes the panel from the DOM and cleans up. [Source line 269](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L269)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.title ?? 'Controls'",
+                    "[Line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L45)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.parent ?? document.body",
+                    "[Line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L45)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ControlPanel.injectStyles: private injectStyles(): void",
+                    "Injects the necessary CSS for the panel into the document's <head>. Ensures the component is self-contained. Body operations (including nested callbacks): calls to `document.getElementById`, `document.createElement`, `document.head.appendChild`.",
+                    "[Line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L56)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ControlPanel.createPanelShell: private createPanelShell(title: string, parent: HTMLElement): void",
+                    "Creates the main panel container, title, and attaches it to the parent. Body operations (including nested callbacks): assignments to `this.container`, `this.container.className`, `this.controlsContainer`, `this.controlsContainer.className`; calls to `document.createElement`, `titleElement.addEventListener`, `this.toggleCollapse`, `this.container.appendChild`, `parent.appendChild`.",
+                    "[Line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L163)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ControlPanel.toggleCollapse: private toggleCollapse(): void",
+                    "Toggles the collapsed state of the panel. Implementation: `this.isCollapsed = !this.isCollapsed; this.container.classList.toggle('collapsed', this.isCollapsed); this.container.querySelector('.cp-title')?.classList.toggle('collapsed', this.isCollapsed);`.",
+                    "[Line 183](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L183)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ControlPanel.addControl: private addControl(option: ControlOption): void",
+                    "Generic method to add a control based on its type. Body operations (including nested callbacks): calls to `this.createSliderControl`.",
+                    "[Line 192](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L192)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "ControlPanel.createSliderControl: private createSliderControl(option: SliderControlOption): void",
+                    "Creates and appends a slider control to the panel. Body operations (including nested callbacks): calls to `document.createElement`, `(option.min ?? 0).toString`, `(option.max ?? 100).toString`, `(option.step ?? 1).toString`, `option.value.toString`, `option.step.toString().split`, `option.step.toString`, `option.value.toFixed` and additional helpers.",
+                    "[Line 206](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/control/menu.ts#L206)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

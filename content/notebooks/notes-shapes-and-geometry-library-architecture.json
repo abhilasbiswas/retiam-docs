@@ -1,0 +1,1126 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-shapes-and-geometry-library-architecture",
+  "title": "Retiam Geometric Shapes & Procedural 3D Mesh Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SHAPES_AND_GEOMETRY_LIBRARY_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SHAPES_AND_GEOMETRY_LIBRARY_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SHAPES_AND_GEOMETRY_LIBRARY_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Shapes](/api-render-pipelines#pipeline), [Circle](/api-entities-primitives-2d#circle), [Triangle](/api-entities-primitives-2d#triangle), [Path](/api-entities-primitives-2d#path), [SVG](/api-entities-composites-svg#svg), [PathGeometry](/api-components-geometry#pathgeometry), [TriangulatedPathGeometry](/api-components-geometry#triangulatedpathgeometry), [WebGPUMesh](/api-math#math3d), [Animation](/api-animation#animation), [Scene](/api-core-scene#scene), [Star](/api-libs-shapes-2d#star), [Gear2D](/api-libs-shapes-2d#gear2d), [Capsule3D](/api-libs-shapes-3d#capsule3d), [Dodecahedron](/api-libs-shapes-3d#platonicsolids), [Squircle](/api-libs-shapes-2d#squircle), [Heart](/api-libs-shapes-2d#heart), [Cross](/api-libs-shapes-2d#cross), [Chevron](/api-libs-shapes-2d#chevron), [RegularPolygon](/api-libs-shapes-2d#regularpolygon), [Capsule](/api-libs-shapes-2d#capsule), [Teardrop](/api-libs-shapes-2d#teardrop), [Annulus](/api-libs-shapes-2d#annulus), [Sector](/api-libs-shapes-2d#sector), [CurvedArrow](/api-libs-shapes-2d#curvedarrow)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-architectural-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Architectural Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam's core vector rendering engine provides foundational 2D primitives ([`Circle`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Circle.ts), `Rectangle`, [`Triangle`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Triangle.ts), [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts)) and basic 3D solids (`Box3D`, `Sphere3D`, `Cylinder3D`, `Cone3D`)."
+        },
+        {
+          "type": "paragraph",
+          "text": "However, mathematical visualization, scientific illustration, infographic animation, and engineering pedagogy demand a dedicated, high-order geometry library capable of generating rich 2D vector curves ($C^1$ continuous Béziers, filleted $N$-gons, compound topology cutouts, involute gear teeth) and procedural 3D WebGPU meshes (Platonic solids with planar normals, swept curve parallel transport tubes, torus knots, and conical frustums)."
+        },
+        {
+          "type": "paragraph",
+          "text": "To satisfy these requirements without bloating the core runtime, Retiam provides a dedicated library: **`retiam/shapes`** (located at [`libs/shapes/`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes))."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Core Principles"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Zero AI-Slop & Strict Mathematical Rigor**: All shapes are mathematically derived from exact closed-form equations (e.g., Lamé superellipses, Archimedean spirals, Frenet-Serret/Bishop parallel transport frames, and $C^1$ cubic Bézier splines).",
+            "**Native WebGPU Integration**: 2D shapes compile directly to SVG path data consumed by Retiam's Loop-Blinn analytical quadratic shader (`PathGeometry`) or CPU triangulator (`TriangulatedPathGeometry`). 3D shapes construct explicit vertex/normal/UV buffers (`WebGPUMesh`) rendered with Retiam's Cook-Torrance PBR shading.",
+            "**Planar Face Normals on Polyhedra**: Eliminates Phong/Gouraud curved specular distortion and perimeter edge banding on flat polyhedral faces (Platonic solids, prisms, wedges, pyramids) by generating distinct vertices per face with true planar normals.",
+            "**Dynamic Mutation & Invalidation**: Every shape features reactive getters and setters for its geometric parameters (e.g. `points`, `radius`, `teeth`, `cornerRadius`), automatically re-tessellating buffers and invalidating the scene graph."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-system-architecture-module-hierarchy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. System Architecture & Module Hierarchy"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph Client [\"Client Animation Scene\"]\n        SceneImport[\"import { Star, Gear2D, Capsule3D, Dodecahedron } from 'retiam/shapes'\"]\n    end\n\n    subgraph ShapesLib [\"libs/shapes/\"]\n        Index[\"libs/shapes/index.ts (Public Entrypoint)\"]\n        Types[\"libs/shapes/types.ts (Interfaces & Contracts)\"]\n\n        subgraph Shapes2D [\"2D Vector Primitives (libs/shapes/2d/)\"]\n            Star[\"Star\"]\n            Squircle[\"Squircle\"]\n            Heart[\"Heart\"]\n            Gear2D[\"Gear2D\"]\n            Cross[\"Cross\"]\n            Chevron[\"Chevron\"]\n            RegularPoly[\"RegularPolygon\"]\n            Capsule2D[\"Capsule\"]\n            Teardrop[\"Teardrop\"]\n            Annulus[\"Annulus\"]\n            Sector[\"Sector\"]\n            CurvedArrow[\"CurvedArrow\"]\n            DoubleArrow[\"DoubleArrow\"]\n            Spiral2D[\"Spiral2D\"]\n            Waveform2D[\"Waveform2D\"]\n            ArchProfile[\"ArchitecturalProfile\"]\n        end\n\n        subgraph Shapes3D [\"3D Procedural Meshes (libs/shapes/3d/)\"]\n            Capsule3D[\"Capsule3D\"]\n            RoundedBox3D[\"RoundedBox3D\"]\n            Prism3D[\"Prism3D\"]\n            Pyramid3D[\"Pyramid3D\"]\n            TruncatedCone3D[\"TruncatedCone3D\"]\n            Tube3D[\"Tube3D\"]\n            Ellipsoid3D[\"Ellipsoid3D\"]\n            Wedge3D[\"Wedge3D\"]\n            Platonic[\"PlatonicSolids\\n(Tetrahedron, Octahedron,\\nDodecahedron, Icosahedron)\"]\n            TorusKnot3D[\"TorusKnot3D\"]\n            Helix3D[\"Helix3D\"]\n            Gear3D[\"Gear3D\"]\n        end\n\n        subgraph Generators [\"Procedural Math & Mesh Engines (libs/shapes/utils/)\"]\n            PathCalc[\"pathCalculations.ts\\n- Arc Fillet Solvers\\n- Involute Tooth Geometry\\n- Compound Holes (Even-Odd)\\n- C1 Bezier Parameterizations\"]\n            MeshGen[\"meshGenerators.ts\\n- Parallel Transport Bishop Frames\\n- Flat Face Normal Synthesizer\\n- Triaxial Quad Extrusions\\n- Spherical UV Maps\"]\n        end\n    end\n\n    subgraph RetiamCore [\"Retiam Core Engine\"]\n        PathEntity[\"Path (VectorEntity)\"]\n        ModelEntity[\"Model (MeshEntity)\"]\n        LoopBlinn[\"Analytical Shader (Loop-Blinn Q-Bezier)\"]\n        PBRShader[\"PBR Cook-Torrance Shader\"]\n    end\n\n    Client --> Index\n    Index --> Shapes2D\n    Index --> Shapes3D\n    Shapes2D --> PathCalc\n    Shapes3D --> MeshGen\n    Shapes2D --> PathEntity\n    Shapes3D --> ModelEntity\n    PathEntity --> LoopBlinn\n    ModelEntity --> PBRShader"
+        }
+      ]
+    },
+    {
+      "id": "3-mathematical-foundations-2d-vector-curves",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Mathematical Foundations: 2D Vector Curves"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.1. Corner Filleting with Interior Angle Bisectors"
+        },
+        {
+          "type": "paragraph",
+          "text": "Sharp polygonal corners in [`Star`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Star.ts), [`RegularPolygon`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/RegularPolygon.ts), [`Cross`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Cross.ts), and [`Chevron`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Chevron.ts) are filleted into smooth circular tangent arcs using closed-form interior bisector trigonometry:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given three consecutive polygon vertices $P_{i-1}, P_i, P_{i+1}$, let the incoming and outgoing normalized edge vectors be:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{u} = \\frac{P_{i-1} - P_i}{\\|P_{i-1} - P_i\\|}, \\quad \\mathbf{v} = \\frac{P_{i+1} - P_i}{\\|P_{i+1} - P_i\\|}"
+        },
+        {
+          "type": "paragraph",
+          "text": "The interior angle $\\theta$ at vertex $P_i$ satisfies $\\cos\\theta = \\mathbf{u} \\cdot \\mathbf{v}$. The distance $d$ from the sharp corner $P_i$ to the tangent contact points $T_1$ and $T_2$ for a fillet radius $r$ is:"
+        },
+        {
+          "type": "math",
+          "tex": "d = \\frac{r}{\\tan(\\theta / 2)}"
+        },
+        {
+          "type": "paragraph",
+          "text": "To prevent adjacent fillets from overlapping when edge length $L = \\|P_{i+1} - P_i\\|$ is short, the fillet radius is dynamically clamped:"
+        },
+        {
+          "type": "math",
+          "tex": "r_{\\text{clamped}} = \\min\\left(r, \\frac{L}{2} \\tan(\\theta / 2)\\right)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The tangent entry point $T_1 = P_i + d \\cdot \\mathbf{u}$ connects to tangent exit point $T_2 = P_i + d \\cdot \\mathbf{v}$ via an exact circular arc of radius $r_{\\text{clamped}}$ encoded into SVG path data using the `A` (elliptical arc) operator."
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "P_{i-1}\n          \\\n           \\\n            T_1\n             \\  ) r\n              \\____ T_2 ______ P_{i+1}\n              P_i"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.2. $C^1$ Continuous Cubic Bézier Curves (Heart)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Many procedural heart implementations suffer from \"horns\", self-intersecting loops, or flattened apex lobes because their control points do not maintain $C^1$ velocity continuity at the upper cleft and bottom cusp."
+        },
+        {
+          "type": "paragraph",
+          "text": "[`Heart`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Heart.ts) constructs two symmetric cubic Bézier curves joining the top cleft $P_0 = (0, -0.65h)$ to the bottom apex $P_3 = (0, 0.95h)$:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Left Lobe**: Defined by control points $P_0, C_1, C_2, P_3$:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "C_1 = \\left(-0.55w, -0.65h - 0.70h \\cdot d_{\\text{cleft}}\\right)"
+        },
+        {
+          "type": "math",
+          "tex": "C_2 = \\left(-0.55w, 0.15h\\right)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Tangent Continuity**: At the bottom cusp $P_3$, the tangent vectors of both lobes share identical vertical inclinations $\\frac{d\\mathbf{B}_L}{dt}(1) \\propto (w, -h)$ and $\\frac{d\\mathbf{B}_R}{dt}(1) \\propto (-w, -h)$, producing a sharp, clean meeting point without loop artifacts."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.3. Compound Cutouts & Even-Odd Winding (Gear2D, Annulus)"
+        },
+        {
+          "type": "paragraph",
+          "text": "In Retiam's analytical GPU vector shader, hollow shapes require multiple sub-paths with opposite winding directions:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Outer Ring/Perimeter**: Counter-Clockwise (CCW) winding.",
+            "**Inner Cutout / Bore Hole**: Clockwise (CW) winding."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Involute Gear Profile (Gear2D)"
+        },
+        {
+          "type": "paragraph",
+          "text": "[`Gear2D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Gear2D.ts) computes $N$ mechanical teeth with addendum $r_{\\text{tip}}$, dedendum $r_{\\text{root}}$, and pressure angle $\\phi$:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Root Flank**: Arc at $r_{\\text{root}}$ between adjacent teeth.",
+            "**Involute Drive Face**: Radial transition from $r_{\\text{root}}$ to $r_{\\text{tip}}$ inclined by angle $\\delta = \\frac{\\pi}{2N}$.",
+            "**Tooth Tip**: Flat or filleted arc at $r_{\\text{tip}}$.",
+            "**Coast Face**: Symmetric return to root circle.",
+            "**Center Bore & Keyway**: Appends a circular hole `M ... A ... A ... Z` with an optional rectangular keyway cutout $(w_{\\text{key}} \\times h_{\\text{key}})$ for shaft mounting."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Tip (r_outer)\n          ┌───┐\n         /     \\   <-- Involute Flanks\n        /       \\\n  ─────┘         └───── Root (r_root)\n        Teeth Cycle"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3.4. Lamé Superellipse Curves (Squircle)"
+        },
+        {
+          "type": "paragraph",
+          "text": "A squircle is a special case of the Lamé curve defined by:"
+        },
+        {
+          "type": "math",
+          "tex": "\\left|\\frac{x}{a}\\right|^n + \\left|\\frac{y}{b}\\right|^n = 1"
+        },
+        {
+          "type": "paragraph",
+          "text": "When $n = 2$, it yields a standard ellipse. When $n = 4$, it produces the canonical squircle. For any $n \\ge 2$, [`Squircle`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Squircle.ts) evaluates parametric coordinates using sign-preserving fractional powers:"
+        },
+        {
+          "type": "math",
+          "tex": "x(\\theta) = a \\cdot \\operatorname{sgn}(\\cos\\theta) \\cdot |\\cos\\theta|^{2/n}, \\quad y(\\theta) = b \\cdot \\operatorname{sgn}(\\sin\\theta) \\cdot |\\sin\\theta|^{2/n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Sampled smoothly with $M = 128$ points and closed via an SVG polyline path."
+        }
+      ]
+    },
+    {
+      "id": "4-3d-procedural-mesh-generation-analytical-shading",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. 3D Procedural Mesh Generation & Analytical Shading"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.1. Flat Face Normals vs. Gouraud Spherical Banding (Platonic Solids)"
+        },
+        {
+          "type": "paragraph",
+          "text": "In 3D mesh rendering, shared vertices with spherical normals produce severe shading artifacts on polyhedra:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{n}_{\\text{spherical}} = \\frac{\\mathbf{v}}{\\|\\mathbf{v}\\|}"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a flat polygon (e.g., a triangular face of a [`Tetrahedron`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/PlatonicSolids.ts#L17) or a pentagonal face of a [`Dodecahedron`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/PlatonicSolids.ts#L63)) shares vertices with adjacent faces, vertex normals point $109.5^\\circ$ apart at the corners. When the GPU fragment shader linearly interpolates these normals, the flat facet renders as an **inflated spherical bubble**, creating curved specular blobs and dark perimeter halos:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "INCORRECT (Shared Radial Normals):\n        n1 ↖        ↗ n2\n            \\      /\n             ──────\n             \\    /   <-- GPU interpolates diverging normals\n              \\  /        Face appears curved like a bubble!\n               \\/\n               n3 ↓\n\n  CORRECT (Flat Face Normals):\n        n ↑   n ↑   n ↑\n        ───────────────   <-- Normal is constant across entire facet\n             \\    /           Uniform, crisp planar specular reflection!\n              \\  /\n               \\/"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "The Flat Shading Solution"
+        },
+        {
+          "type": "paragraph",
+          "text": "[`generatePlatonicMesh`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/utils/meshGenerators.ts#L667) generates **distinct vertices per face**, calculating the exact outward-pointing unit normal of that plane:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{n}_{\\text{face}} = \\frac{(\\mathbf{v}_1 - \\mathbf{v}_0) \\times (\\mathbf{v}_2 - \\mathbf{v}_0)}{\\|(\\mathbf{v}_1 - \\mathbf{v}_0) \\times (\\mathbf{v}_2 - \\mathbf{v}_0)\\|}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Tetrahedron**: 4 faces $\\times$ 3 vertices = **12 vertices**, 4 triangles (12 indices).",
+            "**Octahedron**: 8 faces $\\times$ 3 vertices = **24 vertices**, 8 triangles (24 indices).",
+            "**Icosahedron**: 20 faces $\\times$ 3 vertices = **60 vertices**, 20 triangles (60 indices).",
+            "**Dodecahedron**: 12 pentagons $\\times$ 5 vertices = **60 vertices**, 36 triangles (108 indices)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.2. Regular Dodecahedron Canonical Formulation"
+        },
+        {
+          "type": "paragraph",
+          "text": "A regular dodecahedron has 20 vertices and 12 pentagonal faces. With golden ratio $\\phi = \\frac{1 + \\sqrt{5}}{2}$ and inverse $\\phi^{-1} = \\frac{1}{\\phi} = \\phi - 1$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Vertices: } (\\pm 1, \\pm 1, \\pm 1), \\quad (0, \\pm \\phi^{-1}, \\pm \\phi), \\quad (\\pm \\phi^{-1}, \\pm \\phi, 0), \\quad (\\pm \\phi, 0, \\pm \\phi^{-1})"
+        },
+        {
+          "type": "paragraph",
+          "text": "The 12 planar, outward-oriented pentagons with uniform edge length $s = 2/\\phi \\approx 1.236$ are triangulated as:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const pentagons = [\n    [0, 8, 4, 14, 12],   // Face 0  (-Z / -Y)\n    [0, 16, 2, 10, 8],   // Face 1  (-X / -Z)\n    [0, 12, 1, 17, 16],  // Face 2  (-X / -Y)\n    [1, 12, 14, 5, 9],   // Face 3  (-Y / +Z)\n    [1, 9, 11, 3, 17],   // Face 4  (-X / +Z)\n    [2, 13, 15, 6, 10],  // Face 5  (-Z / +Y)\n    [2, 16, 17, 3, 13],  // Face 6  (-X / +Y)\n    [3, 11, 7, 15, 13],  // Face 7  (+Y / +Z)\n    [4, 8, 10, 6, 18],   // Face 8  (+X / -Z)\n    [4, 18, 19, 5, 14],  // Face 9  (+X / -Y)\n    [5, 19, 7, 11, 9],   // Face 10 (+X / +Z)\n    [6, 15, 7, 19, 18],  // Face 11 (+X / +Y)\n];"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each pentagon $[v_0, v_1, v_2, v_3, v_4]$ is decomposed into three triangles: $(v_0, v_1, v_2)$, $(v_0, v_2, v_3)$, $(v_0, v_3, v_4)$."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.3. Parallel Transport Bishop Frames (TorusKnot3D, Helix3D, Tube3D)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Standard Frenet-Serret frames fail when curve curvature vanishes ($\\kappa(t) = 0$), causing the normal vector to flip $180^\\circ$ and producing sudden mesh pinching."
+        },
+        {
+          "type": "paragraph",
+          "text": "[`generateTubeMesh`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/utils/meshGenerators.ts#L112) utilizes **Rotation-Minimizing (Bishop) Parallel Transport Frames**:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given a smooth space curve $\\mathbf{C}(t)$ with unit tangents $\\mathbf{T}_i$:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Initial Frame**: Choose an arbitrary normal $\\mathbf{N}_0 \\perp \\mathbf{T}_0$, with binormal $\\mathbf{B}_0 = \\mathbf{T}_0 \\times \\mathbf{N}_0$.",
+            "**Parallel Transport**: For each subsequent point $i$, rotate the previous normal $\\mathbf{N}_{i-1}$ around the axis of curvature $\\mathbf{a} = \\mathbf{T}_{i-1} \\times \\mathbf{T}_i$ by angle $\\alpha = \\arccos(\\mathbf{T}_{i-1} \\cdot \\mathbf{T}_i)$:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{N}_i = \\mathbf{R}_{\\mathbf{a}, \\alpha}(\\mathbf{N}_{i-1}), \\quad \\mathbf{B}_i = \\mathbf{T}_i \\times \\mathbf{N}_i"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Closed Loop Twist Equalization**: For closed curves (such as $(p, q)$ torus knots), any residual holonomy angle $\\Delta\\theta = \\arccos(\\mathbf{N}_0 \\cdot \\mathbf{N}_M)$ is distributed uniformly along the path:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "math",
+          "tex": "\\theta_i = i \\cdot \\frac{\\Delta\\theta}{M}"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{N}_i' = \\cos(\\theta_i)\\mathbf{N}_i + \\sin(\\theta_i)\\mathbf{B}_i"
+        },
+        {
+          "type": "paragraph",
+          "text": "This guarantees continuous cross-sections without pinching or localized twisting across complex knots."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.4. Seamless Analytical Capsule (Capsule3D)"
+        },
+        {
+          "type": "paragraph",
+          "text": "A 3D capsule consists of a cylindrical cylinder body joined to two hemispherical caps:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Top Cap: } y \\in [h/2, h/2 + r], \\quad \\text{Cylinder: } y \\in [-h/2, h/2], \\quad \\text{Bottom Cap: } y \\in [-h/2 - r, -h/2]"
+        },
+        {
+          "type": "paragraph",
+          "text": "[`generateCapsuleMesh`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/utils/meshGenerators.ts#L236) uses unified spherical coordinate rings spanning polar angle $\\theta \\in [0, \\pi]$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\theta_i = \\begin{cases}\n\\frac{i}{N_{\\text{cap}}} \\cdot \\frac{\\pi}{2}, & i \\le N_{\\text{cap}} \\quad (\\text{Top Hemisphere}) \\\\\n\\frac{\\pi}{2} + \\frac{i - N_{\\text{cap}}}{N_{\\text{cap}}} \\cdot \\frac{\\pi}{2}, & i > N_{\\text{cap}} \\quad (\\text{Bottom Hemisphere})\n\\end{cases}"
+        },
+        {
+          "type": "paragraph",
+          "text": "At the cylinder transition $\\theta = \\pi/2$, the cylindrical normal $(\\cos\\phi, 0, \\sin\\phi)$ is mathematically identical to the hemispherical normal, achieving **$C^1$ seamless normal continuity** across the weld line."
+        }
+      ]
+    },
+    {
+      "id": "5-complete-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Complete API Reference"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.1. 2D Shapes (libs/shapes/2d/)"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Class",
+            "Base",
+            "Primary Options & Parameters",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "[`Star`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Star.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`points`, `outerRadius`, `innerRadius`, `cornerRadius`, `valleyRadius`"
+                },
+                {
+                  "text": "`5, 2.0, 1.0, 0, 0`"
+                },
+                {
+                  "text": "$N$-pointed star with filleted outer tips and inner valleys."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`RegularPolygon`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/RegularPolygon.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`sides`, `radius`, `inradius`, `sideLength`, `cornerRadius`, `startAngle`"
+                },
+                {
+                  "text": "`6, 2.0, 0, 0`"
+                },
+                {
+                  "text": "Regular $N$-gon with circumradius/inradius and arc filleting."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Capsule`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Capsule.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`radius`, `length`, `orientation` (`'horizontal' \\| 'vertical'`)"
+                },
+                {
+                  "text": "`1.0, 2.0, 'h'`"
+                },
+                {
+                  "text": "2D stadium / pill shape with semicircular end caps."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Squircle`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Squircle.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`width`, `height`, `n` (Lamé exponent)"
+                },
+                {
+                  "text": "`2.0, 2.0, 4.0`"
+                },
+                {
+                  "text": "Superellipse with tunable corner squareness ($n \\ge 2$)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Heart`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Heart.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`width`, `height`, `cleftDepth`"
+                },
+                {
+                  "text": "`2.0, 2.0, 0.3`"
+                },
+                {
+                  "text": "$C^1$ continuous cubic Bézier heart shape with sharp cusp."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Cross`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Cross.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`width`, `height`, `thickness`, `cornerRadius`"
+                },
+                {
+                  "text": "`2.0, 2.0, 0.6, 0`"
+                },
+                {
+                  "text": "Greek / Swiss cross with 12 filleted corners."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Gear2D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Gear2D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`teeth`, `outerRadius`, `rootRadius`, `boreRadius`, `keywayWidth`, `keywayHeight`"
+                },
+                {
+                  "text": "`12, 2.0, 1.4, 0.5, 0, 0`"
+                },
+                {
+                  "text": "Involute gear profile with center bore cutout and keyway."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Teardrop`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Teardrop.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`radius`, `tailLength`, `angle`"
+                },
+                {
+                  "text": "`1.0, 2.2, 0`"
+                },
+                {
+                  "text": "Tangential droplet / map marker shape."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Annulus`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Annulus.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`innerRadius`, `outerRadius`, `startAngle`, `endAngle`"
+                },
+                {
+                  "text": "`1.0, 2.0, 0, 2π`"
+                },
+                {
+                  "text": "Concentric circular washer ring or annular sector."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Sector`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Sector.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`radius`, `startAngle`, `endAngle`"
+                },
+                {
+                  "text": "`2.0, 0, π/3`"
+                },
+                {
+                  "text": "Circular pie slice / wedge shape."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Chevron`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Chevron.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`width`, `height`, `thickness`, `cornerRadius`"
+                },
+                {
+                  "text": "`2.0, 1.5, 0.5, 0`"
+                },
+                {
+                  "text": "Directional arrow chevron with corner rounding."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`CurvedArrow`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/CurvedArrow.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`radius`, `startAngle`, `endAngle`, `headLength`, `headWidth`, `endHead`, `startHead`"
+                },
+                {
+                  "text": "`2.0, 0, π/2, 0.4, 0.4, true, false`"
+                },
+                {
+                  "text": "Sweeping circular arc arrow with tangent-aligned arrowhead."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`DoubleArrow`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/DoubleArrow.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`start`, `end`, `headLength`, `headWidth`"
+                },
+                {
+                  "text": "`[-2,0], [2,0], 0.35, 0.35`"
+                },
+                {
+                  "text": "Bidirectional dimensioning arrow."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Spiral2D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Spiral2D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`spiralType` (`'archimedean' \\| 'logarithmic'`), `a`, `b`, `turns`, `thickness`, `samples`"
+                },
+                {
+                  "text": "`'archimedean', 0.2, 0.15, 3, 0, 200`"
+                },
+                {
+                  "text": "Smooth spiral line or thickened ribbon path."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Waveform2D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/Waveform2D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`waveformType` (`'sine' \\| 'triangle' \\| 'square' \\| 'sawtooth'`), `width`, `amplitude`, `cycles`, `decay`, `phase`"
+                },
+                {
+                  "text": "`'sine', 6.0, 1.0, 3, 0, 0`"
+                },
+                {
+                  "text": "Periodic harmonic waveform with exponential decay."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`ArchitecturalProfile`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/2d/ArchitecturalProfile.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Path`"
+                },
+                {
+                  "text": "`profileType` (`'I' \\| 'H' \\| 'T' \\| 'L' \\| 'C'`), `width`, `height`, `flangeThickness`, `webThickness`, `filletRadius`"
+                },
+                {
+                  "text": "`'I', 3.0, 4.0, 0.5, 0.35, 0`"
+                },
+                {
+                  "text": "Structural steel cross-section with filleted root transitions."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.2. 3D Meshes (libs/shapes/3d/)"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Class",
+            "Base",
+            "Primary Options & Parameters",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "[`Capsule3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/Capsule3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radius`, `length`, `radialSegments`, `capSegments`"
+                },
+                {
+                  "text": "`0.5, 1.0, 32, 16`"
+                },
+                {
+                  "text": "Seamless $C^1$ continuous 3D capsule mesh."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`RoundedBox3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/RoundedBox3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`width`, `height`, `depth`, `radius`, `segments`"
+                },
+                {
+                  "text": "`1.0, 1.0, 1.0, 0.15, 4`"
+                },
+                {
+                  "text": "Analytical 3D box with spherical corners and cylindrical edges."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Prism3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/Prism3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`sides`, `radius`, `height`, `openEnded`"
+                },
+                {
+                  "text": "`6, 1.0, 2.0, false`"
+                },
+                {
+                  "text": "Regular $N$-sided extruded prism with flat face normals."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Pyramid3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/Pyramid3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`sides`, `baseRadius`, `height`, `openEnded`"
+                },
+                {
+                  "text": "`4, 1.0, 2.0, false`"
+                },
+                {
+                  "text": "$N$-sided pyramid with sloped triangular face normals."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`TruncatedCone3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/TruncatedCone3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radiusTop`, `radiusBottom`, `height`, `radialSegments`, `openEnded`"
+                },
+                {
+                  "text": "`0.5, 1.0, 2.0, 32, false`"
+                },
+                {
+                  "text": "Conical frustum with independent top/bottom cap radii."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Tube3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/Tube3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`outerRadius`, `innerRadius`, `height`, `radialSegments`, `openEnded`"
+                },
+                {
+                  "text": "`1.0, 0.75, 2.0, 32, false`"
+                },
+                {
+                  "text": "Hollow cylinder with wall thickness and annular end caps."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Ellipsoid3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/Ellipsoid3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radiusX`, `radiusY`, `radiusZ`, `widthSegments`, `heightSegments`"
+                },
+                {
+                  "text": "`1.0, 1.5, 0.8, 32, 16`"
+                },
+                {
+                  "text": "Triaxial ellipsoid with analytical gradient normals."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Wedge3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/Wedge3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`width`, `height`, `depth`"
+                },
+                {
+                  "text": "`1.0, 1.0, 1.0`"
+                },
+                {
+                  "text": "Right-angled mechanical ramp / doorstop wedge."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Tetrahedron`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/PlatonicSolids.ts#L17)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radius`"
+                },
+                {
+                  "text": "`1.0`"
+                },
+                {
+                  "text": "4 equilateral faces with outward planar face normals."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Octahedron`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/PlatonicSolids.ts#L40)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radius`"
+                },
+                {
+                  "text": "`1.0`"
+                },
+                {
+                  "text": "8 equilateral faces with outward planar face normals."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Dodecahedron`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/PlatonicSolids.ts#L63)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radius`"
+                },
+                {
+                  "text": "`1.0`"
+                },
+                {
+                  "text": "12 regular pentagonal faces with canonical golden-ratio geometry."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Icosahedron`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/PlatonicSolids.ts#L86)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radius`"
+                },
+                {
+                  "text": "`1.0`"
+                },
+                {
+                  "text": "20 equilateral triangular faces with planar face normals."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`TorusKnot3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/TorusKnot3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radius`, `tubeRadius`, `p`, `q`, `tubularSegments`, `radialSegments`"
+                },
+                {
+                  "text": "`1.0, 0.2, 2, 3, 128, 16`"
+                },
+                {
+                  "text": "Parametric $(p, q)$ torus knot with parallel transport frames."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Helix3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/Helix3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`radius`, `pitch`, `turns`, `tubeRadius`, `tubularSegments`, `radialSegments`"
+                },
+                {
+                  "text": "`1.0, 0.8, 4, 0.12, 200, 16`"
+                },
+                {
+                  "text": "Helical mechanical spring / coil with uniform cross-section."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "[`Gear3D`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/shapes/3d/Gear3D.ts)",
+                  "type": "text"
+                },
+                {
+                  "text": "`Model`"
+                },
+                {
+                  "text": "`teeth`, `outerRadius`, `rootRadius`, `height`, `boreRadius`, `hubRadius`, `hubHeight`"
+                },
+                {
+                  "text": "`16, 2.0, 1.5, 0.5, 0.4, 0.8, 0.3`"
+                },
+                {
+                  "text": "Extruded 3D mechanical gear with bore hole and raised hub."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-complete-usage-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Complete Usage Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.1. 2D Technical Vector Scene"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Color } from \"retiam\";\nimport { Star, Gear2D, Cross, CurvedArrow } from \"retiam/shapes\";\n\nexport class Technical2DScene extends Scene {\n    public async run() {\n        // 1. Star with rounded outer tips\n        const star = new Star({ points: 6, outerRadius: 1.5, innerRadius: 0.8, cornerRadius: 0.12 });\n        star.paint.fill = new Color(1.0, 0.7, 0.2, 0.35);\n        star.paint.stroke = new Color(1.0, 0.8, 0.3, 1.0);\n        star.paint.stroke_width = 0.05;\n        star.move([-4, 0, 0]);\n        this.add(star);\n\n        // 2. Mechanical Gear with center bore\n        const gear = new Gear2D({ teeth: 12, outerRadius: 1.4, rootRadius: 1.0, boreRadius: 0.35 });\n        gear.paint.fill = new Color(0.3, 0.6, 1.0, 0.35);\n        gear.paint.stroke = new Color(0.4, 0.7, 1.0, 1.0);\n        gear.paint.stroke_width = 0.05;\n        gear.move([0, 0, 0]);\n        this.add(gear);\n\n        // 3. Sweeping Indicator Arrow\n        const arrow = new CurvedArrow({ radius: 1.8, startAngle: 0, endAngle: Math.PI * 0.75, headLength: 0.4 });\n        arrow.paint.fill = new Color(0.9, 0.3, 0.4, 1.0);\n        arrow.paint.stroke = new Color(1.0, 0.4, 0.5, 1.0);\n        arrow.paint.stroke_width = 0.08;\n        arrow.move([4, 0, 0]);\n        this.add(arrow);\n\n        // Live rotation in update loop\n        this.always((_t, dt) => {\n            gear.transform.rotateWorldZ(dt * 0.001);\n            star.transform.rotateWorldZ(-dt * 0.0005);\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.2. 3D Procedural Mesh & Polyhedra Scene"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Color, OrbitCameraController } from \"retiam\";\nimport { Dodecahedron, TorusKnot3D, Capsule3D, Helix3D } from \"retiam/shapes\";\n\nexport class Polyhedra3DScene extends Scene {\n    public async run() {\n        this.camera.position.set([0, 0, 15]);\n        new OrbitCameraController(this, this.camera);\n\n        // 1. Crystal Dodecahedron (PBR Metallic with Flat Facet Normals)\n        const dodeca = new Dodecahedron(1.2);\n        dodeca.material.color = new Color(0.65, 0.35, 0.95, 1.0); // Royal Amethyst\n        dodeca.material.metallic = 0.85;\n        dodeca.material.roughness = 0.2;\n        dodeca.move([-4, 1.5, 0]);\n        this.add(dodeca);\n\n        // 2. Smooth Torus Knot (Parallel Transport Tube)\n        const knot = new TorusKnot3D({ radius: 1.1, tubeRadius: 0.22, p: 2, q: 3 });\n        knot.material.color = new Color(0.95, 0.6, 0.15, 1.0); // Gold\n        knot.material.metallic = 0.9;\n        knot.material.roughness = 0.15;\n        knot.move([4, 1.5, 0]);\n        this.add(knot);\n\n        // 3. Helical Spring\n        const spring = new Helix3D({ radius: 0.8, pitch: 0.5, turns: 4, tubeRadius: 0.1 });\n        spring.material.color = new Color(0.2, 0.8, 1.0, 1.0); // Cyan Steel\n        spring.material.metallic = 0.8;\n        spring.material.roughness = 0.25;\n        spring.move([-4, -2.5, 0]);\n        this.add(spring);\n\n        // 4. Capsule Pill\n        const cap = new Capsule3D({ radius: 0.6, length: 1.4 });\n        cap.material.color = new Color(0.2, 0.9, 0.5, 1.0); // Emerald\n        cap.material.metallic = 0.7;\n        cap.material.roughness = 0.3;\n        cap.move([4, -2.5, 0]);\n        this.add(cap);\n\n        // Continuous tumbling rotations\n        this.always((_t, dt) => {\n            const rot = dt * 0.001;\n            dodeca.transform.rotateWorldY(rot);\n            dodeca.transform.rotateWorldX(rot * 0.5);\n\n            knot.transform.rotateWorldY(rot * 1.2);\n            knot.transform.rotateWorldZ(rot * 0.6);\n\n            spring.transform.rotateWorldY(rot * 1.5);\n            cap.transform.rotateWorldX(rot * 0.8);\n        });\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "7-interactive-demos-test-suite",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Interactive Demos & Test Suite"
+        },
+        {
+          "type": "paragraph",
+          "text": "The library includes two comprehensive WebGPU showcase scenes and a test suite:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**[`shapes_showcase_demo.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/shapes_paths_2d/shapes_showcase_demo.ts)**:",
+              "children": [
+                "2D Row: `Star`, `Squircle`, `Heart`, `Gear2D`, `Cross`, `Chevron`.",
+                "3D Row: `Capsule3D`, `TorusKnot3D`, `Helix3D`, `RoundedBox3D`, `Icosahedron`, `Gear3D`."
+              ]
+            },
+            {
+              "text": "**[`shapes_showcase_part2_demo.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/shapes_paths_2d/shapes_showcase_part2_demo.ts)**:",
+              "children": [
+                "2D Rows: `RegularPolygon`, `Capsule`, `Teardrop`, `Annulus`, `Sector`, `Spiral2D`, `CurvedArrow`, `DoubleArrow`, `Waveform2D`, `ArchitecturalProfile`.",
+                "3D Rows: `Prism3D`, `Pyramid3D`, `TruncatedCone3D`, `Tube3D`, `Ellipsoid3D`, `Wedge3D`, `Dodecahedron`, `Octahedron`, `Tetrahedron`."
+              ]
+            },
+            {
+              "text": "**Unit Tests ([`test/shapes_test.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/test/shapes_test.ts))**:",
+              "children": [
+                "16 test suites validating vertex counts, index counts, normal normalization, parameter mutation re-synchronization, and topology invariants across all 31 shapes."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

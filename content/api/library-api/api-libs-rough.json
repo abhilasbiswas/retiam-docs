@@ -1,0 +1,1108 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-libs-rough",
+  "title": "rough API",
+  "group": "Library API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "roughmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RoughModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/rough/RoughModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/rough/RoughModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/rough`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "RoughModifier: Geometric path modifier that converts sharp, rigid vector contours into authentic rough.js hand-drawn sketches (identical seed -> identical look to Excalidraw)."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RoughModifierOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RoughModifier",
+                    "Class",
+                    "Geometric path modifier that converts sharp, rigid vector contours into authentic rough.js hand-drawn sketches (identical seed -> identical look to Excalidraw)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface RoughModifierOptions {\n    roughness?: number;\n    bowing?: number;\n    seed?: number | 'auto';\n    time?: number;\n    boilFps?: number;\n    multiStroke?: boolean;\n    pixelScale?: number;\n}\nexport declare class RoughModifier extends PathModifierBase {\n    constructor(options?: RoughModifierOptions, idPrefix?: string);\n    get roughness(): number;\n    set roughness(val: number);\n    get bowing(): number;\n    set bowing(val: number);\n    get seed(): number | 'auto';\n    set seed(val: number | 'auto');\n    get time(): number;\n    set time(val: number);\n    get boilFps(): number;\n    set boilFps(val: number);\n    get multiStroke(): boolean;\n    set multiStroke(val: boolean);\n    get pixelScale(): number;\n    set pixelScale(val: number);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoughModifierOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "roughness?: number;",
+                    "—",
+                    "Numerical roughness parameter (0 = exact/clean, 1 = normal sketch, 2 = cartoonish). When <= 0, returns the cloned input contours unchanged. Default: 1 [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bowing?: number;",
+                    "—",
+                    "Biomechanical curvature / bowing factor (0 = straight segments, 1 = natural sketch bowing). Default: 1 [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "seed?: number | 'auto';",
+                    "—",
+                    "Deterministic pseudo-random seed for reproducible rough strokes, or 'auto' to derive from the path ID. Default: 'auto' [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "time?: number;",
+                    "—",
+                    "Time parameter for animated line boil. Default: 0.0 [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "boilFps?: number;",
+                    "—",
+                    "Frame rate for animated line boil (e.g. 12 for 12 FPS, 0 for continuous time). Default: 12 [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "multiStroke?: boolean;",
+                    "—",
+                    "Whether to generate dual diverging loose sketch strokes (rough.js disableMultiStroke = !multiStroke). Default: true [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pixelScale?: number;",
+                    "—",
+                    "World units per rough.js pixel. rough.js internal distances and falloffs are pixel-based. Default: 0.03 [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L49)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoughModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: RoughModifierOptions, idPrefix: string = \"Rough\")",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._roughness`, `this._bowing`, `this._seed`, `this._time`, `this._boilFps`, `this._multiStroke`, `this._pixelScale`. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get roughness(): number",
+                    "—",
+                    "Implementation: `return this._roughness;`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set roughness(val: number)",
+                    "—",
+                    "Implementation: `if (this._roughness !== val) { this._roughness = val; this.invalidate(); }`. [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get bowing(): number",
+                    "—",
+                    "Implementation: `return this._bowing;`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set bowing(val: number)",
+                    "—",
+                    "Implementation: `if (this._bowing !== val) { this._bowing = val; this.invalidate(); }`. [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get seed(): number | 'auto'",
+                    "—",
+                    "Implementation: `return this._seed;`. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set seed(val: number | 'auto')",
+                    "—",
+                    "Implementation: `if (this._seed !== val) { this._seed = val; this.invalidate(); }`. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get time(): number",
+                    "—",
+                    "Implementation: `return this._time;`. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set time(val: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._time`; calls to `this.invalidate`. [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L113)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get boilFps(): number",
+                    "—",
+                    "Implementation: `return this._boilFps;`. [Source line 124](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L124)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set boilFps(val: number)",
+                    "—",
+                    "Implementation: `if (this._boilFps !== val) { this._boilFps = val; this.invalidate(); }`. [Source line 128](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L128)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get multiStroke(): boolean",
+                    "—",
+                    "Implementation: `return this._multiStroke;`. [Source line 135](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L135)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set multiStroke(val: boolean)",
+                    "—",
+                    "Implementation: `if (this._multiStroke !== val) { this._multiStroke = val; this.invalidate(); }`. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get pixelScale(): number",
+                    "—",
+                    "Implementation: `return this._pixelScale;`. [Source line 146](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L146)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set pixelScale(val: number)",
+                    "—",
+                    "Implementation: `if (this._pixelScale !== val) { this._pixelScale = val; this.invalidate(); }`. [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `PathModifierUtils.cloneContours`, `rough.generator`, `PathModifierUtils.isContourClosed`, `seedFromEntityId`, `generator.path`, `result.push`, `this._approximateCubic`, `currentContour.push`; return paths including `[]`, `PathModifierUtils.cloneContours(contours)`, `result`; 4 explicit loops. [Source line 194](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L194)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RoughModifier._approximateCubic: private _approximateCubic( p0x: number, p0y: number, c1x: number, c1y: number, c2x: number, c2y: number, p3x: number, p3y: number, depth: number, scale: number, out: number[] ): void",
+                    "Recursively approximates a cubic Bézier curve with quadratic Bézier segments. Single quad control point: C = (3(c1 + c2) - p0 - p3) / 4. Splits at t = 0.5 (de Casteljau) when approximation error exceeds ~0.05 px (depth <= 4). Body operations (including nested callbacks): calls to `this._approximateCubic`, `out.push`.",
+                    "[Line 162](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughModifier.ts#L162)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "roughshape",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RoughShape"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/rough/RoughShape.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/rough/RoughShape.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/rough`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "RoughShape: Retiam VGroup representing an authentic rough.js hand-drawn illustration. Renders solid background fills, sketchy hachure fills, and multi-pass sketchy outlines.",
+                "roughify: Functional convenience helper to turn any Retiam VectorEntity or SVG path string into an authentic rough.js hand-drawn illustration.",
+                "roughBoilAnim: Creates an Animation that continuously boils (jitters) the rough.js illustration over time. Can be played standalone or concurrently with other animations:",
+                "roughCreateAnim: Creates an entrance animation drawing the outline and fill while simultaneously boiling rough sketch lines at 12 FPS."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RoughFillStyle",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RoughShapeOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RoughSource",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RoughShape",
+                    "Class",
+                    "Retiam VGroup representing an authentic rough.js hand-drawn illustration. Renders solid background fills, sketchy hachure fills, and multi-pass sketchy outlines."
+                  ]
+                },
+                {
+                  "cells": [
+                    "roughify",
+                    "Function",
+                    "Functional convenience helper to turn any Retiam VectorEntity or SVG path string into an authentic rough.js hand-drawn illustration."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RoughBoilOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RoughBoilAnimation",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "roughBoilAnim",
+                    "Function",
+                    "Creates an Animation that continuously boils (jitters) the rough.js illustration over time. Can be played standalone or concurrently with other animations:"
+                  ]
+                },
+                {
+                  "cells": [
+                    "RoughCreateOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "roughCreateAnim",
+                    "Function",
+                    "Creates an entrance animation drawing the outline and fill while simultaneously boiling rough sketch lines at 12 FPS."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type RoughFillStyle = \"hachure\" | \"cross-hatch\" | \"solid\" | \"dots\" | \"dashed\" | \"zigzag\";\nexport interface RoughShapeOptions {\n    stroke?: string | Color;\n    fill?: string | Color;\n    backgroundColor?: string | Color;\n    fillStyle?: RoughFillStyle;\n    strokeWidth?: number;\n    fillWeight?: number;\n    roughness?: number;\n    bowing?: number;\n    seed?: number | 'auto';\n    time?: number;\n    boil?: boolean;\n    boilFps?: number;\n    hachureAngle?: number;\n    hachureGap?: number;\n    disableMultiStroke?: boolean;\n    maxRandomnessOffset?: number;\n    pixelScale?: number;\n    scale?: number;\n    flipY?: boolean;\n    chainPasses?: boolean;\n    z?: number;\n}\nexport type RoughSource = VectorEntity | Path | string;\nexport declare class RoughShape extends VGroup {\n    fillPath?: Path;\n    fillPaths: Path[];\n    backgroundPath?: Path;\n    backgroundPaths: Path[];\n    sketchPaths: Path[];\n    strokePaths: Path[];\n    constructor(source: RoughSource, options?: RoughShapeOptions);\n    get roughness(): number;\n    set roughness(val: number);\n    get bowing(): number;\n    set bowing(val: number);\n    get seed(): number | 'auto';\n    set seed(val: number | 'auto');\n    setSeed(val: number | 'auto'): this;\n    get time(): number;\n    set time(val: number);\n    setTime(time: number): this;\n    get boilFps(): number;\n    set boilFps(val: number);\n    startBoil(options?: {\n        fps?: number;\n        speed?: number;\n    }): this;\n    stopBoil(): this;\n    get isBoiling(): boolean;\n    static startBoil(target: RoughShape | RoughShape[], options?: {\n        fps?: number;\n        speed?: number;\n    }): void;\n    static stopBoil(target: RoughShape | RoughShape[]): void;\n    static isBoiling(entity: RoughShape): boolean;\n    static createAnim(entity: RoughShape, options?: RoughCreateOptions): Concurrent;\n    boil(options?: RoughBoilOptions): Animation;\n    get fillStyle(): RoughFillStyle | undefined;\n    set fillStyle(val: RoughFillStyle | undefined);\n    get backgroundColor(): string | Color | undefined;\n    set backgroundColor(val: string | Color | undefined);\n    get strokeWidth(): number;\n    set strokeWidth(val: number);\n    get fillWeight(): number;\n    set fillWeight(val: number);\n    get options(): Readonly<RoughShapeOptions>;\n    setOptions(opts: Partial<RoughShapeOptions>): this;\n    setSource(source: RoughSource): this;\n    get isComposite(): boolean;\n    rebuild(): this;\n}\nexport declare function roughify(source: RoughSource, options?: RoughShapeOptions): RoughShape;\nexport interface RoughBoilOptions extends AnimOptions {\n    speed?: number;\n}\nexport declare class RoughBoilAnimation extends Animation {\n    constructor(target: RoughShape | Path | (RoughShape | Path)[], options?: RoughBoilOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}\nexport declare function roughBoilAnim(target: RoughShape | Path | (RoughShape | Path)[], options?: RoughBoilOptions): RoughBoilAnimation;\nexport interface RoughCreateOptions extends CreateOptions {\n    boil?: boolean;\n}\nexport declare function roughCreateAnim(entity: RoughShape, options?: RoughCreateOptions): Concurrent;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "roughify: Implementation: `return new RoughShape(source, options);`.",
+                "roughBoilAnim: Implementation: `return new RoughBoilAnimation(target, options);`.",
+                "roughCreateAnim: Implementation: `let anims: Animation[] = [createAnim(entity, options)]; let boil = options?.boil ?? true; if (boil && !entity.isBoiling) { anims.push(entity.boil(options)); } return new Concurrent(anims, options);`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoughShapeOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "stroke?: string | Color;",
+                    "—",
+                    "Stroke color (hex string, CSS string, or Retiam Color). Default: '#000000' [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fill?: string | Color;",
+                    "—",
+                    "Fill color (hex string, CSS string, or Retiam Color). Default: undefined [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "backgroundColor?: string | Color;",
+                    "—",
+                    "Solid background color rendered underneath hachure/sketch fill lines. Allows dual-layer styling: solid background color + sketchy hachure lines on top. Default: undefined [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillStyle?: RoughFillStyle;",
+                    "—",
+                    "Rough.js fill style: - 'solid': Smooth solid polygon fill - 'hachure': Diagonal parallel sketchy lines (default when fill is set) - 'cross-hatch': Dual diagonal hatching lines in cross pattern - 'dots': Dotted stipple fill - 'dashed': Dashed sketchy hatching lines - 'zigzag': Zigzag wavy hatching lines [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeWidth?: number;",
+                    "—",
+                    "Stroke width in rough pixel coordinates. Default: 2 [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fillWeight?: number;",
+                    "—",
+                    "Fill weight (thickness of hachure lines). Default: strokeWidth / 2 [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "roughness?: number;",
+                    "—",
+                    "Roughness factor: - 0: exact clean shape without jitter - 1: standard hand-drawn sketch (default) - 2+: loose, exaggerated sketch [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bowing?: number;",
+                    "—",
+                    "Curvature / bowing of straight lines (0 = straight, 1 = natural bow). Default: 1 [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "seed?: number | 'auto';",
+                    "—",
+                    "Deterministic PRNG seed for reproducible strokes, or 'auto' to derive from the entity's ID. Default: 'auto' [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "time?: number;",
+                    "—",
+                    "Time parameter for animated line boil. Default: 0.0 [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "boil?: boolean;",
+                    "—",
+                    "Whether this rough illustration should continuously boil (jitter) at `boilFps`. Default: false [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "boilFps?: number;",
+                    "—",
+                    "Frame rate for animated line boil (e.g. 12 for traditional 12 FPS animation, 0 for continuous time). Default: 12 [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "hachureAngle?: number;",
+                    "—",
+                    "Angle of hachure fill lines in degrees. Default: -41 [Source line 91](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L91)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "hachureGap?: number;",
+                    "—",
+                    "Distance between hachure fill lines in rough pixels. Default: 4 [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "disableMultiStroke?: boolean;",
+                    "—",
+                    "If true, draws only 1 outline stroke pass instead of dual overlapping passes. Default: false [Source line 97](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L97)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxRandomnessOffset?: number;",
+                    "—",
+                    "Maximum pixel distance jitter is allowed to offset vertices. Default: 2 [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pixelScale?: number;",
+                    "—",
+                    "World units per rough.js pixel coordinate. Default: 1.0 for SVG, 4.0 / 220 for primitives [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "scale?: number;",
+                    "—",
+                    "Coordinate multiplier applied to the input SVG path before rough generation. Default: 1 [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "flipY?: boolean;",
+                    "—",
+                    "Whether to invert the Y axis (true for canvas Y-down SVGs, false for Retiam Y-up). Default: false [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "chainPasses?: boolean;",
+                    "—",
+                    "Chain consecutive curve segments into continuous smooth passes. Default: true [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "z?: number;",
+                    "—",
+                    "Base Z coordinate for depth layering. Default: 0 [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L115)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoughShape` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public fillPath?: Path",
+                    "—",
+                    "Background solid fill path (if fill was requested with 'solid'). [Source line 201](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L201)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public fillPaths: Path[]",
+                    "[]",
+                    "All solid fill paths across single or composite shapes. [Source line 203](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L203)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public backgroundPath?: Path",
+                    "—",
+                    "Solid background fill path underneath hachures (when backgroundColor is specified). [Source line 205](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L205)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public backgroundPaths: Path[]",
+                    "[]",
+                    "All solid background fill paths across single or composite shapes. [Source line 207](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L207)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sketchPaths: Path[]",
+                    "[]",
+                    "Hachure / stipple sketch line paths. [Source line 209](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L209)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public strokePaths: Path[]",
+                    "[]",
+                    "Outer sketchy outline strokes. [Source line 211](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L211)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        source: RoughSource,\n        options: RoughShapeOptions = {}\n    )",
+                    "—",
+                    "Implementation: `super(); this._source = source; this._options = { ...options }; this.rebuild(); if (this._options.boil) { this.startBoil({ fps: this._options.boilFps }); }`. [Source line 215](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L215)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get roughness(): number",
+                    "—",
+                    "Implementation: `return this._options.roughness ?? 0.5;`. [Source line 228](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L228)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set roughness(val: number)",
+                    "—",
+                    "Implementation: `this._options.roughness = val; this.rebuild();`. [Source line 229](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L229)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get bowing(): number",
+                    "—",
+                    "Implementation: `return this._options.bowing ?? 1;`. [Source line 231](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L231)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set bowing(val: number)",
+                    "—",
+                    "Implementation: `this._options.bowing = val; this.rebuild();`. [Source line 232](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L232)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get seed(): number | 'auto'",
+                    "—",
+                    "Implementation: `return this._options.seed ?? 'auto';`. [Source line 234](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L234)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set seed(val: number | 'auto')",
+                    "—",
+                    "Implementation: `this._options.seed = val; this.rebuild();`. [Source line 235](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L235)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSeed(val: number | 'auto'): this",
+                    "—",
+                    "Implementation: `this.seed = val; return this;`. [Source line 237](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L237)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get time(): number",
+                    "—",
+                    "Implementation: `return this._options.time ?? 0;`. [Source line 242](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L242)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set time(val: number)",
+                    "—",
+                    "Implementation: `this.setTime(val);`. [Source line 243](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L243)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setTime(time: number): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._options.time`; calls to `this.rebuild`; return paths including `this`. [Source line 245](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L245)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get boilFps(): number",
+                    "—",
+                    "Implementation: `return this._options.boilFps ?? 12;`. [Source line 257](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L257)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set boilFps(val: number)",
+                    "—",
+                    "Implementation: `if (this._options.boilFps !== val) { this._options.boilFps = val; this.rebuild(); }`. [Source line 258](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L258)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public startBoil(options?: { fps?: number; speed?: number }): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._boilHandle`; calls to `this.stopBoil`, `this.always`, `this.setTime`; return paths including `this`. [Source line 265](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L265)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public stopBoil(): this",
+                    "—",
+                    "Implementation: `if (this._boilHandle) { this._boilHandle.stop(); this._boilHandle = undefined; } return this;`. [Source line 275](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L275)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isBoiling(): boolean",
+                    "—",
+                    "Implementation: `return this._boilHandle?.isRunning ?? false;`. [Source line 283](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L283)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static startBoil(\n        target: RoughShape | RoughShape[],\n        options?: { fps?: number; speed?: number }\n    ): void",
+                    "—",
+                    "Implementation: `const targets = Array.isArray(target) ? target : [target]; for (const t of targets) t.startBoil(options);`. [Source line 287](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L287)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static stopBoil(target: RoughShape | RoughShape[]): void",
+                    "—",
+                    "Implementation: `const targets = Array.isArray(target) ? target : [target]; for (const t of targets) t.stopBoil();`. [Source line 295](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L295)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static isBoiling(entity: RoughShape): boolean",
+                    "—",
+                    "Implementation: `return entity.isBoiling;`. [Source line 300](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L300)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static createAnim(\n        entity: RoughShape,\n        options?: RoughCreateOptions\n    ): Concurrent",
+                    "—",
+                    "Implementation: `return roughCreateAnim(entity, options);`. [Source line 304](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L304)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public override boil(options?: RoughBoilOptions): Animation",
+                    "—",
+                    "Implementation: `return new RoughBoilAnimation(this, options);`. [Source line 311](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L311)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get fillStyle(): RoughFillStyle | undefined",
+                    "—",
+                    "Implementation: `return this._options.fillStyle;`. [Source line 315](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L315)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set fillStyle(val: RoughFillStyle | undefined)",
+                    "—",
+                    "Implementation: `this._options.fillStyle = val; this.rebuild();`. [Source line 316](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L316)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get backgroundColor(): string | Color | undefined",
+                    "—",
+                    "Implementation: `return this._options.backgroundColor;`. [Source line 318](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L318)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set backgroundColor(val: string | Color | undefined)",
+                    "—",
+                    "Implementation: `this._options.backgroundColor = val; this.rebuild();`. [Source line 319](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L319)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get strokeWidth(): number",
+                    "—",
+                    "Implementation: `return this._options.strokeWidth ?? 2;`. [Source line 321](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L321)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set strokeWidth(val: number)",
+                    "—",
+                    "Implementation: `this._options.strokeWidth = val; this.rebuild();`. [Source line 322](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L322)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get fillWeight(): number",
+                    "—",
+                    "Implementation: `return this._options.fillWeight ?? (this.strokeWidth / 2);`. [Source line 324](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L324)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set fillWeight(val: number)",
+                    "—",
+                    "Implementation: `this._options.fillWeight = val; this.rebuild();`. [Source line 325](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L325)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get options(): Readonly<RoughShapeOptions>",
+                    "—",
+                    "Implementation: `return this._options;`. [Source line 327](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L327)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setOptions(opts: Partial<RoughShapeOptions>): this",
+                    "—",
+                    "Implementation: `Object.assign(this._options, opts); if (opts.boil !== undefined) { if (opts.boil) { this.startBoil({ fps: this._options.boilFps }); } else { this.stopBoil(); } } return this.rebuild();`. [Source line 331](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L331)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setSource(source: RoughSource): this",
+                    "—",
+                    "Implementation: `this._source = source; return this.rebuild();`. [Source line 343](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L343)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isComposite(): boolean",
+                    "—",
+                    "Implementation: `return this._source instanceof VectorEntity && !(this._source instanceof Path);`. [Source line 348](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L348)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public rebuild(): this",
+                    "—",
+                    "Regenerates all inner Retiam paths using rough.js generator. [Source line 355](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L355)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoughBoilOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "speed?: number;",
+                    "—",
+                    "Speed multiplier for the line-boil (1.0 = normal 12 fps, 2.0 = twice as fast). Default: 1.0 [Source line 654](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L654)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoughBoilAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        target: RoughShape | Path | (RoughShape | Path)[],\n        options: RoughBoilOptions = {}\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._targets`, `this.entity`, `this._speed`, `this._startTime`, `this.LABEL`; calls to `Rate.linear`. [Source line 662](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L662)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: ``. [Source line 676](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L676)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`; calls to `item.setTime`, `this.rate_func`, `updateTime`, `this.onComplete`, `this.complete`; return paths including `false`, `true`; 2 explicit loops. [Source line 678](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L678)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoughCreateOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "boil?: boolean;",
+                    "—",
+                    "Whether to boil the rough sketch lines during the creation animation. Default: true (unless the entity is already boiling continuously). [Source line 747](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L747)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.fps ?? this._options.boilFps ?? 12",
+                    "[Line 267](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L267)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.fps ?? this._options.boilFps",
+                    "[Line 267](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L267)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.speed ?? 1.0",
+                    "[Line 268](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L268)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.boil ?? true",
+                    "[Line 759](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L759)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "colorToString: function colorToString(c?: string | Color): string | undefined",
+                    "Implementation: `if (!c || c === \"none\") return undefined; if (typeof c === \"string\") return c; if (c instanceof Color) return c.toHex(); return undefined;`.",
+                    "[Line 120](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L120)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "toRetiamColor: function toRetiamColor(val?: string | Color): Color",
+                    "Body operations (including nested callbacks): calls to `val.startsWith`, `hex`, `Color.fromHex`; return paths including `Color.NONE`, `val`, `hex(val)`.",
+                    "[Line 127](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L127)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "opsToSvg: function opsToSvg(ops: Op[], scale: number, flipY: boolean, closeFirst = false): string",
+                    "Body operations (including nested callbacks): calls to `(closeFirst ? d + \"Z\" : d).trim`; return paths including `(closeFirst ? d + \"Z\" : d).trim()`; 1 explicit loop.",
+                    "[Line 137](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L137)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "chainPasses: function chainPasses(ops: Op[], scale: number, flipY: boolean): string",
+                    "Body operations (including nested callbacks): calls to `passes[(i / 2) % 2].push`, a template-literal expression (see source), a template-literal expression (see source), `passes.map`, `d.trim`; return paths including `\"\"`, `d.trim()`; 2 explicit loops.",
+                    "[Line 155](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/RoughShape.ts#L155)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [VGroup](/api-entities-layout#vgroup), [AnimOptions](/api-animation#animoptions), [Animation](/api-animation#animation), [CreateOptions](/api-animation-creation#create)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "index",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "index"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/rough/index.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/rough/index.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/rough/index.ts)."
+            },
+            {
+              "type": "callout",
+              "variant": "info",
+              "content": "This module is internal or is not reachable through the package entry barrels. Use its source path inside the repository; do not assume it can be imported from `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": []
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export default rough;"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

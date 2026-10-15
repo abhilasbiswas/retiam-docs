@@ -1,0 +1,599 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-frame-graph-architecture-and-extensibility",
+  "title": "FrameGraph Architecture, Extensibility & Custom Pass Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/FRAME_GRAPH_ARCHITECTURE_AND_EXTENSIBILITY.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/FRAME_GRAPH_ARCHITECTURE_AND_EXTENSIBILITY.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/FRAME_GRAPH_ARCHITECTURE_AND_EXTENSIBILITY.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [FrameGraph](/api-render-frame-graph#framegraph), [Pass](/api-render-frame-graph#pass), [Graph](/api-libs-graphs-graph#graph), [IPlugin](/api-core#iplugin), [Pipeline](/api-render-pipelines#pipeline), [Code](/api-entities-composites-text#code), [Model](/api-entities-primitives-3d#model), [TextureHandle](/api-render-frame-graph#resource), [BufferHandle](/api-render-frame-graph#resource), [CreateTexturePass](/api-render-passes#createtexturepass), [ShadowPass](/api-render-passes#shadowpass), [RenderPass](/api-render-passes#renderpass), [AntiAliasingPass](/api-render-passes#antialiasingpass), [PresentPass](/api-render-passes#presentpass), [GraphBuilder](/api-render-frame-graph#graphbuilder), [RenderContext](/api-render-frame-graph#rendercontext), [ResourcePool](/api-render-frame-graph#resourcepool), [TextureDesc](/api-render-frame-graph#resource), [OutlinePass](/api-plugins#outlineplugin), [Usage](/api-utils#gpu-utils), [Texture](/api-render-pipelines#resourcelayouts), [RenderIO](/api-core#iplugin), [Scene](/api-core-scene#scene), [SceneComposer](/api-core-scenecomposer#scenecomposer)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an exhaustive, bit-by-bit technical breakdown of the **FrameGraph (Render Graph) Subsystem** in the Retiam WebGPU Engine. It covers DAG compilation, dead-code culling, transient resource memory pooling, decorator-driven dependency tracking, modular render features (`IPlugin`), and step-by-step guides for creating custom passes and post-processing plugins."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In traditional rendering engines, the render loop executes a rigid, hardcoded sequence of passes. This creates major architectural problems:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**VRAM Bloat**: Render targets (shadow maps, G-Buffers, post-process ping-pongs) remain permanently allocated in VRAM even when their lifespan is only a fraction of a frame.",
+            "**Pipeline Rigidity**: Adding custom effects (e.g. cel-shading outlines, bloom, raytracing, order-independent transparency) requires modifying monolithic render loop code.",
+            "**Lack of Dead-Code Culling**: Inactive passes continue to execute and consume GPU cycles."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "The Retiam FrameGraph Solution:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam utilizes an **Acyclic Directed Graph (DAG) Execution Model**:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Virtual Resource Declarations**: Passes declare what resources they `@create`, `@read`, and `@write` using abstract handles (`TextureHandle`, `BufferHandle`).",
+            "**Automated Dependency Graph & Topological Sorting**: The engine analyzes inputs and outputs to determine the execution order using Kahn's algorithm.",
+            "**Dead-Code Elimination (Culling)**: Any pass whose outputs are not transitively consumed by an unculled sink (such as the canvas presentation pass) is automatically culled from the execution schedule.",
+            "**Transient Resource Aliasing & Memory Pooling**: Textures and buffers with non-overlapping execution lifetimes share the same underlying physical GPU allocations, reducing VRAM consumption by up to **70%**."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph \"Pass Registration & DAG Building\"\n        P1[\"CreateTexturePass\"] -->|\"sceneColor, depth\"| P2[\"ShadowPass\"]\n        P2 -->|\"shadowMap\"| P3[\"RenderPass (Main Raster)\"]\n        P1 -->|\"depth\"| P3\n        P3 -->|\"resolvedColor\"| P4[\"AntiAliasingPass\"]\n        P4 -->|\"aaOutput\"| P5[\"Custom Post-Processing (e.g. CelShading)\"]\n        P5 -->|\"finalColor\"| P6[\"PresentPass (isUnculled = true)\"]\n    end\n    \n    subgraph \"FrameGraph Compilation\"\n        A[\"1. onSetup() & Decorator Registration\"] --> B[\"2. In-Place Versioning & Aliasing\"]\n        B --> C[\"3. DAG Traversal & Dead-Code Culling\"]\n        C --> D[\"4. Topological Sort (Kahn's Algorithm)\"]\n        D --> E[\"5. Resource Lifetime Analysis\"]\n        E --> F[\"6. Physical Memory Allocation & Pooling\"]\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-core-elements-building-blocks",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Elements & Building Blocks"
+        },
+        {
+          "type": "paragraph",
+          "text": "The FrameGraph subsystem consists of 6 foundational components located in [`src/engine/render/frame_graph/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph):"
+        },
+        {
+          "type": "tree",
+          "variant": "folder",
+          "nodes": [
+            {
+              "label": "src/engine/render/frame_graph/",
+              "children": [
+                {
+                  "label": "FrameGraph.ts",
+                  "description": "Main graph manager, DAG compilation, topological sort, execution loop"
+                },
+                {
+                  "label": "GraphBuilder.ts",
+                  "description": "Setup-time pass interface (resource registration, unculled marking)"
+                },
+                {
+                  "label": "Pass.ts",
+                  "description": "Base Pass class and @read, @write, @create decorators"
+                },
+                {
+                  "label": "RenderContext.ts",
+                  "description": "Execution-time context (device, encoder, getTextureView, getBuffer)"
+                },
+                {
+                  "label": "Resource.ts",
+                  "description": "Branded handles (TextureHandle, BufferHandle) & Descriptors"
+                },
+                {
+                  "label": "ResourcePool.ts",
+                  "description": "Hardware GPU resource cache & lifetime-aware allocator"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Virtual Resource Handles (Resource.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Resources in the FrameGraph are declared as lightweight, branded virtual handles that carry zero GPU memory at declaration time:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface TextureHandle {\n    id: number;\n    index: number;\n    __brand: 'texture';\n}\n\nexport interface BufferHandle {\n    id: number;\n    index: number;\n    __brand: 'buffer';\n}\n\nexport function createTextureHandle(): TextureHandle {\n    return { id: ++_next_id, index: 0, __brand: 'texture' } as TextureHandle;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Resource Descriptors & Sizing Modes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Textures and buffers define sizing rules dynamically:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`fixed`**: Explicit pixel dimensions (e.g. $2048 \\times 2048$ shadow map).",
+            "**`relative`**: Dynamically scaled relative to canvas resolution (e.g. `scale: 1.0` for full resolution, `scale: 0.5` for half-res bloom).",
+            "**`custom`**: Sized via a custom callback function `(canvasWidth, canvasHeight) => { width, height }`."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Relative full-screen color texture descriptor\nconst desc: TextureDesc = {\n    mode: \"relative\",\n    scale: 1.0,\n    format: \"bgra8unorm\",\n    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING\n};"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Dependency Decorators (@read, @write, @create)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Pass dependencies can be declared cleanly using TypeScript property decorators in [`Pass.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/Pass.ts):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Decorator",
+            "Effect on Graph"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`@read`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Declares that the pass reads the specified handle, creating an incoming DAG dependency edge."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`@create`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Declares that the pass creates a new virtual resource, making this pass the resource's creator node."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`@write`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Declares an in-place resource mutation. The compiler automatically creates a versioned alias handle to maintain DAG acyclic guarantees."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class OutlinePass extends Pass {\n    @read public inputColor: TextureHandle;\n    @read public inputDepth: TextureHandle;\n    @create public outputColor: TextureHandle;\n\n    constructor(colorIn: TextureHandle, depthIn: TextureHandle, colorOut: TextureHandle) {\n        super(\"OutlinePass\");\n        this.inputColor = colorIn;\n        this.inputDepth = depthIn;\n        this.outputColor = colorOut;\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "3-framegraph-compilation-lifecycle-step-by-step",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. FrameGraph Compilation Lifecycle: Step-by-Step"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `frameGraph.compile()` is called, the graph executes a 5-phase optimization sequence:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 1: Setup Phase & Version Tracking"
+        },
+        {
+          "type": "paragraph",
+          "text": "The compiler iterates through all passes, executing `pass.onSetup(builder)`:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Decorator properties (`@read`, `@write`, `@create`) are parsed and added to internal tracking arrays.",
+            "In-place writes (`@write`) are versioned by aliasing the root resource with a new handle index."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 2: Dead-Code Elimination (Culling)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The compiler traverses backwards from all **terminal sinks** (`isUnculled = true`, such as `PresentPass`):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "private buildDAGAndCull(): Pass[] {\n    const activePasses = new Set<Pass>();\n    const stack = this.passes.filter(p => p.isUnculled);\n\n    while (stack.length > 0) {\n        const pass = stack.pop()!;\n        if (activePasses.has(pass)) continue;\n        activePasses.add(pass);\n\n        const activateCreator = (creator: Pass | null) => {\n            if (creator && !activePasses.has(creator)) stack.push(creator);\n        };\n\n        for (const h of pass.textureReads) activateCreator(this.textures[h.index].creator);\n        for (const h of pass.bufferReads) activateCreator(this.buffers[h.index].creator);\n    }\n    return this.passes.filter(p => activePasses.has(p) || p.isUnculled);\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Any pass that produces textures never read by an active downstream pass is automatically culled!"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 3: Topological Sorting (Kahn's Algorithm)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Dependencies are converted into directed edges ($A \\to B$ where $B$ reads from $A$). The graph executes a topological sort to guarantee that producer passes always execute before consumer passes."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 4: Resource Lifetime Analysis"
+        },
+        {
+          "type": "paragraph",
+          "text": "For every active resource, the compiler records the index of the first pass that accesses it (`firstPassIndex`) and the last pass that consumes it (`lastPassIndex`)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Phase 5: Transient Resource Aliasing & Memory Pooling"
+        },
+        {
+          "type": "paragraph",
+          "text": "When acquiring physical textures from [`ResourcePool.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/frame_graph/ResourcePool.ts), the engine computes a hardware hash:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Hash} = \\text{Type} : \\text{Usage} : \\text{Format} : \\text{SampleCount} : \\text{Width} : \\text{Height}"
+        },
+        {
+          "type": "paragraph",
+          "text": "If an existing physical GPU texture with a matching hash has a lifespan that has **already ended** before the current pass starts, the physical texture is reused!"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n  S[\"Pass 0: ShadowPass<br/>Physical texture A\"] --> RELEASE[\"Texture A lifetime ends<br/>Pass range: 0..0\"]\n  RELEASE --> R[\"Pass 1: main RenderPass<br/>Physical texture B\"]\n  R --> B[\"Pass 2: bloom downsample<br/>Reuses physical texture A\"]"
+        }
+      ]
+    },
+    {
+      "id": "4-the-render-feature-plugin-architecture-iplugin",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. The Render Feature Plugin Architecture (IPlugin)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The primary way to extend Retiam's rendering pipeline is by implementing the `IPlugin` interface. The same interface is used for both config-level plugins and FrameGraph render features:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Location: src/engine/plugins/IPlugin.ts\n\nexport interface RenderIO {\n    color: TextureHandle;\n    resolvedColor: TextureHandle;\n    depth: TextureHandle;\n    shadow?: TextureHandle;\n}\n\nexport interface IPlugin {\n    name: string;\n    install?(scene?: Scene, composer?: SceneComposer): void;\n    registerPasses?(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO;\n    dispose?(): void;\n    priority?: number; // Lower values execute first (default: 100)\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "How Render Features Compose:"
+        },
+        {
+          "type": "paragraph",
+          "text": "In `Renderer.buildFrameGraph()`, the engine pipes the `RenderIO` chain through every registered feature:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "let currentIO: RenderIO = { \n    color: screen_texture, \n    resolvedColor: resolved_screen_texture,\n    depth: depth_texture \n};\n\n// Dynamically pipe through all features:\nfor (const feature of renderer.features) {\n    currentIO = feature.registerPasses(frameGraph, renderer, currentIO);\n}"
+        }
+      ]
+    },
+    {
+      "id": "5-built-in-core-engine-features-passes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Built-In Core Engine Features & Passes"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Feature / Pass Name",
+            "Role in Engine",
+            "Input Handles",
+            "Output Handles"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`ComputeUpdate`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Batched compute shaders (stroke encoding, arc lengths, particle physics)"
+                },
+                {
+                  "text": "None"
+                },
+                {
+                  "text": "GPU storage buffers"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`CreateTexturePass`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Allocates initial scene color, MSAA targets, and depth-stencil buffers"
+                },
+                {
+                  "text": "None"
+                },
+                {
+                  "text": "`sceneColor`, `depthBuffer`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`ShadowFeature` / `ShadowPass`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Rasterizes light-space depth map for 3D casting models"
+                },
+                {
+                  "text": "`albedoTexArray`"
+                },
+                {
+                  "text": "`shadowMap`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`MainRasterFeature` / `RenderPass`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Main forward rasterization pass executing sorted `render_queue` items"
+                },
+                {
+                  "text": "`shadowMap`, `albedoTexArray`"
+                },
+                {
+                  "text": "`sceneColor`, `resolvedColor`, `depth`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`RaytraceFeature` / `RaytracePass`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Hybrid BVH path tracing and G-Buffer generation"
+                },
+                {
+                  "text": "`albedoTexArray`, `normalTexArray`"
+                },
+                {
+                  "text": "`rtColor`, `rtDepth`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`OIDNDenoisePass` / `SpatialDenoisePass`**",
+                  "type": "text"
+                },
+                {
+                  "text": "AI/Spatial denoising on path-traced buffers"
+                },
+                {
+                  "text": "`rtColor`, `rtAlbedo`, `rtNormal`"
+                },
+                {
+                  "text": "`denoisedColor`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`PPLLPrepareFeature` / `PPLLCompositeFeature`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Order-Independent Transparency (Per-Pixel Linked Lists)"
+                },
+                {
+                  "text": "`depth`"
+                },
+                {
+                  "text": "`resolvedColor`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`AntiAliasingPass`**",
+                  "type": "text"
+                },
+                {
+                  "text": "High-quality SSAA / Bilinear downsampling"
+                },
+                {
+                  "text": "`resolvedColor`"
+                },
+                {
+                  "text": "`finalOutput`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`PresentPass`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Swapchain presentation to HTML canvas (`isUnculled = true`)"
+                },
+                {
+                  "text": "`finalOutput`"
+                },
+                {
+                  "text": "Canvas Screen"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-step-by-step-custom-pass-feature-tutorial",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Step-by-Step Custom Pass & Feature Tutorial"
+        },
+        {
+          "type": "paragraph",
+          "text": "Below is a complete, real-world example from [`src/plugins/OutlinePlugin.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/plugins/OutlinePlugin.ts) showing how to write a custom edge-detection pass using depth discontinuities and register it as an `IPlugin`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { FrameGraph, GraphBuilder, Pass, read, create, RenderContext, TextureHandle, createTextureHandle, IPlugin, RenderIO, Renderer } from \"retiam\";\n\n// 1. Define the Custom Pass\nexport class CelOutlinePass extends Pass {\n    @read public inputColor: TextureHandle;\n    @read public inputDepth: TextureHandle;\n    @create public outputColor: TextureHandle;\n\n    private pipeline!: GPURenderPipeline;\n\n    constructor(colorIn: TextureHandle, depthIn: TextureHandle, colorOut: TextureHandle) {\n        super(\"CelOutlinePass\");\n        this.inputColor = colorIn;\n        this.inputDepth = depthIn;\n        this.outputColor = colorOut;\n    }\n\n    setup(builder: GraphBuilder): void {\n        // Declare the output texture: matching canvas size & format\n        builder.createTexture(this.outputColor, {\n            format: navigator.gpu?.getPreferredCanvasFormat() || 'bgra8unorm',\n            mode: 'relative',\n            scale: 1.0,\n            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING\n        });\n        builder.markUnculled();\n    }\n\n    execute(context: RenderContext): void {\n        const { device, commandEncoder } = context;\n\n        // Lazy initialize the WebGPU render pipeline\n        if (!this.pipeline || this.isDirty) {\n            const shaderCode = `\n                @vertex fn vs(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f {\n                    var pos = array<vec2f, 3>(vec2f(-1.0, -1.0), vec2f(3.0, -1.0), vec2f(-1.0, 3.0));\n                    return vec4f(pos[i], 0.0, 1.0);\n                }\n\n                @group(0) @binding(0) var colorTex: texture_2d<f32>;\n                @group(0) @binding(1) var depthTex: texture_depth_2d;\n\n                @fragment fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {\n                    let coord = vec2i(pos.xy);\n                    let baseColor = textureLoad(colorTex, coord, 0);\n\n                    // Depth edge detection (Sobel filter):\n                    let d0 = textureLoad(depthTex, coord, 0);\n                    let dR = textureLoad(depthTex, coord + vec2i(1, 0), 0);\n                    let dL = textureLoad(depthTex, coord + vec2i(-1, 0), 0);\n                    let dU = textureLoad(depthTex, coord + vec2i(0, 1), 0);\n                    let dD = textureLoad(depthTex, coord + vec2i(0, -1), 0);\n\n                    let diff = abs(dR - d0) + abs(dL - d0) + abs(dU - d0) + abs(dD - d0);\n                    let edge = select(0.0, 1.0, diff > 0.0005 && d0 > 0.0001);\n\n                    return vec4f(mix(baseColor.rgb, vec3f(0.0), edge), baseColor.a);\n                }\n            `;\n\n            this.pipeline = device.createRenderPipeline({\n                layout: 'auto',\n                vertex: { module: device.createShaderModule({ code: shaderCode }), entryPoint: 'vs' },\n                fragment: {\n                    module: device.createShaderModule({ code: shaderCode }),\n                    entryPoint: 'fs',\n                    targets: [{ format: navigator.gpu?.getPreferredCanvasFormat() || 'bgra8unorm' }]\n                },\n                primitive: { topology: 'triangle-list' }\n            });\n            this.isDirty = false;\n        }\n\n        // Retrieve physical WebGPU texture views from the context:\n        const colorView = context.getTextureView(this.inputColor);\n        const depthView = context.getTexture(this.inputDepth).createView({ aspect: 'depth-only' });\n        const outputView = context.getTextureView(this.outputColor);\n\n        const bindGroup = device.createBindGroup({\n            layout: this.pipeline.getBindGroupLayout(0),\n            entries: [\n                { binding: 0, resource: colorView },\n                { binding: 1, resource: depthView }\n            ]\n        });\n\n        const pass = commandEncoder.beginRenderPass({\n            colorAttachments: [{\n                view: outputView,\n                loadOp: 'clear',\n                clearValue: { r: 0, g: 0, b: 0, a: 1 },\n                storeOp: 'store'\n            }]\n        });\n\n        pass.setPipeline(this.pipeline);\n        pass.setBindGroup(0, bindGroup);\n        pass.draw(3); // Fullscreen triangle\n        pass.end();\n    }\n}\n\n// 2. Wrap into an IPlugin\nexport class OutlinePlugin implements IPlugin {\n    name = \"OutlinePlugin\";\n    priority = 200;\n\n    constructor(public options: { threshold?: number, thickness?: number } = {}) {}\n\n    registerPasses(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO {\n        const outlineOutput = createTextureHandle();\n        const outlinePass = new CelOutlinePass(io.resolvedColor, io.depth, outlineOutput);\n\n        graph.addPass(outlinePass);\n        io.resolvedColor = outlineOutput; // Intercept the color chain!\n\n        return io;\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. How Users Enable the Custom Feature in Their Scene:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene } from \"retiam\";\nimport { OutlinePlugin } from \"retiam/plugins/OutlinePlugin\";\n\nexport class MyScene extends Scene {\n    public async run() {\n        // Install as a plugin — automatically registers with the FrameGraph:\n        this.use(new OutlinePlugin({ thickness: 1.5 }));\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "7-best-practices-troubleshooting",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Best Practices & Troubleshooting"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Depth Texture Bindings (`aspect: 'depth-only'`)**:",
+              "children": [
+                "When reading depth textures in a post-process fragment shader, WebGPU requires creating a texture view with `{ aspect: 'depth-only' }` instead of binding a combined depth-stencil texture view."
+              ]
+            },
+            {
+              "text": "**Terminal Sinks (`markUnculled`)**:",
+              "children": [
+                "If your custom pass writes to an offscreen target or drives external output, make sure to call `builder.markUnculled()` during `setup()`, or ensure its output is consumed by a downstream unculled pass."
+              ]
+            },
+            {
+              "text": "**Dirty State Flags (`isDirty`)**:",
+              "children": [
+                "When pipelines, canvas sizes, or shader parameters change, set `this.isDirty = true` on your pass to recreate bind groups and pipeline layouts."
+              ]
+            },
+            {
+              "text": "**Rebuilding the Graph (`frameGraphDirty = true`)**:",
+              "children": [
+                "If you add or remove features at runtime (e.g. toggling raytracing or bloom on keypress), set `renderer.frameGraphDirty = true` to trigger automatic DAG recompilation on the next frame."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "RendererComponent": {
+    "description": "Connect an entity’s geometry and fragment components to the WebGPU draw pipeline. Its preparation step watches their data and shader versions so resource changes update bindings while shader changes trigger pipeline compilation.",
+    "notes": [
+      "Compatibility is checked pass by pass: a fragment pass needs a matching geometry pass and the varyings it expects. Prefer compatible built-in components when authoring scenes; inspect checkCompatibility and applySchema when creating a rendering extension."
+    ]
+  },
+  "RendererComponent.prepare": {
+    "description": "Prepare geometry and shading resources, then update the cached pipeline or bind groups only when their tracked versions change. Scene rendering calls this as part of preparing an entity for drawing."
+  },
+  "RendererComponent.checkCompatibility": {
+    "description": "Check that every fragment pass can find a geometry pass and that the geometry supplies each required varying with the expected type. A missing pass or incompatible varying makes the pair unsuitable for this renderer."
+  },
+  "RendererComponent.applySchema": {
+    "description": "Transfer the geometry’s vertex, instance and varying schemas and both components’ shader entry bodies into a ShaderBuilder. This is the bridge between component declarations and the shader generated for their shared pass."
+  },
+  "ControlPanel": {
+    "description": "Add a small DOM panel of sliders for a scene’s numerical parameters. Each slider shares its value with a number input and calls the supplied onChange callback, making it useful for tuning geometry, animation and shader values.",
+    "notes": [
+      "The panel attaches to its configured parent or document.body. Call destroy when its owner is removed so the controls leave the page with the scene."
+    ]
+  },
+  "PlotPrimitiveFactory": {
+    "description": "Choose how plotting curves and grids become drawable entities. The line3d backend keeps spatial points in Line3D; the path backend writes their XY coordinates into an analytical Path.",
+    "notes": [
+      "This factory lets axes and plotting composites share style and shader options while choosing their rendering primitive. The path form represents planar geometry, so use line3d when the Z coordinate matters."
+    ]
+  },
+  "MathShape3D": {
+    "description": "Show a mathematical solid with a shaded surface and visible edges. The composite owns a Model for the surface and a VGroup of Line3D strokes, so a shared transform moves the entire illustration.",
+    "notes": [
+      "Supply explicit edges when you want a teaching diagram’s chosen rings or outline. Otherwise extractUniqueEdges finds edges from the mesh; its spatial hashing rounds positions to three decimal places. Surface material and stroke paint remain separate controls."
+    ]
+  },
+  "Text": {
+    "description": "Render text as vector glyph paths that can be filled, outlined, measured and animated like other VectorEntity geometry. Use this representation when you need character paths or vector shape transformations rather than an atlas-textured label.",
+    "notes": [
+      "Font selection can resolve asynchronously. Measure bounds and perform layout after the required font is ready; changes to text or font rebuild the glyph geometry. The text and rawText setters both rebuild from the new string."
+    ]
+  },
+  "Text.constructor": {
+    "description": "Create vector text from a string and optional TextOptions. The current defaults use a white fill and a font size of 48; a configured font can be a style name or a parsed font.",
+    "parameters": {
+      "text": "The string to turn into glyph geometry, including supported line breaks.",
+      "options": "TextOptions for font selection, size, spacing, paint and vector path shaders."
+    }
+  },
+  "Text.chars": {
+    "description": "The glyph-level path slots produced from the current string. A slot can be null when it has no drawable outline; do not assume every character corresponds to a visible Path."
+  },
+  "Text.setFont": {
+    "description": "Replace the selected font and rebuild the vector text. A parsed font becomes the custom font directly; a string selects a font style and goes through the string-font resolver."
+  },
+  "Text.rawText": {
+    "description": "Read the string used to build this entity. Assigning a new string rebuilds its vector glyphs, so measure or arrange the entity again when the content changes."
+  },
+  "Text.text": {
+    "description": "An alternate accessor for the underlying text string. Its setter rebuilds glyph geometry just like rawText."
+  },
+  "ValueTracker": {
+    "description": "Keep a number on the scene timeline without drawing an object. Other entities can read the tracker in an updater, while animateValue uses the same Animator interpolation that moves and styles visible entities.",
+    "notes": [
+      "The value is stored in transform.t1 and the entity is marked invisible. Assign value for an immediate change; pass animateValue(target) to Scene.play for a timed transition."
+    ],
+    "example": "labs/pg-value-tracker"
+  },
+  "ValueTracker.constructor": {
+    "description": "Create an invisible entity holding the initial scalar value.",
+    "parameters": {
+      "initialValue": "The number that should be available before any animation or updater runs."
+    }
+  },
+  "FeedbackZoomView": {
+    "description": "Display an enlarged region of the previous rendered frame, with a focus box showing which area is sampled. The display surface, window border and focus border are child entities that move with this composite.",
+    "notes": [
+      "The scene must provide a feedbackFeature with getPreviousFrameTexture. The current UV conversion uses camera.orthoScale and the canvas aspect ratio; treat it as an orthographic magnifier rather than a general perspective-camera portal."
+    ]
+  },
+  "FeedbackZoomView.setFocusPosition": {
+    "description": "Move the sampled region’s center and its focus box to the supplied scene coordinate. The next update converts that coordinate to feedback-texture UV offsets."
+  },
+  "FeedbackZoomView.setZoomFactor": {
+    "description": "Change the enlargement and resize the focus outline accordingly. Values are clamped to the supported range of 0.5 through 20."
+  },
+  "FeedbackZoomView.getFocusPosition": {
+    "description": "Return a copy of the current focus coordinate. Editing the returned vector does not move the focus box; use setFocusPosition to change it."
+  },
+  "SDFMorph3D": {
+    "description": "Blend two spatial distance-field trees in a renderable SDFEntity3D. The underlying SDFMorph combines the two fields, while setWeight updates a uniform so the blend can change without recompiling the shader.",
+    "notes": [
+      "Weights are clamped to zero through one. Both inputs are SDFNode trees; this is field interpolation, so it does not require matching mesh vertex counts."
+    ]
+  },
+  "SDFMorph3D.getWeight": {
+    "description": "Read the morph weight stored on the volume’s SDFFragment, or zero when the fragment is unavailable."
+  },
+  "FontCache": {
+    "description": "Reuse parsed vector fonts and generated MSDF fonts instead of rebuilding them for every label. Session maps hold the loaded font objects, an in-flight map shares pending work, and IndexedDB stores atlas metadata and image blobs across sessions.",
+    "notes": [
+      "clearMemory removes session entries; clearDisk removes the persistent atlas database. Disk reads return null when the cache is unavailable or a record cannot be read, allowing font generation to continue."
+    ]
+  },
+  "FontCache.clearMemory": {
+    "description": "Clear the vector, MSDF and pending-work maps for the current session. This does not remove the IndexedDB atlas records."
+  },
+  "FontCache.clearDisk": {
+    "description": "Delete the persistent retiam_font_cache database. Its promise rejects if IndexedDB reports a deletion error; it does not clear the in-memory font maps."
+  },
+  "FontResolver": {
+    "description": "Normalize a font source into binary font data and a cache identifier. It accepts raw buffers, blobs and supported string sources, and converts compressed web-font containers to SFNT data before parsing or atlas generation."
+  },
+  "MSDFGenerator": {
+    "description": "Generate a multi-channel distance-field glyph atlas in a worker from font binary data. The result includes BMFont metadata, an atlas Blob and an ImageBitmap for the text rendering pipeline.",
+    "notes": [
+      "Charset, glyph size, distance range and texture dimensions affect both quality and the amount of generated data. Use FontManager and FontCache for normal loading so labels can share generated resources."
+    ]
+  },
+  "FrustumPlane": {
+    "description": "Represent one normalized plane of a camera frustum. Its normal and constant define the signed expression used to decide which side of the clipping plane contains a point."
+  },
+  "FrustumPlane.setComponents": {
+    "description": "Set and normalize the plane coefficients together. A nearly zero normal resets the plane to zero rather than dividing by an unstable length."
+  },
+  "FrustumPlane.distanceToPoint": {
+    "description": "Evaluate the signed plane distance as dot(normal, point) + constant. A negative value lies outside the inward-facing plane used by the frustum tests."
+  },
+  "NoiseScaler": {
+    "description": "Turn raw noise into values useful for scene parameters. Remap its range, clamp it, create discrete terraces, sharpen its distribution or turn it into a threshold mask before using it for motion or geometry.",
+    "notes": [
+      "Range conversion methods do not automatically clamp the result. Apply clamp when an input can fall outside the expected source range."
+    ]
+  },
+  "GPUType": {
+    "description": "The small abstract contract for values that expose a GPU data representation. Implement dataType, getData and byteSize together so consumers can identify the value’s shader type, read its Float32Array and size its storage correctly."
+  },
+  "OBJLoader": {
+    "description": "Fetch Wavefront OBJ geometry and its optional MTL materials, then create Retiam entities from the parsed groups. One populated material group returns a Model; several groups return an Entity parent with Model children.",
+    "notes": [
+      "The loader chooses flat or smooth geometry processing, uses supplied normals when available, and resolves material texture URLs relative to the MTL file. On a caught load failure it logs the error and returns an empty Entity, so a resolved promise alone does not prove that geometry loaded."
+    ]
+  },
+  "Raycaster": {
+    "description": "Turn pointer coordinates into a scene ray and find the closest visible, pickable entity along it. The traversal respects layer masks, transforms the ray into each entity’s local space and dispatches to its raycast method or a bounds fallback.",
+    "notes": [
+      "cast uses reusable scratch storage and returns a reused hit record; copy values you need to retain across later casts. The synchronous path ignores a promise returned by an entity’s raycast implementation. GPU path intersection is exposed separately as an asynchronous operation."
+    ]
+  },
+  "Raycaster.cast": {
+    "description": "Traverse the supplied entity roots and their children, returning the nearest accepted hit or null. Invisible nodes are skipped; a node outside the culling mask can still have children on a matching layer."
+  },
+  "Raycaster.getRayFromMouse": {
+    "description": "Convert client-space pointer coordinates through the canvas rectangle and inverse view-projection matrix to a normalized world ray. Pass outRay to reuse vector storage when querying every frame."
+  },
+  "Queue": {
+    "description": "A first-in, first-out collection backed by numbered slots. enqueue appends at the rear; dequeue removes from the front and returns undefined when the queue is empty.",
+    "notes": [
+      "peek reads the next item without removing it. size measures the difference between the front and rear counters."
+    ]
+  },
+  "Queue.enqueue": {
+    "description": "Append an item to the rear of the queue, preserving insertion order."
+  },
+  "Queue.dequeue": {
+    "description": "Remove and return the oldest queued item. An empty queue returns undefined."
+  },
+  "Queue.peek": {
+    "description": "Read the oldest queued item without changing the queue, or undefined when empty."
+  },
+  "Queue.isEmpty": {
+    "description": "Return whether the front and rear counters identify the same position."
+  },
+  "Queue.size": {
+    "description": "Return the number of items waiting between the front and rear positions."
+  },
+  "Usage": {
+    "description": "Named combinations of WebGPU buffer usage flags used by Retiam’s allocation helpers. Choose the combination according to whether a buffer holds uniforms, vertices, indices or compute input/output.",
+    "notes": [
+      "USAGE_IO includes STORAGE and VERTEX plus copying in both directions. These flags describe permitted GPU operations; they do not allocate a buffer or describe its data layout."
+    ]
+  }
+}

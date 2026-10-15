@@ -1,0 +1,538 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-instanced-architecture-and-usage",
+  "title": "Instanced Architecture & Comprehensive Usage Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/INSTANCED_ARCHITECTURE_AND_USAGE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/INSTANCED_ARCHITECTURE_AND_USAGE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/INSTANCED_ARCHITECTURE_AND_USAGE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Instanced](/api-entities#instanced), [Usage](/api-utils#gpu-utils), [Pipeline](/api-render-pipelines#pipeline), [Storage](/api-render-pipelines#resourcelayouts), [Mode](/api-render-frame-graph#resource), [Pass](/api-render-frame-graph#pass), [Entity](/api-core-entity#entity), [Path](/api-entities-primitives-2d#path), [Model](/api-entities-primitives-3d#model), [Component](/api-core#component), [Shader](/api-entities-primitives-2d#shader), [Color](/api-math#color), [Fill](/api-core#fill), [State](/api-core#state), [Transform](/api-core-transform#transform), [PathRenderer](/api-components-renderers#pathrenderer), [TriangulatedPathRenderer](/api-components-renderers#triangulatedpathrenderer), [TriangulatedPathGeometry](/api-components-geometry#triangulatedpathgeometry), [Code](/api-entities-composites-text#code), [Scene](/api-core-scene#scene), [Vec3](/api-math-vector#vec3), [Quaternion](/api-math-vector#quaternion), [SVG](/api-entities-composites-svg#svg), [Create](/api-animation-creation#create)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a comprehensive technical overview and usage manual for the **GPU Hardware Instancing Pipeline** ([`Instanced`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts)) in the Retiam Engine."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "In traditional graphics architectures, hardware instancing often relies on per-instance vertex buffer attributes (`stepMode: 'instance'`). However, in modern bindless WebGPU architectures, this approach creates pipeline rigidity, forces pipeline rebuilds, and limits dynamic compute shader manipulation."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam employs a **Programmable Vertex-Pulling Storage Architecture**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Storage Buffer Binding**: Per-instance data is stored in a structured GPU storage buffer (`array<vec4f>`) bound at `@group(3) @binding(10)` or dynamic resource slot.",
+            "**Dual-Mode Bit Packing**: The WebGPU built-in `instance_index` is bit-packed to carry both the **bindless state index** and the **local instance index** simultaneously, with dedicated pass discrimination flags.",
+            "**Safe Prototype Cloning**: Instancing an entity clones component instances rather than mutating base class prototypes, preventing cross-entity contamination.",
+            "**Sub-Pass Discrimination (Bit 30)**: Fills and strokes are rendered through a single uber-shader in **exactly 2 draw calls** for thousands of vector paths."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    A[\"Template Entity (Path / Mesh / Model / Primitive)\"] --> B[\"new Instanced(template, count)\"]\n    B --> C[\"Safe Prototype Component Isolation\"]\n    C --> D[\"Storage Buffer Allocation (array<vec4f>, Stride = 12 floats)\"]\n    C --> E[\"Vertex Shader Injection (Programmable Vertex Pulling)\"]\n    C --> F[\"Fragment Shader Injection (Color & Opacity Multipliers)\"]\n    \n    subgraph \"WebGPU Render Pass (2 Draw Calls for N Paths)\"\n        G[\"Draw Call 1: Fill (Bit 30 = 0)\"] -->|\"instance_index = 0..N-1\"| I[\"Uber-Shader Vertex Pulling\"]\n        H[\"Draw Call 2: Stroke (Bit 30 = 1)\"] -->|\"instance_index = Bit30 | 0..N-1\"| I\n        I --> J[\"Rendered on Screen at 60+ FPS\"]\n    end\n    \n    D --> I"
+        }
+      ]
+    },
+    {
+      "id": "2-dual-mode-bit-allocation-firstinstance-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Dual-Mode Bit Allocation & firstInstance Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam packs entity state indices and local instance indices into the 32-bit `firstInstance` parameter passed to `pass.draw()` or `pass.drawIndexed()`."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Mode",
+            "Bit 31",
+            "Bit 30",
+            "State index bits",
+            "Local instance bits"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Standard",
+                "`0`",
+                "`S`",
+                "29–14: 16 bits, values 0–65,535",
+                "13–0: 14 bits, values 0–16,383"
+              ]
+            },
+            {
+              "cells": [
+                "Mega-instance",
+                "`1`",
+                "`S`",
+                "29–18: 12 bits, values 0–4,095",
+                "17–0: 18 bits, values 0–262,143"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Bit Fields:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Bit 31 (Mode Switch)**: `0` = Standard Mode (14-bit instance capacity), `1` = Mega Mode (18-bit instance capacity).",
+            "**Bit 30 (`S` - Stroke Flag)**: `0` = Fill / Default Pass, `1` = Stroke / Secondary Pass.",
+            "**State Index Bits**: Extracted branchlessly by the WGSL vertex shader to look up `states[state_index]` (matrix transforms, viewport bounds, global paint).",
+            "**Local Index Bits**: Extracted branchlessly by the WGSL vertex shader to pull instance offsets, rotations, scales, and colors from the `instances` storage buffer."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Branchless WGSL Decoder ([common.wgsl](../src/engine/shaders/includes/common.wgsl)):"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn getStateIndex(instance_index: u32) -> u32 {\n    let is_mega = (instance_index & 0x80000000u) != 0u;\n    return select((instance_index >> 14u) & 0xFFFFu, (instance_index >> 18u) & 0xFFFu, is_mega);\n}\n\nfn getLocalIndex(instance_index: u32) -> u32 {\n    let is_mega = (instance_index & 0x80000000u) != 0u;\n    return select(instance_index & 0x3FFFu, instance_index & 0x3FFFFu, is_mega);\n}\n\nfn getIsStroke(instance_index: u32) -> bool {\n    return (instance_index & 0x40000000u) != 0u;\n}"
+        }
+      ]
+    },
+    {
+      "id": "3-storage-buffer-memory-layout",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Storage Buffer Memory Layout"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each instance occupies **12 contiguous 32-bit floats** (48 bytes per instance), organized into three `vec4f` vectors:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Offset (Floats)",
+            "Vector",
+            "Components",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`[0..3]`",
+                  "type": "text"
+                },
+                {
+                  "text": "`_iPosScale`"
+                },
+                {
+                  "text": "`(x, y, z, scale)`"
+                },
+                {
+                  "text": "3D World translation coordinates $(x, y, z)$ and uniform scale factor."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`[4..7]`",
+                  "type": "text"
+                },
+                {
+                  "text": "`_iColor`"
+                },
+                {
+                  "text": "`(r, g, b, a)`"
+                },
+                {
+                  "text": "Per-instance RGBA color multiplier / tint."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`[8..11]`",
+                  "type": "text"
+                },
+                {
+                  "text": "`_iRot`"
+                },
+                {
+                  "text": "`(qx, qy, qz, qw)`"
+                },
+                {
+                  "text": "3D spatial rotation stored as a unit quaternion."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Memory Stride:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "public readonly STRIDE = 12; // 12 floats = 48 bytes\nthis.instanceData = new Float32Array(count * this.STRIDE);"
+        }
+      ]
+    },
+    {
+      "id": "4-programmable-vertex-pulling-shader-injection",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Programmable Vertex Pulling & Shader Injection"
+        },
+        {
+          "type": "paragraph",
+          "text": "When an `Instanced` entity wraps a template:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. 2D Domain Injection (Vector Paths, Polygons, 2D Primitives):"
+        },
+        {
+          "type": "paragraph",
+          "text": "The vertex shader pulls per-instance translation, scale, and 3D quaternion rotation, transforming 2D local space coordinates into full 3D world space before camera projection:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let _local_inst_idx = getLocalIndex(instance_index);\nlet _inst_offset = _local_inst_idx * 3u;\nlet _iPosScale = instances[_inst_offset + 0u];\nlet _iColor = instances[_inst_offset + 1u];\nlet _iRot = instances[_inst_offset + 2u];\nlet _iPos = _iPosScale.xyz;\nlet _iScale = _iPosScale.w;\nlet _q = _iRot;\n\n// Transform 2D position with scale, 3D quaternion rotation, and translation:\nvar _pos2d = input.position;\nvar _v3 = vec3f(_pos2d * _iScale, zOffset);\n_v3 = _v3 + 2.0 * cross(_q.xyz, cross(_q.xyz, _v3) + _q.w * _v3) + _iPos;\nout.position = clip3D(_v3, instance_index);\n\n// Per-instance color tinting:\nout.color = select(paint.fill, paint.stroke, isStroke) * _iColor;\nout.iColor = _iColor;"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. 3D Domain Injection (Models, Meshes, PBR):"
+        },
+        {
+          "type": "paragraph",
+          "text": "For 3D models, vertex positions and normals are transformed by the quaternion and scale factor before standard lighting and camera view-projection:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "var instanced_pos = input.position * _iScale;\ninstanced_pos = instanced_pos + 2.0 * cross(_q.xyz, cross(_q.xyz, instanced_pos) + _q.w * instanced_pos) + _iPos;\n\nvar instanced_normal = input.normal + 2.0 * cross(_q.xyz, cross(_q.xyz, input.normal) + _q.w * input.normal);"
+        }
+      ]
+    },
+    {
+      "id": "5-vector-path-instancing-analytical-vs-fast",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Vector Path Instancing: analytical vs. fast"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam supports two strategies for rendering vector paths:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Property",
+            "`analytical` Mode ([`PathRenderer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/PathRenderer.ts))",
+            "`fast` Mode ([`TriangulatedPathRenderer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/TriangulatedPathRenderer.ts))"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Pipeline Strategy**",
+                  "type": "text"
+                },
+                {
+                  "text": "SDF Stencil-and-Cover (6 separate render passes)"
+                },
+                {
+                  "text": "Triangulated Uber-Shader (1 pass, 2 draw calls)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Instancing Suitability**",
+                  "type": "text"
+                },
+                {
+                  "text": "**Unsuitable**: Overlapping instances cause stencil collisions"
+                },
+                {
+                  "text": "**Ideal**: Pure triangle rasterization with zero stencil state"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Draw Calls for $N$ Clones**",
+                  "type": "text"
+                },
+                {
+                  "text": "Thousands of pass switches & stencil flushes"
+                },
+                {
+                  "text": "**Exactly 2 Draw Calls** (1 for Fill, 1 for Stroke)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Automated Promotion:"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a `Path` created in `analytical` mode is passed to `new Instanced(path, count)`, [`Instanced.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/Instanced.ts#L78-L84) **automatically promotes** the cloned geometry to [`TriangulatedPathGeometry`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/TriangulatedPathGeometry.ts) and [`TriangulatedPathRenderer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/TriangulatedPathRenderer.ts)."
+        }
+      ]
+    },
+    {
+      "id": "6-complete-usage-guide-code-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Complete Usage Guide & Code Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 1: Instancing 2D Vector Paths (Mandala / Particle Swarm)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Path, Instanced, Color, Vec3, Quaternion } from \"retiam\";\n\nexport class VectorSwarmScene extends Scene {\n    public async run() {\n        this.camera.position.set([0, 0, 100]);\n        this.clearColor(new Color(0.02, 0.02, 0.04, 1.0));\n\n        // 1. Define vector SVG path\n        const svg = `\n            M 0 -12 C 4 -6, 8 -3, 12 0 C 8 3, 4 6, 0 12\n            C -4 6, -8 3, -12 0 C -8 -3, -4 -6, 0 -12 Z\n        `;\n\n        // 2. Create template in 'fast' mode\n        const template = new Path(svg, {\n            method: 'fast',\n            fill: new Color(0.2, 0.6, 1.0, 0.7),\n            stroke: new Color(1.0, 1.0, 1.0, 0.95),\n            stroke_width: 0.5\n        });\n\n        // 3. Create 5,000 instances\n        const count = 5000;\n        const swarm = new Instanced(template, count);\n        this.add(swarm);\n\n        // 4. Update instances per frame\n        const pos = new Vec3();\n        this.always(() => {\n            const time = this.time * 0.001;\n\n            for (let i = 0; i < count; i++) {\n                const angle = i * 2.39996 + time * 0.2; // Golden angle + rotation\n                const radius = 1.2 * Math.sqrt(i + 1);\n\n                pos.set(radius * Math.cos(angle), radius * Math.sin(angle), 0);\n                swarm.setInstancePosition(i, pos);\n                swarm.setInstanceRotation(i, Quaternion.fromEuler(0, 0, angle));\n                swarm.setInstanceScale(i, 0.15 + 0.05 * Math.sin(time * 2.0 + i));\n                swarm.setInstanceColor(i, new Color(\n                    Math.sin(angle) * 0.5 + 0.5,\n                    Math.cos(angle * 0.5) * 0.5 + 0.5,\n                    1.0,\n                    0.8\n                ));\n            }\n\n            swarm.isDirty = true; // Stream updates to GPU\n            this.invalidate();\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 2: Instancing 3D PBR Models (Cubes / Asteroid Field)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Model, Math3D, Instanced, Vec3, Quaternion, Color } from \"retiam\";\n\nexport class AsteroidFieldScene extends Scene {\n    public async run() {\n        this.camera.position.set([0, 50, 150]);\n\n        // 1. Create base 3D cube model\n        const baseCube = new Model(Math3D.createCube(1.0));\n        baseCube.material.color = new Float32Array([0.8, 0.8, 0.8]);\n        baseCube.material.roughness = 0.3;\n\n        // 2. Create 20,000 instanced cubes\n        const count = 20000;\n        const asteroids = new Instanced(baseCube, count);\n        this.add(asteroids);\n\n        // 3. Populate positions in a 3D ring\n        const pos = new Vec3();\n        for (let i = 0; i < count; i++) {\n            const theta = Math.random() * Math.PI * 2;\n            const r = 40 + Math.random() * 60;\n            const y = (Math.random() - 0.5) * 20;\n\n            pos.set(r * Math.cos(theta), y, r * Math.sin(theta));\n            asteroids.setInstancePosition(i, pos);\n            asteroids.setInstanceScale(i, 0.2 + Math.random() * 0.8);\n            asteroids.setInstanceRotation(i, Quaternion.fromEuler(\n                Math.random() * Math.PI,\n                Math.random() * Math.PI,\n                Math.random() * Math.PI\n            ));\n        }\n\n        asteroids.isDirty = true;\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 3: GPU Compute Shader Driven Instancing (High-Speed Particles)"
+        },
+        {
+          "type": "paragraph",
+          "text": "For millions of particles, you can bypass the CPU and update the instance storage buffer directly via a WebGPU Compute Shader:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Instanced, ComputeKernel, Res, createBuffer } from \"retiam\";\n\nexport class ComputeParticlesScene extends Scene {\n    public async run() {\n        const count = 100000; // 100k instances!\n        const baseCircle = new Circle(0.2);\n        const instanced = new Instanced(baseCircle, count);\n        this.add(instanced);\n\n        // Prepare geometry and retrieve GPU storage buffer\n        instanced.geo.prepare(this);\n        const instanceBuffer = instanced.getInstanceGPUBuffer();\n\n        // Time uniform buffer\n        const timeBuffer = createBuffer(this.device, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, 4);\n\n        // WebGPU Compute Kernel\n        const kernel = new ComputeKernel({\n            \"instances\": Res.buffer(\"array<vec4f>\", instanceBuffer, \"read_write\"),\n            \"params\": Res.uniform(\"vec4f\", timeBuffer)\n        }, `\n            let idx = global_id.x;\n            if (idx >= ${count}u) { return; }\n\n            let time = params.x;\n            let fIdx = f32(idx);\n            let radius = 10.0 + (fIdx % 500.0) * 0.1;\n            let angle = fIdx * 0.05 + time * (0.5 - radius * 0.005);\n\n            // Write back Position (xyz) and Scale (w)\n            instances[idx * 3u + 0u] = vec4f(cos(angle) * radius, sin(time + radius * 0.2) * 5.0, sin(angle) * radius, 0.3);\n\n            // Write back Color (rgba)\n            instances[idx * 3u + 1u] = vec4f(sin(angle) * 0.5 + 0.5, cos(angle) * 0.5 + 0.5, 1.0, 1.0);\n        `, [64, 1, 1]);\n\n        const timeData = new Float32Array(1);\n        const workgroups = Math.ceil(count / 64);\n\n        this.always(() => {\n            timeData[0] = this.time * 0.001;\n            this.device.queue.writeBuffer(timeBuffer, 0, timeData);\n            this.addCompute(kernel.dispatch(this.device, workgroups));\n            this.invalidate();\n        });\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "7-instance-control-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Instance Control API Reference"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Parameters",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`setInstancePosition(index, pos)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`index: number`, `pos: Vec3`"
+                },
+                {
+                  "text": "Sets 3D position $(x, y, z)$ for instance `index`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`setInstanceScale(index, scale)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`index: number`, `scale: number`"
+                },
+                {
+                  "text": "Sets uniform scale factor for instance `index`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`setInstanceRotation(index, rot)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`index: number`, `rot: Quaternion`"
+                },
+                {
+                  "text": "Sets 3D spatial rotation as a unit quaternion for instance `index`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`setInstanceColor(index, color)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`index: number`, `color: Color`"
+                },
+                {
+                  "text": "Sets RGBA color tint multiplier for instance `index`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`getInstanceGPUBuffer()`",
+                  "type": "text"
+                },
+                {
+                  "text": "None"
+                },
+                {
+                  "text": "Returns the underlying WebGPU `GPUBuffer` for compute pipeline binding."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`isDirty`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean` (property)"
+                },
+                {
+                  "text": "Set to `true` after modifying `instanceData` on CPU to trigger GPU buffer upload."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-performance-best-practices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Performance Best Practices"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Batching & Draw Call Efficiency**:",
+              "children": [
+                "For vector paths, always use `method: 'fast'`. The engine will render all $N$ instances in **exactly 2 draw calls** (Fill + Stroke)."
+              ]
+            },
+            {
+              "text": "**CPU Update Amortization**:",
+              "children": [
+                "If updating thousands of instances on CPU, modify `instanced.instanceData` directly or use `setInstancePosition`/`setInstanceRotation`, then set `instanced.isDirty = true` **once per frame** at the end of the update loop."
+              ]
+            },
+            {
+              "text": "**GPU Compute Offloading**:",
+              "children": [
+                "For dynamic physics, swarms, or particle simulations exceeding 20,000 entities, bind `instanced.getInstanceGPUBuffer()` to a `ComputeKernel` to achieve zero-CPU-overhead animation."
+              ]
+            },
+            {
+              "text": "**Frustum Culling & Shadows**:",
+              "children": [
+                "Clustered shadow casting on thousands of tiny instances can degrade shadow map fill rate. `Instanced.CAST_SHADOW` defaults to `false` to optimize shadow pass throughput."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

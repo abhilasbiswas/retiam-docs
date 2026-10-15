@@ -1,0 +1,2825 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-modifiers-path",
+  "title": "modifiers / path API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "custommodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CustomModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/CustomModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/CustomModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/CustomModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "CustomModifier: Functional adapter allowing developers to author custom inline geometric transformations on path contours without declaring a dedicated class."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ModifierFunction",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "CustomModifier",
+                    "Class",
+                    "Functional adapter allowing developers to author custom inline geometric transformations on path contours without declaring a dedicated class."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type ModifierFunction = (contours: PathContours, modifier: CustomModifier) => PathContours;\nexport declare class CustomModifier extends PathModifierBase {\n    constructor(fn: ModifierFunction, name?: string);\n    get fn(): ModifierFunction;\n    set fn(newFn: ModifierFunction);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `CustomModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(fn: ModifierFunction, name: string = \"Custom\")",
+                    "—",
+                    "Implementation: `super(name); this._fn = fn;`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/CustomModifier.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get fn(): ModifierFunction",
+                    "—",
+                    "Implementation: `return this._fn;`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/CustomModifier.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set fn(newFn: ModifierFunction)",
+                    "—",
+                    "Implementation: `this._fn = newFn; this.invalidate();`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/CustomModifier.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Implementation: `return this._fn(contours, this);`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/CustomModifier.ts#L31)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dashmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "DashModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/DashModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/DashModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "DashModifier: Geometrically subdivides continuous contours into discrete dash sub-paths. Unlike shader dashes, geometric dashes generate real caps at all segment boundaries and can be further processed by downstream modifiers."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "DashOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DashModifier",
+                    "Class",
+                    "Geometrically subdivides continuous contours into discrete dash sub-paths. Unlike shader dashes, geometric dashes generate real caps at all segment boundaries and can be further processed by downstream modifiers."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface DashOptions {\n    dashArray?: number[];\n    dashOffset?: number;\n}\nexport declare class DashModifier extends PathModifierBase {\n    constructor(options?: DashOptions);\n    get dashArray(): number[];\n    set dashArray(val: number[]);\n    get dashOffset(): number;\n    set dashOffset(val: number);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DashOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "dashArray?: number[];",
+                    "—",
+                    "Alternating pattern of dash and gap lengths in world units (e.g. [0.3, 0.15]). Default: [0.3, 0.15] [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "dashOffset?: number;",
+                    "—",
+                    "Phase offset along the curve in world units. Default: 0.0 [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts#L13)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DashModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: DashOptions)",
+                    "—",
+                    "Implementation: `super(\"Dash\"); if (options?.dashArray && options.dashArray.length > 0) this._dashArray = options.dashArray.slice(); if (options?.dashOffset !== undefined) this._dashOffset = options.dashOffset;`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get dashArray(): number[]",
+                    "—",
+                    "Implementation: `return this._dashArray;`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set dashArray(val: number[])",
+                    "—",
+                    "Implementation: `if (val && val.length > 0) { this._dashArray = val.slice(); this.invalidate(); }`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get dashOffset(): number",
+                    "—",
+                    "Implementation: `return this._dashOffset;`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set dashOffset(val: number)",
+                    "—",
+                    "Implementation: `if (this._dashOffset !== val) { this._dashOffset = val; this.invalidate(); }`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `pattern.reduce`, `PathModifierUtils.getContourCumulativeLengths`, `PathModifierUtils.trimContourByLength`, `result.push`; return paths including `contours`, `result`; 2 explicit loops. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/DashModifier.ts#L47)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excalidrawmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ExcalidrawModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/ExcalidrawModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/ExcalidrawModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ExcalidrawModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ExcalidrawPresetValues: Hand-drawn parameters that differ between presets.",
+                "EXCALIDRAW_PRESETS: Preset table shared by {@link ExcalidrawModifier} and the `Excalidraw` style engine. - `normal`: dual-pass sketch with natural bowing and tremor. - `clean`: lighter single-pass sketch. - `architect`: long overshoot with crossing corners (draftsman look). - `rough`: loose, strongly bowed sketch.",
+                "ExcalidrawModifier: {@link WobbleModifier} whose defaults come from an Excalidraw preset. Explicit options always win over the preset."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ExcalidrawPreset",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ExcalidrawPresetValues",
+                    "Interface",
+                    "Hand-drawn parameters that differ between presets."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EXCALIDRAW_PRESETS",
+                    "First",
+                    "Preset table shared by {@link ExcalidrawModifier} and the `Excalidraw` style engine. - `normal`: dual-pass sketch with natural bowing and tremor. - `clean`: lighter single-pass sketch. - `architect`: long overshoot with crossing corners (draftsman look). - `rough`: loose, strongly bowed sketch."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ExcalidrawModifierOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ExcalidrawModifier",
+                    "Class",
+                    "{@link WobbleModifier} whose defaults come from an Excalidraw preset. Explicit options always win over the preset."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type ExcalidrawPreset = 'normal' | 'clean' | 'architect' | 'rough';\nexport interface ExcalidrawPresetValues {\n    roughness: number;\n    bowing: number;\n    passes: number;\n    overshoot: number;\n    crossCorners: boolean;\n}\nexport declare const EXCALIDRAW_PRESETS: Readonly<Record<ExcalidrawPreset, ExcalidrawPresetValues>>;\nexport interface ExcalidrawModifierOptions extends WobbleOptions {\n    preset?: ExcalidrawPreset;\n}\nexport declare class ExcalidrawModifier extends WobbleModifier {\n    constructor(options?: ExcalidrawModifierOptions);\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ExcalidrawPresetValues` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "roughness: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ExcalidrawModifier.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bowing: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ExcalidrawModifier.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "passes: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ExcalidrawModifier.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "overshoot: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ExcalidrawModifier.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "crossCorners: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ExcalidrawModifier.ts#L15)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ExcalidrawModifierOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "preset?: ExcalidrawPreset;",
+                    "—",
+                    "Preset supplying defaults for roughness, bowing, passes, overshoot and crossCorners. Default: 'normal'. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ExcalidrawModifier.ts#L34)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ExcalidrawModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: ExcalidrawModifierOptions)",
+                    "—",
+                    "The body computes the result using local values; inspect the linked source for its branch conditions. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ExcalidrawModifier.ts#L42)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "offsetmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "OffsetModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/OffsetModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/OffsetModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "OffsetModifier: Displaces path boundaries parallel to their normal vectors. Creates concentric contour rings, expanded badges, or shrunk wireframe skeletons. Features miter corner resolution, closed seam continuity, and automatic self-intersection untangling to prevent caustic loops / fishtail knots on acute insets."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "OffsetOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "OffsetModifier",
+                    "Class",
+                    "Displaces path boundaries parallel to their normal vectors. Creates concentric contour rings, expanded badges, or shrunk wireframe skeletons. Features miter corner resolution, closed seam continuity, and automatic self-intersection untangling to prevent caustic loops / fishtail knots on acute insets."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface OffsetOptions {\n    distance?: number;\n    subdivisions?: number;\n    miterLimit?: number;\n}\nexport declare class OffsetModifier extends PathModifierBase {\n    constructor(options?: OffsetOptions);\n    get distance(): number;\n    set distance(val: number);\n    get subdivisions(): number;\n    set subdivisions(val: number);\n    get miterLimit(): number;\n    set miterLimit(val: number);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `OffsetOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "distance?: number;",
+                    "—",
+                    "Distance to offset parallel to curve normals (positive = outset/expand, negative = inset/contract). Default: 0.1 [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "subdivisions?: number;",
+                    "—",
+                    "Number of sample subdivisions used to generate smooth offset curves. Default: 64 [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "miterLimit?: number;",
+                    "—",
+                    "Maximum miter length factor before clamping sharp corner spikes. Default: 4.0 [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `OffsetModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: OffsetOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._distance`, `this._subdivisions`, `this._miterLimit`. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get distance(): number",
+                    "—",
+                    "Implementation: `return this._distance;`. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set distance(val: number)",
+                    "—",
+                    "Implementation: `if (this._distance !== val) { this._distance = val; this.invalidate(); }`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get subdivisions(): number",
+                    "—",
+                    "Implementation: `return this._subdivisions;`. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set subdivisions(val: number)",
+                    "—",
+                    "Implementation: `if (this._subdivisions !== val) { this._subdivisions = val; this.invalidate(); }`. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get miterLimit(): number",
+                    "—",
+                    "Implementation: `return this._miterLimit;`. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set miterLimit(val: number)",
+                    "—",
+                    "Implementation: `if (this._miterLimit !== val) { this._miterLimit = val; this.invalidate(); }`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec2`; calls to `result.push`, `contour.slice`, `PathModifierUtils.isContourClosed`, `PathModifierUtils.getContourCumulativeLengths`, `PathModifierUtils.sampleContourAtLength`, `this._computeMiterNormal`, `rawPoints.push`, `this._untanglePolyline` and additional helpers; return paths including `contours`, `result`; 3 explicit loops. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L61)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "OffsetModifier._computeMiterNormal: private _computeMiterNormal(nIn: Vec2, nOut: Vec2): Vec2",
+                    "Calculates the miter normal vector between incoming and outgoing boundary normals, with clamping against the configured miterLimit. Body operations (including nested callbacks): construction of `Vec2`; return paths including `new Vec2(nIn.x, nIn.y)`, `new Vec2(mx, my)`.",
+                    "[Line 151](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L151)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OffsetModifier._untanglePolyline: private _untanglePolyline(points: Vec2[], isClosed: boolean): Vec2[]",
+                    "Untangles self-intersecting loops created by sharp insets or caustics. Body operations (including nested callbacks): calls to `points.slice`, `this._segmentIntersection`, `newPts.push`; return paths including `pts`; 5 explicit loops.",
+                    "[Line 171](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L171)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "OffsetModifier._segmentIntersection: private _segmentIntersection(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2): Vec2 | null",
+                    "Calculates the 2D intersection of line segments P1-P2 and P3-P4. Body operations (including nested callbacks): construction of `Vec2`; return paths including `null`, `new Vec2( p1.x + t * d1x, p1.y + t * d1y )`.",
+                    "[Line 231](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/OffsetModifier.ts#L231)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pathmodifierutils",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PathModifierUtils"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/PathModifierUtils.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/PathModifierUtils.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PathModifierUtils: Shared mathematical and geometric helper functions for PathModifiers."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PathModifierUtils",
+                    "Class",
+                    "Shared mathematical and geometric helper functions for PathModifiers."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PathModifierUtils {\n    static cloneContours(contours: PathContours): PathContours;\n    static getContourCumulativeLengths(contour: PathContour): number[];\n    static getContourTotalLength(contour: PathContour): number;\n    static sampleContourAtLength(contour: PathContour, length: number, cumLens?: number[]): CurveFrame;\n    static sampleContourAtT(contour: PathContour, t: number, cumLens?: number[]): CurveFrame;\n    static trimContourByLength(contour: PathContour, sStart: number, sEnd: number, cumLens?: number[]): PathContour;\n    static isContourClosed(contour: PathContour, tolerance?: number): boolean;\n    static pointsToQuadraticContour(points: Vec2[], isClosed?: boolean): PathContour;\n    static extractEndpoints(contour: PathContour): Vec2[];\n    static getContourCentroid(contour: PathContour): Vec2;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PathModifierUtils` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static cloneContours(contours: PathContours): PathContours",
+                    "—",
+                    "Deep clones an array of contours. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getContourCumulativeLengths(contour: PathContour): number[]",
+                    "—",
+                    "Calculates cumulative arc-lengths for each quadratic Bézier segment in a single contour. Contour format: [startX, startY, cp1X, cp1Y, ep1X, ep1Y, cp2X, cp2Y, ep2X, ep2Y, ...] [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getContourTotalLength(contour: PathContour): number",
+                    "—",
+                    "Calculates total arc-length of a contour. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static sampleContourAtLength(\n        contour: PathContour,\n        length: number,\n        cumLens?: number[]\n    ): CurveFrame",
+                    "—",
+                    "Evaluates position, tangent, and normal on a contour at a specified arc-length. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static sampleContourAtT(\n        contour: PathContour,\n        t: number,\n        cumLens?: number[]\n    ): CurveFrame",
+                    "—",
+                    "Evaluates a contour at normalized parameter t in [0.0, 1.0]. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static trimContourByLength(\n        contour: PathContour,\n        sStart: number,\n        sEnd: number,\n        cumLens?: number[]\n    ): PathContour",
+                    "—",
+                    "Trims a single contour to the arc-length range [sStart, sEnd]. Uses analytical de Casteljau splitting on the boundary segments. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static isContourClosed(contour: PathContour, tolerance: number = 1e-4): boolean",
+                    "—",
+                    "Checks if a contour is closed (start and end endpoints are coincident within tolerance). [Source line 182](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L182)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static pointsToQuadraticContour(points: Vec2[], isClosed: boolean = false): PathContour",
+                    "—",
+                    "Converts a list of 2D points into a quadratic Bézier contour format. [Source line 194](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L194)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static extractEndpoints(contour: PathContour): Vec2[]",
+                    "—",
+                    "Extracts all polyline endpoints (ignoring control points) from a contour. [Source line 227](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L227)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getContourCentroid(contour: PathContour): Vec2",
+                    "—",
+                    "Calculates the geometric center / centroid of a contour. [Source line 240](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PathModifierUtils.ts#L240)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "puckerbloatmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PuckerBloatModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/PuckerBloatModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/PuckerBloatModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PuckerBloatModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "PuckerBloatModifier: Pucker & Bloat modifier. Deforms segments radially relative to the contour centroid while anchoring corner endpoints."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PuckerBloatOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "PuckerBloatModifier",
+                    "Class",
+                    "Pucker & Bloat modifier. Deforms segments radially relative to the contour centroid while anchoring corner endpoints."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface PuckerBloatOptions {\n    amount?: number;\n}\nexport declare class PuckerBloatModifier extends PathModifierBase {\n    constructor(options?: PuckerBloatOptions);\n    get amount(): number;\n    set amount(val: number);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PuckerBloatOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "amount?: number;",
+                    "—",
+                    "Deformation amount. Positive = Bloat (inflates outward away from center into puffy clover/flower). Negative = Pucker (pinches inward toward center into sharp star). Default: 0.0 [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PuckerBloatModifier.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PuckerBloatModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: PuckerBloatOptions)",
+                    "—",
+                    "Implementation: `super(\"PuckerBloat\"); if (options?.amount !== undefined) this._amount = options.amount;`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PuckerBloatModifier.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get amount(): number",
+                    "—",
+                    "Implementation: `return this._amount;`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PuckerBloatModifier.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set amount(val: number)",
+                    "—",
+                    "Implementation: `if (this._amount !== val) { this._amount = val; this.invalidate(); }`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PuckerBloatModifier.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `result.push`, `contour.slice`, `PathModifierUtils.getContourCentroid`, `newContour.push`; return paths including `contours`, `result`; 2 explicit loops. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/PuckerBloatModifier.ts#L39)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resamplemodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ResampleModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/ResampleModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/ResampleModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ResampleModifier: Resamples a path's contours by arc-length, producing evenly spaced vertices. Resolves non-uniform velocity and allows downstream modifiers (like Wiggle or Twist) to deform straight lines and sparse curves uniformly."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ResampleOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ResampleModifier",
+                    "Class",
+                    "Resamples a path's contours by arc-length, producing evenly spaced vertices. Resolves non-uniform velocity and allows downstream modifiers (like Wiggle or Twist) to deform straight lines and sparse curves uniformly."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ResampleOptions {\n    count?: number;\n    maxDistance?: number;\n}\nexport declare class ResampleModifier extends PathModifierBase {\n    constructor(options?: ResampleOptions);\n    get count(): number | undefined;\n    set count(val: number | undefined);\n    get maxDistance(): number | undefined;\n    set maxDistance(val: number | undefined);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ResampleOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "count?: number;",
+                    "—",
+                    "Fixed count of equidistant sample points per contour [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxDistance?: number;",
+                    "—",
+                    "Maximum Euclidean distance between consecutive sample points [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts#L14)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ResampleModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: ResampleOptions)",
+                    "—",
+                    "Implementation: `super(\"Resample\"); this._count = options?.count; this._maxDistance = options?.maxDistance;`. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get count(): number | undefined",
+                    "—",
+                    "Implementation: `return this._count;`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set count(val: number | undefined)",
+                    "—",
+                    "Implementation: `if (this._count !== val) { this._count = val; this.invalidate(); }`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get maxDistance(): number | undefined",
+                    "—",
+                    "Implementation: `return this._maxDistance;`. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set maxDistance(val: number | undefined)",
+                    "—",
+                    "Implementation: `if (this._maxDistance !== val) { this._maxDistance = val; this.invalidate(); }`. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `result.push`, `contour.slice`, `PathModifierUtils.getContourCumulativeLengths`, `PathModifierUtils.isContourClosed`, `PathModifierUtils.sampleContourAtLength`, `points.push`, `PathModifierUtils.pointsToQuadraticContour`; return paths including `result`; 2 explicit loops. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ResampleModifier.ts#L54)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reversemodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ReverseModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/ReverseModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/ReverseModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ReverseModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ReverseModifier: Inverts the geometric traversal direction of path contours. Reverses start and end points and flips curve normals."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ReverseModifier",
+                    "Class",
+                    "Inverts the geometric traversal direction of path contours. Reverses start and end points and flips curve normals."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class ReverseModifier extends PathModifierBase {\n    constructor();\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ReverseModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor()",
+                    "—",
+                    "Implementation: `super(\"Reverse\");`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ReverseModifier.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `result.push`, `contour.slice`, `reversed.push`; return paths including `result`; 2 explicit loops. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ReverseModifier.ts#L17)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "roundcornersmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RoundCornersModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/RoundCornersModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/RoundCornersModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "RoundCornersModifier: Rounds sharp corners along the path into smooth circular/quadratic Bézier fillets. Similar to After Effects Round Corners and CAD 2D Fillet operations."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RoundCornersOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RoundCornersModifier",
+                    "Class",
+                    "Rounds sharp corners along the path into smooth circular/quadratic Bézier fillets. Similar to After Effects Round Corners and CAD 2D Fillet operations."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface RoundCornersOptions {\n    radius?: number;\n    maxRadiusRatio?: number;\n}\nexport declare class RoundCornersModifier extends PathModifierBase {\n    constructor(options?: RoundCornersOptions);\n    get radius(): number;\n    set radius(val: number);\n    get maxRadiusRatio(): number;\n    set maxRadiusRatio(val: number);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoundCornersOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Corner fillet radius in world units. Default: 0.2 [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxRadiusRatio?: number;",
+                    "—",
+                    "Maximum ratio of adjacent edge length that can be consumed by the corner fillet [0.0 - 0.5]. Default: 0.49 [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts#L14)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RoundCornersModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: RoundCornersOptions)",
+                    "—",
+                    "Implementation: `super(\"RoundCorners\"); if (options?.radius !== undefined) this._radius = options.radius; if (options?.maxRadiusRatio !== undefined) this._maxRadiusRatio = options.maxRadiusRatio;`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get radius(): number",
+                    "—",
+                    "Implementation: `return this._radius;`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set radius(val: number)",
+                    "—",
+                    "Implementation: `if (this._radius !== val) { this._radius = val; this.invalidate(); }`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get maxRadiusRatio(): number",
+                    "—",
+                    "Implementation: `return this._maxRadiusRatio;`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set maxRadiusRatio(val: number)",
+                    "—",
+                    "Implementation: `if (this._maxRadiusRatio !== val) { this._maxRadiusRatio = val; this.invalidate(); }`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `result.push`, `contour.slice`, `PathModifierUtils.isContourClosed`, `PathModifierUtils.extractEndpoints`, `vertices.slice`, `newContour.push`; return paths including `contours`, `result`; 2 explicit loops. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/RoundCornersModifier.ts#L47)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "smoothmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SmoothModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/SmoothModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/SmoothModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SmoothModifier: Simplifies noisy/dense paths using Ramer-Douglas-Peucker reduction and smooths sharp angles into continuous quadratic Béziers."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SmoothOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SmoothModifier",
+                    "Class",
+                    "Simplifies noisy/dense paths using Ramer-Douglas-Peucker reduction and smooths sharp angles into continuous quadratic Béziers."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface SmoothOptions {\n    tolerance?: number;\n    smoothness?: number;\n}\nexport declare class SmoothModifier extends PathModifierBase {\n    constructor(options?: SmoothOptions);\n    get tolerance(): number;\n    set tolerance(val: number);\n    get smoothness(): number;\n    set smoothness(val: number);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SmoothOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "tolerance?: number;",
+                    "—",
+                    "Simplification tolerance for Douglas-Peucker reduction. Set to 0 to disable. Default: 0.02 [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "smoothness?: number;",
+                    "—",
+                    "Curvature smoothness factor [0.0 - 1.0]. Default: 0.5 [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L14)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SmoothModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: SmoothOptions)",
+                    "—",
+                    "Implementation: `super(\"Smooth\"); if (options?.tolerance !== undefined) this._tolerance = options.tolerance; if (options?.smoothness !== undefined) this._smoothness = options.smoothness;`. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get tolerance(): number",
+                    "—",
+                    "Implementation: `return this._tolerance;`. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set tolerance(val: number)",
+                    "—",
+                    "Implementation: `if (this._tolerance !== val) { this._tolerance = val; this.invalidate(); }`. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get smoothness(): number",
+                    "—",
+                    "Implementation: `return this._smoothness;`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set smoothness(val: number)",
+                    "—",
+                    "Implementation: `if (this._smoothness !== val) { this._smoothness = val; this.invalidate(); }`. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `result.push`, `contour.slice`, `PathModifierUtils.extractEndpoints`, `this._douglasPeucker`, `PathModifierUtils.isContourClosed`, `PathModifierUtils.pointsToQuadraticContour`, `this._chaikinSmooth`; return paths including `result`; 1 explicit loop. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L47)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SmoothModifier._douglasPeucker: private _douglasPeucker(points: Vec2[], sqTolerance: number): Vec2[]",
+                    "Body operations (including nested callbacks): calls to `this._perpendicularDistanceSq`, `this._douglasPeucker`, `points.slice`, `left.slice(0, left.length - 1).concat`, `left.slice`; return paths including `points`, `left.slice(0, left.length - 1).concat(right)`, `[p1, p2]`; 1 explicit loop.",
+                    "[Line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L83)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SmoothModifier._perpendicularDistanceSq: private _perpendicularDistanceSq(p: Vec2, lineStart: Vec2, lineEnd: Vec2): number",
+                    "Body operations (including nested callbacks): return paths including `px * px + py * py`, `diffX * diffX + diffY * diffY`.",
+                    "[Line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L108)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SmoothModifier._chaikinSmooth: private _chaikinSmooth(points: Vec2[], tension: number): Vec2[]",
+                    "Body operations (including nested callbacks): construction of `Vec2`; calls to `out.push`; return paths including `out`; 1 explicit loop.",
+                    "[Line 127](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/SmoothModifier.ts#L127)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "trimmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TrimModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/TrimModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/TrimModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "TrimModifier: Trims path contours based on normalized arc-length percentages. Supports looping wrap-around offsets and multi-contour sequence trimming."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TrimMode",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TrimOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TrimModifier",
+                    "Class",
+                    "Trims path contours based on normalized arc-length percentages. Supports looping wrap-around offsets and multi-contour sequence trimming."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type TrimMode = \"simultaneously\" | \"individually\";\nexport interface TrimOptions {\n    start?: number;\n    end?: number;\n    offset?: number;\n    mode?: TrimMode;\n}\nexport declare class TrimModifier extends PathModifierBase {\n    constructor(options?: TrimOptions);\n    get start(): number;\n    set start(val: number);\n    get end(): number;\n    set end(val: number);\n    get offset(): number;\n    set offset(val: number);\n    get mode(): TrimMode;\n    set mode(val: TrimMode);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TrimOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "start?: number;",
+                    "—",
+                    "Normalized start percentage [0.0 - 1.0]. Default: 0.0 [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "end?: number;",
+                    "—",
+                    "Normalized end percentage [0.0 - 1.0]. Default: 1.0 [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "offset?: number;",
+                    "—",
+                    "Normalized continuous offset added to start & end. Useful for traveling/looping strokes. Default: 0.0 [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "mode?: TrimMode;",
+                    "—",
+                    "Whether each contour is trimmed simultaneously (independent 0..1), or individually in sequence across total compound path arc-length. Default: 'simultaneously' [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L23)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TrimModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: TrimOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._start`, `this._end`, `this._offset`, `this._mode`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get start(): number",
+                    "—",
+                    "Implementation: `return this._start;`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set start(val: number)",
+                    "—",
+                    "Implementation: `if (this._start !== val) { this._start = val; this.invalidate(); }`. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get end(): number",
+                    "—",
+                    "Implementation: `return this._end;`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set end(val: number)",
+                    "—",
+                    "Implementation: `if (this._end !== val) { this._end = val; this.invalidate(); }`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get offset(): number",
+                    "—",
+                    "Implementation: `return this._offset;`. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set offset(val: number)",
+                    "—",
+                    "Implementation: `if (this._offset !== val) { this._offset = val; this.invalidate(); }`. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get mode(): TrimMode",
+                    "—",
+                    "Implementation: `return this._mode;`. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set mode(val: TrimMode)",
+                    "—",
+                    "Implementation: `if (this._mode !== val) { this._mode = val; this.invalidate(); }`. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Implementation: `if (contours.length === 0) return []; if (this._mode === \"simultaneously\") { return this._applySimultaneously(contours); } else { return this._applyIndividually(contours); }`. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L84)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TrimModifier._applySimultaneously: private _applySimultaneously(contours: PathContours): PathContours",
+                    "Body operations (including nested callbacks): calls to `PathModifierUtils.getContourCumulativeLengths`, `this._trimSingleContour`; return paths including `result`; 1 explicit loop.",
+                    "[Line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L94)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "TrimModifier._applyIndividually: private _applyIndividually(contours: PathContours): PathContours",
+                    "Body operations (including nested callbacks): calls to `PathModifierUtils.getContourCumulativeLengths`, `lengths.push`, `allCumLens.push`, `globalRanges.push`, `PathModifierUtils.trimContourByLength`, `result.push`; return paths including `[]`, `result`; 3 explicit loops.",
+                    "[Line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L110)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "TrimModifier._trimSingleContour: private _trimSingleContour( contour: PathContour, totalLen: number, cumLens: number[], out: PathContours ): void",
+                    "Body operations (including nested callbacks): calls to `out.push`, `contour.slice`, `PathModifierUtils.trimContourByLength`.",
+                    "[Line 180](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TrimModifier.ts#L180)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "twistmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TwistModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/TwistModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/TwistModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "TwistModifier: Twists path coordinates around a center point with radial falloff. Creates whirlpool, vortex, and spiral gravitational distortion effects."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TwistOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TwistModifier",
+                    "Class",
+                    "Twists path coordinates around a center point with radial falloff. Creates whirlpool, vortex, and spiral gravitational distortion effects."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TwistOptions {\n    angle?: number;\n    radius?: number;\n    center?: Vec2;\n}\nexport declare class TwistModifier extends PathModifierBase {\n    constructor(options?: TwistOptions);\n    get angle(): number;\n    set angle(val: number);\n    get radius(): number;\n    set radius(val: number);\n    get center(): Vec2 | undefined;\n    set center(val: Vec2 | undefined);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TwistOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "angle?: number;",
+                    "—",
+                    "Maximum rotation angle at the center in radians. Default: Math.PI / 2 [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Outer influence radius. Points outside this radius are unaffected. Default: 5.0 [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "center?: Vec2;",
+                    "—",
+                    "Center of the twist vortex. If omitted, uses the contour centroid. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TwistModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: TwistOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._angle`, `this._radius`, `this._center`; calls to `options.center.clone`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get angle(): number",
+                    "—",
+                    "Implementation: `return this._angle;`. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set angle(val: number)",
+                    "—",
+                    "Implementation: `if (this._angle !== val) { this._angle = val; this.invalidate(); }`. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get radius(): number",
+                    "—",
+                    "Implementation: `return this._radius;`. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set radius(val: number)",
+                    "—",
+                    "Implementation: `if (this._radius !== val) { this._radius = val; this.invalidate(); }`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get center(): Vec2 | undefined",
+                    "—",
+                    "Implementation: `return this._center;`. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set center(val: Vec2 | undefined)",
+                    "—",
+                    "Implementation: `this._center = val ? val.clone() : undefined; this.invalidate();`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Array`; calls to `result.push`, `contour.slice`, `PathModifierUtils.getContourCentroid`; return paths including `contours`, `result`; 2 explicit loops. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/TwistModifier.ts#L57)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wigglemodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "WiggleModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/WiggleModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/WiggleModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "WiggleModifier: Displaces curve vertices along local normals using multi-octave coherent noise. Simulates hand-drawn pencil tremor, electric arcs, lightning, and organic waves."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WiggleType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "WiggleOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "WiggleModifier",
+                    "Class",
+                    "Displaces curve vertices along local normals using multi-octave coherent noise. Simulates hand-drawn pencil tremor, electric arcs, lightning, and organic waves."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type WiggleType = \"smooth\" | \"corner\";\nexport interface WiggleOptions {\n    amplitude?: number;\n    frequency?: number;\n    detail?: number;\n    type?: WiggleType;\n    time?: number;\n    seed?: number;\n    anchorEnds?: boolean;\n}\nexport declare class WiggleModifier extends PathModifierBase {\n    constructor(options?: WiggleOptions);\n    get amplitude(): number;\n    set amplitude(val: number);\n    get frequency(): number;\n    set frequency(val: number);\n    get detail(): number;\n    set detail(val: number);\n    get type(): WiggleType;\n    set type(val: WiggleType);\n    get time(): number;\n    set time(val: number);\n    get seed(): number;\n    set seed(val: number);\n    get anchorEnds(): boolean;\n    set anchorEnds(val: boolean);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WiggleOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "amplitude?: number;",
+                    "—",
+                    "Maximum displacement distance in world units. Default: 0.1 [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frequency?: number;",
+                    "—",
+                    "Spatial frequency of waves along the curve. Default: 3.0 [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "detail?: number;",
+                    "—",
+                    "Number of noise octaves / detail level. Default: 3 [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "type?: WiggleType;",
+                    "—",
+                    "Whether wiggles maintain tangent continuity ('smooth') or break angles ('corner'). Default: 'smooth' [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "time?: number;",
+                    "—",
+                    "Time parameter for animated line boil / waving. Default: 0.0 [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "seed?: number;",
+                    "—",
+                    "Random number generator seed. Default: 1337 [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "anchorEnds?: boolean;",
+                    "—",
+                    "Whether to pin start & end vertices so the path doesn't detach from connections. Default: false [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L26)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WiggleModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: WiggleOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._amplitude`, `this._frequency`, `this._detail`, `this._type`, `this._time`, `this._seed`, `this._anchorEnds`. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get amplitude(): number",
+                    "—",
+                    "Implementation: `return this._amplitude;`. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set amplitude(val: number)",
+                    "—",
+                    "Implementation: `if (this._amplitude !== val) { this._amplitude = val; this.invalidate(); }`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get frequency(): number",
+                    "—",
+                    "Implementation: `return this._frequency;`. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set frequency(val: number)",
+                    "—",
+                    "Implementation: `if (this._frequency !== val) { this._frequency = val; this.invalidate(); }`. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get detail(): number",
+                    "—",
+                    "Implementation: `return this._detail;`. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set detail(val: number)",
+                    "—",
+                    "Implementation: `if (this._detail !== val) { this._detail = val; this.invalidate(); }`. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get type(): WiggleType",
+                    "—",
+                    "Implementation: `return this._type;`. [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set type(val: WiggleType)",
+                    "—",
+                    "Implementation: `if (this._type !== val) { this._type = val; this.invalidate(); }`. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get time(): number",
+                    "—",
+                    "Implementation: `return this._time;`. [Source line 85](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L85)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set time(val: number)",
+                    "—",
+                    "Implementation: `if (this._time !== val) { this._time = val; this.invalidate(); }`. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get seed(): number",
+                    "—",
+                    "Implementation: `return this._seed;`. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set seed(val: number)",
+                    "—",
+                    "Implementation: `if (this._seed !== val) { this._seed = val; this.invalidate(); }`. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get anchorEnds(): boolean",
+                    "—",
+                    "Implementation: `return this._anchorEnds;`. [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L101)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set anchorEnds(val: boolean)",
+                    "—",
+                    "Implementation: `if (this._anchorEnds !== val) { this._anchorEnds = val; this.invalidate(); }`. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec2`; calls to `result.push`, `contour.slice`, `PathModifierUtils.getContourCumulativeLengths`, `PathModifierUtils.sampleContourAtLength`, `samplePoints.push`, `PathModifierUtils.isContourClosed`, `this._fitSmoothQuadratic`, `PathModifierUtils.pointsToQuadraticContour`; return paths including `contours`, `result`; 3 explicit loops. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L109)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WiggleModifier._fitSmoothQuadratic: private _fitSmoothQuadratic(points: Vec2[], isClosed: boolean = false): PathContour",
+                    "Converts sample points into smooth quadratic Béziers with continuous tangents. Body operations (including nested callbacks): calls to `PathModifierUtils.pointsToQuadraticContour`, `contour.push`; return paths including `PathModifierUtils.pointsToQuadraticContour(points, isClosed)`, `contour`; 1 explicit loop.",
+                    "[Line 181](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WiggleModifier.ts#L181)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wobblemodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "WobbleModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/WobbleModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/WobbleModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "WobbleModifier: Geometric path modifier that converts sharp, rigid vector contours into imperfect, organic hand-drawn sketches. Features: - Biomechanical wrist/elbow bowing across straight segments. - Physiological motor tremor and roughness. - Automatic segment subdivision for long lines. - Corner overshoot & drafting crosses. - Dual-pass loose sketch strokes (Excalidraw / Rough.js aesthetic). - Animated cel line boil at configurable frame rates (e.g. 12 FPS). - Endpoint anchoring for node-link diagrams and graphs."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WobbleOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "WobbleModifier",
+                    "Class",
+                    "Geometric path modifier that converts sharp, rigid vector contours into imperfect, organic hand-drawn sketches. Features: - Biomechanical wrist/elbow bowing across straight segments. - Physiological motor tremor and roughness. - Automatic segment subdivision for long lines. - Corner overshoot & drafting crosses. - Dual-pass loose sketch strokes (Excalidraw / Rough.js aesthetic). - Animated cel line boil at configurable frame rates (e.g. 12 FPS). - Endpoint anchoring for node-link diagrams and graphs."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface WobbleOptions {\n    roughness?: number;\n    bowing?: number;\n    maxSegmentLength?: number;\n    overshoot?: number;\n    crossCorners?: boolean;\n    passes?: number;\n    anchorEnds?: boolean;\n    seed?: number;\n    time?: number;\n    boilFps?: number;\n    isClosed?: boolean;\n}\nexport declare class WobbleModifier extends PathModifierBase {\n    constructor(options?: WobbleOptions, idPrefix?: string);\n    get isClosed(): boolean | undefined;\n    set isClosed(val: boolean | undefined);\n    get roughness(): number;\n    set roughness(val: number);\n    get bowing(): number;\n    set bowing(val: number);\n    get maxSegmentLength(): number;\n    set maxSegmentLength(val: number);\n    get overshoot(): number;\n    set overshoot(val: number);\n    get crossCorners(): boolean;\n    set crossCorners(val: boolean);\n    get passes(): number;\n    set passes(val: number);\n    get anchorEnds(): boolean;\n    set anchorEnds(val: boolean);\n    get seed(): number;\n    set seed(val: number);\n    get time(): number;\n    set time(val: number);\n    get boilFps(): number;\n    set boilFps(val: number);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WobbleOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "roughness?: number;",
+                    "—",
+                    "Overall roughness / jitter amplitude (0.0 = perfectly rigid, 1.0 = normal sketch, 2.0+ = very rough). Displaces vertices and intermediate control points to simulate human motor tremor. Default: 0.15 [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bowing?: number;",
+                    "—",
+                    "Biomechanical curvature / bowing factor (0.0 = no bowing, 1.0 = natural wrist arch). Simulates the anatomical arc produced by drawing with the wrist or elbow pivot. Default: 0.2 [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxSegmentLength?: number;",
+                    "—",
+                    "Maximum segment length before subdividing long straight segments into multiple jittered sections. Prevents long lines from having only a single midpoint bow. Default: 0.8 [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "overshoot?: number;",
+                    "—",
+                    "Corner overshoot factor (0.0 to 1.0) extending segment endpoints past intersections. Simulates rapid draftsman pen strokes that cross corners before lifting the pen. Default: 0.0 [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "crossCorners?: boolean;",
+                    "—",
+                    "When true on closed polygonal shapes, decomposes the closed contour into separate overshooting strokes that cross at corner intersections (draftsman / architectural style). Note: If using fill, keep this false so the shape interior remains a closed loop. Default: false [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "passes?: number;",
+                    "—",
+                    "Number of sketch passes (1 for clean single contour, 2 for dual sketch, 3+ for loose multi-stroke drawing). Default: 1 [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "anchorEnds?: boolean;",
+                    "—",
+                    "Whether to lock the absolute start and end coordinates of open paths. Keeps node connectors, circuit lines, and diagram arrows connected to their targets. Default: false [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "seed?: number;",
+                    "—",
+                    "Deterministic pseudo-random seed. Default: 42 [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "time?: number;",
+                    "—",
+                    "Time parameter for animated line boil or hand tremor. Default: 0.0 [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "boilFps?: number;",
+                    "—",
+                    "Frame rate for animated line boil (e.g. 12 for traditional 12 FPS animation, 0 for continuous time). When > 0, quantizes the seed into discrete frames, simulating traditional cel animation jitter. Default: 12 [Source line 105](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L105)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isClosed?: boolean;",
+                    "—",
+                    "Whether the path forms a closed loop. When undefined, automatically detected from contour endpoints. When true, enforces closed-loop vertex matching, seamless stroke wrapping, and corner crossing. When false, treats the path as open (overshooting ends, anchored endpoints). [Source line 113](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L113)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WobbleModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: WobbleOptions, idPrefix: string = \"Wobble\")",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._roughness`, `this._bowing`, `this._maxSegmentLength`, `this._overshoot`, `this._crossCorners`, `this._passes`, `this._anchorEnds`, `this._isClosed` and other instance fields. [Source line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L144)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get isClosed(): boolean | undefined",
+                    "—",
+                    "Implementation: `return this._isClosed;`. [Source line 159](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L159)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set isClosed(val: boolean | undefined)",
+                    "—",
+                    "Implementation: `if (this._isClosed !== val) { this._isClosed = val; this.invalidate(); }`. [Source line 160](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L160)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get roughness(): number",
+                    "—",
+                    "Implementation: `return this._roughness;`. [Source line 167](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L167)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set roughness(val: number)",
+                    "—",
+                    "Implementation: `if (this._roughness !== val) { this._roughness = val; this.invalidate(); }`. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get bowing(): number",
+                    "—",
+                    "Implementation: `return this._bowing;`. [Source line 175](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L175)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set bowing(val: number)",
+                    "—",
+                    "Implementation: `if (this._bowing !== val) { this._bowing = val; this.invalidate(); }`. [Source line 176](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L176)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get maxSegmentLength(): number",
+                    "—",
+                    "Implementation: `return this._maxSegmentLength;`. [Source line 183](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L183)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set maxSegmentLength(val: number)",
+                    "—",
+                    "Implementation: `if (this._maxSegmentLength !== val) { this._maxSegmentLength = val; this.invalidate(); }`. [Source line 184](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L184)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get overshoot(): number",
+                    "—",
+                    "Implementation: `return this._overshoot;`. [Source line 191](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L191)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set overshoot(val: number)",
+                    "—",
+                    "Implementation: `if (this._overshoot !== val) { this._overshoot = val; this.invalidate(); }`. [Source line 192](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L192)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get crossCorners(): boolean",
+                    "—",
+                    "Implementation: `return this._crossCorners;`. [Source line 199](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L199)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set crossCorners(val: boolean)",
+                    "—",
+                    "Implementation: `if (this._crossCorners !== val) { this._crossCorners = val; this.invalidate(); }`. [Source line 200](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L200)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get passes(): number",
+                    "—",
+                    "Implementation: `return this._passes;`. [Source line 207](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L207)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set passes(val: number)",
+                    "—",
+                    "Implementation: `const clamped = Math.max(1, Math.min(8, Math.round(val))); if (this._passes !== clamped) { this._passes = clamped; this.invalidate(); }`. [Source line 208](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L208)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get anchorEnds(): boolean",
+                    "—",
+                    "Implementation: `return this._anchorEnds;`. [Source line 216](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L216)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set anchorEnds(val: boolean)",
+                    "—",
+                    "Implementation: `if (this._anchorEnds !== val) { this._anchorEnds = val; this.invalidate(); }`. [Source line 217](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L217)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get seed(): number",
+                    "—",
+                    "Implementation: `return this._seed;`. [Source line 224](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L224)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set seed(val: number)",
+                    "—",
+                    "Implementation: `if (this._seed !== val) { this._seed = val; this.invalidate(); }`. [Source line 225](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L225)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get time(): number",
+                    "—",
+                    "Implementation: `return this._time;`. [Source line 232](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L232)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set time(val: number)",
+                    "—",
+                    "Implementation: `if (this._time !== val) { this._time = val; this.invalidate(); }`. [Source line 233](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L233)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get boilFps(): number",
+                    "—",
+                    "Implementation: `return this._boilFps;`. [Source line 240](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L240)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set boilFps(val: number)",
+                    "—",
+                    "Implementation: `if (this._boilFps !== val) { this._boilFps = val; this.invalidate(); }`. [Source line 241](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L241)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._bowSeed`; construction of `WobbleRng`; calls to `PathModifierUtils.cloneContours`, `result.push`, `contour.slice`, `this._wobbleContour`; return paths including `PathModifierUtils.cloneContours(contours)`, `result`; 3 explicit loops. [Source line 248](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L248)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "WobbleModifier._wobbleContour: private _wobbleContour( contour: PathContour, rng: WobbleRng, crossCorners: boolean ): PathContours",
+                    "Body operations (including nested callbacks): construction of `Vec2`; calls to `contour.slice`, `PathModifierUtils.isContourClosed`, `V.push`, `Vprime.push`, `Vprime[0].clone`, `V[i].clone`, `rng.centered`, `WobbleModifier._isStraightSegment` and additional helpers; return paths including `[contour.slice()]`, `openContours`, `[outContour]`; 5 explicit loops.",
+                    "[Line 288](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L288)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "WobbleModifier._wobbleSegment: private _wobbleSegment( contour: PathContour, s: number, startPt: Vec2, endPt: Vec2, rng: WobbleRng, overshootCorners: boolean ): PathContour",
+                    "Body operations (including nested callbacks): calls to `startPt.clone`, `endPt.clone`, `rng.range`, `this._appendWobbledSegment`; return paths including `outContour`.",
+                    "[Line 384](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L384)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "WobbleModifier._isStraightSegment: private static _isStraightSegment(contour: PathContour, s: number): boolean",
+                    "Whether quadratic segment `s` is effectively straight (control point collinear with its chord). Body operations (including nested callbacks): return paths including `true`, `(twiceArea / chordLenSq) < 1e-3`.",
+                    "[Line 418](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L418)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "WobbleModifier._bowSide: private _bowSide(x0: number, y0: number, x1: number, y1: number): 1 | -1",
+                    "Pseudo-random bow side (+1 / -1) derived from the segment's endpoints and the frame seed. Shared by every pass, so the two sketch strokes of a line bend the same way and stay close together. Implementation: `const h = Math.sin(x0 * 127.1 + y0 * 311.7 + x1 * 74.7 + y1 * 269.5 + this._bowSeed * 0.0137) * 43758.5453; return (h - Math.floor(h)) > 0.5 ? 1 : -1;`.",
+                    "[Line 439](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L439)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "WobbleModifier._appendWobbledSegment: private _appendWobbledSegment( outContour: PathContour, contour: PathContour, s: number, startPt: Vec2, endPt: Vec2, rng: WobbleRng ): void",
+                    "Body operations (including nested callbacks): calls to `outContour.push`, `WobbleModifier._isStraightSegment`, `this._bowSide`, `rng.range`, `rng.centered`; 1 explicit loop.",
+                    "[Line 444](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/WobbleModifier.ts#L444)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zigzagmodifier",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ZigZagModifier"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/modifiers/path/ZigZagModifier.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/modifiers/path/ZigZagModifier.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ZigZagModifier: Modulates path boundaries with periodic triangular ridges or sinusoidal waves along local normals. Useful for schematic resistors, gears, scalloped edges, and wave ribbons."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ZigZagStyle",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ZigZagOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ZigZagModifier",
+                    "Class",
+                    "Modulates path boundaries with periodic triangular ridges or sinusoidal waves along local normals. Useful for schematic resistors, gears, scalloped edges, and wave ribbons."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type ZigZagStyle = \"corner\" | \"smooth\";\nexport interface ZigZagOptions {\n    amplitude?: number;\n    ridges?: number;\n    style?: ZigZagStyle;\n    phase?: number;\n}\nexport declare class ZigZagModifier extends PathModifierBase {\n    constructor(options?: ZigZagOptions);\n    get amplitude(): number;\n    set amplitude(val: number);\n    get ridges(): number;\n    set ridges(val: number);\n    get style(): ZigZagStyle;\n    set style(val: ZigZagStyle);\n    get phase(): number;\n    set phase(val: number);\n    apply(contours: PathContours): PathContours;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ZigZagOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "amplitude?: number;",
+                    "—",
+                    "Ridge/peak height in world units. Default: 0.15 [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ridges?: number;",
+                    "—",
+                    "Number of full waves/teeth along the contour. Default: 10 [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "style?: ZigZagStyle;",
+                    "—",
+                    "Whether ridges are sharp triangular peaks ('corner') or smooth sinusoidal waves ('smooth'). Default: 'corner' [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "phase?: number;",
+                    "—",
+                    "Phase offset in radians for animating traveling waves. Default: 0.0 [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L20)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ZigZagModifier` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(options?: ZigZagOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._amplitude`, `this._ridges`, `this._style`, `this._phase`. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get amplitude(): number",
+                    "—",
+                    "Implementation: `return this._amplitude;`. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set amplitude(val: number)",
+                    "—",
+                    "Implementation: `if (this._amplitude !== val) { this._amplitude = val; this.invalidate(); }`. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get ridges(): number",
+                    "—",
+                    "Implementation: `return this._ridges;`. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set ridges(val: number)",
+                    "—",
+                    "Implementation: `if (this._ridges !== val) { this._ridges = val; this.invalidate(); }`. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get style(): ZigZagStyle",
+                    "—",
+                    "Implementation: `return this._style;`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set style(val: ZigZagStyle)",
+                    "—",
+                    "Implementation: `if (this._style !== val) { this._style = val; this.invalidate(); }`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get phase(): number",
+                    "—",
+                    "Implementation: `return this._phase;`. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set phase(val: number)",
+                    "—",
+                    "Implementation: `if (this._phase !== val) { this._phase = val; this.invalidate(); }`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public apply(contours: PathContours): PathContours",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec2`; calls to `result.push`, `contour.slice`, `PathModifierUtils.getContourCumulativeLengths`, `PathModifierUtils.sampleContourAtLength`, `wavePoints.push`, `PathModifierUtils.isContourClosed`, `PathModifierUtils.pointsToQuadraticContour`; return paths including `contours`, `result`; 2 explicit loops. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/modifiers/path/ZigZagModifier.ts#L73)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [PathModifierBase](/api-modifiers#pathmodifierbase)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

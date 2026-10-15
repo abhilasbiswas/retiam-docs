@@ -1,0 +1,158 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-texture-atlas-and-sprite-animation-architecture",
+  "title": "Texture Atlases, SubTextures & Sprite Animation Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/TEXTURE_ATLAS_AND_SPRITE_ANIMATION_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/TEXTURE_ATLAS_AND_SPRITE_ANIMATION_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/TEXTURE_ATLAS_AND_SPRITE_ANIMATION_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Texture](/api-render-pipelines#resourcelayouts), [Sprite](/api-entities-primitives-2d#sprite), [Animation](/api-animation#animation), [TextureAtlas](/api-loader#textureatlas), [SubTexture](/api-loader#subtexture), [AnimatedSprite](/api-entities-primitives-2d#animatedsprite), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "2D character animations, scientific sprite charts, UI icons, and particle effects require efficient texture packing to avoid multiple individual texture binds in WebGPU."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a complete sprite management pipeline:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`TextureAtlas`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts)**: Ingests TexturePacker JSON manifests (hash and array formats) and combines multiple sub-images into a single GPU texture sheet.",
+            "**[`SubTexture`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts)**: Mathematical abstraction representing a rectangular region on a parent atlas with normalized UV coordinates, rotational transformations, and whitespace trimming metrics.",
+            "**[`AnimatedSprite`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/AnimatedSprite.ts)**: Frame-based animation entity that plays sprite sheet sequences at precise frame rates with zero per-frame buffer reallocation."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  IMAGE[\"TexturePacker image<br/>spritesheet.png\"] --> ATLAS[\"TextureAtlas<br/>Load texture and parse UVs\"]\n  JSON[\"JSON manifest<br/>spritesheet.json\"] --> ATLAS\n  ATLAS --> SUB[\"SubTexture<br/>uMin, vMin, uMax, vMax, sourceSize\"]\n  SUB --> SPRITE[\"Static Sprite<br/>Single frame\"]\n  SUB --> ANIMATED[\"AnimatedSprite<br/>12–60 FPS frame loop\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-texture-atlas-manifest-ingestion-textureatlas-ts-src-engine-loader-textureatlas-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Texture Atlas & Manifest Ingestion ([TextureAtlas.ts](../src/engine/loader/TextureAtlas.ts))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Normalized UV Coordinate Mapping"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given an atlas of total width $W$ and height $H$, a frame located at pixel coordinates $(x, y, w, h)$ maps to normalized WebGPU UV coordinates $[0, 1]^2$:"
+        },
+        {
+          "type": "math",
+          "tex": "u_{\\min} = \\frac{x}{W}, \\quad u_{\\max} = \\frac{x + w}{W}"
+        },
+        {
+          "type": "math",
+          "tex": "v_{\\min} = \\frac{y}{H}, \\quad v_{\\max} = \\frac{y + h}{H}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Frame Trimming & Rotation Mechanics"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Whitespace Trimming (`trimmed: true`)**: TexturePacker crops transparent margins to conserve atlas space. The `SubTexture` stores `spriteSourceSize` and `sourceSize` $(W_{\\text{orig}}, H_{\\text{orig}})$, centering the trimmed sprite accurately relative to its uncropped anchor point.",
+            "**Rotated Frames (`rotated: true`)**: Rotated sprites swap UV coordinates during quad vertex construction to restore upright orientation without runtime matrix overhead."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-animated-sprite-engine-animatedsprite-ts-src-engine-entities-primitives-2d-animatedsprite-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Animated Sprite Engine ([AnimatedSprite.ts](../src/engine/entities/primitives/2d/AnimatedSprite.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `AnimatedSprite` updates frame indexing inside the engine's continuous composition loop:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Frame Timing & Wrap Mechanics"
+        },
+        {
+          "type": "paragraph",
+          "text": "For elapsed playback time $\\Delta t$, configured frame rate $F$ (frames per second), and total frame count $N$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{frameIndex} = \\lfloor t_{\\text{elapsed}} \\cdot F \\rfloor \\pmod N \\quad (\\text{when } \\text{loop} = \\text{true})"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a new frame is reached:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "The active `SubTexture` reference is fetched from the atlas index.",
+            "The quad's UV vertex attributes are mutated in-place via zero-allocation buffer updates.",
+            "VRAM texture binding remains completely unchanged because all frames share the unified parent atlas texture."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, TextureAtlas, AnimatedSprite } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Asynchronously load packed sprite sheet and JSON manifest\nconst atlas = await TextureAtlas.load(\"/assets/character.png\", \"/assets/character.json\");\n\n// 2. Instantiate animated sprite playing at 24 FPS\nconst walkCycle = new AnimatedSprite(atlas, \"walk_\", 24);\nwalkCycle.transform.scale = 2.0;\nwalkCycle.transform.position = [-3, 0, 0];\nscene.add(walkCycle);\n\n// 3. Play / Pause / Seek frame controls\nwalkCycle.play();"
+        }
+      ]
+    }
+  ]
+}

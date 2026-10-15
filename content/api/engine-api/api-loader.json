@@ -1,0 +1,602 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-loader",
+  "title": "loader API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "subtexture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SubTexture"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/loader/SubTexture.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/loader/SubTexture.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SubTexture: Represents a sub-region within a parent texture/image (Texture Atlas Frame). Designed to act as a transparent wrapper around a sub-rectangle of a larger image, supporting zero-copy GPU UV remapping as well as lazy bitmap cropping."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SubTextureOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SubTexture",
+                    "Class",
+                    "Represents a sub-region within a parent texture/image (Texture Atlas Frame). Designed to act as a transparent wrapper around a sub-rectangle of a larger image, supporting zero-copy GPU UV remapping as well as lazy bitmap cropping."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface SubTextureOptions {\n    x: number;\n    y: number;\n    width: number;\n    height: number;\n    sourceWidth: number;\n    sourceHeight: number;\n    uMin?: number;\n    vMin?: number;\n    uMax?: number;\n    vMax?: number;\n    trimmed?: boolean;\n    trim?: {\n        x: number;\n        y: number;\n        w: number;\n        h: number;\n    };\n}\nexport declare class SubTexture {\n    readonly parentSource: any;\n    readonly x: number;\n    readonly y: number;\n    readonly width: number;\n    readonly height: number;\n    readonly sourceWidth: number;\n    readonly sourceHeight: number;\n    readonly uMin: number;\n    readonly vMin: number;\n    readonly uMax: number;\n    readonly vMax: number;\n    readonly trimmed: boolean;\n    readonly trim?: {\n        x: number;\n        y: number;\n        w: number;\n        h: number;\n    };\n    constructor(parentSource: any, options: SubTextureOptions);\n    remapUVs(uvs: Float32Array | number[]): Float32Array;\n    toImageBitmap(): Promise<ImageBitmap>;\n    toCanvas(loadedSource?: any): HTMLCanvasElement;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SubTextureOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "x: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 4](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L4)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "y: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 5](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L5)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "width: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sourceWidth: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sourceHeight: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "uMin?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vMin?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "uMax?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vMax?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "trimmed?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "trim?: { x: number; y: number; w: number; h: number };",
+                    "—",
+                    "Optional record/option field with declared type `{ x: number; y: number; w: number; h: number }`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L15)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SubTexture` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly parentSource: any",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly x: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly y: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly width: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly height: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly sourceWidth: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly sourceHeight: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly uMin: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly vMin: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly uMax: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly vMax: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly trimmed: boolean",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly trim?: { x: number; y: number; w: number; h: number }",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(parentSource: any, options: SubTextureOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.parentSource`, `this.x`, `this.y`, `this.width`, `this.height`, `this.sourceWidth`, `this.sourceHeight`, `this.uMin` and other instance fields. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remapUVs(uvs: Float32Array | number[]): Float32Array",
+                    "—",
+                    "Remaps an array of standard UV coordinates ([0..1] range) to this sub-texture's atlas UV range. Param: uvs Input UV array or Float32Array (pairs of u, v coordinates). Returns: New Float32Array containing remapped UV coordinates. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async toImageBitmap(): Promise<ImageBitmap>",
+                    "—",
+                    "Extracts a cropped ImageBitmap of this sub-region on demand. Useful for systems that require physical individual bitmaps (e.g. 3D Raytracing texture arrays). [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toCanvas(loadedSource?: any): HTMLCanvasElement",
+                    "—",
+                    "Paints the sub-region onto a HTMLCanvasElement. [Source line 115](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/SubTexture.ts#L115)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "textureatlas",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TextureAtlas"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/loader/TextureAtlas.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/loader/TextureAtlas.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TexturePackerFrame",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TexturePackerManifest",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TextureAtlas",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TexturePackerFrame {\n    filename?: string;\n    frame: {\n        x: number;\n        y: number;\n        w: number;\n        h: number;\n    };\n    rotated?: boolean;\n    trimmed?: boolean;\n    spriteSourceSize?: {\n        x: number;\n        y: number;\n        w: number;\n        h: number;\n    };\n    sourceSize?: {\n        w: number;\n        h: number;\n    };\n}\nexport interface TexturePackerManifest {\n    meta?: {\n        size?: {\n            w: number;\n            h: number;\n        };\n        image?: string;\n    };\n    frames: Record<string, TexturePackerFrame> | TexturePackerFrame[];\n}\nexport declare class TextureAtlas {\n    readonly source: any;\n    width: number;\n    height: number;\n    constructor(source: any, width?: number, height?: number);\n    static load(imageSource: any, jsonUrlOrData: string | TexturePackerManifest): Promise<TextureAtlas>;\n    static fromGrid(imageSource: any, cols: number, rows: number, frameWidth?: number, frameHeight?: number, sourceWidth?: number, sourceHeight?: number): TextureAtlas;\n    addFrame(name: string, x: number, y: number, width: number, height: number, trimmed?: boolean, trim?: {\n        x: number;\n        y: number;\n        w: number;\n        h: number;\n    }): SubTexture;\n    getTexture(keyOrIndex: string | number): SubTexture | undefined;\n    getSubTexture(keyOrIndex: string | number): SubTexture | undefined;\n    getFrameCount(): number;\n    forEach(callback: (name: string, texture: SubTexture) => void): void;\n    getFrameNames(): string[];\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TexturePackerFrame` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "filename?: string;",
+                    "—",
+                    "Optional record/option field with declared type `string`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frame: { x: number; y: number; w: number; h: number };",
+                    "—",
+                    "Required record/option field with declared type `{ x: number; y: number; w: number; h: number }`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "rotated?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "trimmed?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "spriteSourceSize?: { x: number; y: number; w: number; h: number };",
+                    "—",
+                    "Optional record/option field with declared type `{ x: number; y: number; w: number; h: number }`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "sourceSize?: { w: number; h: number };",
+                    "—",
+                    "Optional record/option field with declared type `{ w: number; h: number }`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L11)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TexturePackerManifest` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "meta?: {\n        size?: { w: number; h: number };\n        image?: string;\n    };",
+                    "—",
+                    "Optional record/option field with declared type `{ size?: { w: number; h: number }; image?: string; }`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "frames: Record<string, TexturePackerFrame> | TexturePackerFrame[];",
+                    "—",
+                    "Required record/option field with declared type `Record<string, TexturePackerFrame> | TexturePackerFrame[]`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TextureAtlas` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly source: any",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public width: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public height: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(source: any, width: number = 0, height: number = 0)",
+                    "—",
+                    "Implementation: `this.source = source; this.width = width; this.height = height;`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static async load(imageSource: any, jsonUrlOrData: string | TexturePackerManifest): Promise<TextureAtlas>",
+                    "—",
+                    "Loads a TextureAtlas from an image source and a JSON manifest (URL or object). [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fromGrid(\n        imageSource: any,\n        cols: number,\n        rows: number,\n        frameWidth?: number,\n        frameHeight?: number,\n        sourceWidth?: number,\n        sourceHeight?: number\n    ): TextureAtlas",
+                    "—",
+                    "Creates a TextureAtlas from a uniform grid sprite sheet. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addFrame(name: string, x: number, y: number, width: number, height: number, trimmed?: boolean, trim?: { x: number; y: number; w: number; h: number }): SubTexture",
+                    "—",
+                    "Registers a single frame sub-texture in the atlas. [Source line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L121)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getTexture(keyOrIndex: string | number): SubTexture | undefined",
+                    "—",
+                    "Retrieves a SubTexture by frame key or numerical index. [Source line 137](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L137)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubTexture(keyOrIndex: string | number): SubTexture | undefined",
+                    "—",
+                    "Deprecated: Use {@link getTexture} instead (canonical API name). [Source line 147](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L147)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getFrameCount(): number",
+                    "—",
+                    "Returns the number of registered frames in this atlas. [Source line 154](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L154)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forEach(callback: (name: string, texture: SubTexture) => void): void",
+                    "—",
+                    "Iterates over all named frames in insertion order. Param: callback Called with (name, subTexture) for each frame. [Source line 163](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L163)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getFrameNames(): string[]",
+                    "—",
+                    "Returns array of registered frame names. [Source line 170](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L170)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TextureAtlas.parseManifest: private parseManifest(manifest: TexturePackerManifest)",
+                    "Parses TexturePacker Hash or Array format manifest. Handles the `rotated` flag by swapping frame w/h when necessary. Body operations (including nested callbacks): calls to `frames.forEach`, `this.addFrame`; 1 explicit loop.",
+                    "[Line 178](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/loader/TextureAtlas.ts#L178)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

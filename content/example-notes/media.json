@@ -1,0 +1,28 @@
+{
+ "media_textures/texture_atlas": {
+  "description":"One generated sprite sheet supplies several sprites, an animated frame sequence, and a texture on a rotating cube. Follow the same atlas image through these different uses to see what sharing a texture actually means.",
+  "walkthrough":["The helper draws four gemstone images into a 512 × 512 canvas. `TextureAtlas` maps named regions of that canvas to reusable texture sources.","A `Sprite` selects one region, while `AnimatedSprite` cycles through the named regions. The atlas is shared; the frame selection belongs to each consumer.","The cube takes another region through `Model.setTextureMap`. The updater then moves the sprites and rotates the cube, showing that their transforms remain independent of the shared image."],
+  "experiments":["Open the source and change the animated sprite’s frame order. Rerun to see how sequencing differs from changing the atlas image.","Change the animation frame rate while leaving the bobbing speed alone. The sprite’s picture and its position are driven by separate updates.","Orbit the camera around the cube to inspect how its UV mapping uses the selected region."],
+  "related":["TextureAtlas","Sprite","AnimatedSprite","Model.setTextureMap","Scene.always"]
+ },
+ "media_textures/texture_mapping": {
+  "description":"An Earth image supplies the sphere’s surface color, while a normal map changes how light responds to it. Orbit the model and inspect the highlights to separate image detail from geometric shape.",
+  "walkthrough":["`Math3D.createSphere` builds the mesh and its UV coordinates. `Model.setTextureMap` assigns the Earth image to those coordinates.","The scene loads a TIFF normal map through `Model.setNormalMap` and sets the material’s normal scale. This changes surface shading without displacing the sphere’s vertices.","The camera controller lets you inspect the result from different angles. Material roughness changes how easy it is to read the normal-map detail in the highlights."],
+  "experiments":["Change `normalScale` from 10 to 1 and rerun. Compare the strength of the apparent surface detail.","Comment out the normal-map assignment and compare the silhouette with the lit surface. The mesh stays the same.","Change roughness while keeping the normal map fixed, then orbit to compare the highlight."],
+  "related":["Model","Model.setTextureMap","Model.setNormalMap","Material.normalScale","OrbitCameraController"]
+ },
+ "media_textures/media_raster": {
+  "description":"Place an image and a video in the same scene, then compare their placement with their playback. Both occupy scene geometry, while the video also owns a media timeline.",
+  "walkthrough":["`RTImage` loads the still image and `RTVideo` loads the video file. Their dimensions and transforms determine their placement in the scene.","Camera movement changes the view of these surfaces. It does not replace the media source or turn a still image into a timed sequence.","The viewer’s pause control pauses scene-managed media along with the scene. Restart creates fresh instances and starts the example again."],
+  "experiments":["Pause while the video is moving, then resume. Compare the media state with the surrounding scene.","Change the image’s position in the source without changing its dimensions. Then change dimensions separately.","Replace the video path with another same-origin media file and inspect the loading behavior."],
+  "requirements":["The build includes the repository’s `/res/media/image.jpg` and `/res/media/nature.mp4`. Browser media policies can require a user gesture before playback."],
+  "related":["RTImage","RTVideo","Scene.pause","Scene.resume"]
+ },
+ "media_textures/html_in_canvas": {
+  "description":"Render an HTML surface into the scene and compare it with ordinary 3D geometry. This example demonstrates a surface backed by another document, including the restrictions of capturing and loading that document.",
+  "walkthrough":["`RTHTML` supplies the HTML-backed surface. Its render mode determines how the document becomes pixels available to the scene.","The demo’s source points at a local Studio URL. That document must be reachable for this particular surface to load; the documentation build does not start a second Studio server.","Use the rest of the geometry and the source together to inspect placement and material behavior even while diagnosing document-loading requirements."],
+  "requirements":["This source references `http://localhost:5173/studio/index.html`. Run Studio there or edit that URL to a reachable document before running the HTML capture portion."],
+  "experiments":["Change the source URL to a small same-origin HTML page. Start with a static document before testing dynamic content.","Compare the HTML surface’s dimensions with the neighboring model so its resolution and world size are easier to distinguish."],
+  "related":["RTHTML","HTMLRenderMode","Model","OrbitCameraController"]
+ }
+}

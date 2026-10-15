@@ -1,0 +1,182 @@
+{
+  "persistence/persistence": {
+    "description": "Accumulate brush marks in an offscreen drawing board.",
+    "walkthrough": [
+      "RenderTarget captures two moving brush circles and retains previous pixels. Sprite displays its texture, while the outer frame and instructions remain ordinary scene entities.",
+      "Press C after focusing the preview to clear retained marks. Clearing the target removes pixel history, not the brush entities or their update functions."
+    ],
+    "experiments": [
+      "Increase one brush radius and compare trail width. Clear the board between runs to avoid confusing old and new marks."
+    ]
+  },
+  "persistence/persistent_draw": {
+    "description": "Display accumulated brush motion on a spatial screen.",
+    "walkthrough": [
+      "The persistent RenderTarget receives a moving circle, and toSprite exposes its texture as a screen. A cube-derived casing places that screen in a spatial composition.",
+      "The active brush follows a scripted trajectory. Orbiting the camera changes how the display is viewed; it does not change the brush’s coordinates inside the target."
+    ],
+    "experiments": [
+      "Disable persistence and compare the moving dot with its accumulated trail. Keep the same brush trajectory."
+    ]
+  },
+  "physics/billiards_game": {
+    "description": "A 3D pool table with physical balls, raycast aiming, turn rules, synthesized collision audio and AI shots.",
+    "walkthrough": [
+      "run builds a landscape table, dynamic balls, cushions and aiming visuals, then installs Physics3D and pointer controls. The table’s shaded Models and the physical collision shapes have different jobs: changing roughness changes appearance, while body/fixture settings change motion.",
+      "setupPointerControls converts pointer actions into the table’s aiming state. updateAimingVisuals derives the cue direction and power display; executeShot applies the selected impulse to the cue ball. Aim lines and contact hints are geometric predictions, so they do not guarantee the complete subsequent collision chain.",
+      "updateGameLoop tracks rolling balls and pockets; checkSettling waits for sufficiently slow motion before onAllBallsSettled evaluates the turn. onBallPotted records the individual event, while evaluateTurnRules decides groups, fouls and continuation after the shot. That delayed rule boundary prevents a transient contact from switching turns prematurely.",
+      "The AI’s calculateShot considers ball-to-pocket geometry and obstructions. startAITurn schedules the chosen shot rather than replacing the physics system. To debug a miss, keep the candidate geometry and resulting impulse separate from the simulation outcome.",
+      "BilliardsAudio builds excitation buffers and shapes them differently for ball, cushion, cue and pocket sounds. Stereo position and impact speed are audio inputs; browser permission still determines whether playback starts. This audio subsystem is reusable only after its lifetime is made explicit.",
+      "resetRack restores the playable setup and UI, while final cleanup removes timers, DOM and stored native listeners and destroys the audio helper. The source’s scene-level onDestroy method is not automatically called by Scene.destroy: an application host must wire that cleanup through a destroy override. The larger game is a subsystem reference, not a drop-in lifecycle template."
+    ],
+    "experiments": [
+      "Keep the same cue direction and vary powerRatio; compare the contact order and final state.",
+      "Change only the ball material roughness and verify that physical trajectories remain governed by body settings.",
+      "Compare a recorded human strike with the AI’s selected strike to inspect obstruction handling separately from turn rules."
+    ]
+  },
+  "physics/box3d_demo": {
+    "description": "Compare falling stacks, bouncing balls and a kinematic paddle using the Box3D backend.",
+    "walkthrough": [
+      "Physics3D selects the backend and awaits ready before constructing bodies. Static ground, dynamic objects and the driven paddle exercise distinct body roles.",
+      "A delayed projectile disturbs the stack. The paddle’s prescribed motion differs from a dynamic body that moves in response to forces."
+    ],
+    "experiments": [
+      "Reduce projectile impulse and compare stack stability. Then change sphere restitution while leaving the stack untouched."
+    ]
+  },
+  "physics/carrom_game": {
+    "description": "A complete Carrom game combining a 2D world, pointer aiming, turn rules, AI, audio and DOM controls.",
+    "walkthrough": [
+      "Read run as the assembly order: disable the generic player, enable continuous frames, create Physics2D with the Planck backend, zero gravity and a 1/60-second step, then build the board, rosette, striker, aiming aids and controls. Rendering the coins and simulating their bodies are separate responsibilities connected by Rigidbody2DComponent.",
+      "The board uses static boundaries and four pocket regions. Coins and striker are dynamic bodies. Mass, damping and fixture friction determine travel and contacts; pocket detection, score and turn ownership are application rules layered on top of those contacts. setBoardFriction updates both damping and fixture settings, so it changes more than one physical parameter.",
+      "Pointer input is a state machine: positioning follows a baseline, a left click locks the striker for aiming, dragging supplies a pull vector, and release applies an impulse opposite that vector. Right click cancels the aiming state. executeShot clamps drag to 5.5 units, converts it to a power ratio and applies a bounded impulse scaled by strikeForceMultiplier; the trajectory dots are an aiming aid, not a full future physics replay.",
+      "During rolling, update logic checks pockets and the fastest active piece. It uses minimum roll frames, consecutive quiet frames and a timeout before transitioning the turn, with additional low-speed damping to remove tiny residual motion. Those thresholds are expressed partly in frames: their apparent seconds depend on the update cadence, so the source comments are not universal timing guarantees.",
+      "The shot records potted coins and striker fouls, then applies scoring, queen/cover and turn rules after settling. Manual striker collection is allowed only under the scene’s slow-motion and pocket-danger checks. Keep these game-state decisions separate from collision callbacks when changing the rules.",
+      "CarromAI.findBestShot tests candidate coin-to-pocket paths and striker-to-contact paths for obstruction, then scores possible strikes. The same execution path ultimately applies an impulse. This is a geometric shot heuristic, so moving bodies and multi-bounce shots can differ from its predicted result.",
+      "Collision audio distinguishes striker/coin contacts from cushion contacts and derives sound intensity from relative speed, normal impact and glancing motion. The first user interaction also matters for browser audio permission. A silent collision can therefore be an unlock problem or a below-threshold event rather than a physics failure.",
+      "For an application port, move the DOM panel, native listeners and AI timers under an explicit owner. This demonstration defines onDestroy, but Scene does not invoke a scene-level onDestroy hook automatically; call that cleanup from an override of destroy which also calls super.destroy. Its anonymous native listeners need stored callbacks to be removable. Use the smaller physics scenes for a minimal reusable setup before copying the whole game."
+    ],
+    "experiments": [
+      "Keep a reproducible strike position/direction and change only strikeForceMultiplier. Compare the initial impulse and the final pocket outcome.",
+      "Change board friction independently from coin mass in the setup panel. Inspect how setBoardFriction changes damping as well as fixture friction.",
+      "Reduce REQUIRED_QUIET_FRAMES and observe whether a turn changes while pieces still move. Restore it before changing the stillness speed threshold.",
+      "Play a light cushion contact and a head-on coin collision after unlocking audio. Compare the contact branch and amplitude rather than increasing master volume immediately."
+    ]
+  },
+  "physics/physics_large_scale": {
+    "description": "Feed a stream of bodies through a multi-tier obstacle field.",
+    "walkthrough": [
+      "The arena combines walls, pins and collection bins. Physics3D handles contacts as batches of spheres enter through repeated spawning.",
+      "The source limits retained bodies by removing older ones. This keeps the live workload bounded; the example title’s body count is not a hardware-independent performance promise."
+    ],
+    "experiments": [
+      "Reduce the spawn batch and extend the interval. Compare congestion in the pin field and the final distribution."
+    ]
+  },
+  "physics/physics_math3d": {
+    "description": "Drop filled and outlined mathematical meshes onto ramps.",
+    "walkthrough": [
+      "The scene uses Physics3D with downward gravity and a maximum substep count of four. Static tilted boxes form ramps and a basin; the orbit camera changes your view without changing their collision geometry. The dynamic objects are MathShape3D constructions, combining visible faces and edge strokes.",
+      "Five initial objects enter in sequence: a box, sphere, torus, cylinder and custom icosahedron. The last is built from explicit vertices and triangle indices with Math3D.computeSmoothShading. Stroke width and transparent fill expose topology, but their visual appearance is separate from the Physics3D collider chosen for each body.",
+      "The icosahedron explicitly requests a convex collider. Other bodies use their configured/default shape handling. In particular, a visible torus opening does not prove that an automatically generated convex collider has an opening. Choose and inspect a collision representation that suits the intended interaction.",
+      "spawnRandomShape selects a geometry, moves it above the ramps, gives it linear and angular velocity, registers its body and stores the association. The periodic loop waits 1,500 ms between opportunities and creates up to thirty additional bodies. Its waits use scene timing, which is different from an unrelated browser setInterval.",
+      "The retained body list is limited to twenty-five by removing its oldest physics registration. Physics3D.remove also detaches the visible entity from the scene by default, but does not itself call Entity.destroy. Decide when to retire unique geometry and GPU resources as well; a bounded bookkeeping array alone does not establish bounded allocations.",
+      "Compare physical and visual settings independently. Restitution changes bounce, friction changes tangential contact response, and paint/material values change appearance. Seed random choices and check the offline step size when turning this interactive tumble into a reproducible video."
+    ],
+    "experiments": [
+      "Set restitution to zero on one dynamic body while leaving its paint unchanged. Compare its first landing with a neighboring body.",
+      "Temporarily stop spawning after five objects. Orbit to inspect the torus and examine the selected collider before using it for a ring-shaped obstacle."
+    ]
+  },
+  "physics/physics_showcase": {
+    "description": "Strike a wall of boxes and observe the collision cascade.",
+    "walkthrough": [
+      "Physics3D owns a static ground and dynamic box wall. A sphere receives the projectile motion after the initial pause.",
+      "The scene changes timing around impact to make the cascade easier to inspect. Simulation and scene time scaling remain distinct from rendering mesh detail."
+    ],
+    "experiments": [
+      "Halve the projectile speed and replay. Compare the number of disturbed boxes with the unchanged wall geometry."
+    ]
+  },
+  "physics/physics_trimesh": {
+    "description": "Use a static triangle-mesh terrain as the collision surface.",
+    "walkthrough": [
+      "The terrain’s sampled vertices and indices provide both visible geometry and a trimesh collider. Dynamic spheres and boxes fall onto that concave surface.",
+      "Static concave terrain is different from assigning a dynamic concave collider to every moving object. Click spawning and boundary cleanup keep the experiment interactive."
+    ],
+    "experiments": [
+      "Lower terrain sampling resolution and compare rolling over the same ridge. Inspect both the visible triangles and contact motion."
+    ]
+  },
+  "physics/physics": {
+    "description": "Create a static floor and dynamic falling boxes.",
+    "walkthrough": [
+      "Physics3D initializes the physics world and adds entities with body settings. The floor stays fixed while boxes respond to gravity and contacts.",
+      "The physics integration updates entity transforms. Avoid writing competing transform updates to a dynamic box unless the body API is also updated intentionally."
+    ],
+    "experiments": [
+      "Change gravity from -9.82 to -4. Compare fall time while leaving box mass and initial height unchanged."
+    ]
+  },
+  "physics/physics2d_collisions": {
+    "description": "React to contacts with bumper impulses and color feedback.",
+    "walkthrough": [
+      "Physics2D creates the enclosure, bumpers and falling balls. Per-body and global collision listeners attach behavior to contact events.",
+      "A reactive impulse changes motion, while a fill change supplies visual feedback. Mouse dragging provides another way to create controlled contacts."
+    ],
+    "experiments": [
+      "Disable the bumper impulse but retain its flash. Compare ordinary restitution with the actively boosted bounce."
+    ]
+  },
+  "physics/physics2d_mouse_drag": {
+    "description": "Grab and throw bodies through a physics-aware pointer constraint.",
+    "walkthrough": [
+      "enableMouseDrag connects pointer input to bodies through the physics system. Static boundaries, a hinged plank and a suspended body give the interaction different constraints to work against.",
+      "Dragging a physical body differs from setting its entity position every event. The constraint lets the solver account for contacts and joint forces during the drag."
+    ],
+    "experiments": [
+      "Pull the suspended body sideways and release it. Compare its constrained return with throwing an unconstrained crate."
+    ]
+  },
+  "physics/physics2d_seesaw": {
+    "description": "Balance falling bodies on a revolute-jointed plank.",
+    "walkthrough": [
+      "The plank attaches to a fixed support with addRevoluteJoint. A heavy ball and falling blocks apply torque through their contacts and positions relative to the hinge.",
+      "Stops constrain the plank’s practical range. Pointer spawning changes loading, while cleanup removes bodies outside the enclosure."
+    ],
+    "experiments": [
+      "Move the hinge toward one end and replay the same initial load. Compare lever arms and rotation."
+    ]
+  },
+  "physics/physics2d_softbody": {
+    "description": "Deform spring-connected polygons and a pinned curtain.",
+    "walkthrough": [
+      "addSoftBody represents the visible contour through a lattice of physical points and springs. The curtain pins selected points, while free jelly shapes fall over obstacles.",
+      "Stiffness, damping and sampling affect deformation and solver workload. A soft body is not just a rigid polygon with a wobble shader."
+    ],
+    "experiments": [
+      "Increase damping on one jelly shape and drop it from the same height. Compare oscillation decay with the neighboring shape."
+    ]
+  },
+  "physics/physics2d_springs": {
+    "description": "Compare spring suspensions and a multi-link elastic chain.",
+    "walkthrough": [
+      "addSpring connects bodies with configurable restoring and damping behavior. Static anchors define the attachment points while dynamic bobs respond to gravity.",
+      "The trampoline platform uses multiple connections, and the chain passes motion between bobs. A stronger spring differs from a more heavily damped spring."
+    ],
+    "experiments": [
+      "Increase damping while holding stiffness constant. Compare settling time and oscillation amplitude."
+    ]
+  },
+  "physics/physics2d": {
+    "description": "Spawn a variety of rigid shapes into a two-dimensional arena.",
+    "walkthrough": [
+      "Physics2D adds the static floor and dynamic primitives. Scene click events supply world positions for newly generated circles, rectangles and polygons.",
+      "Body friction and restitution control contact behavior. Cleanup removes shapes that fall below the useful region, preventing unlimited accumulation."
+    ],
+    "experiments": [
+      "Spawn a circle and rectangle from similar heights with equal restitution. Compare rolling with tumbling."
+    ]
+  }
+}

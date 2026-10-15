@@ -1,0 +1,1378 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-animation-transform",
+  "title": "animation / transform API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "homotopyanimation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "HomotopyAnimation"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/HomotopyAnimation.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/HomotopyAnimation.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "HomotopyAnimation: Universal mathematical animation driving spatial deformations, vector fields, and continuous homotopies H(p, t) across any VectorEntity, composite, or scene graph."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "HomotopyAnimationOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "HomotopyAnimation",
+                    "Class",
+                    "Universal mathematical animation driving spatial deformations, vector fields, and continuous homotopies H(p, t) across any VectorEntity, composite, or scene graph."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface HomotopyAnimationOptions extends AnimOptions {\n    fromProgress?: number;\n    toProgress?: number;\n    isComplex?: boolean;\n}\nexport declare class HomotopyAnimation extends Animation {\n    constructor(target: VectorEntity | VectorEntity[], mapping: HomotopyFunction | ISpatialField | SpatialMappingFunction | ComplexMappingFunction, options?: HomotopyAnimationOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `HomotopyAnimationOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fromProgress?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "toProgress?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isComplex?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L21)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `HomotopyAnimation` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        target: VectorEntity | VectorEntity[],\n        mapping: HomotopyFunction | ISpatialField | SpatialMappingFunction | ComplexMappingFunction,\n        options: HomotopyAnimationOptions = {}\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.targetEntities`, `this.fromProgress`, `this.toProgress`, `this.homotopyFn`, `this.LABEL`; construction of `Complex`, `Vec3`; calls to `Rate.smooth`, `complexFn`, `Complex.from`, `field.evaluate`, `fn`; return paths including `new Vec3( p.x + (w.re - p.x) * t, p.y + (w.im - p.y) * t, p.z )`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Implementation: `this.applyProgress(this.rate_func(0.0));`. [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`; calls to `this.applyProgress`, `this.rate_func`, `this.onComplete`, `this.complete`; return paths including `false`, `true`. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L86)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.duration ?? 2500",
+                    "[Line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L40)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.rate_func ?? Rate.smooth()",
+                    "[Line 41](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L41)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.fromProgress ?? 0.0",
+                    "[Line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L46)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.toProgress ?? 1.0",
+                    "[Line 47](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L47)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "HomotopyAnimation.applyProgress: private applyProgress(progress: number)",
+                    "Implementation: `const t = this.fromProgress + (this.toProgress - this.fromProgress) * progress; for (let i = 0; i < this.targetEntities.length; i++) { this.targetEntities[i].applyHomotopy(this.homotopyFn, t); }`.",
+                    "[Line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/HomotopyAnimation.ts#L79)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Animation](/api-animation#animation)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modeltransform",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ModelTransform"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/ModelTransform.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/ModelTransform.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/ModelTransform.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ModelTransformOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ModelTransform",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface ModelTransformOptions extends AnimOptions, MorphOptions {\n    blendThreshold?: number;\n}\nexport declare class ModelTransform extends Animation {\n    constructor(source: Model, target: Model, options?: ModelTransformOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ModelTransformOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "blendThreshold?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/ModelTransform.ts#L14)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `ModelTransform` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(source: Model, target: Model, options: ModelTransformOptions = { mode: MorphMode.SWARM })",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.source`, `this.target`, `this.LABEL`, `this.transOptions`, `this.isIntroducer`, `this.entity`, `this.morphEntity`, `this.target.VISIBILITY` and other instance fields; construction of `MorphModel`; calls to `this.promise.then(() => { if (this.initialized) { const scene = this.source.getScene() || this.target.getScene(); if (scene) { scene.remove(this.morp…`, `this.promise.then`, `this.source.getScene`, `this.target.getScene`, `scene.remove`, `this.morphEntity.destroy`, `scene.entities.includes`, `scene.add` and additional helpers. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/ModelTransform.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.sourceOriginalOpacity`, `this.targetOriginalOpacity`, `this.source.VISIBILITY`, `this.target.VISIBILITY`, `this.target.material.opacity`, `this.morphEntity.material.opacity`, `this.initialized`; calls to `this.source.getScene`, `this.target.getScene`, `scene.entities.includes`, `scene.add`, `this.morphEntity.state.transform.set`, `this.morphEntity.transform.set`. [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/ModelTransform.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`, `this.target.VISIBILITY`, `this.morphEntity.z_index`; calls to `this.source.getScene`, `this.target.getScene`, `this.rate_func`, `this.morphEntity.setWeight`, `tMask.push`, `State.interpolateWithMask`, `this.morphEntity.transform.set`, `this.source.invalidate` and additional helpers; return paths including `false`, `true`; 1 explicit loop. [Source line 116](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/ModelTransform.ts#L116)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Animation](/api-animation#animation)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "morph",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Morph"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/Morph.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/Morph.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/Morph.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Morph: Unified animation API for transforming between entities. Automatically selects the appropriate morphological transform strategy based on the provided entity types."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Morph",
+                    "Function",
+                    "Unified animation API for transforming between entities. Automatically selects the appropriate morphological transform strategy based on the provided entity types."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Morph",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Morph",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Morph",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Morph",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare function Morph(source: SDFEntity3D, target: SDFEntity3D, options?: AnimOptions): SDF3DTransform;\nexport declare function Morph(source: Model, target: Model, options?: ModelTransformOptions): ModelTransform;\nexport declare function Morph(source: Tex | Text, target: Tex | Text, options?: TransformMatchingTexOptions): TransformMatchingTex;\nexport declare function Morph(source: VectorEntity | VectorEntity[], target: VectorEntity | VectorEntity[], options?: VectorTransformOptions): VectorTransform;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Morph: Body operations (including nested callbacks): construction of `SDF3DTransform`, `ModelTransform`, `TransformMatchingTex`, `VectorTransform`, `Error`; calls to `source.every`, `target.every`; return paths including `new SDF3DTransform(source, target, options)`, `new ModelTransform(source, target, options)`, `new TransformMatchingTex(source, target, options)`; rejection paths `new Error(\"Morph: Unsupported entity types or mismatched source/target types.\")`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"Morph: Unsupported entity types or mismatched source/target types.\")"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdf3dtransform",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SDF3DTransform"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/SDF3DTransform.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/SDF3DTransform.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SDF3DTransform.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SDF3DTransform",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class SDF3DTransform extends Animation {\n    constructor(source: SDFEntity3D, target: SDFEntity3D, options?: AnimOptions);\n    prepare(): void;\n    update(dt: number): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SDF3DTransform` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(source: SDFEntity3D, target: SDFEntity3D, options: AnimOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.source`, `this.target`, `this.LABEL`, `this.isIntroducer`, `this.entity`, `this.morphEntity`, `this.target.VISIBILITY`, `this.target.volume.VISIBILITY`; construction of `SDFMorph3D`; calls to `this.promise.then(() => { if (this.initialized) { const scene = this.source.getScene() || this.target.getScene(); if (scene) { scene.remove(this.morp…`, `this.promise.then`, `this.source.getScene`, `this.target.getScene`, `scene.remove`, `this.morphEntity.destroy`, `scene.entities.includes`, `scene.add` and additional helpers. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SDF3DTransform.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare()",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.source.VISIBILITY`, `this.source.volume.VISIBILITY`, `this.target.VISIBILITY`, `this.target.volume.VISIBILITY`, `this.morphEntity.state.paint.set_mask`, `this.morphEntity.state.material.set_mask`, `this.morphEntity.volume.state.paint.set_mask`, `this.morphEntity.volume.state.material.set_mask` and other instance fields; calls to `this.source.getScene`, `this.target.getScene`, `scene.entities.includes`, `scene.add`, `this.morphEntity.state.set`, `this.morphEntity.volume.state.set`. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SDF3DTransform.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`; calls to `this.source.getScene`, `this.target.getScene`, `this.rate_func`, `this.morphEntity.setWeight`, `State.interpolate`, `scene.invalidate`, `this.complete`; return paths including `false`, `true`. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SDF3DTransform.ts#L108)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Animation](/api-animation#animation)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "spacetransform",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SpaceTransform"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/SpaceTransform.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/SpaceTransform.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SpaceTransform.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SpaceTransform: Backward-compatible alias for {@link HomotopyAnimation}. Animates spatial vector fields and deformations across coordinate systems and vector entities."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SpaceTransformOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "SpaceTransform",
+                    "Class",
+                    "Backward-compatible alias for {@link HomotopyAnimation}. Animates spatial vector fields and deformations across coordinate systems and vector entities."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface SpaceTransformOptions extends HomotopyAnimationOptions {\n    fromAlpha?: number;\n    toAlpha?: number;\n}\nexport declare class SpaceTransform extends HomotopyAnimation {\n    constructor(target: VectorEntity | VectorEntity[], mapping: ISpatialField | SpatialMappingFunction | HomotopyFunction | ComplexMappingFunction, options?: SpaceTransformOptions);\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SpaceTransformOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "fromAlpha?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SpaceTransform.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "toAlpha?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SpaceTransform.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SpaceTransform` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        target: VectorEntity | VectorEntity[],\n        mapping: ISpatialField | SpatialMappingFunction | HomotopyFunction | ComplexMappingFunction,\n        options: SpaceTransformOptions = {}\n    )",
+                    "—",
+                    "Implementation: `super(target, mapping, { fromProgress: options.fromAlpha ?? options.fromProgress, toProgress: options.toAlpha ?? options.toProgress, ...options }); this.LABEL = \"SpaceTransform\";`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SpaceTransform.ts#L24)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.fromAlpha ?? options.fromProgress",
+                    "[Line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SpaceTransform.ts#L30)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options.toAlpha ?? options.toProgress",
+                    "[Line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/SpaceTransform.ts#L31)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transformmatch",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TransformMatch"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/TransformMatch.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/TransformMatch.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatch.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "TransformMatch: Unified API for intelligently morphing between entities by matching identical sub-components. It translates, scales, and rotates identical components into place, and morphs/fades the remaining unmatched parts."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TransformMatch",
+                    "Function",
+                    "Unified API for intelligently morphing between entities by matching identical sub-components. It translates, scales, and rotates identical components into place, and morphs/fades the remaining unmatched parts."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformMatch",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformMatch",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformMatch",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformMatch",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare function TransformMatch(source: Text, target: Text, options?: TransformMatchingOptions): TransformMatchingText;\nexport declare function TransformMatch(source: Tex, target: Tex | Text, options?: TransformMatchingTexOptions): TransformMatchingTex;\nexport declare function TransformMatch(source: Tex | Text, target: Tex, options?: TransformMatchingTexOptions): TransformMatchingTex;\nexport declare function TransformMatch(source: VectorEntity, target: VectorEntity, options?: TransformMatchingShapesOptions): TransformMatchingShapes;"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "TransformMatch: Body operations (including nested callbacks): construction of `TransformMatchingText`, `TransformMatchingTex`, `TransformMatchingShapes`, `Error`; return paths including `new TransformMatchingText(source, target, options)`, `new TransformMatchingTex(source, target, options)`, `new TransformMatchingShapes(source, target, options)`; rejection paths `new Error(\"TransformMatch: Unsupported entity types. Source and target must be VectorEntities (e.g. Text, Tex, Path, VGroup, etc).\")`."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(\"TransformMatch: Unsupported entity types. Source and target must be VectorEntities (e.g. Text, Tex, Path, VGroup, etc).\")"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transformmatchingshapes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TransformMatchingShapes"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/TransformMatchingShapes.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/TransformMatchingShapes.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TransformMatchingShapesOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformMatchingShapes",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TransformMatchingShapesOptions extends AnimOptions {\n    morphUnmatched?: boolean;\n}\nexport declare class TransformMatchingShapes extends Concurrent {\n    static getWorldState(entity: Entity): State;\n    constructor(source: VectorEntity, target: VectorEntity, options?: TransformMatchingShapesOptions);\n    finalize(): void;\n    update(dt: number): boolean;\n    prepare(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TransformMatchingShapesOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "morphUnmatched?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts#L20)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TransformMatchingShapes` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static getWorldState(entity: Entity): State",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `State`; calls to `chain.unshift`, `nextState.apply`; return paths including `worldState`; 2 explicit loops. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(source: VectorEntity, target: VectorEntity, options: TransformMatchingShapesOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.sourceEntity`, `this.targetEntity`, `this.proxies`, `this.targetPaths`, `this.LABEL`, `this.isIntroducer`, `this.entity`; construction of `Set`, `VectorTransform`, `StateAnimation`; calls to `source.decompose`, `target.decompose`, `source.extractAllPaths`, `target.extractAllPaths`, `srcPaths.map`, `PathEqualizer.getContours`, `tgtPaths.map`, `Mat4.identity` and additional helpers; 5 explicit loops. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public finalize(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._finalized`; calls to `this.targetEntity.getScene`, `this.sourceEntity.getScene`, `scene.remove`, `this.proxies.forEach`, `p.destroy`, `this.sourceEntity.destroy`, `e.children.forEach`, `setVis` and additional helpers. [Source line 194](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts#L194)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Implementation: `const res = super.update(dt); if (res !== null) { this.finalize(); } return res;`. [Source line 219](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts#L219)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `e.children.forEach`, `setVis`, `super.prepare`; 1 explicit loop. [Source line 227](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts#L227)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TransformMatchingShapes.createStandaloneProxy: private static createStandaloneProxy(path: Path): Path",
+                    "Body operations (including nested callbacks): construction of `Path`; calls to `TransformMatchingShapes.getWorldState`, `proxy.paint.set`, `proxy.material.set`, `proxy.transform.set`, `proxy.refresh`; return paths including `proxy`.",
+                    "[Line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingShapes.ts#L46)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Concurrent](/api-animation#concurrent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transformmatchingtex",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TransformMatchingTex"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/TransformMatchingTex.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/TransformMatchingTex.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingTex.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TransformMatchingTexOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformMatchingTex",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TransformMatchingTexOptions extends AnimOptions {\n    morphUnmatched?: boolean;\n}\nexport declare class TransformMatchingTex extends Concurrent {\n    constructor(source: Tex | Text, target: Tex | Text, options?: TransformMatchingTexOptions);\n    finalize(): void;\n    update(dt: number): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TransformMatchingTexOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "morphUnmatched?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingTex.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TransformMatchingTex` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(source: Tex | Text, target: Tex | Text, options: TransformMatchingTexOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.sourceEntity`, `this.targetPaths`, `this.LABEL`, `this.isIntroducer`, `this.entity`; construction of `Set`, `Map`, `VectorTransform`, `StateAnimation`; calls to `source.decompose`, `target.decompose`, `source.getPaths`, `target.getPaths`, `tgtPaths.map`, `p.state.copy`, `ent.LABEL.match`, `ent.getLocalAABB` and additional helpers; return paths including `match[0]`, a template-literal expression (see source); 10 explicit loops. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingTex.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public finalize(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._finalized`; calls to `tPath.invalidate`, `this.sourceEntity.getScene`, `scene.remove`, `this.sourceEntity.destroy`; 1 explicit loop. [Source line 208](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingTex.ts#L208)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Implementation: `const res = super.update(dt); if (res !== null) { this.finalize(); } return res;`. [Source line 225](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingTex.ts#L225)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TransformMatchingTex.getWorldState: private static getWorldState(entity: Entity): State",
+                    "Resolves the absolute world state matrix mapping. Body operations (including nested callbacks): construction of `State`; calls to `chain.unshift`, `nextState.apply`; return paths including `worldState`; 2 explicit loops.",
+                    "[Line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingTex.ts#L23)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Concurrent](/api-animation#concurrent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transformmatchingtext",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TransformMatchingText"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/TransformMatchingText.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/TransformMatchingText.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingText.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TransformMatchingOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "TransformMatchingText",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface TransformMatchingOptions extends AnimOptions {\n    morphUnmatched?: boolean;\n}\nexport declare class TransformMatchingText extends Concurrent {\n    constructor(source: Text, target: Text, options?: TransformMatchingOptions);\n    finalize(): void;\n    update(dt: number): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TransformMatchingOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "morphUnmatched?: boolean;",
+                    "—",
+                    "Optional record/option field with declared type `boolean`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingText.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `TransformMatchingText` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(source: Text, target: Text, options: TransformMatchingOptions = {})",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.LABEL`, `this.isIntroducer`, `this.entity`, `this.sourceText`, `this.targetText`; construction of `Set`, `Map`, `VectorTransform`, `StateAnimation`; calls to `source.decompose`, `target.decompose`, `target.chars.map`, `c.state.copy`, `c.trim`, `srcMap.has`, `srcMap.set`, `srcMap.get(c)!.push` and additional helpers; 12 explicit loops. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingText.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public finalize(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._finalized`; calls to `tChar.invalidate`, `this.sourceText.getScene`, `scene.remove`, `this.sourceText.destroy`; 1 explicit loop. [Source line 227](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingText.ts#L227)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Implementation: `const res = super.update(dt); if (res !== null) { this.finalize(); } return res;`. [Source line 247](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingText.ts#L247)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "TransformMatchingText.getWorldState: private static getWorldState(entity: Entity): State",
+                    "Reconstructs the absolute World State of an entity, compiling all hierarchical layout offsets, scales, rotations, opacities, and colors. Body operations (including nested callbacks): construction of `State`; calls to `chain.unshift`, `nextState.apply`; return paths including `worldState`; 2 explicit loops.",
+                    "[Line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/TransformMatchingText.ts#L27)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Concurrent](/api-animation#concurrent)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vectortransform",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "VectorTransform"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/animation/transform/VectorTransform.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/animation/transform/VectorTransform.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VectorTransformOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "VectorTransform",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface VectorTransformOptions extends AnimOptions {\n    policy?: MatchingPolicy;\n}\nexport declare class VectorTransform extends Animation {\n    constructor(source: VectorEntity | VectorEntity[], target: VectorEntity | VectorEntity[], options?: VectorTransformOptions);\n    finalizeMorph(scene?: Scene): void;\n    prepare(): void;\n    update(dt: number): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VectorTransformOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "policy?: MatchingPolicy;",
+                    "—",
+                    "Optional record/option field with declared type `MatchingPolicy`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VectorTransform` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        source: VectorEntity | VectorEntity[],\n        target: VectorEntity | VectorEntity[],\n        options: VectorTransformOptions = {}\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.sourceEntities`, `this.targetEntities`, `this.policy`, `this.LABEL`, `this.isIntroducer`, `this.entity`; construction of `State`, `Path`, `Float32Array`; calls to `PathEqualizer.equalize`, `this.getWorldState`, `srcState.transform._matrix.getScale`, `tgtState.transform._matrix.getScale`, `srcState.transform._matrix.identity`, `tgtState.transform._matrix.identity`, `srcState.copy`, `tgtState.copy` and additional helpers; 1 explicit loop. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public finalizeMorph(scene?: Scene): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._finalized`; calls to `this.sourceEntities[0]?.getScene`, `this.targetEntities[0]?.getScene`, `activeScene.remove`, `this.morphTargets.map`, `e.geometry.refreshCompute`, `e.toPaths`, `p.geometry.refreshCompute`, `e.invalidate` and additional helpers; 3 explicit loops. [Source line 200](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts#L200)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepare(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.initialized`; construction of `Set`; calls to `this.sourceEntities[0]?.getScene`, `this.targetEntities[0]?.getScene`, `e.children.forEach`, `setVis`, `this.sourceEntities.forEach`, `targetPrimitives.add`, `this.targetEntities.includes`, `scene.entities.includes` and additional helpers; 3 explicit loops. [Source line 264](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts#L264)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(dt: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.delay`, `this.elapsed`; calls to `this.sourceEntities[0]?.getScene`, `this.targetEntities[0]?.getScene`, `this.rate_func`, `State.interpolate`, `scene.compute.pathInterpolate`, `scene.addCompute`, `m.path.refresh`, `u.entity.invalidate` and additional helpers; return paths including `false`, `true`; 2 explicit loops. [Source line 337](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts#L337)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options.policy || MatchingPolicy.SPATIAL",
+                    "[Line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts#L76)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VectorTransform.getWorldState: private getWorldState(entity: Entity): State",
+                    "Body operations (including nested callbacks): construction of `State`; calls to `chain.unshift`, `nextState.apply`; return paths including `worldState`; 2 explicit loops.",
+                    "[Line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/transform/VectorTransform.ts#L49)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [AnimOptions](/api-animation#animoptions), [Animation](/api-animation#animation)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

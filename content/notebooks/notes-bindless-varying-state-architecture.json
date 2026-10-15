@@ -1,0 +1,588 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-bindless-varying-state-architecture",
+  "title": "Retiam Engine: Bindless Varying Architecture & Performance Upgrades",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/BINDLESS_VARYING_STATE_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/BINDLESS_VARYING_STATE_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/BINDLESS_VARYING_STATE_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Model](/api-entities-primitives-3d#model), [Material](/api-core-material#material), [Mode](/api-render-frame-graph#resource), [Storage](/api-render-pipelines#resourcelayouts), [Instanced](/api-entities#instanced), [ModelGeometry](/api-components-geometry#modelgeometry), [Res](/api-render-shader-system-schemas#shadertypes), [Pipeline](/api-render-pipelines#pipeline), [State](/api-core#state), [Texture](/api-render-pipelines#resourcelayouts), [Group](/api-core#group), [RenderPass](/api-render-passes#renderpass), [DrawCall](/api-components#geometrycomponent), [GeometryPassConfig](/api-components#geometrycomponent), [SceneComposer](/api-core-scenecomposer#scenecomposer), [Shader](/api-entities-primitives-2d#shader), [Domains](/api-render-shader-system#domains), [SDFFragment](/api-components-fragment#sdffragment), [Compute](/api-compute#compute), [Pass](/api-render-frame-graph#pass), [Fill](/api-core#fill), [MorphGeometry](/api-components-geometry#morphgeometry), [Renderer](/api-render#renderer), [GlobalStateAllocator](/api-render-allocator#globalstateallocator)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document details the architectural features, shader optimizations, bit-packing schemes, and pipeline fixes implemented in this development session for the **Retiam WebGPU Engine**."
+        }
+      ]
+    },
+    {
+      "id": "1-executive-summary-of-implementations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Executive Summary of Implementations"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Feature / Subsystem",
+            "Problem Addressed",
+            "Solution & Architecture"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Model & Raymarch Material Varying Optimization**",
+                  "type": "text"
+                },
+                {
+                  "text": "Fragment shaders were reading `(*_p_entity).material` from the global storage buffer, causing redundant GPU memory bus reads across millions of fragments."
+                },
+                {
+                  "text": "Vertex shaders now pack PBR material properties into flat varyings (`v_mat_color`, `v_mat_em`, `v_mat_pbr`, `v_mat_tex`). Fragment shaders reconstruct `Material` in-register with **zero storage buffer memory reads**."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Adaptive Dual-Mode Bit Packing (`packInstanceIndex`)**",
+                  "type": "text"
+                },
+                {
+                  "text": "50,000+ instances exceeded the previous 14-bit local instance boundary (16,384 instance limit) in `firstInstance`."
+                },
+                {
+                  "text": "Implemented an adaptive MSB mode switch: Mode 0 (Standard: 18-bit state + 14-bit instance) and Mode 1 (Mega: 13-bit state + 18-bit instance up to 262,144 instances). Branchless WGSL decoding via `getStateIndex()` and `getLocalIndex()`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Programmable Storage Buffer Pulling**",
+                  "type": "text"
+                },
+                {
+                  "text": "WebGPU hardware vertex instancing (`stepMode: 'instance'`) calculates offset as `firstInstance * stride`. Using bit-packed MSB caused a 68 GB out-of-bounds fetch on vertex slot 1."
+                },
+                {
+                  "text": "Replaced vertex buffer slot 1 instancing in `Instanced.ts` and `ModelGeometry.splat` with storage buffer pulling (`Res.storage('array<vec4f>', buffer)` at `@group(3)` binding 5)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Volumetric SDF & 3D Raymarching Pipeline Fixes**",
+                  "type": "text"
+                },
+                {
+                  "text": "Custom raymarching domains threw `unresolved value 'state'` in WGSL when evaluating mathematical functions or user-defined `map(p)` routines referencing `state.t1` / `state.matrix`."
+                },
+                {
+                  "text": "Added `var<private> state: State;` at WGSL module scope, synchronized `varyingSchema` with `v_mat_*` varyings, and properly bound `SDFParams` / `RMParams` uniforms."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Destroyed Texture Bind Group Cache Invalidation**",
+                  "type": "text"
+                },
+                {
+                  "text": "When texture arrays were resized or re-allocated on the fly (e.g. font glyphs or materials loading), cached `@group(3)` instanced bind groups submitted destroyed texture views to the queue."
+                },
+                {
+                  "text": "Added `_instancedAlbedoTex`, `_instancedNormalTex`, and `_instancedExtraBuffer` cache tracking in `RenderPass.ts`, automatically refreshing bind groups upon texture rebuilds."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Zero-GC & Retained State Allocator Enhancements**",
+                  "type": "text"
+                },
+                {
+                  "text": "Per-frame allocations of `DrawCall[]`, `GeometryPassConfig`, and scene traversal states produced minor GC spikes on high entity counts."
+                },
+                {
+                  "text": "Implemented persistent entity state slots (`acquireSlotForEntity` / `releaseSlot`), retained `_cachedDrawCalls` across geometries, cached `_cachedPasses`, and static pass-through traversal caching in `SceneComposer`."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-model-raymarch-material-varying-optimization",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Model & Raymarch Material Varying Optimization"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Problem Statement"
+        },
+        {
+          "type": "paragraph",
+          "text": "Previously, during the rasterization of 3D Models, 3D SDF Volumes, and 3D Raymarched Surfaces, the fragment shader looked up the entity's material by executing:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let _p_entity = &states[input.state_index];\nlet material = (*_p_entity).material;"
+        },
+        {
+          "type": "paragraph",
+          "text": "For high-resolution framebuffers ($1920\\times1080 = 2\\text{M}$ pixels, or $4\\text{K} = 8.3\\text{M}$ pixels), every fragment evaluated executed a 96-byte global memory read from VRAM."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Flat Varying Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "We eliminated fragment shader storage buffer reads by forwarding material data from the vertex shader:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n    subgraph VertexStage [Vertex Shader]\n        StateRead[\"Read states[getStateIndex(instance_index)]\"] --> PackVaryings[\"Pack Material -> Varyings:\n        v_mat_color: (color.rgb, opacity)\n        v_mat_em: (emColor.rgb, emStrength)\n        v_mat_pbr: (roughness, metallic, transmission, ior)\n        v_mat_tex: (specular, albedoIdx, normalIdx, normalScale)\"]\n    end\n\n    subgraph Rasterizer [Hardware Interpolator]\n        PackVaryings --> Interp[\"@interpolate(flat) Varying Transfer\"]\n    end\n\n    subgraph FragmentStage [Fragment Shader]\n        Interp --> Unpack[\"Reconstruct struct Material from Varyings (Registers Only)\"]\n        Unpack --> PBR[\"PBR Lighting & Tone Mapping (Zero Storage Reads)\"]\n    end"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "1. Vertex Shader Packing Snippet (Domains.ts)"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "out.v_mat_color = vec4f(material.color, material.opacity);\nout.v_mat_em = vec4f(material.emColor, material.emStrength);\nout.v_mat_pbr = vec4f(material.roughness, material.metallic, material.transmission, material.ior);\nout.v_mat_tex = vec4f(material.specular, material.albedoIdx, material.normalIdx, material.normalScale);"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "2. Fragment Shader Unpacking Snippet (Domains.ts, RaymarchPlot3D.ts, SDFFragment.ts)"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let material = Material(\n    input.v_mat_color.rgb,\n    input.v_mat_color.a,\n    input.v_mat_em.rgb,\n    input.v_mat_em.a,\n    input.v_mat_pbr.x,\n    input.v_mat_pbr.y,\n    input.v_mat_pbr.z,\n    input.v_mat_pbr.w,\n    input.v_mat_tex.x,\n    input.v_mat_tex.y,\n    input.v_mat_tex.z,\n    input.v_mat_tex.w,\n    vec4f(0.0),\n    vec4f(0.0),\n);"
+        }
+      ]
+    },
+    {
+      "id": "3-adaptive-dual-mode-bit-packing-packinstanceindex",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Adaptive Dual-Mode Bit Packing (packInstanceIndex)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. The Challenge"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam packs both the **entity state index** and the **local instance / sub-element index** into WebGPU's 32-bit `firstInstance` parameter in `draw()` / `drawIndexed()`:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Normal scenes contain thousands of entities with few instances per entity.",
+            "Compute and swarm simulations contain a few entities with up to **262,144 instances** per entity."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Dual-Mode Bit Allocation"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Mode",
+            "Bit 31",
+            "Bit 30",
+            "State index bits",
+            "Local instance bits"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Standard",
+                "`0`",
+                "`S`",
+                "29–14: 16 bits, values 0–65,535",
+                "13–0: 14 bits, values 0–16,383"
+              ]
+            },
+            {
+              "cells": [
+                "Mega-instance",
+                "`1`",
+                "`S`",
+                "29–18: 12 bits, values 0–4,095",
+                "17–0: 18 bits, values 0–262,143"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Bit 31**: Mode Switch (`0` = Standard Mode, `1` = Mega-Instance Mode)",
+            "**Bit 30 (`S`)**: Secondary Pass / Stroke Flag (`0` = Fill / Default, `1` = Stroke)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. TypeScript Encoder ([gpuutils.ts](../src/engine/utils/gpuutils.ts))"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export function packInstanceIndex(\n    stateIndex: number, \n    localIndex: number = 0, \n    isMega: boolean = false, \n    isStroke: boolean = false\n): number {\n    const strokeBit = isStroke ? 0x40000000 : 0;\n    if (isMega || localIndex > 16383) {\n        return (0x80000000 | strokeBit | ((stateIndex & 0xFFF) << 18) | (localIndex & 0x3FFFF)) >>> 0;\n    }\n    return (strokeBit | ((stateIndex & 0xFFFF) << 14) | (localIndex & 0x3FFF)) >>> 0;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Branchless WGSL Decoder ([common.wgsl](../src/engine/shaders/includes/common.wgsl))"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn getStateIndex(instance_index: u32) -> u32 {\n    let is_mega = (instance_index & 0x80000000u) != 0u;\n    return select((instance_index >> 14u) & 0xFFFFu, (instance_index >> 18u) & 0xFFFu, is_mega);\n}\n\nfn getLocalIndex(instance_index: u32) -> u32 {\n    let is_mega = (instance_index & 0x80000000u) != 0u;\n    return select(instance_index & 0x3FFFu, instance_index & 0x3FFFFu, is_mega);\n}\n\nfn getIsStroke(instance_index: u32) -> bool {\n    return (instance_index & 0x40000000u) != 0u;\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-programmable-storage-buffer-pulling",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Programmable Storage Buffer Pulling"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. WebGPU Hardware Vertex Instancing Conflict"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a vertex buffer is declared with `stepMode: 'instance'`, the hardware GPU vertex fetcher calculates memory offsets as:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Offset} = (\\text{firstInstance} + \\text{instance\\_index}) \\times \\text{stride}"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `firstInstance` contained bit-packed metadata (such as `MSB = 1` $\\rightarrow 2,147,745,792$), the GPU attempted to fetch vertex attributes from offset:"
+        },
+        {
+          "type": "math",
+          "tex": "2,147,745,792 \\times 32\\text{ bytes} = 68.7\\text{ GB}"
+        },
+        {
+          "type": "paragraph",
+          "text": "This resulted in WebGPU device validation failure: `Instance range requires a larger buffer than the bound buffer size`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Solution: Programmable Storage Pulling"
+        },
+        {
+          "type": "paragraph",
+          "text": "We migrated hardware vertex instancing to programmable storage pulling:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**`Instanced.ts`**:",
+              "children": [
+                "Created `@group(3)` resource: `instances: Res.storage('array<vec4f>', this.instanceBuffer)`.",
+                "In WGSL:"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let _local_inst_idx = getLocalIndex(instance_index);\n     let _inst_offset = _local_inst_idx * 3u;\n     let _iPosScale = instances[_inst_offset + 0u];\n     let _iColor    = instances[_inst_offset + 1u];\n     let _iRot      = instances[_inst_offset + 2u];"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**`ModelGeometry.ts` & `MorphGeometry.ts` (`splat` pass)**:",
+              "children": [
+                "Created `@group(3)` resource: `particles: Res.storage('array<vec4f>', this.vertex_buffer)`.",
+                "Slot 0 binds only the 4-vertex quad buffer.",
+                "In WGSL:"
+              ]
+            }
+          ],
+          "start": 2
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let _particle_idx = getLocalIndex(instance_index);\n     let _base = _particle_idx * 2u;\n     let _p0 = particles[_base + 0u];\n     let _p1 = particles[_base + 1u];\n     let _particlePos    = _p0.xyz;\n     let _particleNormal = vec3f(_p0.w, _p1.xy);\n     let _particleUV     = _p1.zw;"
+        }
+      ]
+    },
+    {
+      "id": "5-3d-raymarching-sdf-volume-upgrades",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. 3D Raymarching & SDF Volume Upgrades"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Module-Scoped State in WGSL"
+        },
+        {
+          "type": "paragraph",
+          "text": "Mathematical raymarching formulas in `RaymarchPlot3D` and `SDFFragment` execute inside nested top-level WGSL helper functions (e.g. `map(p)`, `calcNormal(p)`, `surfaceFunc(x, z)`)."
+        },
+        {
+          "type": "paragraph",
+          "text": "To give all nested functions access to the entity's current transform matrix, offsets, and dynamic time variables (`state.t1`, `state.t2`) without passing `State` through every function signature, we introduced **private module-scoped state**:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "var<private> state: State;\n\n@vertex fn vs(#pragma INJECT(VERTEX_PARAMS)) -> Varyings {\n    var out: Varyings;\n    let _state_idx = getStateIndex(instance_index);\n    let _p_entity = &states[_state_idx];\n    state = (*_p_entity).transform;\n    ...\n    return out;\n}\n\n@fragment fn fs(input: Varyings) -> FragmentOutput {\n    let _p_entity = &states[input.state_index];\n    state = (*_p_entity).transform;\n    ...\n}"
+        }
+      ]
+    },
+    {
+      "id": "6-texture-lifecycle-dynamic-bind-group-cache-invalidation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Texture Lifecycle & Dynamic Bind Group Cache Invalidation"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. The Destroyed Texture Bug"
+        },
+        {
+          "type": "paragraph",
+          "text": "When loading scenes with SDF fonts, images, or procedural textures, `Renderer.ts` dynamically reallocates `albedoTexArray` and `normalTexArray` to accommodate new texture layers, destroying the old $1024\\times1024$ `rgba8unorm` texture array."
+        },
+        {
+          "type": "paragraph",
+          "text": "`RenderPass.ts` cached the `@group(3)` instanced bind group on the geometry:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "(packet.geometry as any)._instancedShadowBindGroup = instancedBindGroup;\n(packet.geometry as any)._instancedBufferVersion = (packet.geometry as any).version;"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because `geometry.version` did not change when the texture array rebuilt, the draw call submitted the stale bind group referencing the **destroyed** texture."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. The Fix in [RenderPass.ts](../src/engine/render/passes/RenderPass.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "We expanded the cache invalidation condition to monitor texture identity and extra buffer pointers:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "if (!instancedBindGroup || \n    (packet.geometry as any)._instancedBufferVersion !== (packet.geometry as any).version ||\n    (packet.geometry as any)._instancedAlbedoTex !== albedoTex ||\n    (packet.geometry as any)._instancedNormalTex !== normalTex ||\n    (packet.geometry as any)._instancedExtraBuffer !== extraBuffer) {\n    \n    instancedBindGroup = context.device.createBindGroup({\n        layout: layout,\n        entries: [\n            { binding: 0, resource: context.getTextureView(this.shadow_texture) },\n            { binding: 1, resource: this.shadowSampler },\n            { binding: 2, resource: this.texSampler },\n            { binding: 3, resource: albedoTex.createView({ dimension: '2d-array' }) },\n            { binding: 4, resource: normalTex.createView({ dimension: '2d-array' }) },\n            { binding: 5, resource: { buffer: extraBuffer } }\n        ]\n    });\n\n    (packet.geometry as any)._instancedShadowBindGroup = instancedBindGroup;\n    (packet.geometry as any)._instancedBufferVersion = (packet.geometry as any).version;\n    (packet.geometry as any)._instancedAlbedoTex = albedoTex;\n    (packet.geometry as any)._instancedNormalTex = normalTex;\n    (packet.geometry as any)._instancedExtraBuffer = extraBuffer;\n}"
+        }
+      ]
+    },
+    {
+      "id": "7-zero-gc-memory-optimizations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Zero-GC Memory Optimizations"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Persistent State Slot Allocation**:",
+              "children": [
+                "Entities retain a stable slot in `GlobalStateAllocator` via `acquireSlotForEntity(entity)` / `releaseSlot(slot)`.",
+                "Bypasses repeated allocation/free cycles across frames."
+              ]
+            },
+            {
+              "text": "**DrawCall Array Retention**:",
+              "children": [
+                "`ModelGeometry`, `MorphGeometry`, `TextGeometry`, and `TriangulatedPathGeometry` use fixed retained `DrawCall[]` arrays (`_cachedDrawCalls`) updated in-place instead of instantiating new arrays every frame."
+              ]
+            },
+            {
+              "text": "**Geometry Pass Config Caching**:",
+              "children": [
+                "Geometries cache their `Record<string, GeometryPassConfig>` dictionaries in `_cachedPasses`, eliminating per-frame object allocation during render queue construction."
+              ]
+            },
+            {
+              "text": "**Scissor State Memoization**:",
+              "children": [
+                "Integrated with [`RenderStateCache.setScissorRect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/RenderStateCache.ts), skipping redundant WebGPU scissor commands across batches."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-verification-validation-summary",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Verification & Validation Summary"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Test Case / Demo",
+            "Description",
+            "Results"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`demos/compute_shader/instance_gpu.ts`**",
+                  "type": "text"
+                },
+                {
+                  "text": "50,000 instanced cubes + circles running in Mega-Instance Mode (`MSB = 1`)."
+                },
+                {
+                  "text": "**60 FPS, 0 Errors, zero artifacting**."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`demos/morph_3d/swarm_morph.ts`**",
+                  "type": "text"
+                },
+                {
+                  "text": "40,000 particle swarm morphing between 3D geometry targets using storage pulling."
+                },
+                {
+                  "text": "**0 WebGPU errors, smooth compute & splat rendering**."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`demos/raymarch/raymarch.ts`**",
+                  "type": "text"
+                },
+                {
+                  "text": "3D mathematical surface raymarching with dynamic contour gradients and lighting."
+                },
+                {
+                  "text": "**Rendered cleanly with zero storage reads**."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`demos/raymarch/sdf_volume.ts`**",
+                  "type": "text"
+                },
+                {
+                  "text": "16 animated 3D SDF volumetric solids, smooth booleans, and domain repetitions."
+                },
+                {
+                  "text": "**All 16 primitives rendered with full PBR shading**."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`demos/features/timescale.ts`**",
+                  "type": "text"
+                },
+                {
+                  "text": "Cinematic title intro, 80,000 particle swarm morph, and trace paths with time dilation."
+                },
+                {
+                  "text": "**Passed without destroyed texture errors**."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

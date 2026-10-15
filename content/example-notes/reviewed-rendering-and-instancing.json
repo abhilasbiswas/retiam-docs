@@ -1,0 +1,257 @@
+{
+  "font/msdf_font": {
+    "description": "Load a local font and a named font as distance-field atlases.",
+    "walkthrough": [
+      "FontLoader.msdf prepares font resources asynchronously before SDFText is constructed. The local TTF path and named Fira Code request exercise different ways to locate the font.",
+      "Each text entity receives its loaded atlas and its own fill. Font loading can fail independently of scene geometry, so inspect the requested font resource when one label is missing."
+    ],
+    "experiments": [
+      "Replace the local TTF with another available font, keeping the text and font size unchanged. Compare glyph shapes and spacing."
+    ]
+  },
+  "fourier/fourier_demo": {
+    "description": "Reconstruct a path with rotating Fourier vectors and a fading trace.",
+    "walkthrough": [
+      "FourierEpicycles and FourierPresets are local example helpers, not exports from the core Retiam package. The preset supplies a sampled outline; Fourier coefficients produce rotating vectors whose sum traces that outline. Circles visualize vector magnitudes, arrows show directions, and the tip supplies the point followed by TracePath.",
+      "The scene begins with the IndiaMap preset and a small harmonic count. Its updater does not add a constant number per second: it calculates Math.pow(time, 1.5) / 40000 and caps the result at 600. Adding higher-frequency terms makes small features easier to recover, while increasing the amount of vector geometry and computation.",
+      "The same updater increases speed and shortens trace age until its lower condition is reached. Those are independent changes: harmonics affect the approximation, speed affects traversal, and age affects how much history remains visible. Freeze two of them before judging the third.",
+      "Camera follow runs in the post phase, after the Fourier entity has updated. localToWorld converts the local tip into the camera’s world-space target. Following an unconverted tip would break if the epicycle container were translated or scaled. The separate 100 ms updater only refreshes DOM statistics.",
+      "The panel changes presets, harmonic count, tip appearance, trace age and circle visibility. The automatic updater can overwrite a manually selected harmonic count on the next update; focusing the slider only suppresses its displayed value refresh. Disable the automatic harmonic assignment to make a stable comparison.",
+      "The local pause button sets Fourier speed to zero, whereas scene pause affects the engine clock. The reset button clears the trace and restores progress; it does not reconstruct the whole application. When reusing the helper, keep coefficient preparation separate from per-frame geometry updates and give DOM controls their own cleanup lifetime."
+    ],
+    "experiments": [
+      "Comment out the automatic setHarmonics call, then compare 10, 50 and 200 harmonics at a fixed speed and trace age.",
+      "Disable the post-phase follow callback and translate the Fourier container. Observe the difference between a fixed view and a camera following a world-space tip."
+    ]
+  },
+  "geometry_raytracing_3d/builder_3d_demo": {
+    "description": "Drag textured planes and spatial meshes over a shadow-receiving ground.",
+    "walkthrough": [
+      "Canvas-generated text and hollow shapes become textures on flat planes. A sphere and a Builder3D star provide actual spatial geometry beside those textured silhouettes.",
+      "Hover handlers change scale and emission; dragging changes position. The updater avoids rotating the actively dragged object, preventing scripted movement from competing with pointer input."
+    ],
+    "experiments": [
+      "Drag a textured plane beside the sphere and orbit the camera. Compare their thickness and silhouettes from the side."
+    ]
+  },
+  "geometry_raytracing_3d/builder_demo2": {
+    "description": "Arrange thin boxes in front of a wall and watch their shadows change.",
+    "walkthrough": [
+      "The objects are narrow Box meshes, with a wall and floor as receiving surfaces. A floating frame introduces an additional shadow across the arrangement.",
+      "The updater changes transforms, while lighting and materials determine the resulting appearance. Apparent depth comes from geometry, viewpoint and shadows together."
+    ],
+    "experiments": [
+      "Increase one box’s depth from 0.2 to 2. Compare its side silhouette and shadow without changing its front dimensions."
+    ]
+  },
+  "geometry_raytracing_3d/depth_map": {
+    "description": "Generate a terrain mesh from heightmap samples.",
+    "walkthrough": [
+      "Terrain3D defines the terrain extent and sampling resolution. generateFromHeightmap awaits the image-driven generation before adding the terrain to the scene.",
+      "The material and texture mapping style the resulting mesh. The source has a fallback for image failure, so a visible terrain alone does not prove that the intended heightmap loaded."
+    ],
+    "experiments": [
+      "Change widthSegments while keeping the same heightmap. Inspect how coarse sampling affects ridges and the mesh silhouette."
+    ]
+  },
+  "geometry_raytracing_3d/mouse_trace": {
+    "description": "Turn pointer positions into a spatial orb and a fading trail.",
+    "walkthrough": [
+      "Scene mouse events update a shared target position. The orb follows that position, and TracePath samples it through targetFunc instead of receiving a new path string on every event.",
+      "The trace retains recent motion and can be cleared on pointer down. Camera orientation affects the input mapping, so inspect the result from a stable view first."
+    ],
+    "experiments": [
+      "Draw a slow loop and then a fast one. Change trace age to compare retained history without changing pointer handling."
+    ]
+  },
+  "geometry_raytracing_3d/plugin_system_demo": {
+    "description": "Compose a motion plugin and an outline plugin around differently shaded models.",
+    "walkthrough": [
+      "The custom BobAndRotatePlugin installs motion through the scene’s plugin lifecycle. OutlinePlugin adds a rendering treatment without requiring each mesh to implement outlining.",
+      "Press O after focusing the preview to toggle inking. Material shading remains on the objects, while plugin installation and removal control scene-level behavior."
+    ],
+    "experiments": [
+      "Remove BobAndRotatePlugin while keeping OutlinePlugin active. Compare static outlined geometry with the original moving scene."
+    ]
+  },
+  "geometry_raytracing_3d/shadow_map_transparency": {
+    "description": "Compare cutout textures with an opaque mesh in shadow mapping.",
+    "walkthrough": [
+      "Canvas-generated grate and leaf textures contain transparent regions. Their models cast and receive shadows alongside a solid sphere and ground plane.",
+      "Dragging changes light-space placement; hover emission changes the visible object rather than the texture’s alpha mask. Inspect both the surface silhouette and the corresponding ground shadow."
+    ],
+    "experiments": [
+      "Fill the grate texture’s transparent holes and replay. Compare the object and shadow silhouettes with the cutout version."
+    ]
+  },
+  "geometry_raytracing_3d/shadow_map": {
+    "description": "Reuse a generated canvas texture on a box and a sprite.",
+    "walkthrough": [
+      "The source draws a texture with Canvas2D, then supplies it to a spatial Box and a flat Sprite. The same image therefore participates in different geometry paths.",
+      "Pointer handlers enable dragging and hover styling while an updater rotates the box. Ground shadows expose the difference between an image-bearing surface and a spatial volume."
+    ],
+    "experiments": [
+      "Replace the texture’s central motif with a circle. Compare its appearance on the rotating box with the flat sprite."
+    ]
+  },
+  "geometry_raytracing_3d/styles_and_shadows_demo": {
+    "description": "Compare PBR, Gooch, cel and clay-style materials under shared lighting.",
+    "walkthrough": [
+      "Separate objects demonstrate each treatment: PBR responds through physical material parameters, Gooch uses warm–cool illustration, and cel shading introduces discrete lighting bands.",
+      "The ground receives shadows while the objects rotate. Shared lighting makes the styles comparable, but their differing geometry still affects highlights and shadow shape."
+    ],
+    "experiments": [
+      "Apply the Gooch setup to the box as well as the sphere. Compare materials on a shared geometry before comparing different shapes."
+    ]
+  },
+  "graphs/automata_dfa_demo": {
+    "description": "Follow a DFA as it reads two strings and reports acceptance.",
+    "walkthrough": [
+      "Automaton defines states and transitions; Tape presents the input and current read position. AutomatonRunner connects those structures during execution.",
+      "The two awaited runs make different outcomes visible. Animation duration controls presentation speed; transition definitions determine acceptance."
+    ],
+    "experiments": [
+      "Change one input string by a single bit. Follow the exact transition where its state path diverges."
+    ]
+  },
+  "graphs/graph_theory_demo": {
+    "description": "Animate a weighted network through several layouts and a highlighted route.",
+    "walkthrough": [
+      "Nodes and weighted edges define topology. Force-directed, circular and layered layouts change positions while retaining those connections.",
+      "The highlighted A-to-G route is specified in the scene. The labels describe shortest-path behavior, but this example’s active presentation should not be mistaken for a live Dijkstra search on every frame."
+    ],
+    "experiments": [
+      "Change an edge weight, then inspect the explicitly selected path. Update the route or add a path-finding calculation before claiming a new shortest path."
+    ]
+  },
+  "highlights/circumscribe_demo": {
+    "description": "Draw temporary and retained boundary highlights around existing entities.",
+    "walkthrough": [
+      "Circumscribe derives a surrounding contour from the target’s bounds. The box, circle and title show how contour shape and padding affect emphasis.",
+      "The highlight is an additional visual layer; it does not replace the target’s paint or geometry. Persistent settings determine whether that layer remains after the animation."
+    ],
+    "experiments": [
+      "Increase padding around the box while keeping stroke width fixed. Compare breathing room with line thickness."
+    ]
+  },
+  "highlights/color_tint_demo": {
+    "description": "Tint a grouped card temporarily, then leave a new accent color.",
+    "walkthrough": [
+      "ColorTint changes the target’s fill and stroke through the animation. Applying it to the group includes the card and its label rather than only the background rectangle.",
+      "The first tint restores the original treatment; the second demonstrates a retained accent. Restoration matters when later animations expect the original colors."
+    ],
+    "experiments": [
+      "Tint only the card rectangle instead of the whole group. Compare label contrast during the same color transition."
+    ]
+  },
+  "highlights/corner_brackets_demo": {
+    "description": "Frame a whole card and then a smaller header with animated brackets.",
+    "walkthrough": [
+      "CornerBrackets places L-shaped marks around target bounds. Targeting the card group includes its contents, while targeting the header produces a tighter frame.",
+      "Padding, bracket length and stroke width describe the framing marks independently of the target’s appearance. The marks do not alter the card’s dimensions."
+    ],
+    "experiments": [
+      "Use the header as the first target and increase padding. Compare target selection with padding around the larger group."
+    ]
+  },
+  "highlights/flash_demo": {
+    "description": "Emit radial rays around an entity and a coordinate point.",
+    "walkthrough": [
+      "Flash can resolve its center from the target group or receive an explicit position. The two calls show attention directed at an object and at an otherwise empty location.",
+      "Ray count, length and timing control the burst. The target remains intact after the effect; the flash is a transient accent rather than a geometric transformation."
+    ],
+    "experiments": [
+      "Move the explicit flash coordinate to the orb’s edge and reduce ray count. Compare a localized cue with a centered burst."
+    ]
+  },
+  "highlights/marker_sweep_demo": {
+    "description": "Sweep a translucent marker behind text and retain selected emphasis.",
+    "walkthrough": [
+      "MarkerSweep uses target bounds to define the highlighter region. The example text is scene typography; the displayed import string is not executed as code.",
+      "The first highlight is transient and the second remains. Color and opacity must leave enough contrast for the underlying glyphs to stay readable."
+    ],
+    "experiments": [
+      "Lower the persistent marker’s opacity and replace the phrase with a shorter one. Inspect both contrast and bound-based sizing."
+    ]
+  },
+  "highlights/shimmer_sweep_demo": {
+    "description": "Pass a bright sheen across newly introduced text.",
+    "walkthrough": [
+      "The text first grows into view, then ShimmerSweep supplies a separate finishing accent. Separating the two animations gives the reader time to recognize the content.",
+      "The sheen changes the visible highlight over the glyphs without changing their positions or the formula string. Its timing should support reading rather than compete with it."
+    ],
+    "experiments": [
+      "Double the delay before the shimmer, keeping its duration fixed. Compare how easily the formula can be read before the accent."
+    ]
+  },
+  "highlights/underline_demo": {
+    "description": "Compare straight and wavy emphasis beneath text.",
+    "walkthrough": [
+      "Underline derives its placement from the selected text. The straight line reads as ordinary emphasis; the wavy variant can suggest a warning or a marked expression.",
+      "Both examples retain their underlines after drawing. Stroke width and vertical spacing affect readability independently of the text’s font size."
+    ],
+    "experiments": [
+      "Apply both variants to the same phrase with the same stroke width. Compare their meaning and visual weight."
+    ]
+  },
+  "hybrid_pipelines/hybrid_mix": {
+    "description": "Mix a raytraced glass sphere, a rasterized cube and a vector path.",
+    "walkthrough": [
+      "The models select their rendering path through RT_ENABLE. The glass sphere exercises raytracing while the opaque cube uses rasterization.",
+      "The vector Path adds a different kind of geometry to the same composition. Combining paths requires compatible lighting, depth and transparency behavior rather than merely matching object positions."
+    ],
+    "experiments": [
+      "Disable RT_ENABLE on the sphere and compare its glass appearance. Keep camera and lighting unchanged during the comparison."
+    ]
+  },
+  "instancing/instanced_active_range": {
+    "description": "Reuse a fixed instance pool as particles are spawned and retired.",
+    "walkthrough": [
+      "Instanced allocates capacity once; CPU particle state supplies position, velocity, rotation and color. activeCount and firstInstance select the live portion of that pool.",
+      "The ring-buffer arrangement reuses records instead of allocating a new entity for each particle. Integration timestep and gravity control motion separately from pool bookkeeping."
+    ],
+    "experiments": [
+      "Reduce pool capacity and raise spawn rate. Watch records being reused before changing particle motion."
+    ]
+  },
+  "instancing/instanced_interactive_picking": {
+    "description": "Hover and select individual instances in a shared mesh group.",
+    "walkthrough": [
+      "One Instanced entity holds the grid. RaycastHit identifies the touched instance, allowing event handlers to update its color and selected-state membership.",
+      "Selection survives hover changes because the scene tracks selected indices separately. updateInstances uploads the edited records; a shared template alone cannot hold distinct per-instance selections."
+    ],
+    "experiments": [
+      "Click two instances, then hover a third. Change the selected color and verify that hover does not erase the existing selections."
+    ]
+  },
+  "instancing/instanced_non_uniform_scale": {
+    "description": "Stretch and orient instances toward an attractor.",
+    "walkthrough": [
+      "The extended instance layout provides separate x, y and z scale values. setInstanceScale3D turns a shared cube into a needle or slab without duplicating its mesh.",
+      "The updater computes orientation and deformation from the attractor position. Pointer input can move that attractor, separating a shared force field from individual geometry storage."
+    ],
+    "experiments": [
+      "Keep the attractor fixed and make all three scale components equal. Compare uniform scaling with the original anisotropic field."
+    ]
+  },
+  "instancing/instanced_partial_streaming": {
+    "description": "Update local regions of a large grid after pointer interaction.",
+    "walkthrough": [
+      "The grid begins with one full upload. Pointer hits create pulses; subsequent updates change affected instance ranges rather than intentionally rewriting every record.",
+      "Dirty ranges reduce upload work when most records stay still. The configured 40,000 instances demonstrate scale, but performance depends on the GPU and pulse workload."
+    ],
+    "experiments": [
+      "Reduce the grid to 2,500 instances, then enlarge a pulse radius. Compare the affected region before testing the larger grid."
+    ]
+  },
+  "instancing/instanced_staggered_animation": {
+    "description": "Reveal a spiral of instances with per-instance timing offsets.",
+    "walkthrough": [
+      "The source computes a Fibonacci distribution and stores final transforms. animateStaggered drives the entrance from those records without creating thousands of separate scene animations.",
+      "Its overshoot easing gives a spring-like appearance; it is an easing formula rather than a simulated spring system. A later updater adds a continuing wave."
+    ],
+    "experiments": [
+      "Increase stagger spacing while keeping the individual duration fixed. Compare cascade length with the overshoot amount."
+    ]
+  }
+}

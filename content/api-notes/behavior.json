@@ -1,0 +1,351 @@
+{
+  "Scene.add": {
+    "description": "Register root entities with the scene and request a frame.",
+    "parameters": {
+      "entities": "Root entities to render and update. Add a hierarchy root once; its children are traversed through that root."
+    },
+    "notes": [
+      "This implementation pushes entries without deduplicating them. Repeatedly adding the same root can create duplicate entries."
+    ],
+    "example": "labs/pg-firstscene"
+  },
+  "Scene.remove": {
+    "description": "Remove the supplied entities and recursively destroy their descendants.",
+    "parameters": {
+      "entities": "Entities to remove, including their collected descendants."
+    },
+    "notes": [
+      "Removal invokes destroy; it is a lifecycle operation. Use Entity.remove to detach a child without performing this scene-level destruction."
+    ]
+  },
+  "Scene.wait": {
+    "description": "Insert a timed pause into choreography while the scene continues updating.",
+    "parameters": {
+      "ms": "Scene-timeline milliseconds. Defaults to 1000; timeScale changes its wall-clock duration."
+    },
+    "notes": [
+      "This schedules Waiting through Scene.play. Updaters and other active animations continue during the wait."
+    ],
+    "returnsDescription": "Resolves with the Waiting animation’s overshoot.",
+    "example": "labs/pg-firstscene"
+  },
+  "Scene.seekTo": {
+    "description": "Advance or rebuild the scene to a requested timeline time.",
+    "parameters": {
+      "targetTimeMs": "Absolute scene time in milliseconds."
+    },
+    "notes": [
+      "Seeking backward resets and reruns the scene; seeking forward can use stored checkpoints. Keep run repeatable and clean up external side effects.",
+      "Fast-forward stepping and snapshot restoration do not guarantee that arbitrary DOM, random inputs or external services can be replayed deterministically."
+    ],
+    "returnsDescription": "Resolves after seeking and restoration of the prior pause state."
+  },
+  "Scene.reset": {
+    "description": "Clear current content, animations and updaters, then reset the scene clock and camera.",
+    "notes": [
+      "Pending animations are rejected with Scene Reset. reset does not run your choreography again; use restart for that.",
+      "Keep references rebuilt by run out of later callbacks after reset, or replace them in onAfterReset."
+    ],
+    "returnsDescription": "Resolves after queued GPU disposal and reset work."
+  },
+  "Scene.restart": {
+    "description": "Reset the scene and invoke run again.",
+    "notes": [
+      "Its promise covers reset and launching run, rather than waiting for the complete choreography."
+    ],
+    "returnsDescription": "Resolves after the new run has been launched."
+  },
+  "Scene.use": {
+    "description": "Install a plugin and register its render features when available.",
+    "parameters": {
+      "plugin": "Plugin instance with a unique name and optional install, dispose and registerPasses hooks."
+    },
+    "notes": [
+      "A plugin with the same name is disposed and replaced. Install plugins after the composer exists when they need renderer access."
+    ],
+    "returnsDescription": "The same scene for chaining.",
+    "example": "labs/pg-plugin"
+  },
+  "Scene.removePlugin": {
+    "description": "Dispose an installed plugin and remove its render features.",
+    "parameters": {
+      "name": "The name used by the installed plugin."
+    },
+    "notes": [
+      "An unknown name leaves the scene unchanged."
+    ],
+    "returnsDescription": "The same scene for chaining."
+  },
+  "Scene.unregister": {
+    "description": "Remove a scene updater by its original callback or handle.",
+    "parameters": {
+      "callbackOrHandle": "The callback passed to always, or the returned AlwaysHandle."
+    },
+    "returnsDescription": "Whether the updater registry found and removed the registration."
+  },
+  "Scene.setEvent": {
+    "description": "Register a canvas pointer event with a resolved world position.",
+    "parameters": {
+      "type": "Supported pointer event or legacy mouse alias; aliases are normalized to pointer events.",
+      "listener": "Receives the world Vec3 first and the raw browser event second.",
+      "options": "Coordinate-resolution settings. The default uses the Z = 0 plane without context-aware picking."
+    },
+    "notes": [
+      "Unlike Entity.setEvent, this is a scene-wide listener and its callback does not begin with the raw PointerEvent."
+    ],
+    "returnsDescription": "The same scene for chaining.",
+    "example": "labs/pg-scene-event"
+  },
+  "Scene.animateTimeScale": {
+    "description": "Ease the scene’s playback rate using wall-clock time.",
+    "parameters": {
+      "targetScale": "Desired playback multiplier. One is normal speed; small positive values produce slow motion.",
+      "durationRealMs": "Transition duration in real milliseconds, independent of the slowed scene clock."
+    },
+    "returnsDescription": "Resolves when the time-scale transition finishes.",
+    "example": "labs/pg-time-scale"
+  },
+  "Entity.animate": {
+    "description": "Create a fresh Animator for a target-state transition.",
+    "notes": [
+      "Each access constructs a new builder. Save the builder if you need to pause or stop that specific animation later.",
+      "Entity mutation methods apply immediately; similarly named Animator methods edit a target state until Scene.play schedules it."
+    ],
+    "example": "labs/pg-animator"
+  },
+  "Entity.animateWith": {
+    "description": "Create an Animator with timing options.",
+    "parameters": {
+      "options": "Initial AnimOptions; duration, delay and intervals use milliseconds."
+    },
+    "returnsDescription": "A fresh Animator for this entity."
+  },
+  "Entity.remove": {
+    "description": "Detach children from this parent without destroying them.",
+    "parameters": {
+      "entities": "Direct children to detach."
+    },
+    "notes": [
+      "Their parent becomes null; local transforms are retained, so visible world placement can change. Reattach or add them to a scene deliberately."
+    ],
+    "returnsDescription": "This parent entity for chaining."
+  },
+  "Entity.destroy": {
+    "description": "Invoke component cleanup and recursively destroy children.",
+    "notes": [
+      "This implementation clears its updater registry but does not detach the entity or clear its child/component arrays. Scene.remove manages scene membership; dispose performs fuller graph cleanup."
+    ]
+  },
+  "Entity.dispose": {
+    "description": "Detach from the parent, dispose descendants and clear components and callbacks.",
+    "notes": [
+      "The disposed object is marked invisible and must not be reused. Root membership in Scene.entities is managed separately by Scene.remove."
+    ]
+  },
+  "Entity.clone": {
+    "description": "Clone state and hierarchy while sharing heavy geometry resources.",
+    "parameters": {
+      "recursive": "Include cloned descendants when true. Defaults to true.",
+      "entityMap": "Mapping used during a recursive clone to associate original and copied entities."
+    },
+    "notes": [
+      "This is not a deep copy of every GPU resource. Editing shared geometry can affect related clones; use independent geometry when it must diverge."
+    ],
+    "returnsDescription": "A new instance of the same concrete entity class."
+  },
+  "Entity.getBoundingBox": {
+    "description": "Compute world-aligned bounds for the entity and optionally its descendants.",
+    "parameters": {
+      "includeChildren": "Include descendant bounds when true. Invisible nodes are skipped."
+    },
+    "notes": [
+      "Use getLocalAABB for local geometry bounds. An AABB expands under rotation and is not an oriented boundary contour."
+    ],
+    "returnsDescription": "A world-space AABB."
+  },
+  "Entity.setEvent": {
+    "description": "Attach an entity-specific pointer or drag handler.",
+    "parameters": {
+      "type": "Event name selecting the handler slot on InteractionComponent.",
+      "listener": "Callback for that event. Pointer callbacks receive event and hit; drag callbacks receive the new position according to InteractionEventMap."
+    },
+    "notes": [
+      "Calling again for the same type replaces that handler. Drag event registrations also enable dragging. InteractionManager must be available to dispatch picking events."
+    ],
+    "returnsDescription": "The same entity for chaining.",
+    "example": "labs/pg-interactionscene"
+  },
+  "Entity.setDraggable": {
+    "description": "Enable picking and configure dragging on an interaction component.",
+    "parameters": {
+      "draggable": "Whether the object can be dragged.",
+      "planeNormal": "Optional drag-plane normal. Omit to retain the component’s current constraint."
+    },
+    "notes": [
+      "This creates InteractionComponent when needed; it does not install a scene InteractionManager."
+    ],
+    "returnsDescription": "The same entity for chaining.",
+    "example": "labs/lab-bezier"
+  },
+  "Camera.cullingMask": {
+    "description": "Bitmask of layers visible to this camera.",
+    "notes": [
+      "The current field initializer is 1, so layer zero is selected. seeAllLayers sets all 32 bits; the source comment claiming an all-layer default is stale."
+    ]
+  },
+  "Camera.constructor": {
+    "description": "Create a camera with an explicit perspective field of view.",
+    "parameters": {
+      "fov_rad": "Vertical field of view in radians. Pass an explicit value such as Math.PI / 3; the literal source default is 45."
+    }
+  },
+  "Camera.lookAt": {
+    "description": "Face an entity or world point and retain it as the camera’s tracking target.",
+    "parameters": {
+      "target": "Entity or world coordinate to face; null clears automatic target tracking."
+    },
+    "notes": [
+      "Passing an entity tracks its world transform origin, which can differ from its visible bounds center."
+    ],
+    "returnsDescription": "The same camera for chaining.",
+    "example": "labs/lab-camera"
+  },
+  "Camera.toOrtho": {
+    "description": "Switch projection while matching size at a chosen subject distance.",
+    "parameters": {
+      "targetDistance": "World-space distance to the subject plane. Defaults to camera position length relative to the origin."
+    },
+    "notes": [
+      "A correct radian fov is required because conversion uses tan(fov / 2)."
+    ],
+    "returnsDescription": "The same camera for chaining."
+  },
+  "Camera.toPerspective": {
+    "description": "Switch to perspective and position the camera to match orthographic framing.",
+    "parameters": {
+      "targetPos": "World-space subject point. Defaults to the origin."
+    },
+    "notes": [
+      "The size match applies at that subject plane; objects at different depths change apparent size."
+    ],
+    "returnsDescription": "The same camera for chaining."
+  },
+  "Camera.frame": {
+    "description": "Fit bounds into the viewport and update camera placement.",
+    "parameters": {
+      "target": "Entity, entities, AABB or points to include in the framing calculation.",
+      "options": "Padding, aspect, direction and focus settings. Supply the actual canvas aspect for reliable framing."
+    },
+    "notes": [
+      "For orthographic projection this updates scale and position. For perspective it updates position and, unless disabled, focus distance."
+    ],
+    "returnsDescription": "The same camera; an invalid framing target leaves it unchanged.",
+    "example": "labs/pg-camera-frame"
+  },
+  "Camera.getProjectionMatrix": {
+    "description": "Compute projection from the current camera and canvas aspect.",
+    "parameters": {
+      "aspect": "Canvas width divided by height; must be positive."
+    },
+    "notes": [
+      "The implementation reuses scratch matrix storage. Copy the result before retaining it across later calls."
+    ],
+    "returnsDescription": "The current projection matrix in reused storage."
+  },
+  "Camera.getViewMatrix": {
+    "description": "Compute the inverse camera-world transform, with current look-at tracking.",
+    "notes": [
+      "Copy the result if it must survive later matrix computations using scratch storage."
+    ],
+    "returnsDescription": "The current view matrix."
+  },
+  "Animator.constructor": {
+    "parameters": {
+      "entity": "Entity whose current state supplies the animation start.",
+      "options": "Initial animation timing and easing settings."
+    }
+  },
+  "Animator.getAnim": {
+    "description": "Return the underlying StateAnimation and remember it for lifecycle controls.",
+    "returnsDescription": "The animation currently built by this Animator; it is not a fresh copy."
+  },
+  "Animator.stop": {
+    "description": "Remove the remembered animation and freeze the current interpolated state.",
+    "notes": [
+      "stop resolves the awaiting animation promise with zero and resets this builder for a new chain."
+    ]
+  },
+  "Animator.restart": {
+    "description": "Restart the remembered animation from the entity’s current state.",
+    "notes": [
+      "This snapshots the current entity as a new start; it does not restore the original start of the first playback."
+    ]
+  },
+  "Paint.opacity": {
+    "description": "Vector-paint opacity multiplier.",
+    "notes": [
+      "Default storage value is one. Zero makes the paint transparent without removing the entity, its events or its updaters."
+    ],
+    "example": "labs/lab-paint"
+  },
+  "Paint.strokeWidth": {
+    "description": "Vector outline width in scene units.",
+    "notes": [
+      "Default storage value is zero. The getter reports negative values as zero; setter input is otherwise stored directly."
+    ],
+    "example": "labs/lab-paint"
+  },
+  "Paint.setStroke": {
+    "parameters": {
+      "strokeWidth": "Outline width in scene units.",
+      "color": "Optional outline color; omission retains the existing stroke color."
+    },
+    "returnsDescription": "The same Paint for chaining."
+  },
+  "Paint.setFill": {
+    "parameters": {
+      "color": "Fill color accepted by Color.from, such as a Color or supported color string."
+    },
+    "notes": [
+      "Assigning fill sets a local override and marks paint dirty for synchronization."
+    ]
+  },
+  "Paint.setClip": {
+    "parameters": {
+      "start": "Lower clipping coordinates for the paint’s normalized clip region.",
+      "end": "Upper clipping coordinates. Default storage spans [0, 0] to [1, 1]."
+    }
+  },
+  "Material": {
+    "description": "Describe mesh appearance and track local material overrides.",
+    "notes": [
+      "Vector paint and mesh material are distinct. Entity.setOpacity changes paint; mesh opacity is controlled by material.opacity.",
+      "Defaults include white color, opacity 1, roughness 1, metallic 0, transmission 0, IOR 1.5 and specular 0.5. Raw data writes bypass setter change tracking."
+    ],
+    "example": "labs/pg-material"
+  },
+  "Material.roughness": {
+    "description": "Surface roughness, normally between zero and one.",
+    "notes": [
+      "Default is one. Lower values sharpen specular reflections; they do not increase mesh resolution."
+    ]
+  },
+  "Material.metallic": {
+    "description": "Metalness contribution, normally between zero and one.",
+    "notes": [
+      "Default is zero. Color and roughness also affect the visible result."
+    ]
+  },
+  "Material.transmission": {
+    "description": "Transmission contribution for supported material rendering paths.",
+    "notes": [
+      "Default is zero. Transmission and alpha opacity are different controls; turning on one does not configure every other glass parameter."
+    ]
+  },
+  "Material.ior": {
+    "description": "Index of refraction for supported refractive shading.",
+    "notes": [
+      "Default is 1.5. It influences refraction when the selected pipeline supports it; it does not switch rendering pipelines."
+    ]
+  }
+}

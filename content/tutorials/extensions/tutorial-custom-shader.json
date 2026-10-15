@@ -1,0 +1,136 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tutorial-custom-shader",
+  "title": "Write a custom shader with uniforms",
+  "group": "Extending Retiam",
+  "summary": "Start with a UV gradient and add aligned uniform data to control a procedural surface.",
+  "prerequisites": [
+    "[Paint and effects](/paint-effects)",
+    "[Resource ownership](/lifecycle-resources)"
+  ],
+  "outcome": "An animated shader surface with editable colors and correctly aligned parameter data.",
+  "difficulty": "intermediate",
+  "estimatedMinutes": 30,
+  "sections": [
+    {
+      "id": "result",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "What you will build"
+        },
+        {
+          "type": "paragraph",
+          "text": "The first surface uses only UV coordinates. Then a uniform buffer controls a ring pattern, two colors and elapsed time. Click the complete surface to freeze time."
+        }
+      ]
+    },
+    {
+      "id": "gradient",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Create the smallest shader"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const surface = new Shader(6, 4, `\n  finalColor = vec4f(input.uv.x, input.uv.y, 0.4, 1.0);\n`);\nthis.add(surface);"
+        },
+        {
+          "type": "paragraph",
+          "text": "Shader installs quad geometry, ShaderFragment and MeshRenderer. Your fragment body assigns finalColor. input.uv ranges over the surface; view.time contains scene milliseconds (divide by 1000 for seconds) and view.size contains viewport pixels. userFunctions supplies module-scope structs and helpers. See [Shader](/api-entities-primitives-2d#shader)."
+        }
+      ]
+    },
+    {
+      "id": "schema",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Describe the uniform layout"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const schema = new UniformSchema('Palette', {\n  focus: DataType.vec2f, cyan: DataType.vec4f,\n  amber: DataType.vec4f, mixAmount: DataType.f32\n});\nconst data = new UniformBufferData(schema);\nconst buffer = this.device.createBuffer({\n  size: schema.byteSize,\n  usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST\n});"
+        },
+        {
+          "type": "paragraph",
+          "text": "UniformSchema calculates byte offsets and padding. A vec4 following a vec2 does not simply follow it in a dense float array. UniformBufferData writes fields by name. It writes floating-point data; integer fields need an appropriate integer typed view."
+        }
+      ]
+    },
+    {
+      "id": "binding",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Bind and update the resource"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Supply the struct without an explicit binding declaration.\nconst struct = schema.generateWGSL(0, 0, false);\n// Pass struct through Shader options.userFunctions when constructing it.\nsurface.setUniformBuffer('palette', 'Palette', buffer);\ndata.set('mixAmount', 0.5);\nthis.device.queue.writeBuffer(buffer, 0, data.buffer);\nthis.invalidate();"
+        },
+        {
+          "type": "paragraph",
+          "text": "The resource setter generates the binding for the name palette. Keep that name identical in WGSL. Updating buffer values reuses the pipeline. Changing the declaration or resource layout is a different operation and can rebuild shaders."
+        }
+      ]
+    },
+    {
+      "id": "complete",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Run and inspect the complete surface"
+        },
+        {
+          "type": "example",
+          "example": "labs/workshop-uniforms"
+        },
+        {
+          "type": "paragraph",
+          "text": "BufferOwner releases the allocation through Renderer.destroyBuffers. Shader.setUniformBuffer binds an existing buffer and does not assume ownership. For textures and samplers, use [Shader.setTexture and setSampler](/api-entities-primitives-2d#shader) and follow [shader resources](/shader-system)."
+        },
+        {
+          "type": "paragraph",
+          "text": "The camera updater keeps the known 6 × 4 surface dimensions visible at different preview aspect ratios. The pause control uses Scene.setEvent and tests its world coordinates against that rectangle; it does not depend on Shader picking bounds."
+        }
+      ]
+    },
+    {
+      "id": "practice-and-next",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Practice and continue"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Move the focus to [0.25, 0.7].",
+            "Change uniform colors without editing the WGSL.",
+            "Compare a change to the numeric time value with a change to the shader frequency constant."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Check the result: The surface should animate and freeze on click. A binding or struct error appears in the example console; verify names, declarations and byte layout before expanding the shader."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Use ComputeKernel](/tutorial-compute-kernel). Use the [tutorial index](/tutorials) to choose another project."
+        }
+      ]
+    }
+  ]
+}

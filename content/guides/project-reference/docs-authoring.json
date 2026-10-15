@@ -1,0 +1,301 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "docs-authoring",
+  "title": "Maintain this documentation",
+  "group": "Project reference",
+  "summary": "Author modular pages, example notes and API explanations using the validated content schema.",
+  "sections": [
+    {
+      "id": "page-purpose-and-reading-order",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Page purpose and reading order"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use the page’s title for its single main heading and summary for a concise purpose statement. Optional prerequisites are inline links to earlier guides; outcome states the expected result for a tutorial. Keep these fields near the top of the page JSON. Start content sections at heading level 2; existing section IDs and API member anchors remain stable."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"id\": \"my-guide\",\n  \"group\": \"Core authoring\",\n  \"title\": \"My guide\",\n  \"summary\": \"Explain the behavior this guide teaches.\",\n  \"prerequisites\": [\n    \"[Entities](/entities)\"\n  ],\n  \"outcome\": \"A concrete scene result.\",\n  \"sections\": []\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each navigation group has kind guide or reference. Guide groups form one ordered reading sequence shared by the sidebar and Previous/Next links. Reference pages paginate within their own group. Collapsing a sidebar group changes visibility only; it never changes the reading sequence. API references show public members by default; the internal/protected toggle and direct member links preserve access to implementation details."
+        }
+      ]
+    },
+    {
+      "id": "source-derived-type-hierarchies",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Add a source-derived type hierarchy"
+        },
+        {
+          "type": "paragraph",
+          "text": "A class-hierarchy block reads the compiler-derived API index. Choose a unique type name as its root and a descendant depth of 1, 2, 3 or all. Ancestors remain visible when the reader focuses on a descendant; nodes open the exact API declaration. Enable browse to allow searching all documented types."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"type\": \"class-hierarchy\",\n  \"root\": \"Animation\",\n  \"depth\": 1\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "For duplicate names, qualify the root as source/path.ts:Type or use its API member ID. The build rejects unknown or ambiguous roots. The generated class-hierarchy.json is refreshed from TypeScript extends and implements declarations during the normal content build. Use the [class hierarchy explorer](/class-hierarchy#explorer) to inspect a family and the linked text list when a diagram is inconvenient."
+        }
+      ]
+    },
+    {
+      "id": "single-json-source",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Modular content files"
+        },
+        {
+          "type": "paragraph",
+          "text": "Author one page per JSON file under content/, following AUTHORING.md and docs-authoring-schema.json. Pages have id, group, title and sections; each section starts with a heading and owns a stable anchor. The build resolves example files, validates links and generates a page catalog, search index and individual page assets. React loads the current page on demand and renders the existing block types."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"id\": \"new-feature\", \"group\": \"Core authoring\", \"title\": \"New feature\",\n  \"sections\": [{\n    \"id\": \"usage\",\n    \"blocks\": [\n      { \"type\": \"heading\", \"level\": 2, \"text\": \"Usage\" },\n      { \"type\": \"paragraph\", \"text\": \"See [animation](/animation).\" }\n    ]\n  }]\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Add each page ID once to content/navigation.json in the matching group. This manifest controls sidebar groups and previous/next order. File locations do not determine URLs, so topic folders can be reorganized while preserving page and section IDs. The original single-json-source anchor is retained for compatibility."
+        }
+      ]
+    },
+    {
+      "id": "executable-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Embed the real example source"
+        },
+        {
+          "type": "paragraph",
+          "text": "An example block points at a repository module rather than a copy of its code. The ID is the path under examples/demos/, without the .ts extension. A documentation-only experiment uses labs/<filename> and lives in content/playgrounds/. Use the same ID in a guide and an API reference to teach the same behavior in both places."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"type\": \"example\",\n  \"example\": \"media_textures/texture_atlas\"\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "The build discovers exported Scene subclasses, compiles their helpers and copies referenced local assets. Embedded viewers import the engine and sublibraries from cdnUrl in content/config.json. Run the local engine CDN separately on port 3000; run npm run dev in retiam-docs for the viewer on port 4000. Production uses a pinned public HTTPS module URL. Original and edited demo URLs resolve under the documentation deployment base. Service-dependent demos start after an explicit Run and report missing configuration; services.msedgeEndpoint and services.modelBaseUrl configure externally hosted speech and model resources. Run Scene (or Ctrl/Command+Enter) applies edits. Live Auto-Run reruns after a short typing pause. Reset Code restores the original source. Preserve State carries the camera, scene clock and pause flag between runs; it does not restore every entity or replay the animation timeline. Each run uses a fresh viewer. The editor checks syntax at runtime; content verification also checks authored lab types."
+        },
+        {
+          "type": "paragraph",
+          "text": "Add the example’s explanation to content/example-notes/<topic>.json. Tell readers what they will see, how the scene produces that result, and a few specific changes worth trying. List missing assets and required services. Source discovery keeps the example connected to its implementation; it cannot replace an explanation of the idea."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"media_textures/texture_atlas\": {\n    \"description\": \"Several sprites share one generated atlas.\",\n    \"walkthrough\": [\n      \"TextureAtlas.load reads the canvas and its frame manifest.\",\n      \"Sprite selects a named region; AnimatedSprite cycles through the same regions.\"\n    ],\n    \"experiments\": [\n      \"Change one frame rectangle and inspect how every user of that region changes.\"\n    ],\n    \"related\": [\n      \"TextureAtlas\",\n      \"Sprite\",\n      \"AnimatedSprite\"\n    ]\n  }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use the source editor for experiments. Name the value or API call to change and explain what readers should look for in the preview. The workbench has no separate playback row or parameter sliders. When Show Code is turned off, the preview fills the workbench."
+        },
+        {
+          "type": "paragraph",
+          "text": "Editor drafts are saved by example ID and canonical source hash. They survive navigation and reloads; Reset Code clears the current revision’s draft. If the canonical source changes, the editor starts from that new source. When browser storage is unavailable, drafts survive navigation in the current tab and the editor explains how to keep them before closing it."
+        },
+        {
+          "type": "paragraph",
+          "text": "Every runnable example must include both a walkthrough and an experiment. The build rejects newly discovered scenes that omit either. Use the Projects group as a pattern: each stage is runnable by itself, adds one behavior, explains its relevant APIs and gives the reader something specific to change."
+        }
+      ]
+    },
+    {
+      "id": "engine-cdn",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Configure the Retiam CDN"
+        },
+        {
+          "type": "paragraph",
+          "text": "The documentation treats Retiam as an external dependency. Embedded examples import the module URL in content/config.json and resolve sublibraries relative to that URL. Local development uses http://localhost:3000/retiam.es.js; production should use a pinned npm CDN version."
+        },
+        {
+          "type": "paragraph",
+          "text": "The CDN must serve JavaScript modules with CORS enabled for the documentation origin. The docs do not compare source hashes or require the CDN to come from the same repository checkout. Pin the package version in the production URL rather than using a moving latest tag."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "# In retiam-docs; run the local engine CDN separately if configured\nnpm ci\nnpm run dev"
+        },
+        {
+          "type": "paragraph",
+          "text": "For GitHub Pages, update cdnUrl in content/config.json to a pinned published HTTPS module URL. In the public retiam-docs repository, enable GitHub Actions as the Pages source, then run the Documentation Pages workflow. It derives the base path from Pages settings and emits a physical entry for every page. Optional speech services and model files require their own hosting."
+        }
+      ]
+    },
+    {
+      "id": "source-api-references",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explain an API beside its current contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use an api-reference block with a repository source path. The build extracts classes, interfaces, enums, functions and their accessible members, including overloads, parameter types, defaults, return types, inheritance and JSDoc. Each entry has a stable link and can open its current implementation inside the page."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"type\": \"api-reference\",\n  \"source\": \"src/engine/_core/Entity.ts\"\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Write behavior in content/api-notes/<topic>.json, keyed by a symbol such as Entity.rotate. Explain units, state changes, ownership and practical choices. Add notes for caveats, parameters for argument explanations, and example for an inline scene. A duplicate symbol can use source/path.ts:Owner.member to choose the declaration precisely."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"Entity.rotate\": {\n    \"description\": \"Add a rotation to the current orientation.\",\n    \"parameters\": {\n      \"angle\": \"A scalar uses radians; convert degrees before passing it.\"\n    },\n    \"notes\": [\n      \"Repeated calls accumulate rotation. Use Entity.setRotation for a slider with an absolute angle.\"\n    ],\n    \"example\": \"labs/lab-transforms\"\n  }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Known class, type, member and file names become links in prose, inline code, tables and highlighted source. Inherited member names lead to the base declaration. For an ambiguous name, use its qualified form or an explicit page link. The build validates every generated destination."
+        },
+        {
+          "type": "paragraph",
+          "text": "Check src/data/generated/learning-coverage.json during review. It separates declaration coverage from explanation coverage and lists public APIs that still need prose. A generated signature makes a member discoverable; a useful explanation tells someone when and how to use it."
+        },
+        {
+          "type": "paragraph",
+          "text": "Use returnsDescription for the meaning of a return value, especially asynchronous completion, copies, reused storage or fluent chaining. Signatures provide the type; prose should explain what a caller can do with the result."
+        },
+        {
+          "type": "paragraph",
+          "text": "Hover or keyboard-focus an API link to preview its signature and description. Ordinary prose words such as State, Pass, Usage, Rate and Field remain plain; put an intended identifier in backticks or use an explicit link. Search ranks exact API names first and can restrict results to guides, API references or examples."
+        }
+      ]
+    },
+    {
+      "id": "mermaid-diagrams",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Flowcharts and diagrams"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use a code block with language set to mermaid to render a flowchart, sequence diagram, state diagram, timeline or another Mermaid diagram. The existing content schema stays the same. Diagrams use a plain canvas with reset and fullscreen icons in the corner. Readers zoom with Ctrl/⌘ + mouse wheel, drag to pan, or pinch on a touchscreen. With the canvas focused, + and − zoom, 0 resets the view, and arrow keys pan. Small diagrams show fully; large ones use a taller canvas and keep their text readable. Colors follow the site theme."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"type\": \"code\",\n  \"language\": \"mermaid\",\n  \"code\": \"flowchart LR\\n  Scene --> Update\\n  Update --> Render\\n  Render --> Frame\"\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quote node and edge labels that contain parentheses, brackets or other punctuation. Give subgraphs explicit identifiers when linking them: subgraph Pipeline [\"Rendering pipeline\"], then Pipeline --> Frame. Syntax errors appear with the original source so other diagrams and page navigation keep working. Preview new diagrams in the browser; JSON schema validation checks the block structure, not Mermaid syntax. Registered API names in node labels link to their reference even when the node also contains an explanation."
+        },
+        {
+          "type": "paragraph",
+          "text": "Use a tree block for class hierarchies, ownership and directory listings. Choose horizontal, vertical or folder as the variant. Keep the label short and put secondary information in the node description, which supports Markdown and API links. Graph trees become indented hierarchies on small screens; paths wrap within folder trees."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"type\": \"tree\",\n  \"variant\": \"vertical\",\n  \"nodes\": [\n    {\n      \"label\": \"Scene\",\n      \"description\": \"Owns the local timeline.\",\n      \"children\": [\n        {\n          \"label\": \"Entity\",\n          \"description\": \"State, geometry and child ownership.\"\n        }\n      ]\n    }\n  ]\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use nested list items to group settings under the step they belong to. Simple items remain strings; a parent item has text and children. Set ordered on the parent to number its children, and use start to continue an ordered list after an equation or another block."
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "{\n  \"type\": \"list\",\n  \"ordered\": true,\n  \"items\": [\n    {\n      \"text\": \"World view\",\n      \"children\": [\n        \"Draw scene entities.\",\n        \"Clear color and depth.\"\n      ]\n    },\n    {\n      \"text\": \"UI overlay\",\n      \"children\": [\n        \"Preserve scene color.\",\n        \"Clear overlay depth.\"\n      ]\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "id": "validation-workflow",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Validation workflow"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npm run test:content\nnpm run verify:content\nnpm run build\nnpm run dev"
+        },
+        {
+          "type": "paragraph",
+          "text": "Verification checks page schemas, navigation, stable IDs, all generated API destinations, authored note shapes, example references and TypeScript contracts for the guide labs. Development watches content, documentation examples, versioned reference data and assets, rebuilds them, and refreshes the page. Browser checks still need to exercise actual scenes, media loading, drag interactions and GPU rendering."
+        },
+        {
+          "type": "paragraph",
+          "text": "Run test:content for content, links, search and drafts, and test:scenes for the comparison/project authoring checks. scripts/browser-checks.mjs runs the new scenes through a connected WebGPU browser and checks desktop/mobile layout and search. Also inspect rendered images and exercise input; a ready scene does not prove every interaction behaves correctly."
+        }
+      ]
+    },
+    {
+      "id": "update-with-source-changes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Update with source changes"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Read the relevant implementation and affected demos.",
+            "Update the guide’s explanation, signature/default tables and compatibility notes.",
+            "Update content/coverage.json if source files or exports are added, removed or renamed.",
+            "Keep the notebook archive explicitly historical; do not quietly promote its sketches into current examples.",
+            "Run content and viewer validation, then verify the affected playgrounds in a browser."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "generated-runtime-assets",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "How the pieces fit together"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  Pages[\"Page JSON and navigation\"] --> Content[\"Content build and validation\"]\n  Source[\"src and libs TypeScript\"] --> API[\"Declarations, members and aliases\"]\n  Notes[\"API and example notes\"] --> Content\n  API --> Content\n  Demos[\"Repository demos and authored labs\"] --> Runtime[\"Engine and scene module build\"]\n  Demos --> Content\n  Content --> Site[\"React pages, search and API links\"]\n  Runtime --> Viewer[\"Inline scene viewer\"]\n  Site --> Viewer"
+        },
+        {
+          "type": "paragraph",
+          "text": "Generated page, search, symbol, example and per-file API assets live in src/data/generated/. Compiled scenes and original source files live in public/runtime/. The engine is loaded from the CDN URL in content/config.json. These files are ignored by Git and rebuilt from their inputs. Edit pages and notes in content/, scenes in their canonical source files, and engine behavior in src/ or libs/."
+        },
+        {
+          "type": "paragraph",
+          "text": "The browser loads page and API assets on demand. The symbol index shares destinations across inherited aliases and loads separately from the app bundle. Runnable scenes start when any part of their preview becomes visible and keep playing until fully off-screen. Multiple visible previews can play together. Starting another scene releases off-screen viewers; scrolling back starts them again with their current editor contents."
+        }
+      ]
+    }
+  ]
+}

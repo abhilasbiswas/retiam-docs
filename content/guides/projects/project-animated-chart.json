@@ -1,0 +1,139 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "project-animated-chart",
+  "title": "Build an animated chart",
+  "group": "Projects",
+  "summary": "Build an animated bar chart in three stages: drawing the data, sequencing changes and accepting new values.",
+  "prerequisites": [
+    "[Animation](/animation)",
+    "[Charts](/charts)"
+  ],
+  "outcome": "A bar chart that animates its data and responds to changes.",
+  "sections": [
+    {
+      "id": "overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "From data to animated bars"
+        },
+        {
+          "type": "paragraph",
+          "text": "Build a release-time chart that first shows fixed data, then reveals its bars, and finally lets the reader compare a second dataset by clicking. Each stage below is a complete scene you can edit and run."
+        }
+      ]
+    },
+    {
+      "id": "stage-1",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Define meaningful data"
+        },
+        {
+          "type": "paragraph",
+          "text": "We will compare the time spent building, testing and shipping a release. The category stays attached to its value, so a changing bar is easy to follow. Start by editing one value and checking the labels before adding animation."
+        },
+        {
+          "type": "paragraph",
+          "text": "`BarChart` comes from `retiam/charts`; `Scene` and the camera come from `retiam`. The chart uses a fixed `yRange` of zero to 100 minutes. This preserves a stable scale when comparing datasets."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-chart-1"
+        }
+      ]
+    },
+    {
+      "id": "stage-2",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Introduce the chart"
+        },
+        {
+          "type": "paragraph",
+          "text": "The second version adds one awaited `BarChart.animateIn` call. The chart already knows its final geometry; the animation introduces that geometry over 1200 milliseconds."
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep the entrance brief enough that the audience can read the values. A decorative reveal should support the comparison. Change duration to 400 and then 2400 milliseconds to judge the tradeoff."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-chart-2"
+        }
+      ]
+    },
+    {
+      "id": "stage-3",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Change data through interaction"
+        },
+        {
+          "type": "paragraph",
+          "text": "Click any bar after the entrance to alternate datasets. `InteractionManager` dispatches the bar’s click; a busy flag prevents conflicting updates if the reader clicks repeatedly."
+        },
+        {
+          "type": "paragraph",
+          "text": "`BarChart.animateData` updates existing bars by index using the established scale. Keep category count and order fixed here. It does not rebuild categories or recompute the axis domain; rebuild a chart deliberately if those must change."
+        },
+        {
+          "type": "example",
+          "example": "labs/project-chart-3"
+        }
+      ]
+    },
+    {
+      "id": "make-it-your-own",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Use it in your own application"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use units in the title or value suffix and keep comparisons on the same scale. Validate finite values before creating the chart."
+        },
+        {
+          "type": "paragraph",
+          "text": "Animate updates from user actions or actual data changes. Keep the data model outside the scene when integrating with an application, and destroy the scene when its canvas is removed."
+        },
+        {
+          "type": "paragraph",
+          "text": "Next, compare other chart types in [Charts](/charts) or inspect the [chart gallery](/examples-charts)."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Build a draggable diagram](/project-draggable-diagram)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "difficulty": "intermediate",
+  "estimatedMinutes": 25
+}

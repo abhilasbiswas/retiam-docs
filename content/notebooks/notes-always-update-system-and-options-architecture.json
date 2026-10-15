@@ -1,0 +1,600 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-always-update-system-and-options-architecture",
+  "title": "Enhanced always() Lifecycle & Scheduling Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/ALWAYS_UPDATE_SYSTEM_AND_OPTIONS_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/ALWAYS_UPDATE_SYSTEM_AND_OPTIONS_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/ALWAYS_UPDATE_SYSTEM_AND_OPTIONS_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [Entity](/api-core-entity#entity), [SceneComposer](/api-core-scenecomposer#scenecomposer), [AlwaysRegistry](/api-core-always#always), [AlwaysOptions](/api-core-always#always), [AlwaysHandle](/api-core-always#always), [Rate](/api-animation#rate), [Arrow](/api-entities-composites-geometry#arrow), [Camera](/api-camera#camera), [Animation](/api-animation#animation), [Queue](/api-utils#utility), [Graph](/api-libs-graphs-graph#graph), [Delay](/api-animation#delay), [AlwaysContext](/api-core-always#always), [Usage](/api-utils#gpu-utils), [Flash](/api-libs-highlights-finish#flash)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `always()` update system in Retiam provides a unified, high-performance, and frame-rate-independent execution loop for both scene-level tasks and individual entity behaviors."
+        },
+        {
+          "type": "paragraph",
+          "text": "This document details the architectural redesign of `always()` in `Scene`, `Entity`, and `SceneComposer`, the `AlwaysRegistry` task scheduling engine, execution phases (`pre`, `update`, `post`), and the complete `AlwaysOptions` / `AlwaysHandle` API."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-motivation-problem-statement",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Motivation & Problem Statement"
+        },
+        {
+          "type": "paragraph",
+          "text": "Prior to this architecture, `scene.always()` and `entity.always()` were simple array pushes of raw callbacks:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Legacy implementation\npublic always(func: (time: number, dt: number) => void): void {\n    this.update_callbacks.push(func);\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "While lightweight, this presented several critical limitations in production scenes:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**No Rate Limiting / Frequency Throttling**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Every callback fired at display refresh rate (60 Hz, 120 Hz, 144 Hz+). Heavy tasks like updating DOM stats, polling endpoints, querying AST nodes, or downsampling audio visualizers required repetitive boilerplate accumulator logic:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Boilerplate accumulator before\n   let acc = 0;\n   scene.always((t, dt) => {\n       acc += dt;\n       if (acc >= 100) {\n           acc = 0;\n           updateDOM();\n       }\n   });"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Anonymous Callbacks Were Unstoppable**:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "Unregistering required passing the exact function reference (`scene.unregister(cb)`). Arrow functions like `scene.always(() => ...)` could never be cancelled because `always()` returned `void` (in `Scene`) or `this` (in `Entity`)."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Array Mutation Bugs During Execution**:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "If an updater unregistered itself or another updater while the update loop was running, in-place `splice()` shifted elements left, causing subsequent callbacks in the same frame to be skipped or throwing `TypeError: is not a function`."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**1-Frame Camera Tracking Lag / Jitter**:"
+          ],
+          "start": 4
+        },
+        {
+          "type": "paragraph",
+          "text": "`scene.always()` executed *before* scene entities stepped their positions. If a camera controller used `scene.always()` to track a moving entity, the camera read the entity's position *prior* to that frame's movement, causing a permanent 1-frame visual stutter during high-speed tracking."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**No Entity Lifecycle Binding**:"
+          ],
+          "start": 5
+        },
+        {
+          "type": "paragraph",
+          "text": "Updaters attached to an entity kept running indefinitely even if the entity was hidden (`VISIBILITY = false`) or destroyed, unless explicitly detached."
+        }
+      ]
+    },
+    {
+      "id": "2-system-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. System Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "The redesigned system introduces a centralized, zero-overhead task scheduler:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  S[\"Scene.update(time, dt)\"] --> PRE[\"Scene pre registry<br/>Legacy scene.always callbacks\"]\n  PRE --> A[\"Animation queue<br/>scene.play animators\"]\n  A --> U[\"Scene update registry\"]\n  U --> EP[\"Entity.update(t, dt): pre registry\"]\n  subgraph E[\"Entity graph traversal\"]\n    EP --> EU[\"update registry\"] --> L[\"Legacy updaters\"] --> C[\"components.update\"] --> CH[\"children.update\"] --> EPOST[\"post registry\"]\n  end\n  EPOST --> POST[\"Scene post registry<br/>Camera follow, look-at, UI sync and constraints\"]\n  POST --> R[\"Render queue building<br/>WebGPU command encoding\"]"
+        }
+      ]
+    },
+    {
+      "id": "3-core-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Core API Reference"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "AlwaysOptions"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Option",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`interval`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`undefined`"
+                },
+                {
+                  "text": "Minimum interval in milliseconds between invocations (e.g. `100` = 10 Hz). Passes the accumulated `dt` since the last run."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`delay`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0`"
+                },
+                {
+                  "text": "Delay in milliseconds before the first invocation."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`duration`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`undefined`"
+                },
+                {
+                  "text": "Maximum duration in milliseconds before auto-unregistering."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`times`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`undefined`"
+                },
+                {
+                  "text": "Maximum number of invocations before auto-unregistering (e.g. `times: 1` runs once)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`phase`",
+                  "type": "text"
+                },
+                {
+                  "text": "`'pre' \\| 'update' \\| 'post'`"
+                },
+                {
+                  "text": "`'pre'` (Scene) `'update'` (Entity)"
+                },
+                {
+                  "text": "Execution phase relative to scene graph traversal."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`priority`",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0`"
+                },
+                {
+                  "text": "Execution priority within the phase (higher runs earlier)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`while`",
+                  "type": "text"
+                },
+                {
+                  "text": "`() => boolean`"
+                },
+                {
+                  "text": "`undefined`"
+                },
+                {
+                  "text": "Evaluated every frame; continues running only while returning `true`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`until`",
+                  "type": "text"
+                },
+                {
+                  "text": "`() => boolean`"
+                },
+                {
+                  "text": "`undefined`"
+                },
+                {
+                  "text": "Evaluated every frame; stops and unregisters once returning `true`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`signal`",
+                  "type": "text"
+                },
+                {
+                  "text": "`AbortSignal`"
+                },
+                {
+                  "text": "`undefined`"
+                },
+                {
+                  "text": "Standard Web `AbortSignal` for cancellation."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`onlyWhenVisible`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`false`"
+                },
+                {
+                  "text": "*(Entity only)* Only executes when `entity.VISIBILITY` is `true`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`autoDestroy`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`true`"
+                },
+                {
+                  "text": "*(Entity only)* Automatically unregisters when `entity.destroy()` or `dispose()` is called."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`paused`",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`false`"
+                },
+                {
+                  "text": "Starts in a paused state if `true`."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "AlwaysHandle"
+        },
+        {
+          "type": "paragraph",
+          "text": "Returned by `scene.always()` and `entity.always()`."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface AlwaysHandle {\n    /** Unique task ID */\n    readonly id: number;\n\n    /** Stops and unregisters the callback */\n    stop(): void;\n\n    /** Pauses execution without unregistering */\n    pause(): void;\n\n    /** Resumes a paused callback */\n    resume(): void;\n\n    /** Resets the elapsed timer, invocation counter, and interval accumulator */\n    reset(): void;\n\n    /** Whether the task is currently active */\n    readonly isRunning: boolean;\n\n    /** Whether the task is currently paused */\n    readonly isPaused: boolean;\n\n    /** Total number of successful invocations */\n    readonly count: number;\n\n    /** Total active time elapsed in ms */\n    readonly elapsed: number;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "AlwaysContext"
+        },
+        {
+          "type": "paragraph",
+          "text": "Passed as the 3rd argument to update callbacks: `(time, dt, ctx) => void | boolean`."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface AlwaysContext {\n    /** Total active elapsed time in milliseconds */\n    readonly elapsed: number;\n    /** 1-based invocation count */\n    readonly count: number;\n    /** Interval-adjusted delta time in ms (accumulates over skipped frames) */\n    readonly dt: number;\n    /** Raw frame delta time in ms */\n    readonly frameDt: number;\n    /** Convenience helper to stop this task */\n    stop(): void;\n    /** Pause this task */\n    pause(): void;\n    /** Resume this task */\n    resume(): void;\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-key-capabilities-usage-patterns",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Key Capabilities & Usage Patterns"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.1. Throttled UI & Stats Updates (interval)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Throttles expensive DOM manipulation from 120 FPS down to 10 Hz without manual accumulators:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Throttled to run at most every 100ms (10 times per second)\nscene.always(() => {\n    fpsDisplay.textContent = `${engine.currentFps} FPS`;\n    harmonicsBadge.textContent = `${activeCount} Harmonics`;\n}, { interval: 100 });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.2. Accurate Physics & Math with Accumulated Delta Time"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `interval` is configured, the `dt` passed to the callback is the exact accumulated delta time across all skipped frames:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Runs every 50ms, dt is ~50ms (not 16ms), ensuring accurate numeric integration\nentity.always((time, dt, ctx) => {\n    particle.position.x += velocity.x * (dt / 1000);\n    // ctx.frameDt is still available if raw frame delta is needed\n}, { interval: 50 });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.3. Jitter-Free Camera Follow (phase: 'post')"
+        },
+        {
+          "type": "paragraph",
+          "text": "Eliminates 1-frame tracking lag by executing after the target entity has completed its movement for the current frame:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Without phase: 'post', camera reads tip position BEFORE tip moves this frame (1-frame lag)\n// With phase: 'post', camera reads the final, fresh position in the exact same frame!\nscene.always(\n    () => controller.follow(satellite.localToWorld(satellite.getTip()), { damping: 12 }),\n    { phase: 'post' }\n);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.4. Auto-Cancellation on Condition (return false, until, while)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Three ergonomic ways to terminate an updater:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Pattern 1: Return false directly from the callback\nentity.always((time, dt) => {\n    entity.position.x += speed * dt;\n    if (entity.position.x >= targetX) {\n        return false; // Automatically unregisters!\n    }\n});\n\n// Pattern 2: Declarative 'until' predicate\nentity.always(pulseAnimation, {\n    until: () => entity.position.y > 600\n});\n\n// Pattern 3: Self-stopping via context\nentity.always((time, dt, ctx) => {\n    if (collisionDetected) {\n        ctx.stop();\n    }\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.5. Temporary Effects (duration)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Screen shakes, particle bursts, and temporary trails with automatic expiration:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Screen shake lasts exactly 600ms, then stops automatically\nscene.always((time, dt) => {\n    camera.offset.x = (Math.random() - 0.5) * intensity;\n    camera.offset.y = (Math.random() - 0.5) * intensity;\n}, { duration: 600 });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.6. Delayed Initiation (delay)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Waits `delay` ms of scene time before the first execution:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Spawns a shockwave 500ms after impact\nscene.always(() => {\n    shockwave.radius += dt * 0.4;\n}, { delay: 500, duration: 1500 });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.7. Discrete Tick Limits (times)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Executes exactly `N` times (e.g. `times: 1` for next-frame execution):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Flash warning beacon exactly 3 times, then stop\nbeacon.always(toggleFlash, { interval: 200, times: 3 });"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.8. Lifecycle Integration (onlyWhenVisible, autoDestroy)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Entity updaters automatically pause when invisible and clean themselves up on destruction:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Only computes particle kinematics when this entity is visible on screen\nparticles.always(() => computeParticles(), { onlyWhenVisible: true });\n\n// When entity.destroy() or entity.dispose() is called,\n// all registered updaters are automatically purged to prevent memory leaks."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.9. External Web Standard Cancellation (signal: AbortSignal)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Integrates seamlessly with `AbortController`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const controller = new AbortController();\n\nscene.always(networkSync, { signal: controller.signal });\n\n// Later, on route change or modal close:\ncontroller.abort();"
+        }
+      ]
+    },
+    {
+      "id": "5-loop-safety-concurrency-architecture",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Loop Safety & Concurrency Architecture"
+        },
+        {
+          "type": "paragraph",
+          "text": "A common failure mode in game engine loops is modifying the subscriber list during iteration."
+        },
+        {
+          "type": "paragraph",
+          "text": "`AlwaysRegistry` solves this through a dual-buffer staging and tombstone cleanup architecture:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Iteration Guard**: `_isIterating` flag protects active iteration loops.",
+            "**Safe Removal**: Calling `handle.stop()` or `unregister()` marks `task.isRunning = false`. The active loop continues without altering array indices or skipping subsequent elements.",
+            "**Pending Addition Queue**: If a callback registers a new `always()` task mid-loop, the task is staged in `_pendingAdd` and flushed safely after iteration finishes.",
+            "**Post-Loop Purge**: After the loop finishes, dead tasks are removed in a single pass (`_purgeStopped()`), and pending additions are merged and priority-sorted."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-backward-compatibility-guarantee",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Backward Compatibility Guarantee"
+        },
+        {
+          "type": "paragraph",
+          "text": "All existing legacy code continues to work without modification:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Existing syntax works identically:\nscene.always(() => { ... });\nscene.always((time, dt) => { ... });\nentity.always(() => { ... });\nentity.always((time, dt) => { ... });\n\n// Legacy unregister by reference continues to work:\nscene.unregister(myFunc);\nentity.unregister(myFunc);"
+        },
+        {
+          "type": "paragraph",
+          "text": "No breaking changes were introduced to existing method signatures or return types."
+        }
+      ]
+    }
+  ]
+}

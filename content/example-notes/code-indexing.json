@@ -1,0 +1,17 @@
+{
+  "labs/lab-code-indices": {
+    "title":"Select a row, a match and a source range",
+    "description":"The second displayed row is highlighted, the second amount match is marked, and a copy of the first amount moves above the source.",
+    "walkthrough":[
+      "startLineNumber is 40, so the three source rows are displayed as 40, 41 and 42. highlightLine(41) addresses the second row rather than source-array index 41.",
+      "highlightText counts nonoverlapping matches across all source rows. Its occurrence argument of 2 selects amount in the second row; the displayed line numbers do not affect this lookup.",
+      "extractTextByIndices uses displayed line 40 and the half-open source range [6, 12). removeOriginal defaults to false, so the source word stays in place.",
+      "The extracted group initially belongs to the code's scrollGroup. This scene detaches it and adds it as a scene root so it can move above the code window. That simple transfer preserves placement here because the Code has no transform and sits at origin; for a transformed parent, preserve the world transform when reparenting."
+    ],
+    "experiments":[
+      "Change startLineNumber to 100 and the line arguments to 101 and 100. Keep occurrence at 2 and compare which annotations move.",
+      "Change endCol from 12 to 11 to leave out the final t, then pass true as the fourth extraction argument to hide the selected original glyphs."
+    ],
+    "related":["Code","Code.highlightLine","Code.highlightText","Code.extractTextByIndices","Scene.play"]
+  }
+}

@@ -1,0 +1,786 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-libs-physics-3d",
+  "title": "physics / 3d API",
+  "group": "Library API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "physics3d",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Physics3D"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/3d/Physics3D.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/3d/Physics3D.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Physics3D: Top-level 3D physics controller for the Retiam engine. Supports: - Rapier: SIMD WebAssembly XPBD solver with exact CCD and convex decomposition. - Box3D: Erin Catto's fast, deterministic 3D physics engine via WebAssembly (box3d-wasm)."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Physics3D",
+                    "Class",
+                    "Top-level 3D physics controller for the Retiam engine. Supports: - Rapier: SIMD WebAssembly XPBD solver with exact CCD and convex decomposition. - Box3D: Erin Catto's fast, deterministic 3D physics engine via WebAssembly (box3d-wasm)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class Physics3D {\n    backend: IPhysics3DBackend;\n    scene: Scene;\n    timeStep: number;\n    maxSubSteps: number;\n    constructor(scene: Scene, options?: Physics3DOptions);\n    ready(): Promise<void>;\n    step(timeStep?: number, dt?: number, maxSubSteps?: number): void;\n    on(event: 'collisionStart' | 'collisionEnd', callback: (e: Collision3DEvent) => void): this;\n    off(event: 'collisionStart' | 'collisionEnd', callback: (e: Collision3DEvent) => void): this;\n    add<T extends Entity>(entity: T, options?: MotionType | RigidOptions): RigidBodyComponent;\n    addSoftBody<T extends Entity>(entity: T, options?: SoftBodyOptions): SoftBodyComponent;\n    addMany<T extends Entity>(entities: T[], options?: MotionType | RigidOptions): RigidBodyComponent[];\n    getBody(entity: Entity): RigidBodyComponent | null;\n    getSoftBody(entity: Entity): SoftBodyComponent | null;\n    remove(entity: Entity, removeFromScene?: boolean): void;\n    pause(): void;\n    resume(): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Physics3D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public backend: IPhysics3DBackend",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scene: Scene",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public timeStep: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public maxSubSteps: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(scene: Scene, options?: Physics3DOptions)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.scene`, `this.timeStep`, `this.maxSubSteps`, `this.backend`, `this._autoStepHandle`; construction of `Box3DBackend`, `Rapier3DBackend`; calls to `this.backend.onCollision`, `listeners[i]`, `this.scene.always`, `this.step`; 1 explicit loop. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public async ready(): Promise<void>",
+                    "—",
+                    "Resolves when the underlying physics backend WebAssembly runtime is fully initialized. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public step(timeStep: number = this.timeStep, dt?: number, maxSubSteps: number = this.maxSubSteps): void",
+                    "—",
+                    "Manually advances the physics world by fixed sub-steps. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public on(event: 'collisionStart' | 'collisionEnd', callback: (e: Collision3DEvent) => void): this",
+                    "—",
+                    "Registers a global 3D collision event listener ('collisionStart' or 'collisionEnd'). [Source line 80](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L80)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public off(event: 'collisionStart' | 'collisionEnd', callback: (e: Collision3DEvent) => void): this",
+                    "—",
+                    "Unregisters a global 3D collision event listener. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add<T extends Entity>(\n        entity: T,\n        options: MotionType | RigidOptions = 'dynamic'\n    ): RigidBodyComponent",
+                    "—",
+                    "Adds a 3D Entity to the physics simulation as a rigid body. [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addSoftBody<T extends Entity>(\n        entity: T,\n        options: SoftBodyOptions = {}\n    ): SoftBodyComponent",
+                    "—",
+                    "Adds a 3D Entity to the physics simulation as a deformable soft body or cloth. (Available when configured with backend: 'jolt'). [Source line 116](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L116)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public addMany<T extends Entity>(\n        entities: T[],\n        options: MotionType | RigidOptions = 'dynamic'\n    ): RigidBodyComponent[]",
+                    "—",
+                    "Batch adds multiple entities to the physics world. [Source line 129](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L129)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBody(entity: Entity): RigidBodyComponent | null",
+                    "—",
+                    "Retrieves the attached RigidBodyComponent for an entity. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSoftBody(entity: Entity): SoftBodyComponent | null",
+                    "—",
+                    "Retrieves the attached SoftBodyComponent for an entity. [Source line 146](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L146)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public remove(entity: Entity, removeFromScene: boolean = true): void",
+                    "—",
+                    "Removes an entity from the simulation. [Source line 153](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L153)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pause(): void",
+                    "—",
+                    "Implementation: `this._isRegistered = false; this._autoStepHandle?.pause();`. [Source line 160](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L160)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resume(): void",
+                    "—",
+                    "Implementation: `this._isRegistered = true; this._autoStepHandle?.resume();`. [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L165)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Implementation: `this._isRegistered = false; this._autoStepHandle?.stop(); this._autoStepHandle = undefined; this._collisionStartListeners = []; this._collisionEndListeners = []; this.backend.destroy();`. [Source line 170](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L170)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Option fallback expressions found in the implementation. Nullish coalescing (`??`) preserves false/zero values; logical OR (`||`) replaces any falsy input. These are source expressions, including helper-specific fallbacks, not one universal constructor default."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Fallback expression",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "options?.timeStep ?? (1 / 60)",
+                    "[Line 33](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L33)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "options?.maxSubSteps ?? (options?.backend === 'box3d' ? 4 : 3)",
+                    "[Line 34](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3D.ts#L34)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`Physics backend '${this.backend.name}' does not support soft bodies. Use backend: 'jolt'.`)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "physics3dtypes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Physics3DTypes"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/3d/Physics3DTypes.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/3d/Physics3DTypes.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Collider3DOptions: Backward compatibility alias for Collider3DOptions"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Collision3DEvent",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "MotionType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BodyType3D",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ColliderShape3D",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "RigidOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Collider3DOptions",
+                    "TypeAlias",
+                    "Backward compatibility alias for Collider3DOptions"
+                  ]
+                },
+                {
+                  "cells": [
+                    "SoftBodyOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "BasePhysics3DOptions",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Physics3DBackendType",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Physics3DOptions",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface Collision3DEvent {\n    entityA: Entity;\n    entityB: Entity;\n    componentA: RigidBodyComponent;\n    componentB: RigidBodyComponent;\n    started: boolean;\n}\nexport type MotionType = 'dynamic' | 'static' | 'kinematic';\nexport type BodyType3D = MotionType;\nexport type ColliderShape3D = 'auto' | 'box' | 'sphere' | 'cylinder' | 'cone' | 'capsule' | 'plane' | 'trimesh' | 'convex' | 'convexDecomposition';\nexport interface RigidOptions {\n    motion?: MotionType;\n    type?: MotionType;\n    mass?: number;\n    density?: number;\n    shape?: ColliderShape3D;\n    friction?: number;\n    restitution?: number;\n    linearDamping?: number;\n    angularDamping?: number;\n    lockRotation?: boolean;\n    fixedRotation?: boolean;\n    ccd?: boolean;\n    isTrigger?: boolean;\n    isSensor?: boolean;\n    radius?: number;\n    radiusTop?: number;\n    radiusBottom?: number;\n    height?: number;\n    halfExtents?: [\n        number,\n        number,\n        number\n    ] | Vec3 | {\n        x: number;\n        y: number;\n        z: number;\n    };\n    velocity?: [\n        number,\n        number,\n        number\n    ] | Vec3;\n    angularVelocity?: [\n        number,\n        number,\n        number\n    ] | Vec3;\n}\nexport type Collider3DOptions = RigidOptions;\nexport interface SoftBodyOptions {\n    mass?: number;\n    stiffness?: number;\n    damping?: number;\n    pressure?: number;\n    friction?: number;\n    pinned?: 'top-edge' | 'corners' | number[] | ((position: Vec3, index: number) => boolean);\n}\nexport interface BasePhysics3DOptions {\n    gravity?: [\n        number,\n        number,\n        number\n    ] | Vec3 | {\n        x: number;\n        y: number;\n        z: number;\n    };\n    timeStep?: number;\n    maxSubSteps?: number;\n    subSteps?: number;\n    autoStep?: boolean;\n}\nexport type Physics3DBackendType = 'rapier' | 'box3d';\nexport type Physics3DOptions = BasePhysics3DOptions & {\n    backend?: Physics3DBackendType;\n    enableSleep?: boolean;\n    enableContinuous?: boolean;\n};"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Collision3DEvent` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "entityA: Entity;",
+                    "—",
+                    "Required record/option field with declared type `Entity`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "entityB: Entity;",
+                    "—",
+                    "Required record/option field with declared type `Entity`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "componentA: RigidBodyComponent;",
+                    "—",
+                    "Required record/option field with declared type `RigidBodyComponent`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "componentB: RigidBodyComponent;",
+                    "—",
+                    "Required record/option field with declared type `RigidBodyComponent`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "started: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L13)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RigidOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "motion?: MotionType;",
+                    "—",
+                    "Motion behavior: 'dynamic', 'static', or 'kinematic'. Defaults to 'dynamic'. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "type?: MotionType;",
+                    "—",
+                    "Alias for motion. Defaults to 'dynamic'. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "mass?: number;",
+                    "—",
+                    "Mass in kg. If omitted, derived from volume × density. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "density?: number;",
+                    "—",
+                    "Material density (kg/m³). Defaults to 1.0. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "shape?: ColliderShape3D;",
+                    "—",
+                    "Explicit collision shape override. Defaults to 'auto'. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "friction?: number;",
+                    "—",
+                    "Friction coefficient [0.0 = ice, 1.0 = rubber]. Defaults to 0.5. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "restitution?: number;",
+                    "—",
+                    "Restitution (bounciness) [0.0 = thud, 1.0 = superball]. Defaults to 0.0. [Source line 47](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L47)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "linearDamping?: number;",
+                    "—",
+                    "Linear air resistance / drag factor. Defaults to 0.0. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "angularDamping?: number;",
+                    "—",
+                    "Rotational drag factor. Defaults to 0.0. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "lockRotation?: boolean;",
+                    "—",
+                    "Prevents the body from rotating along any axis. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "fixedRotation?: boolean;",
+                    "—",
+                    "Alias for lockRotation. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "ccd?: boolean;",
+                    "—",
+                    "Continuous Collision Detection (CCD) to eliminate high-speed tunneling. Defaults to true for dynamic bodies. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isTrigger?: boolean;",
+                    "—",
+                    "Whether the collider is a non-solid trigger sensor. Defaults to false. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isSensor?: boolean;",
+                    "—",
+                    "Alias for isTrigger. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radiusTop?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radiusBottom?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "height?: number;",
+                    "—",
+                    "Optional record/option field with declared type `number`. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "halfExtents?: [number, number, number] | Vec3 | { x: number; y: number; z: number };",
+                    "—",
+                    "Optional record/option field with declared type `[number, number, number] | Vec3 | { x: number; y: number; z: number }`. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "velocity?: [number, number, number] | Vec3;",
+                    "—",
+                    "Optional record/option field with declared type `[number, number, number] | Vec3`. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "angularVelocity?: [number, number, number] | Vec3;",
+                    "—",
+                    "Optional record/option field with declared type `[number, number, number] | Vec3`. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L74)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SoftBodyOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "mass?: number;",
+                    "—",
+                    "Total mass in kg distributed across all vertices. Defaults to 1.0. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "stiffness?: number;",
+                    "—",
+                    "Structural stiffness against deformation [0.0 = liquid jelly, 1.0 = firm rubber]. Defaults to 0.5. [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "damping?: number;",
+                    "—",
+                    "Oscillation damping factor to suppress continuous jiggling. Defaults to 0.1. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pressure?: number;",
+                    "—",
+                    "Internal air/gas pressure for closed volume meshes (e.g. balloons, cushions). Defaults to 0.0. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "friction?: number;",
+                    "—",
+                    "Surface friction coefficient against colliders. Defaults to 0.4. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pinned?: 'top-edge' | 'corners' | number[] | ((position: Vec3, index: number) => boolean);",
+                    "—",
+                    "Anchor / pin specific vertices in space (mass = 0): - 'top-edge': Pins the topmost boundary (flags, curtains, banners). - 'corners': Pins perimeter corners (trampolines, hammocks). - number[]: Explicit vertex indices to anchor. - Function: Spatial predicate returning true for vertices that should remain fixed. [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L98)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `BasePhysics3DOptions` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "gravity?: [number, number, number] | Vec3 | { x: number; y: number; z: number };",
+                    "—",
+                    "Gravitational acceleration in m/s². Defaults to [0, -9.81, 0]. [Source line 103](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L103)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "timeStep?: number;",
+                    "—",
+                    "Fixed simulation delta time step in seconds. Defaults to 1 / 60. [Source line 105](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L105)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxSubSteps?: number;",
+                    "—",
+                    "Maximum number of fixed sub-steps per frame. Defaults to 3. [Source line 107](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L107)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "subSteps?: number;",
+                    "—",
+                    "Number of internal temporal sub-steps per fixed time step to prevent high-speed tunneling. Defaults to 4. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "autoStep?: boolean;",
+                    "—",
+                    "Automatically step inside the Scene's render loop. Defaults to true. [Source line 111](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/Physics3DTypes.ts#L111)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "physicsutils",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "PhysicsUtils"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/3d/PhysicsUtils.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/3d/PhysicsUtils.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/PhysicsUtils.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "PhysicsUtils",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class PhysicsUtils {\n    static createAABBCollider(entity: Entity, options?: BodyType3D | Collider3DOptions | number): RAPIER.ColliderDesc;\n    static createSphereCollider(entity: Entity, radius: number, options?: BodyType3D | Collider3DOptions | number): RAPIER.ColliderDesc;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `PhysicsUtils` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static createAABBCollider(\n        entity: Entity,\n        options: BodyType3D | Collider3DOptions | number = 'dynamic'\n    ): RAPIER.ColliderDesc",
+                    "—",
+                    "Generates a Cuboid collider descriptor matching the entity's visual bounds [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/PhysicsUtils.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static createSphereCollider(\n        entity: Entity,\n        radius: number,\n        options: BodyType3D | Collider3DOptions | number = 'dynamic'\n    ): RAPIER.ColliderDesc",
+                    "—",
+                    "Generates a Sphere / Ball collider descriptor [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/PhysicsUtils.ts#L38)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

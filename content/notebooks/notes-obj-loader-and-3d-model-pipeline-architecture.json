@@ -1,0 +1,268 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-obj-loader-and-3d-model-pipeline-architecture",
+  "title": "3D Model Ingestion, OBJ/MTL Parsing & Mesh Pipeline Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/OBJ_LOADER_AND_3D_MODEL_PIPELINE_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/OBJ_LOADER_AND_3D_MODEL_PIPELINE_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/OBJ_LOADER_AND_3D_MODEL_PIPELINE_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Model](/api-entities-primitives-3d#model), [Pipeline](/api-render-pipelines#pipeline), [OBJLoader](/api-utils#objloader), [ModelGeometry](/api-components-geometry#modelgeometry), [ModelRenderer](/api-components-renderers#modelrenderer), [Component](/api-core#component), [Pass](/api-render-frame-graph#pass), [Topology](/api-entities-primitives-3d#model), [Group](/api-core#group), [Entity](/api-core-entity#entity), [Line](/api-entities-primitives-2d#line), [Texture](/api-render-pipelines#resourcelayouts), [Math3D](/api-math#math3d), [Material](/api-core-material#material), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [OrbitCameraController](/api-camera#orbitcameracontroller), [Light](/api-entities-primitives-3d#light), [Color](/api-math#color), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rendering real-world objects, mathematical CAD surfaces, and 3D scientific meshes requires an asynchronous model ingestion pipeline capable of parsing polygonal geometry, material definitions, and texture maps."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`OBJLoader`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/OBJLoader.ts)**: High-speed asynchronous parser for Wavefront OBJ geometry and companion MTL material libraries.",
+            "**[`Model`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Model.ts)**: Core 3D renderable entity wrapping geometric vertex buffers and surface materials.",
+            "**[`ModelGeometry`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/ModelGeometry.ts) & [`ModelRenderer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/ModelRenderer.ts)**: Component-level abstractions managing GPU Vertex/Index Buffer Objects (VBO/IBO) and pipeline bind groups."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  OBJ[\"Wavefront .OBJ file\"] --> MTL[\"MTL library<br/>.mtl parsing\"]\n  OBJ --> GEO[\"Geometry pass<br/>v, vn, vt, f\"]\n  MTL --> MAPS[\"Diffuse, specular and normal maps<br/>Roughness and metallic maps\"]\n  GEO --> TRI[\"N-gon triangulation\"]\n  TRI --> NORMAL[\"Topology normal generator<br/>Smooth or flat shading\"]\n  MAPS --> GROUP[\"Group partitioning<br/>Single Model or Entity tree\"]\n  NORMAL --> GROUP\n  GROUP --> GPU[\"WebGPU ModelGeometry and VBO\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-geometry-parsing-topology-processing-objloader-ts-src-engine-utils-objloader-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Geometry Parsing & Topology Processing ([OBJLoader.ts](../src/engine/utils/OBJLoader.ts))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Line Grammar Interpretation"
+        },
+        {
+          "type": "paragraph",
+          "text": "The parser iterates through lines using optimized string slicing:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`v x y z`**: Geometric vertex coordinates.",
+            "**`vt u v`**: Texture UV coordinates (flipped vertically $v' = 1 - v$ to match WebGPU top-left texture coordinates).",
+            "**`vn x y z`**: Analytical vertex normal vectors.",
+            "**`f v1/vt1/vn1 v2/vt2/vn2 ...`**: Face definitions. Quad and n-gon faces are decomposed into triangle fans using fan triangulation $(v_0, v_i, v_{i+1})$."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Flat vs. Smooth Topology Calculation"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `topology` parameter governs normal calculation:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Smooth Shading (`topology: 'smooth'`)**: If vertex normals are missing, Retiam computes area-weighted vertex normals by accumulating face cross products:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{n}_v = \\sum_{f \\in F(v)} (\\mathbf{v}_1 - \\mathbf{v}_0) \\times (\\mathbf{v}_2 - \\mathbf{v}_0)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Sharing vertices across triangles produces continuous Blinn-Phong and PBR shading."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Flat Shading (`topology: 'flat'`)**: Handled via [`Math3D.computeFlatShading()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts). Vertex buffers are completely de-indexed (each triangle gets 3 distinct vertices). The unweighted face normal is duplicated across all 3 vertices, producing crisp faceted low-poly visuals."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-material-ingestion-pbr-mapping",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Material Ingestion & PBR Mapping"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `loadMtl: true` is configured, companion `.mtl` files are fetched and converted into Retiam [`Material`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts) instances:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "MTL Keyword",
+            "Parameter Description",
+            "Retiam Material Mapping"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`Kd r g b`",
+                  "type": "text"
+                },
+                {
+                  "text": "Diffuse color"
+                },
+                {
+                  "text": "`material.color = Float32Array([r, g, b])`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Ks r g b`",
+                  "type": "text"
+                },
+                {
+                  "text": "Specular color"
+                },
+                {
+                  "text": "Specular reflection highlights"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Ns exponent`",
+                  "type": "text"
+                },
+                {
+                  "text": "Specular exponent"
+                },
+                {
+                  "text": "Roughness: $\\text{roughness} = \\sqrt{2 / (N_s + 2)}$"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`d` or `Tr`",
+                  "type": "text"
+                },
+                {
+                  "text": "Opacity factor"
+                },
+                {
+                  "text": "`material.opacity = d`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`map_Kd path`",
+                  "type": "text"
+                },
+                {
+                  "text": "Albedo texture map"
+                },
+                {
+                  "text": "Asynchronously uploaded to GPU texture array"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`map_Bump path`",
+                  "type": "text"
+                },
+                {
+                  "text": "Bump / normal map"
+                },
+                {
+                  "text": "Normal perturbation in fragment shader"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "When `legacyMaterials: true` is active, models with high specular exponents ($N_s > 50$) are automatically promoted to metallic PBR materials."
+        }
+      ]
+    },
+    {
+      "id": "4-hierarchy-construction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Hierarchy Construction"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Single Group**: If the OBJ file contains only one material group, `OBJLoader.load()` returns a direct [`Model`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d/Model.ts) instance.",
+            "**Multi-Group**: If the OBJ file defines multiple sub-meshes or materials via `o`, `g`, or `usemtl`, `OBJLoader.load()` returns an [`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts) root node whose children are individual `Model` instances sharing parent transformations."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, OBJLoader, OrbitCameraController, Light, Color } from \"retiam\";\n\nconst scene = new Scene({ canvas });\nnew OrbitCameraController(scene.camera, canvas);\n\n// Add lighting for 3D model\nconst light = new Light({ position: [5, 10, 8], color: Color.WHITE, intensity: 1.2 });\nscene.add(light);\n\n// Asynchronously load 3D OBJ with smooth normals and MTL textures\nconst spaceship = await OBJLoader.load(\"/models/spaceship.obj\", \"smooth\", true);\nspaceship.transform.scale = 0.5;\nspaceship.transform.position = [0, 0, 0];\nscene.add(spaceship);"
+        }
+      ]
+    }
+  ]
+}

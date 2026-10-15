@@ -1,0 +1,1854 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-render-allocator",
+  "title": "render / allocator API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dirtybuffertracker",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "DirtyBufferTracker"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/allocator/DirtyBufferTracker.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/allocator/DirtyBufferTracker.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "DirtyBufferTracker: Tracks and coalesces dirty memory ranges for continuous CPU-to-GPU buffer streaming. Instead of issuing separate `writeBuffer` commands for every granular geometry update, this tracker merges adjacent or closely spaced updates (gaps <= MARGIN_THRESHOLD) into unified contiguous uploads, eliminating costly WebGPU API command submission overhead. Zero-Allocation Architecture: Pre-allocates and reuses internal DirtyRange pools to guarantee zero garbage collection during high-frequency animations."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "DirtyRange",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "DirtyBufferTracker",
+                    "Class",
+                    "Tracks and coalesces dirty memory ranges for continuous CPU-to-GPU buffer streaming. Instead of issuing separate `writeBuffer` commands for every granular geometry update, this tracker merges adjacent or closely spaced updates (gaps <= MARGIN_THRESHOLD) into unified contiguous uploads, eliminating costly WebGPU API command submission overhead. Zero-Allocation Architecture: Pre-allocates and reuses internal DirtyRange pools to guarantee zero garbage collection during high-frequency animations."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface DirtyRange {\n    start: number;\n    end: number;\n}\nexport declare class DirtyBufferTracker {\n    marginThreshold: number;\n    constructor(marginThreshold?: number);\n    markDirty(startByte: number, byteLength: number): void;\n    markFull(): void;\n    hasDirty(): boolean;\n    coalesce(maxByteLength: number): DirtyRange[];\n    flush(device: GPUDevice, gpuBuffer: GPUBuffer, cpuBuffer: ArrayBufferView): void;\n    clear(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DirtyRange` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "start: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "end: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L7)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `DirtyBufferTracker` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public marginThreshold: number",
+                    "—",
+                    "Maximum gap size (in bytes) between two dirty ranges to merge them into a single upload. Gaps smaller than this threshold are intentionally uploaded with unmodified \"margin\" data to reduce the total number of JavaScript-to-GPU API calls. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(marginThreshold: number = 0)",
+                    "—",
+                    "Param: marginThreshold Byte gap threshold for merging ranges. Default: 0 bytes (exact range tracking). [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public markDirty(startByte: number, byteLength: number): void",
+                    "—",
+                    "Marks a specific byte range as dirty. Param: startByte The byte offset where modifications began. Param: byteLength The number of modified bytes. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public markFull(): void",
+                    "—",
+                    "Marks the entire buffer as dirty (e.g., on initial creation, reallocation, or buffer resize). [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public hasDirty(): boolean",
+                    "—",
+                    "Checks if there are any pending dirty regions awaiting flush. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public coalesce(maxByteLength: number): DirtyRange[]",
+                    "—",
+                    "Sorts and merges dirty ranges based on the margin threshold. All ranges are aligned to 4-byte boundaries to satisfy strict WebGPU writeBuffer alignment rules. Param: maxByteLength The maximum byte length of the target buffer. Returns: Array of coalesced, 4-byte aligned DirtyRanges (reused in-place). [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public flush(device: GPUDevice, gpuBuffer: GPUBuffer, cpuBuffer: ArrayBufferView): void",
+                    "—",
+                    "Flushes all coalesced dirty memory ranges from the CPU mirror to the destination GPU buffer. Automatically clears dirty tracking state upon successful upload. Param: device Active GPUDevice. Param: gpuBuffer Target massive WebGPU buffer. Param: cpuBuffer CPU mirror ArrayBufferView (e.g. Float32Array or Uint32Array). [Source line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L179)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear(): void",
+                    "—",
+                    "Clears all dirty state without uploading. [Source line 212](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/DirtyBufferTracker.ts#L212)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gpustrokepipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GPUStrokePipeline"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/allocator/GPUStrokePipeline.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/allocator/GPUStrokePipeline.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "GPUStrokePipeline: High-Performance GPU Compute Pipeline for Batched 2D Stroke Extrusion. Offloads normal bisector calculations, ribbon extrusion, miter limits, and quad index generation directly to a parallel WebGPU compute shader across all scene paths in a single dispatch."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "StrokeJobDescriptor",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GPUStrokePipeline",
+                    "Class",
+                    "High-Performance GPU Compute Pipeline for Batched 2D Stroke Extrusion. Offloads normal bisector calculations, ribbon extrusion, miter limits, and quad index generation directly to a parallel WebGPU compute shader across all scene paths in a single dispatch."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface StrokeJobDescriptor {\n    inputVertexStart: number;\n    vertexCount: number;\n    outputVertexStart: number;\n    outputIndexStart: number;\n    halfWidth: number;\n    isClosed: boolean;\n    relativeVertexStart: number;\n    jointType?: JointType;\n}\nexport declare class GPUStrokePipeline {\n    gpuPolylineBuffer: GPUBuffer | null;\n    gpuJobBuffer: GPUBuffer | null;\n    gpuUniformBuffer: GPUBuffer | null;\n    static getInstance(device?: GPUDevice): GPUStrokePipeline;\n    constructor(device?: GPUDevice);\n    initGPU(device: GPUDevice): void;\n    queueStroke(points: Vec2[] | number[], allocation: AllocationRange, strokeWidth: number, isClosed?: boolean, cap?: CapType, joint?: JointType, relativeVertexStart?: number, uniquePointCount?: number): void;\n    hasJobs(): boolean;\n    dispatch(commandEncoder: GPUCommandEncoder): void;\n    clear(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `StrokeJobDescriptor` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "inputVertexStart: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertexCount: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "outputVertexStart: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "outputIndexStart: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "halfWidth: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isClosed: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "relativeVertexStart: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "jointType?: JointType;",
+                    "—",
+                    "Optional record/option field with declared type `JointType`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `GPUStrokePipeline` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public gpuPolylineBuffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuJobBuffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuUniformBuffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getInstance(device?: GPUDevice): GPUStrokePipeline",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `GPUStrokePipeline`; calls to `GPUStrokePipeline._instance.initGPU`; return paths including `GPUStrokePipeline._instance`. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(device?: GPUDevice)",
+                    "—",
+                    "Implementation: `if (device) { this.initGPU(device); }`. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public initGPU(device: GPUDevice): void",
+                    "—",
+                    "Implementation: `this._device = device; this._initPipeline(); this._recreateBuffers(4096, 256);`. [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public queueStroke(\n        points: Vec2[] | number[],\n        allocation: AllocationRange,\n        strokeWidth: number,\n        isClosed: boolean = false,\n        cap: CapType = CapType.BUTT,\n        joint: JointType = JointType.MITER,\n        relativeVertexStart: number = 0,\n        uniquePointCount?: number\n    ): void",
+                    "—",
+                    "Queues a stroke extrusion job for parallel execution on the GPU. Param: points Raw polyline points Param: allocation Pre-allocated destination range in the GlobalGeometryAllocator Param: strokeWidth Stroke line thickness Param: isClosed Whether the polyline forms a closed polygon ring Param: cap End cap style Param: joint Corner join style Param: relativeVertexStart Offset in vertices relative to the entity's base vertex in drawIndexed Param: uniquePointCount Optional explicit count of unique points in the contour [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L165)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public hasJobs(): boolean",
+                    "—",
+                    "Checks if there are pending stroke compute jobs to execute. [Source line 232](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L232)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dispatch(commandEncoder: GPUCommandEncoder): void",
+                    "—",
+                    "Executes the batched GPU compute pass, uploading points and jobs and generating extruded ribbon vertices and indices directly into the global VBO/IBO. [Source line 240](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L240)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear(): void",
+                    "—",
+                    "Clears all queued stroke jobs and coordinates. [Source line 317](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L317)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GPUStrokePipeline._initPipeline: private _initPipeline(): void",
+                    "Body operations (including nested callbacks): assignments to `this._bindGroupLayout`, `this._computePipeline`; calls to `this._device.createShaderModule`, `this._device.createBindGroupLayout`, `this._device.createPipelineLayout`, `this._device.createComputePipeline`.",
+                    "[Line 71](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L71)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GPUStrokePipeline._recreateBuffers: private _recreateBuffers(minPolylineCount: number, minJobCount: number): void",
+                    "Body operations (including nested callbacks): assignments to `this._polylineCapacity`, `this.gpuPolylineBuffer`, `this._jobCapacity`, `this.gpuJobBuffer`, `this._jobDataBuffer`, `this._jobUint32`, `this._jobFloat32`, `this.gpuUniformBuffer`; construction of `ArrayBuffer`, `Uint32Array`, `Float32Array`; calls to `setTimeout`, `oldBuf.destroy`, `GPUAllocator.safeCreateBuffer`.",
+                    "[Line 105](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GPUStrokePipeline.ts#L105)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "globalanalyticalallocator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GlobalAnalyticalAllocator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/allocator/GlobalAnalyticalAllocator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/allocator/GlobalAnalyticalAllocator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "GlobalAnalyticalAllocator: Unified Global Memory Allocator for Analytical SDF & Stencil Path Rendering. Manages 4 massive continuous GPU storage buffers across all analytical paths in the scene: - gpuGlobalPoints: Raw quadratic bezier control points (vec2f) - gpuGlobalIndices: Contour metadata pairs [point_start, segment_start] (2 x u32 per contour) - gpuGlobalStrokeMesh: Encoded triangle strip vertices (13 vec4f per segment) - gpuGlobalArcLengths: Cumulative arc lengths (11 floats per segment)"
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AnalyticalAllocationRange",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator",
+                    "Class",
+                    "Unified Global Memory Allocator for Analytical SDF & Stencil Path Rendering. Manages 4 massive continuous GPU storage buffers across all analytical paths in the scene: - gpuGlobalPoints: Raw quadratic bezier control points (vec2f) - gpuGlobalIndices: Contour metadata pairs [point_start, segment_start] (2 x u32 per contour) - gpuGlobalStrokeMesh: Encoded triangle strip vertices (13 vec4f per segment) - gpuGlobalArcLengths: Cumulative arc lengths (11 floats per segment)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface AnalyticalAllocationRange {\n    id: number;\n    pointStartIndex: number;\n    pointLength: number;\n    pointCapacity: number;\n    contourStartIndex: number;\n    contourLength: number;\n    contourCapacity: number;\n    segmentStartIndex: number;\n    segmentLength: number;\n    segmentCapacity: number;\n    strokeMeshStartIndex: number;\n    strokeMeshLength: number;\n    strokeMeshCapacity: number;\n    arcLenStartIndex: number;\n    arcLenLength: number;\n    arcLenCapacity: number;\n}\nexport declare class GlobalAnalyticalAllocator {\n    static readonly POINTS_PER_SEGMENT: number;\n    static readonly FLOATS_PER_ARC_SEGMENT: number;\n    gpuGlobalPoints: GPUBuffer;\n    gpuGlobalIndices: GPUBuffer;\n    gpuGlobalStrokeMesh: GPUBuffer;\n    gpuGlobalArcLengths: GPUBuffer;\n    gpuGlobalClipQuads: GPUBuffer;\n    cpuPointBuffer: Float32Array;\n    cpuIndexBuffer: Uint32Array;\n    pointCapacity: number;\n    indexCapacity: number;\n    segmentCapacity: number;\n    pointDirtyTracker: DirtyBufferTracker;\n    indexDirtyTracker: DirtyBufferTracker;\n    static getInstance(device?: GPUDevice): GlobalAnalyticalAllocator;\n    bufferVersion: number;\n    constructor(device?: GPUDevice, initialPointCap?: number, initialIndexCap?: number, initialSegmentCap?: number, marginThreshold?: number);\n    initGPU(device: GPUDevice): void;\n    allocateAndWrite(pointData: Float32Array | number[], contourIndices: Uint32Array | number[], segmentCount: number, existing?: AnalyticalAllocationRange | null): AnalyticalAllocationRange;\n    allocateRange(pointCount: number, contourCount: number, segmentCount: number, existing?: AnalyticalAllocationRange | null): AnalyticalAllocationRange;\n    writeIndices(contourStart: number, contourIndices: Uint32Array | number[], pointStart: number, segmentStart: number): void;\n    free(allocation: AnalyticalAllocationRange): void;\n    flush(device: GPUDevice): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AnalyticalAllocationRange` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "id: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pointStartIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pointLength: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "pointCapacity: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "contourStartIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "contourLength: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "contourCapacity: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "segmentStartIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "segmentLength: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "segmentCapacity: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeMeshStartIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeMeshLength: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeMeshCapacity: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "arcLenStartIndex: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "arcLenLength: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "arcLenCapacity: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L24)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `GlobalAnalyticalAllocator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static readonly POINTS_PER_SEGMENT: number",
+                    "13",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static readonly FLOATS_PER_ARC_SEGMENT: number",
+                    "T_POINTS_PER_CURVE + 1",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuGlobalPoints!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuGlobalIndices!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuGlobalStrokeMesh!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuGlobalArcLengths!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuGlobalClipQuads!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cpuPointBuffer!: Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cpuIndexBuffer!: Uint32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pointCapacity: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indexCapacity: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public segmentCapacity: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pointDirtyTracker: DirtyBufferTracker",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indexDirtyTracker: DirtyBufferTracker",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getInstance(device?: GPUDevice): GlobalAnalyticalAllocator",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `GlobalAnalyticalAllocator`; calls to `GlobalAnalyticalAllocator._instance.initGPU`; return paths including `GlobalAnalyticalAllocator._instance`. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufferVersion: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(\n        device?: GPUDevice,\n        initialPointCap: number = 131072,\n        initialIndexCap: number = 32768,\n        initialSegmentCap: number = 65536,\n        marginThreshold: number = 1024\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.pointCapacity`, `this.indexCapacity`, `this.segmentCapacity`, `this.cpuPointBuffer`, `this.cpuIndexBuffer`, `this.pointDirtyTracker`, `this.indexDirtyTracker`; construction of `Float32Array`, `Uint32Array`, `DirtyBufferTracker`; calls to `this.initGPU`. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public initGPU(device: GPUDevice): void",
+                    "—",
+                    "Implementation: `this._device = device; this._recreateGPUBuffers();`. [Source line 116](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L116)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public allocateAndWrite(\n        pointData: Float32Array | number[],\n        contourIndices: Uint32Array | number[],\n        segmentCount: number,\n        existing?: AnalyticalAllocationRange | null\n    ): AnalyticalAllocationRange",
+                    "—",
+                    "Allocates or reallocates memory for an analytical path entity. [Source line 185](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L185)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public allocateRange(\n        pointCount: number,\n        contourCount: number,\n        segmentCount: number,\n        existing?: AnalyticalAllocationRange | null\n    ): AnalyticalAllocationRange",
+                    "—",
+                    "Sub-allocates memory range without immediate CPU writing (for external GPUBuffer copies). [Source line 252](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L252)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public writeIndices(\n        contourStart: number,\n        contourIndices: Uint32Array | number[],\n        pointStart: number,\n        segmentStart: number\n    ): void",
+                    "—",
+                    "Implementation: `this._writeIndexData(contourStart, contourIndices, pointStart, segmentStart);`. [Source line 305](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L305)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public free(allocation: AnalyticalAllocationRange): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this._allocations.has`, `this._allocations.delete`, `this._insertFreeBlock`. [Source line 412](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L412)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public flush(device: GPUDevice): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.initGPU`, `this.pointDirtyTracker.flush`, `this.indexDirtyTracker.flush`. [Source line 538](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L538)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._recreateGPUBuffers: private _recreateGPUBuffers(): void",
+                    "Body operations (including nested callbacks): assignments to `this.bufferVersion`, `this.gpuGlobalPoints`, `this.gpuGlobalIndices`, `this.gpuGlobalStrokeMesh`, `this.gpuGlobalArcLengths`, `this.gpuGlobalClipQuads`; calls to `setTimeout`, `oldPoints?.destroy`, `oldIndices?.destroy`, `oldStroke?.destroy`, `oldArc?.destroy`, `oldClip?.destroy`, `GPUAllocator.safeCreateBuffer`, `this.pointDirtyTracker.markFull` and additional helpers.",
+                    "[Line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L121)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._writePointData: private _writePointData(pointStart: number, points: Float32Array | number[]): void",
+                    "Body operations (including nested callbacks): assignments to `this.cpuPointBuffer[floatOffset + i]`; calls to `this.cpuPointBuffer.set`, `this.pointDirtyTracker.markDirty`; 1 explicit loop.",
+                    "[Line 314](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L314)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._writeIndexData: private _writeIndexData( contourStart: number, indices: Uint32Array | number[], pointStart: number, segmentStart: number ): void",
+                    "Body operations (including nested callbacks): assignments to `this.cpuIndexBuffer[(contourStart + j) * 2]`, `this.cpuIndexBuffer[(contourStart + j) * 2 + 1]`, `this.cpuIndexBuffer[(contourStart + contourCount) * 2]`, `this.cpuIndexBuffer[(contourStart + contourCount) * 2 + 1]`; calls to `this.indexDirtyTracker.markDirty`; 1 explicit loop.",
+                    "[Line 329](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L329)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._subAllocatePoints: private _subAllocatePoints(count: number): { start: number; capacity: number }",
+                    "Implementation: `return this._subAllocateGeneric(this._freePointBlocks, count, () => { const start = this._pointHead; this._pointHead += count; return { start, capacity: count }; });`.",
+                    "[Line 356](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L356)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._subAllocateIndices: private _subAllocateIndices(count: number): { start: number; capacity: number }",
+                    "Implementation: `return this._subAllocateGeneric(this._freeIndexBlocks, count, () => { const start = this._indexHead; this._indexHead += count; return { start, capacity: count }; });`.",
+                    "[Line 364](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L364)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._subAllocateSegments: private _subAllocateSegments(count: number): { start: number; capacity: number }",
+                    "Implementation: `return this._subAllocateGeneric(this._freeSegmentBlocks, count, () => { const start = this._segmentHead; this._segmentHead += count; return { start, capacity: count }; });`.",
+                    "[Line 372](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L372)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._subAllocateGeneric: private _subAllocateGeneric( freeList: FreeBlock[], count: number, bumpFn: () => { start: number; capacity: number } ): { start: number; capacity: number }",
+                    "Body operations (including nested callbacks): calls to `freeList.splice`, `bumpFn`; return paths including `{ start, capacity: count }`, `bumpFn()`; 1 explicit loop.",
+                    "[Line 380](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L380)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._insertFreeBlock: private _insertFreeBlock(freeList: FreeBlock[], block: FreeBlock, type: number): void",
+                    "Body operations (including nested callbacks): assignments to `this._pointHead`, `this._indexHead`, `this._segmentHead`; calls to `freeList.pop`, `freeList.splice`; 2 explicit loops.",
+                    "[Line 436](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L436)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalAllocator._ensureCapacity: private _ensureCapacity(neededPoints: number, neededContours: number, neededSegments: number): void",
+                    "Body operations (including nested callbacks): assignments to `this.pointCapacity`, `this.cpuPointBuffer`, `this.indexCapacity`, `this.cpuIndexBuffer`, `this.segmentCapacity`; construction of `Float32Array`, `Uint32Array`; calls to `this.cpuPointBuffer.set`, `this.cpuIndexBuffer.set`, `this._recreateGPUBuffers`; 3 explicit loops.",
+                    "[Line 492](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts#L492)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "globalanalyticalpipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GlobalAnalyticalPipeline"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/allocator/GlobalAnalyticalPipeline.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/allocator/GlobalAnalyticalPipeline.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "GlobalAnalyticalPipeline: Batched GPU Compute Pipeline for Analytical SDF & Stencil Path Rendering. Executes all pathEncode and arcLength operations across the entire scene in 2 cohesive compute dispatches before the main render pass."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AnalyticalJobDescriptor",
+                    "Interface",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalPipeline",
+                    "Class",
+                    "Batched GPU Compute Pipeline for Analytical SDF & Stencil Path Rendering. Executes all pathEncode and arcLength operations across the entire scene in 2 cohesive compute dispatches before the main render pass."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface AnalyticalJobDescriptor {\n    allocation: AnalyticalAllocationRange;\n    strokeWidth: number;\n    jointType: JointType;\n    isClosed: boolean;\n    externalBufferCopy?: {\n        sourceBuffer: GPUBuffer;\n        byteLength: number;\n    };\n}\nexport declare class GlobalAnalyticalPipeline {\n    gpuJobsBuffer: GPUBuffer | null;\n    gpuUniformBuffer: GPUBuffer | null;\n    static getInstance(device?: GPUDevice): GlobalAnalyticalPipeline;\n    constructor(device?: GPUDevice);\n    initGPU(device: GPUDevice): void;\n    queueJob(job: AnalyticalJobDescriptor): void;\n    hasJobs(): boolean;\n    dispatch(commandEncoder: GPUCommandEncoder): void;\n    clear(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AnalyticalJobDescriptor` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "allocation: AnalyticalAllocationRange;",
+                    "—",
+                    "Required record/option field with declared type `AnalyticalAllocationRange`. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "strokeWidth: number;",
+                    "—",
+                    "Required record/option field with declared type `number`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "jointType: JointType;",
+                    "—",
+                    "Required record/option field with declared type `JointType`. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "isClosed: boolean;",
+                    "—",
+                    "Required record/option field with declared type `boolean`. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "externalBufferCopy?: {\n        sourceBuffer: GPUBuffer;\n        byteLength: number;\n    };",
+                    "—",
+                    "Optional record/option field with declared type `{ sourceBuffer: GPUBuffer; byteLength: number; }`. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L16)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `GlobalAnalyticalPipeline` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public gpuJobsBuffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuUniformBuffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 49](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L49)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getInstance(device?: GPUDevice): GlobalAnalyticalPipeline",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `GlobalAnalyticalPipeline`; calls to `GlobalAnalyticalPipeline._instance.initGPU`; return paths including `GlobalAnalyticalPipeline._instance`. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(device?: GPUDevice)",
+                    "—",
+                    "Implementation: `if (device) { this.initGPU(device); }`. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public initGPU(device: GPUDevice): void",
+                    "—",
+                    "Implementation: `this._device = device; this._initPipelines(); this._recreateBuffers(256);`. [Source line 69](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L69)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public queueJob(job: AnalyticalJobDescriptor): void",
+                    "—",
+                    "Implementation: `this._jobs.push(job);`. [Source line 150](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L150)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public hasJobs(): boolean",
+                    "—",
+                    "Implementation: `return this._jobs.length > 0;`. [Source line 154](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L154)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dispatch(commandEncoder: GPUCommandEncoder): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._jobUint32[wordOffset + 0]`, `this._jobUint32[wordOffset + 1]`, `this._jobUint32[wordOffset + 2]`, `this._jobUint32[wordOffset + 3]`, `this._jobUint32[wordOffset + 4]`, `this._jobFloat32[wordOffset + 5]`, `this._jobUint32[wordOffset + 6]`, `this._jobUint32[wordOffset + 7]` and other instance fields; calls to `this.clear`, `GlobalAnalyticalAllocator.getInstance`, `allocator.flush`, `commandEncoder.copyBufferToBuffer`, `this._recreateBuffers`, `this._device.queue.writeBuffer`, `this._device.createBindGroup`, `commandEncoder.beginComputePass` and additional helpers; 2 explicit loops. [Source line 158](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L158)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clear(): void",
+                    "—",
+                    "Implementation: `this._jobs.length = 0;`. [Source line 255](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L255)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GlobalAnalyticalPipeline._initPipelines: private _initPipelines(): void",
+                    "Body operations (including nested callbacks): assignments to `this._encodeBGL`, `this._encodePipeline`, `this._arcExtractBGL`, `this._arcExtractPipeline`; calls to `this._device.createShaderModule`, `this._device.createBindGroupLayout`, `this._device.createComputePipeline`, `this._device.createPipelineLayout`.",
+                    "[Line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L75)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalAnalyticalPipeline._recreateBuffers: private _recreateBuffers(minJobCount: number): void",
+                    "Body operations (including nested callbacks): assignments to `this._jobCapacity`, `this.gpuJobsBuffer`, `this._jobBuffer`, `this._jobUint32`, `this._jobFloat32`, `this.gpuUniformBuffer`; construction of `ArrayBuffer`, `Uint32Array`, `Float32Array`; calls to `this.gpuJobsBuffer.destroy`, `GPUAllocator.safeCreateBuffer`.",
+                    "[Line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts#L122)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "globalgeometryallocator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GlobalGeometryAllocator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/allocator/GlobalGeometryAllocator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/allocator/GlobalGeometryAllocator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AllocationRange: Sub-allocation descriptor stored on each TriangulatedPathEntity.",
+                "GlobalGeometryAllocator: High-performance global geometry allocator for batched 2D rendering. Manages single, massive global GPU vertex (VBO) and index (IBO) buffers with continuous CPU mirrors. Entities sub-allocate chunks of memory from this allocator rather than creating isolated WebGPU buffers. All CPU writes are automatically registered with DirtyBufferTrackers for coalesced, low-overhead GPU streaming."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AllocationRange",
+                    "Interface",
+                    "Sub-allocation descriptor stored on each TriangulatedPathEntity."
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalGeometryAllocator",
+                    "Class",
+                    "High-performance global geometry allocator for batched 2D rendering. Manages single, massive global GPU vertex (VBO) and index (IBO) buffers with continuous CPU mirrors. Entities sub-allocate chunks of memory from this allocator rather than creating isolated WebGPU buffers. All CPU writes are automatically registered with DirtyBufferTrackers for coalesced, low-overhead GPU streaming."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface AllocationRange {\n    id: number;\n    vertexStartIndex: number;\n    vertexLength: number;\n    vertexCapacity: number;\n    indexStartIndex: number;\n    indexLength: number;\n    indexCapacity: number;\n    source?: 'cpu' | 'gpu';\n}\nexport declare class GlobalGeometryAllocator {\n    static readonly FLOATS_PER_VERTEX: number;\n    static readonly BYTES_PER_VERTEX: number;\n    static readonly BYTES_PER_INDEX: number;\n    gpuVertexBuffer: GPUBuffer;\n    gpuIndexBuffer: GPUBuffer;\n    cpuVertexBuffer: Float32Array;\n    cpuIndexBuffer: Uint32Array;\n    vertexCapacity: number;\n    indexCapacity: number;\n    vertexDirtyTracker: DirtyBufferTracker;\n    indexDirtyTracker: DirtyBufferTracker;\n    static getInstance(device?: GPUDevice): GlobalGeometryAllocator;\n    constructor(device?: GPUDevice, initialVertexCap?: number, initialIndexCap?: number, marginThreshold?: number);\n    initGPU(device: GPUDevice): void;\n    bufferVersion: number;\n    markActiveCPURanges(): void;\n    allocateRange(vertCount: number, idxCount: number, existing?: AllocationRange | null): AllocationRange;\n    allocateAndWrite(vertices: Float32Array | number[], indices: Uint32Array | number[], existing?: AllocationRange | null): AllocationRange;\n    free(allocation: AllocationRange): void;\n    shrinkToFit(minVertexCap?: number, minIndexCap?: number): void;\n    flush(device: GPUDevice): void;\n    destroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AllocationRange` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "id: number;",
+                    "—",
+                    "Unique allocation ID [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertexStartIndex: number;",
+                    "—",
+                    "Offset in vertices (used as baseVertex in drawIndexed or computed offset) [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertexLength: number;",
+                    "—",
+                    "Total number of vertices in this allocation [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "vertexCapacity: number;",
+                    "—",
+                    "Allocated vertex capacity (in vertices) [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "indexStartIndex: number;",
+                    "—",
+                    "Offset in indices (firstIndex in drawIndexed) [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "indexLength: number;",
+                    "—",
+                    "Total number of indices in this allocation [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "indexCapacity: number;",
+                    "—",
+                    "Allocated index capacity (in indices) [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L25)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "source?: 'cpu' | 'gpu';",
+                    "—",
+                    "Memory source domain ('cpu' for CPU-streamed fills, 'gpu' for compute-generated strokes) [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L27)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `GlobalGeometryAllocator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static readonly FLOATS_PER_VERTEX: number",
+                    "2",
+                    "Floats per vertex: (x, y) = 2 floats (8 bytes) [Source line 48](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L48)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static readonly BYTES_PER_VERTEX: number",
+                    "GlobalGeometryAllocator.FLOATS_PER_VERTEX * 4",
+                    "Bytes per vertex [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static readonly BYTES_PER_INDEX: number",
+                    "4",
+                    "Bytes per index (Uint32) [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuVertexBuffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuIndexBuffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cpuVertexBuffer!: Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cpuIndexBuffer!: Uint32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 60](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L60)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertexCapacity: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indexCapacity: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 64](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L64)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertexDirtyTracker: DirtyBufferTracker",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 78](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L78)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public indexDirtyTracker: DirtyBufferTracker",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getInstance(device?: GPUDevice): GlobalGeometryAllocator",
+                    "—",
+                    "Singleton accessor for global geometry allocation. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(\n        device?: GPUDevice,\n        initialVertexCap: number = 65536,\n        initialIndexCap: number = 131072,\n        marginThreshold: number = 0\n    )",
+                    "—",
+                    "Param: device Optional GPUDevice for immediate GPU buffer allocation. Param: initialVertexCap Initial vertex capacity (default: 65,536 vertices = ~512 KB). Param: initialIndexCap Initial index capacity (default: 131,072 indices = ~512 KB). Param: marginThreshold Margin threshold in bytes for coalescing dirty ranges (default: 0 bytes = exact range tracking). [Source line 101](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L101)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public initGPU(device: GPUDevice): void",
+                    "—",
+                    "Initializes or assigns the WebGPU device and creates massive global GPU buffers. [Source line 126](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L126)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bufferVersion: number",
+                    "0",
+                    "Monotonically increasing version counter bumped whenever GPU buffers are created/resized [Source line 189](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L189)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public markActiveCPURanges(): void",
+                    "—",
+                    "Marks all active CPU-streamed allocations dirty without touching GPU compute regions. [Source line 194](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L194)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public allocateRange(\n        vertCount: number,\n        idxCount: number,\n        existing?: AllocationRange | null\n    ): AllocationRange",
+                    "—",
+                    "Allocates or reallocates memory range descriptor without immediate CPU data writing. Used by GPU Compute passes (such as GPUStrokePipeline) to secure VBO/IBO slots. [Source line 215](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L215)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public allocateAndWrite(\n        vertices: Float32Array | number[],\n        indices: Uint32Array | number[],\n        existing?: AllocationRange | null\n    ): AllocationRange",
+                    "—",
+                    "Allocates or reallocates memory for an entity and writes the triangulated vertex and index data into the CPU mirror arrays, recording dirty ranges for batched GPU upload. Param: vertices Triangulated 2D vertices as flat Float32Array or number[]: [x0, y0, x1, y1, ...] Param: indices Triangulated index list as Uint32Array or number[]: [i0, i1, i2, ...] Param: existing Optional previous allocation to update in-place or resize Returns: Up-to-date AllocationRange descriptor [Source line 260](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L260)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public free(allocation: AllocationRange): void",
+                    "—",
+                    "Releases an allocation back to the free list, triggering automatic coalescing and high-water mark reclaim. [Source line 501](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L501)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public shrinkToFit(minVertexCap: number = 1024, minIndexCap: number = 1024): void",
+                    "—",
+                    "Downsizes the CPU mirror arrays and GPU buffers to fit active allocations, releasing unused VRAM back to the system. [Source line 523](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L523)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public flush(device: GPUDevice): void",
+                    "—",
+                    "Flushes all modified dirty regions from CPU mirrors to GPU buffers. Should be called once per frame prior to rendering triangulated passes. Param: device GPUDevice instance. [Source line 590](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L590)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public destroy(): void",
+                    "—",
+                    "Cleans up all GPU and CPU resources. [Source line 602](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L602)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GlobalGeometryAllocator._recreateGPUBuffers: private _recreateGPUBuffers(): void",
+                    "Recreates GPU buffers when capacity grows or upon initialization. Body operations (including nested callbacks): assignments to `this.gpuVertexBuffer`, `this.gpuIndexBuffer`, `this.bufferVersion`; calls to `GPUAllocator.safeCreateBuffer`, `this._device.createCommandEncoder`, `copyEncoder.copyBufferToBuffer`, `this._device.queue.submit`, `copyEncoder.finish`, `setTimeout`, `oldV?.destroy`, `oldI?.destroy` and additional helpers.",
+                    "[Line 134](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L134)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalGeometryAllocator._writeVertexData: private _writeVertexData(vertexStart: number, vertices: Float32Array | number[]): void",
+                    "Writes vertex data to the CPU mirror and marks the dirty byte span. Body operations (including nested callbacks): assignments to `this.cpuVertexBuffer[floatOffset + i]`; calls to `this.cpuVertexBuffer.set`, `this.vertexDirtyTracker.markDirty`; 1 explicit loop.",
+                    "[Line 316](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L316)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalGeometryAllocator._writeIndexData: private _writeIndexData(indexStart: number, indices: Uint32Array | number[]): void",
+                    "Writes index data to the CPU mirror and marks the dirty byte span. Body operations (including nested callbacks): assignments to `this.cpuIndexBuffer[indexStart + i]`; calls to `this.cpuIndexBuffer.set`, `this.indexDirtyTracker.markDirty`; 1 explicit loop.",
+                    "[Line 336](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L336)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalGeometryAllocator._insertFreeBlock: private _insertFreeBlock(freeList: FreeBlock[], block: FreeBlock, isVertex: boolean): void",
+                    "Inserts a freed block into the sorted free list, coalescing with adjacent free blocks and reclaiming the high-water mark if the block touches the top of the buffer. Body operations (including nested callbacks): assignments to `this._vertexHead`, `this._indexHead`; calls to `freeList.pop`, `freeList.splice`; 2 explicit loops.",
+                    "[Line 356](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L356)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalGeometryAllocator._subAllocateVertex: private _subAllocateVertex(count: number): { start: number; capacity: number }",
+                    "Sub-allocates a contiguous block for vertices with best-fit block splitting. Body operations (including nested callbacks): assignments to `this._vertexHead`; calls to `this._freeVertexBlocks.splice`; return paths including `{ start, capacity: count }`; 1 explicit loop.",
+                    "[Line 425](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L425)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalGeometryAllocator._subAllocateIndex: private _subAllocateIndex(count: number): { start: number; capacity: number }",
+                    "Sub-allocates a contiguous block for indices with best-fit block splitting. Body operations (including nested callbacks): assignments to `this._indexHead`; calls to `this._freeIndexBlocks.splice`; return paths including `{ start, capacity: count }`; 1 explicit loop.",
+                    "[Line 463](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L463)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalGeometryAllocator._ensureCapacity: private _ensureCapacity(neededVerts: number, neededIndices: number): void",
+                    "Ensures global capacity is large enough for incoming allocations. Doubles capacity if required. Body operations (including nested callbacks): assignments to `this.vertexCapacity`, `this.cpuVertexBuffer`, `this.indexCapacity`, `this.cpuIndexBuffer`; construction of `Float32Array`, `Uint32Array`; calls to `this.cpuVertexBuffer.set`, `this.cpuIndexBuffer.set`, `this._recreateGPUBuffers`; 2 explicit loops.",
+                    "[Line 549](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalGeometryAllocator.ts#L549)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "globalstateallocator",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GlobalStateAllocator"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/allocator/GlobalStateAllocator.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/allocator/GlobalStateAllocator.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "GlobalStateAllocator: High-performance global state allocator for all entity transforms, paint styles, and materials. Manages a single, massive GPU Storage Buffer (`array<EntityState>`) with a continuous CPU mirror. All entity states are fixed-size slabs (256 bytes = 64 Float32 elements), guaranteeing: - Zero memory fragmentation. - O(1) allocation and recycling. - Single GPUBindGroup bound once per render pass. - Coalesced partial streaming via DirtyBufferTracker."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GlobalStateAllocator",
+                    "Class",
+                    "High-performance global state allocator for all entity transforms, paint styles, and materials. Manages a single, massive GPU Storage Buffer (`array<EntityState>`) with a continuous CPU mirror. All entity states are fixed-size slabs (256 bytes = 64 Float32 elements), guaranteeing: - Zero memory fragmentation. - O(1) allocation and recycling. - Single GPUBindGroup bound once per render pass. - Coalesced partial streaming via DirtyBufferTracker."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class GlobalStateAllocator {\n    static readonly BYTES_PER_STATE: number;\n    static readonly FLOATS_PER_STATE: number;\n    gpuBuffer: GPUBuffer;\n    globalBindGroup: GPUBindGroup;\n    cpuData: Float32Array;\n    capacity: number;\n    dirtyTracker: DirtyBufferTracker;\n    states: State[];\n    static getInstance(device?: GPUDevice, layout?: GPUBindGroupLayout): GlobalStateAllocator;\n    constructor(device?: GPUDevice, layout?: GPUBindGroupLayout, initialCapacity?: number, marginThreshold?: number);\n    initGPU(device: GPUDevice, layout?: GPUBindGroupLayout): void;\n    resetForNewFrame(): void;\n    allocateDirect(): State;\n    uploadToGPU(device?: GPUDevice): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `GlobalStateAllocator` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static readonly BYTES_PER_STATE: number",
+                    "256",
+                    "Total bytes per entity state slab (Paint: 64B, Transform: 96B, Material: 96B = 256B) [Source line 24](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L24)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static readonly FLOATS_PER_STATE: number",
+                    "GlobalStateAllocator.BYTES_PER_STATE / 4",
+                    "Total Float32 elements per state slab [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public gpuBuffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public globalBindGroup!: GPUBindGroup",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cpuData!: Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public capacity: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dirtyTracker: DirtyBufferTracker",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public states: State[]",
+                    "[]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static getInstance(device?: GPUDevice, layout?: GPUBindGroupLayout): GlobalStateAllocator",
+                    "—",
+                    "Singleton accessor for global state allocation. [Source line 51](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L51)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(\n        device?: GPUDevice,\n        layout?: GPUBindGroupLayout,\n        initialCapacity: number = 16384,\n        marginThreshold: number = 0\n    )",
+                    "—",
+                    "Param: device Optional GPUDevice for immediate GPU buffer allocation. Param: layout Optional GPUBindGroupLayout for state binding (defaults to Pipeline.state_layout). Param: initialCapacity Initial entity capacity (default: 16,384 entities = 4 MB). Param: marginThreshold Byte gap threshold for coalescing dirty ranges (default: 0 bytes). [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L66)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public initGPU(device: GPUDevice, layout?: GPUBindGroupLayout): void",
+                    "—",
+                    "Initializes or updates the WebGPU device and creates the global GPU storage buffer and bind group. [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resetForNewFrame(): void",
+                    "—",
+                    "Resets the allocation head for the new frame. [Source line 167](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L167)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public allocateDirect(): State",
+                    "—",
+                    "Allocates the next contiguous state slot for the current frame. Returns its pre-mapped State instance. [Source line 175](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L175)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public uploadToGPU(device?: GPUDevice): void",
+                    "—",
+                    "Flushes active state memory to the GPU storage buffer. Param: device Active GPUDevice. [Source line 191](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L191)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GlobalStateAllocator._initMappedStates: private _initMappedStates(start: number, end: number): void",
+                    "Initializes pre-mapped State instances over a slice of cpuData. Implementation: `const stride = GlobalStateAllocator.FLOATS_PER_STATE; for (let i = start; i < end; i++) { const slice = this.cpuData.subarray(i * stride, (i + 1) * stride); this.states[i] = new State(slice, true); }`.",
+                    "[Line 91](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L91)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalStateAllocator._recreateGPUBuffers: private _recreateGPUBuffers(): void",
+                    "Recreates GPU storage buffer and bind group upon initialization or dynamic capacity expansion. Body operations (including nested callbacks): assignments to `this.gpuBuffer`, `this.globalBindGroup`; calls to `GPUAllocator.safeCreateBuffer`, `this._device.createBindGroup`, `this.dirtyTracker.markFull`.",
+                    "[Line 111](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L111)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GlobalStateAllocator._resize: private _resize(minCapacity: number): void",
+                    "Dynamically expands capacity geometrically (2x). Body operations (including nested callbacks): assignments to `this.capacity`, `this.cpuData`, `this.states.length`; construction of `Float32Array`; calls to `this.cpuData.set`, `this._initMappedStates`, `this._recreateGPUBuffers`; 1 explicit loop.",
+                    "[Line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts#L145)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "megadrawbatchmanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "MegaDrawBatchManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/allocator/MegaDrawBatchManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/allocator/MegaDrawBatchManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "MegaDrawBatchManager: Manages GPU storage buffers and CPU packing for Programmable Mega-Draw. Batches thousands of consecutive triangulated 2D path draw calls into a single WebGPU draw call (pass.draw(totalTriangles * 3, 1, 0, 0)) via storage buffer pulling."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MegaDrawBatchManager",
+                    "Class",
+                    "Manages GPU storage buffers and CPU packing for Programmable Mega-Draw. Batches thousands of consecutive triangulated 2D path draw calls into a single WebGPU draw call (pass.draw(totalTriangles * 3, 1, 0, 0)) via storage buffer pulling."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class MegaDrawBatchManager {\n    static getInstance(device?: GPUDevice): MegaDrawBatchManager;\n    layout: GPUBindGroupLayout | null;\n    drawItemsBuffer: GPUBuffer | null;\n    triangleLookupBuffer: GPUBuffer | null;\n    cpuDrawItems: Uint32Array;\n    cpuTriangleLookup: Uint32Array;\n    bindGroup: GPUBindGroup | null;\n    constructor(device?: GPUDevice);\n    initGPU(device: GPUDevice): void;\n    getLayout(device: GPUDevice): GPUBindGroupLayout;\n    buildBatch(device: GPUDevice, allocator: GlobalGeometryAllocator, packets: RenderCommand[], startIndex: number, count: number): {\n        totalTriangles: number;\n        bindGroup: GPUBindGroup;\n    };\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `MegaDrawBatchManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public static getInstance(device?: GPUDevice): MegaDrawBatchManager",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `MegaDrawBatchManager`; calls to `MegaDrawBatchManager._instance.initGPU`; return paths including `MegaDrawBatchManager._instance`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public layout: GPUBindGroupLayout | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public drawItemsBuffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public triangleLookupBuffer: GPUBuffer | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cpuDrawItems: Uint32Array",
+                    "new Uint32Array(1024 * 4)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cpuTriangleLookup: Uint32Array",
+                    "new Uint32Array(4096)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bindGroup: GPUBindGroup | null",
+                    "null",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(device?: GPUDevice)",
+                    "—",
+                    "Implementation: `if (device) { this.initGPU(device); }`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public initGPU(device: GPUDevice): void",
+                    "—",
+                    "Implementation: `this._device = device; this._initLayout(device);`. [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getLayout(device: GPUDevice): GPUBindGroupLayout",
+                    "—",
+                    "Implementation: `if (!this.layout) { this._initLayout(device); } return this.layout!;`. [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public buildBatch(\n        device: GPUDevice,\n        allocator: GlobalGeometryAllocator,\n        packets: RenderCommand[],\n        startIndex: number,\n        count: number\n    ): { totalTriangles: number, bindGroup: GPUBindGroup }",
+                    "—",
+                    "Builds a continuous Mega-Draw batch from a slice of consecutive TriangulatedPath packets. Param: device Active GPUDevice Param: allocator GlobalGeometryAllocator instance containing shared VBO and IBO Param: packets RenderQueue array Param: startIndex Start index of the consecutive run Param: count Number of consecutive packets [Source line 144](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L144)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "MegaDrawBatchManager._initLayout: private _initLayout(device: GPUDevice): void",
+                    "Body operations (including nested callbacks): assignments to `this.layout`; calls to `device.createBindGroupLayout`.",
+                    "[Line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L63)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "MegaDrawBatchManager._ensureCapacity: private _ensureCapacity(drawItemCount: number, triangleCount: number): void",
+                    "Body operations (including nested callbacks): assignments to `this.cpuDrawItems`, `this.drawItemsBuffer`, `this.cpuTriangleLookup`, `this.triangleLookupBuffer`, `this.bindGroup`; construction of `Uint32Array`; calls to `newArr.set`, `this.drawItemsBuffer.destroy`, `GPUAllocator.safeCreateBuffer`, `this.triangleLookupBuffer.destroy`.",
+                    "[Line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/MegaDrawBatchManager.ts#L83)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

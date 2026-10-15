@@ -1,0 +1,154 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "gpu-memory",
+  "title": "GPU state, memory pools and batching",
+  "group": "GPU implementation",
+  "summary": "Understand how state buffers, geometry allocation and batching turn many entities into efficient draws.",
+  "sections": [
+    {
+      "id": "shared-state-blocks",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Shared state blocks"
+        },
+        {
+          "type": "paragraph",
+          "text": "State packs Transform, Paint and Material into typed-array-backed storage. GlobalStateAllocator reserves retained slots, recycles released slots and uploads changed ranges. Render commands refer to a state index rather than rebinding a uniform group for every entity. The state block’s byte size is computed from its components; verify State.size and the matching shader struct when changing fields."
+        },
+        {
+          "type": "paragraph",
+          "text": "Changing a CPU structure without changing WGSL alignment corrupts downstream fields. Padding, float/u32 reinterpretation and binding alignment are correctness requirements, not only optimizations."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [State](/api-core#state), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [StateDataManager](/api-core#statedatamanager), [UniformSchema](/api-render-shader-system-schemas#uniformschema)."
+        }
+      ]
+    },
+    {
+      "id": "geometry-allocation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Geometry allocation"
+        },
+        {
+          "type": "paragraph",
+          "text": "GlobalGeometryAllocator suballocates shared vertex/index ranges; GlobalAnalyticalAllocator owns curve/contour data for analytical paths. Free-list reuse, capacity growth and binding rebuilds preserve valid offsets. MegaDrawBatchManager groups compatible path packets and uses programmable vertex pulling to reduce draw calls."
+        },
+        {
+          "type": "paragraph",
+          "text": "Batching depends on pipeline, textures, scissor/mask state and other compatible draw properties. A scene with many entities does not necessarily become a single draw call. Destroying an entity should release its retained ranges without destroying a buffer still shared by other entities."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [GlobalGeometryAllocator](/api-render-allocator#globalgeometryallocator), [GlobalAnalyticalAllocator](/api-render-allocator#globalanalyticalallocator), [MegaDrawBatchManager](/api-render-allocator#megadrawbatchmanager), [GPUAllocator](/api-utils#gpu-utils), [ComputeBufferPool](/api-utils#gpu-utils)."
+        }
+      ]
+    },
+    {
+      "id": "firstinstance-bit-packing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "firstInstance bit packing"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Mode",
+            "State index bits",
+            "Local index bits",
+            "Capacity"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Standard",
+                "16",
+                "14",
+                "65,536 state indices; 16,384 local indices"
+              ]
+            },
+            {
+              "cells": [
+                "Mega-instance",
+                "12",
+                "18",
+                "4,096 state indices; 262,144 local indices"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Bit 31 selects mega-instance mode and bit 30 indicates the secondary/stroke pass. packInstanceIndex and WGSL getStateIndex/getLocalIndex must agree. Masks truncate overflowing indices, so these are representable limits rather than automatic safety checks. The GPU adds each draw’s local instance index to firstInstance; keep it within the selected mode’s range."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [packInstanceIndex](/api-utils#gpu-utils)."
+        }
+      ]
+    },
+    {
+      "id": "flat-varying-state",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Flat varying state"
+        },
+        {
+          "type": "paragraph",
+          "text": "Some model/raymarch fragment paths receive material fields through flat varyings from the vertex stage. That avoids repeated per-fragment storage reads for those fields. It does not mean every shader is bindless or that no fragment shader ever reads a buffer. Varying layout and interpolation qualifiers must match the linked vertex and fragment stages."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One base circle and a compact transform array make shared instanced geometry visible."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-instancedscene"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Shader builders, schemas and resources](/shader-system)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Rendering pipeline from scene to pixels](/rendering-architecture)"
+  ]
+}

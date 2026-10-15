@@ -1,0 +1,224 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-svg-system-and-path-equalization-architecture",
+  "title": "SVG Ingestion, AST Parsing & Path Equalization Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SVG_SYSTEM_AND_PATH_EQUALIZATION_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SVG_SYSTEM_AND_PATH_EQUALIZATION_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SVG_SYSTEM_AND_PATH_EQUALIZATION_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [SVG](/api-entities-composites-svg#svg), [Path](/api-entities-primitives-2d#path), [VectorEntity](/api-core-vectorentity#vectorentity), [Model](/api-entities-primitives-3d#model), [SVGPath](/api-entities-composites-svg#svgpath), [PathEqualizer](/api-utils#pathequalizer), [Pass](/api-render-frame-graph#pass), [Mat3](/api-math-vector#mat3), [Transform](/api-core-transform#transform), [Rect](/api-entities-primitives-2d#rect), [Circle](/api-entities-primitives-2d#circle), [Poly](/api-entities-primitives-2d#poly), [Graph](/api-libs-graphs-graph#graph), [Morph](/api-animation-transform#morph), [Arc](/api-entities-primitives-2d#arc), [Pipeline](/api-render-pipelines#pipeline), [Ellipse](/api-entities-primitives-2d#ellipse), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [VectorTransform](/api-animation-transform#vectortransform), [Rate](/api-animation#rate)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Importing vector artwork (icons, logos, diagrams, mathematical illustrations) from design software (Illustrator, Inkscape, Figma) requires a robust conversion pipeline from standard XML SVG markup into Retiam's WebGPU vector representations ([`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) and [`VectorEntity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts))."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides two specialized SVG entities and a mathematical contour equalizer:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`SVG`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/svg/SVG.ts)**: High-level composite entity that ingests full SVG documents, parses the document Object Model (DOM) tree via `svg-parser`, resolves cascading CSS classes and inline styles, expands `<defs>` / `<use>` templates, and preserves layer hierarchies as a tree of WebGPU entities.",
+            "**[`SVGPath`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/svg/SVGPath.ts)**: Single-entity path extractor that parses SVG path `d=\"...\"` attribute commands and collapses all contours into a unified vertex buffer for maximum GPU rendering throughput.",
+            "**[`PathEqualizer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/PathEqualizer.ts)**: Algorithmic utility that balances contour counts, segment counts, and arc-length vertex distributions between two disparate vector shapes to enable continuous, artifact-free topological morphing."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  XML[\"Raw SVG XML markup\"] --> AST[\"svg-parser AST pass\"]\n  AST --> DEFS[\"Definition cache<br/>rawDefsMap\"]\n  AST --> WALK[\"Document walk<br/>Recursive nodes\"]\n  DEFS --> STYLE[\"CSS styling and transforms<br/>classStyles / Mat3 Transform\"]\n  WALK --> STYLE\n  WALK --> GEOMETRY[\"Geometry tessellation<br/>Path / Rect / Circle / Poly\"]\n  STYLE --> ENTITY[\"VectorEntity graph\"]\n  GEOMETRY --> ENTITY\n  ENTITY -->|Optional morph transition| EQUAL[\"PathEqualizer<br/>Contour balancing and arc-length subdivision\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-document-processing-ingestion-pipeline-svg-ts-src-engine-entities-composites-svg-svg-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Document Processing & Ingestion Pipeline ([SVG.ts](../src/engine/entities/composites/svg/SVG.ts))"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Two-Pass AST Compilation"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `setSrc(svgString)` is called:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Pass 1 (`findDefs`)**: Recursively traverses the AST, indexing all nodes bearing an `id` attribute into `rawDefsMap`. This allows later `<use href=\"#id\">` references to be resolved instantaneously without linear tree searches.",
+            {
+              "text": "**Pass 2 (`decodeNode`)**: Traverses structural elements (`<svg>`, `<g>`), applying affine transformation matrices and styling cascades to child leaves:",
+              "children": [
+                "`<path>`: Parses SVG path grammar into Bézier contours.",
+                "`<rect>`: Converts `x`, `y`, `width`, `height`, and optional rounded corners `rx`, `ry` into a [`Rect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Rect.ts).",
+                "`<circle>` & `<ellipse>`: Maps center coordinates $(c_x, c_y)$ and radii $(r_x, r_y)$ to [`Circle`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Circle.ts) and [`Ellipse`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Ellipse.ts).",
+                "`<polygon>` & `<polyline>`: Parses space/comma-separated coordinate strings into contiguous contour vertex arrays.",
+                "`<use>`: Resolves target templates from `rawDefsMap`, clones the template subtree, and applies the instance's local `x`, `y`, and `transform` attributes."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Cascading Style & Transform Resolution"
+        },
+        {
+          "type": "paragraph",
+          "text": "SVG styles originate from four competing sources. Retiam resolves them according to standard CSS specificity:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Default Presentation**: SVG standards dictate a default black fill (`#000000`) and transparent stroke. Setting `ignoreSvgDefaults: true` overrides this behavior, permitting inherited scene/parent styling to cascade down.",
+            "**Document Stylesheets**: `<style>` tag declarations are parsed into a scoped `classStyles: Map<string, Record<string, string>>`.",
+            "**Presentational Attributes**: Attributes such as `fill=\"...\"`, `stroke=\"...\"`, `stroke-width=\"...\"`, `fill-opacity=\"...\"`, and `stroke-linecap=\"...\"`.",
+            "**Inline Styles**: Declarations inside `style=\"...\"` take highest precedence."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Transforms (`matrix`, `translate`, `scale`, `rotate`, `skewX`, `skewY`) are parsed via regular expressions into 3x3 matrices ([`Mat3`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/vector/Mat3.ts)) and multiplied cumulatively down the entity hierarchy."
+        }
+      ]
+    },
+    {
+      "id": "3-high-throughput-path-extraction-svgpath-ts-src-engine-entities-composites-svg-svgpath-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. High-Throughput Path Extraction ([SVGPath.ts](../src/engine/entities/composites/svg/SVGPath.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "While [`SVG`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/svg/SVG.ts) builds an explicit scene graph of nested entities, [`SVGPath`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/svg/SVGPath.ts) flattens all contours into a single [`Path`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Path.ts) entity."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Path Command Decoding"
+        },
+        {
+          "type": "paragraph",
+          "text": "The path interpreter evaluates the complete SVG path specification:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**MoveTo (`M`, `m`)**: Terminates current contour and establishes a new start vertex.",
+            "**LineTo (`L`, `l`, `H`, `h`, `V`, `v`)**: Emits straight linear segments.",
+            "**Cubic Bézier (`C`, `c`, `S`, `s`)**: Emits cubic Bézier curves, automatically reflecting the control point for smooth continuation (`S`).",
+            "**Quadratic Bézier (`Q`, `q`, `T`, `t`)**: Evaluates quadratic control points with smooth tangent reflection (`T`).",
+            "**Elliptical Arc (`A`, `a`)**: Converts SVG endpoint arc parameterization $(r_x, r_y, \\phi, f_A, f_S, x_2, y_2)$ into center parameterization $(\\theta_1, \\Delta\\theta)$ and subdivides the arc into cubic Bézier segments ($\\Delta\\theta \\le \\pi / 2$).",
+            "**ClosePath (`Z`, `z`)**: Closes the contour back to the first vertex."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-topological-path-equalization-pathequalizer-ts-src-engine-utils-pathequalizer-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Topological Path Equalization ([PathEqualizer.ts](../src/engine/utils/PathEqualizer.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Morphing between two distinct vector graphics (e.g. morphing an SVG checkmark into an SVG cross) requires the source and target geometries to share **identical contour counts** and **identical vertex counts per contour**:"
+        },
+        {
+          "type": "math",
+          "tex": "C_A = \\{c_{A, 1}, c_{A, 2}, \\dots, c_{A, n}\\}, \\quad C_B = \\{c_{B, 1}, c_{B, 2}, \\dots, c_{B, m}\\}"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  S[\"Source SVG<br/>1 contour, 40 vertices\"] --> B[\"Contour balancing<br/>Add a degenerate zero-area contour: 1 → 2\"]\n  T[\"Target SVG<br/>2 contours, 100 vertices\"] --> B\n  B --> R[\"Arc-length resampling<br/>Equal segment density: 120 vertices each\"]\n  R --> A[\"Winding and alignment<br/>Minimize summed squared vertex travel distance\"]"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Equalization Pipeline"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Contour Count Balancing**: If $n < m$, degenerate zero-length / zero-area contours located at the geometric center of the shape are inserted into $C_A$ until $|C_A| = |C_B|$.",
+            "**Arc-Length Resampling**: For matching contour pairs $(c_{A, k}, c_{B, k})$, the total arc length $S = \\int_0^1 \\|\\mathbf{r}'(t)\\|\\,dt$ is computed. Vertices are resampled at equidistant arc-length intervals:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "N_{\\text{target}} = \\max\\big(|c_{A, k}|, |c_{B, k}|\\big)"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Winding & Index Alignment**: Polygons are tested for clockwise vs. counter-clockwise orientation. If orientations disagree, vertex order is inverted. The starting vertex index is circularly shifted to minimize the total Euclidean displacement during the animation:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "math",
+          "tex": "\\min_{k \\in [0, N-1]} \\sum_{i=0}^{N-1} \\|\\mathbf{v}_{A, i} - \\mathbf{v}_{B, (i+k) \\bmod N}\\|^2"
+        }
+      ]
+    },
+    {
+      "id": "5-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, SVG, SVGPath, VectorTransform, Rate } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Ingest full hierarchical SVG with preserved layers\nconst icon = new SVG(`\n    <svg viewBox=\"0 0 100 100\">\n        <circle cx=\"50\" cy=\"50\" r=\"40\" fill=\"#3b82f6\" />\n        <path d=\"M30 50 L45 65 L70 35\" stroke=\"#ffffff\" stroke-width=\"8\" fill=\"none\" stroke-linecap=\"round\"/>\n    </svg>\n`, { ignoreSvgDefaults: false });\n\nicon.transform.scale = 0.08;\nscene.add(icon);\n\n// 2. Morph between two SVGs using automatic equalization\nconst checkmark = new SVGPath(\"M30 50 L45 65 L70 35\", { stroke_width: 0.1 });\nconst cross = new SVGPath(\"M30 30 L70 70 M70 30 L30 70\", { stroke_width: 0.1 });\n\nscene.add(checkmark);\nawait scene.play(new VectorTransform(checkmark, cross, {\n    duration: 1200,\n    rate_func: Rate.easeInOutCubic()\n}));"
+        }
+      ]
+    }
+  ]
+}

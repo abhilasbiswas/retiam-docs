@@ -1,0 +1,134 @@
+{
+  "labs/project-chart-1": {
+    "title": "Define meaningful data",
+    "description": "A fixed-scale chart for three release stages.",
+    "walkthrough": [
+      "Each data entry pairs a category with a time in minutes. BarChart builds the marks, grid and labels; Scene.add makes that composite part of the rendered scene.",
+      "The orthographic camera removes perspective distortion. Its minimum vertical extent is 13; a pre updater widens that extent in a narrow canvas so the whole horizontal chart remains visible."
+    ],
+    "experiments": [
+      "Set Ship to 90 and add valueSuffix: \" min\". Check that the axis and value labels remain legible."
+    ]
+  },
+  "labs/project-chart-2": {
+    "title": "Introduce the chart",
+    "description": "Watch the bars rise in a staggered entrance.",
+    "walkthrough": [
+      "Calling BarChart.animateIn first prepares the bars at their entrance state. Scene.play advances the returned Animation; awaiting it makes later instructions wait for the reveal.",
+      "The bar baselines stay fixed while their heights grow. The value labels move with the rising tops, so the labels still refer to the correct marks."
+    ],
+    "experiments": [
+      "Change the entrance duration to 400, then 2400 milliseconds. Compare when the numbers become readable."
+    ]
+  },
+  "labs/project-chart-3": {
+    "title": "Change data through interaction",
+    "description": "Click a bar to compare two datasets.",
+    "walkthrough": [
+      "The click callback chooses the next three values, preserving category order. The busy flag guards the entire awaited transition, including rapid repeated clicks.",
+      "BarChart.animateData reuses the current scale and bar geometry. It changes value labels during interpolation, but does not replace category labels or the initial hover tooltip data."
+    ],
+    "experiments": [
+      "Change the alternate values to [70, 35, 90], then click rapidly. The busy flag should keep one transition active at a time."
+    ]
+  },
+  "labs/project-diagram-1": {
+    "title": "Start with two nodes",
+    "description": "Two labeled nodes connected by a line.",
+    "walkthrough": [
+      "The nodes, labels and connector are independent entities. Their initial positions come from the same node coordinates, which makes the relationship explicit in the source.",
+      "There is no follower updater in this version. Editing a node’s initial position works because initialization recalculates the endpoints; a later node.move call would need to refresh its followers too."
+    ],
+    "experiments": [
+      "Edit the first node’s initial position, then add a later node.move call. Compare initialization with a change after the connector was constructed."
+    ]
+  },
+  "labs/project-diagram-2": {
+    "title": "Let the nodes move",
+    "description": "Drag either node; its label and connector follow.",
+    "walkthrough": [
+      "Entity.setDraggable enables drag dispatch. The drag callback receives a world-space position, suitable for these root nodes because they have no transformed parent.",
+      "The post updater runs after other entity changes, reads both node positions and sets the line endpoints and label positions. This keeps all three drawings synchronized."
+    ],
+    "experiments": [
+      "Drag both nodes and watch the labels. Temporarily remove the post updater to see which drawings stop following."
+    ]
+  },
+  "labs/project-diagram-3": {
+    "title": "Keep connections readable",
+    "description": "Drag the nodes inside the bounds and inspect the trimmed connector.",
+    "walkthrough": [
+      "Clamping the received x/y coordinates keeps the nodes in the diagram’s useful area. The labels and connector derive from those clamped positions.",
+      "A normalized direction from the first center to the second supplies the two radius offsets. When the circles overlap, a center-to-center fallback avoids reversing the segment."
+    ],
+    "experiments": [
+      "Drag the nodes together, then apart. Change the shared node radius and the connector inset together to preserve the boundary alignment."
+    ]
+  },
+  "labs/project-tangent-1": {
+    "title": "Give the curve a coordinate system",
+    "description": "Plot y = x² / 2 on an explicit coordinate system.",
+    "walkthrough": [
+      "Axes sets the mathematical domain and the physical rectangle. FunctionGraph2D samples f and uses that coordinate system to construct the visible curve.",
+      "The shared f function will also position the moving dot and calculate the tangent in later stages. Changing that one definition keeps the mathematical objects consistent."
+    ],
+    "experiments": [
+      "Replace f with Math.sin(x) + 2 and inspect the curve over the same domain."
+    ]
+  },
+  "labs/project-tangent-2": {
+    "title": "Animate a mathematical value",
+    "description": "One animated number drives a point on the curve.",
+    "walkthrough": [
+      "ValueTracker starts at −2. Its Animator moves the scalar to 2 over 4500 milliseconds while a post updater reads the current value.",
+      "Axes.c2p converts (x, f(x)) to the untransformed axes rectangle. Moving the dot to that result ties its geometry to the scalar without a second animation."
+    ],
+    "experiments": [
+      "Make the sweep slower, then narrow its target interval. The dot should still stay on the curve without a separate position animation."
+    ]
+  },
+  "labs/project-tangent-3": {
+    "title": "Reveal the changing slope",
+    "description": "Move the pointer after the sweep to explore the tangent.",
+    "walkthrough": [
+      "The centered difference [f(x+h) − f(x−h)] / (2h) estimates slope. The line endpoints use the same f(x) and slope, then pass through Axes.c2p.",
+      "After the sweep completes, Scene.setEvent receives pointer coordinates. Axes.p2c returns [x, y]; the first element selects the tracker value, clamped to the intended domain."
+    ],
+    "experiments": [
+      "Use f(x) = Math.sin(x) + 2. Compare h = 0.01 with h = 0.5, especially near a turning point."
+    ]
+  },
+  "labs/project-model-1": {
+    "title": "Place the models and camera",
+    "description": "A box and sphere viewed through a perspective camera.",
+    "walkthrough": [
+      "The camera looks at the origin with a field of view of π/3 radians. Both models use their own materials, so color changes can be compared independently.",
+      "Sphere segment counts control the mesh silhouette. Material roughness changes surface shading; it does not add vertices or smooth the geometry."
+    ],
+    "experiments": [
+      "Set widthSegments to 8 and compare the sphere outline with the original 32. Then change only its material color."
+    ]
+  },
+  "labs/project-model-2": {
+    "title": "Explore the scene with an orbit camera",
+    "description": "Orbit, pan and zoom around the same two models.",
+    "walkthrough": [
+      "OrbitCameraController uses the camera’s initial orientation and a target at the origin. Dragging changes the viewing direction; wheel input changes the target radius.",
+      "The controller installs canvas/document input listeners and a scene updater. Scene cleanup disposes the controller; explicitly destroy it if replacing controls during a running scene."
+    ],
+    "experiments": [
+      "Change radius to 6, then 15. Observe the viewing distance while the models’ positions remain fixed."
+    ]
+  },
+  "labs/project-model-3": {
+    "title": "Pick objects and change appearance",
+    "description": "Hover for a highlight; click to switch roughness.",
+    "walkthrough": [
+      "InteractionManager raycasts the pointer against scene entities. Each model has its own hover and click callbacks, so changing one model leaves the other’s material alone.",
+      "The hover callbacks change emission strength. The click callback switches roughness between 0.8 and 0.15, then invalidates the scene so the new material is drawn."
+    ],
+    "experiments": [
+      "Click each model separately. Change the glossy setting from 0.15 to 0.4 and compare its highlight."
+    ]
+  }
+}

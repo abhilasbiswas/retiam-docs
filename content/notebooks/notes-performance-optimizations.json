@@ -1,0 +1,628 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-performance-optimizations",
+  "title": "Retiam Engine Performance & Zero-GC Optimization Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/PERFORMANCE_OPTIMIZATIONS.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/PERFORMANCE_OPTIMIZATIONS.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/PERFORMANCE_OPTIMIZATIONS.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Rect](/api-entities-primitives-2d#rect), [Entity](/api-core-entity#entity), [Raycaster](/api-utils#raycaster), [Pipeline](/api-render-pipelines#pipeline), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Camera](/api-camera#camera), [SceneComposer](/api-core-scenecomposer#scenecomposer), [State](/api-core#state), [Storage](/api-render-pipelines#resourcelayouts), [Uniform](/api-render-pipelines#resourcelayouts), [Renderer](/api-render#renderer), [Component](/api-core#component), [GlobalStateAllocator](/api-render-allocator#globalstateallocator), [StateDataManager](/api-core#statedatamanager), [Transform](/api-core-transform#transform), [Paint](/api-core-paint#paint), [Material](/api-core-material#material), [Queue](/api-utils#utility), [CameraController](/api-camera#cameracontroller), [OrbitCameraController](/api-camera#orbitcameracontroller), [AABB](/api-math#aabb), [SVG](/api-entities-composites-svg#svg), [TriangulatedPathGeometry](/api-components-geometry#triangulatedpathgeometry)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document details the architectural changes, memory management strategies, and algorithm optimizations implemented to achieve **Zero Garbage Collection (0.0 KB Minor GC)** and **sub-millisecond CPU frame times (< 0.05 ms)** across complex scenes (e.g. 30,000+ vector paths in Paris 30K)."
+        }
+      ]
+    },
+    {
+      "id": "1-executive-summary",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Executive Summary"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Metric",
+            "Before Optimizations",
+            "After Optimizations",
+            "Improvement"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Minor Garbage Collection (GC)**",
+                  "type": "text"
+                },
+                {
+                  "text": "~32.7 MB / frame"
+                },
+                {
+                  "text": "**0.0 KB / frame**"
+                },
+                {
+                  "text": "**100% Eliminated**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**CPU Scripting Frame Time**",
+                  "type": "text"
+                },
+                {
+                  "text": "~8.0 – 12.0 ms"
+                },
+                {
+                  "text": "**< 0.05 ms** (idle/camera) / **< 0.2 ms** (full traverse)"
+                },
+                {
+                  "text": "**160× Faster**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**4×4 Matrix Multiplications (`mul`)**",
+                  "type": "text"
+                },
+                {
+                  "text": "30,000 / frame"
+                },
+                {
+                  "text": "**0** (cached) / Dynamic-only"
+                },
+                {
+                  "text": "**Eliminated on static frames**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**CPU Buffer Memory Copies (`Float32Array.set`)**",
+                  "type": "text"
+                },
+                {
+                  "text": "1.92 MB (30,000 copies/frame)"
+                },
+                {
+                  "text": "**0 bytes** (True Zero-Copy)"
+                },
+                {
+                  "text": "**100% Eliminated**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**WebGPU Scissor Rect Driver Calls**",
+                  "type": "text"
+                },
+                {
+                  "text": "30,000 calls / frame"
+                },
+                {
+                  "text": "**1 call** (state-filtered)"
+                },
+                {
+                  "text": "**99.99% Reduced**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Entity.update()` Subtree Traversal**",
+                  "type": "text"
+                },
+                {
+                  "text": "~8.0 ms (walks 30k nodes)"
+                },
+                {
+                  "text": "**< 0.01 ms** (hierarchical culling)"
+                },
+                {
+                  "text": "**800× Faster**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`Raycaster.cast()` Stack Operations**",
+                  "type": "text"
+                },
+                {
+                  "text": "30,000 nodes pushed"
+                },
+                {
+                  "text": "**1 root check** (pickable culling)"
+                },
+                {
+                  "text": "**Instantaneous**"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-architecture-pipeline-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Architecture & Pipeline Overview"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph CPU Frame Loop\n        A[Frame Start] --> B{Scene Graph Dirty?}\n        B -- Yes --> C[Subtree-Culled update]\n        B -- No (Camera Only) --> D[Skip update & traverse]\n        C --> E[SceneComposer.buildRenderQueues]\n        E --> F[Hierarchical traverse with Version Memoization]\n        F --> G[True Zero-Copy In-Place State Evaluation]\n        G --> H[Upload Storage Buffer Range]\n        D --> I[Update Camera View Uniform Buffer]\n        H --> J[Renderer.render]\n        I --> J\n    end\n    subgraph WebGPU Execution\n        J --> K[Single GPUBindGroup State Binding]\n        K --> L[State-Cached Scissor & Pipeline]\n        L --> M[Zero-Allocation getDrawCalls]\n        M --> N[drawIndexed]\n    end"
+        }
+      ]
+    },
+    {
+      "id": "3-detailed-optimizations-by-component",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Detailed Optimizations by Component"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. True Zero-Copy Persistent Retained Slot Allocation"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files:** [`src/engine/render/allocator/GlobalStateAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalStateAllocator.ts), [`src/engine/_core/StateDataManager.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/StateDataManager.ts), [`src/engine/_core/Entity.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Problem"
+        },
+        {
+          "type": "paragraph",
+          "text": "Previously, `GlobalStateAllocator` functioned as a per-frame linear bump allocator (`resetForNewFrame()` reset allocation head to 0). Each frame, `traverse()` allocated slot $0 \\dots N$ sequentially and copied 64 float values from `entity._cachedWorldState` into the staging buffer via `Float32Array.set()`. In a 30,000-entity scene, this transferred **1.92 million floats (~7.68 MB) every frame**, causing high CPU memory traffic."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Persistent Entity Slots:**",
+              "children": [
+                "Each entity is assigned a permanent slot (`_stateSlotIndex`) in `GlobalStateAllocator` via `acquireSlot()`.",
+                "Slices in `GlobalStateAllocator.cpuData` map directly to `entity.worldState`.",
+                "When an entity is destroyed, its slot is recycled back into `_freeSlots`."
+              ]
+            },
+            {
+              "text": "**In-Place Mutation:**",
+              "children": [
+                "When an entity or parent moves, `worldState.apply(entity.state, parentState)` writes directly into `cpuData` in-place.",
+                "When an entity is static, **zero memory operations occur**."
+              ]
+            },
+            {
+              "text": "**Resizing Safety:**",
+              "children": [
+                "On buffer geometric growth ($2\\times$), `cpuData.set(oldData)` preserves existing float states, and `_initMappedStates(0, newCap)` remaps all active states."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Hierarchical State Version Memoization (parentId + childId Cache)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files:** [`src/engine/_core/State.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts), [`src/engine/_core/Transform.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Transform.ts), [`src/engine/_core/Paint.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Paint.ts), [`src/engine/_core/Material.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Material.ts), [`src/engine/_core/SceneComposer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Problem"
+        },
+        {
+          "type": "paragraph",
+          "text": "In deeply nested hierarchy trees, calculating `worldState.apply(entity.state, parentState)` executes 4×4 matrix multiplications (`mul()`), translation additions, paint color blending, and material overrides on every node every frame, even when no object in the scene has moved."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Monotonic Version Counter:**",
+              "children": [
+                "Every `State`, `Transform`, `Paint`, and `Material` tracks an integer `version` incremented on mutation.",
+                "`State.localVersion` computes the composite hash of all local components."
+              ]
+            },
+            {
+              "text": "**Hierarchical Memoization Check:**",
+              "children": [
+                "In `SceneComposer.traverse()`:"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "ts",
+          "code": "const localVer = entity.state.localVersion;\n     const parentVer = parentState.version;\n\n     if (\n         entity._lastEvaluatedParentVersion !== parentVer ||\n         entity._lastEvaluatedLocalVersion !== localVer\n     ) {\n         worldState.transform.bit_mask = 1 << ((this.bit_count++) % 32);\n         worldState.apply(entity.state, parentState);\n\n         entity._lastEvaluatedParentVersion = parentVer;\n         entity._lastEvaluatedLocalVersion = localVer;\n     }"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "If neither the parent world matrix nor the entity's local transform/style has changed, the evaluation is **completely bypassed**."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Scene-Level Render Queue & GPU Buffer Caching"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files:** [`src/engine/_core/SceneComposer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Problem"
+        },
+        {
+          "type": "paragraph",
+          "text": "When the user orbits, pans, or zooms the camera (e.g. via `CameraController` or `OrbitCameraController`), the scene graph objects are completely static, yet the engine was rebuilding the entire render command queue and re-uploading the 7.68 MB storage buffer to the GPU."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Added `_sceneGraphDirty` tracking to `SceneComposer`.",
+            "When only the camera moves, `prepare()` updates view projection uniforms, reuses `_cachedCommands`, and skips `buildRenderQueues()`, `traverse()`, and `stateManager.uploadToGPU()`.",
+            "CPU frame time during camera interaction drops from **~8.0 ms to < 0.05 ms (600+ FPS)**."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. CPU Update Loop & Subtree Culling (childUpdateCount)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files:** [`src/engine/_core/Entity.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts), [`src/engine/_core/Scene.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Problem"
+        },
+        {
+          "type": "paragraph",
+          "text": "Composite entities (such as SVGs containing 30,000 static child paths) were recursing through all 30,000 nodes inside `Entity.update()`, calling empty component update hooks and invoking `.forEach()` closure callbacks that generated **32.7 MB of Minor GC nursery allocations**."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Hierarchical Update Counter (`_childUpdateCount`):**",
+              "children": [
+                "Entities track how many descendant nodes have active `updaters` or custom component `update()` methods.",
+                "When `_childUpdateCount === 0`, `Entity.update()` early-outs immediately in $O(1)$, skipping all 30,000 children."
+              ]
+            },
+            {
+              "text": "**Closure Elimination:**",
+              "children": [
+                "Replaced all `Array.forEach(...)` with indexed `for` loops across `Entity.ts`, `Scene.ts`, and `SceneComposer.ts`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. Raycaster Hierarchical Pruning (childPickableCount)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files:** [`src/engine/utils/Raycaster.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/Raycaster.ts), [`src/engine/_core/Entity.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Problem"
+        },
+        {
+          "type": "paragraph",
+          "text": "During `pointermove` events, `Raycaster.cast()` walked every single child node in the scene, allocating stack items and executing ray-AABB tests across 30,000 non-interactive vector paths."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Added `_childPickableCount` with parent notification in `Entity.ts`.",
+            "`Raycaster.cast()` checks `node.isPickable || node._childPickableCount > 0` before pushing child nodes to the traversal stack, pruning 30,000 non-pickable SVG paths at the root level in $O(1)$."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "F. Zero-Allocation getDrawCalls() & Geometry Rendering Pipeline"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files:** All geometry classes under [`src/engine/components/geometry/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry) and [`src/engine/components/renderers/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Problem"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "`TriangulatedPathGeometry.getDrawCalls()` was clearing its array (`length = 0`), querying singletons, and re-pushing `DrawCall` objects 30,000 times per frame.",
+            "Other geometry classes (`Geometry2D`, `QuadGeometry`, `CircleGeometry`, `PolyGeometry`, `IndexGeometry2D`, `TextGeometry`, `LineGeometry`, `ModelGeometry`, `MorphGeometry`) returned inline literal arrays `[{ vertexCount: ... }]`, creating tens of thousands of temporary arrays per frame."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Pre-built `_cachedDrawCalls` inside `_updateDrawCalls()` in `TriangulatedPathGeometry.ts`, updating it **only when geometry is triangulated or modified**.",
+            "Made `getDrawCalls()` an instant, zero-allocation reference return (`return this._cachedDrawCalls;`).",
+            "Replaced inline literal arrays across all geometry classes with persistent retained array slots."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "G. WebGPU Scissor Rect & State Caching"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files:** [`src/engine/render/RenderStateCache.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/RenderStateCache.ts), [`src/engine/render/passes/RenderPass.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RenderPass.ts)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Problem"
+        },
+        {
+          "type": "paragraph",
+          "text": "`RenderPass.execute` was issuing `pass.setScissorRect(...)` for every single entity packet in the render queue, generating **30,000 WebGPU API calls per frame**."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Added scissor rectangle caching to `RenderStateCache.setScissorRect(pass, x, y, w, h)`.",
+            "Consecutive packets sharing identical scissor bounds skip the WebGPU driver call, reducing scissor commands from 30,000 to **1 per frame**.",
+            "`RenderStateCache.reset(device)` cleanly invalidates cached pipeline and scissor states at the start of each render pass encoder."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "H. Memory Buffer Alignment Fix (State.BYTELENGTH)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Files:** [`src/engine/_core/State.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/State.ts), [`src/engine/utils/gpu_utils.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/gpu_utils.ts)"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Problem"
+        },
+        {
+          "type": "paragraph",
+          "text": "The legacy alignment helper `round(n, base)` was written as `n + (base - (n % base))`. When $n = 256$ (already aligned to 16 bytes), $256 \\pmod{16} = 0$, producing **272 bytes (68 floats)** for standalone `State` instances, while `GlobalStateAllocator` sub-arrays were fixed at **256 bytes (64 floats)**. Copying between them triggered `RangeError: offset is out of bounds`."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Solution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Replaced rounding with standard `Math.ceil(n / base) * base`, guaranteeing exact **256 bytes (64 floats)** across the entire engine.",
+            "Updated `State.copyFrom(state)` to safely handle exact or sliced array sets."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-performance-profiling-verification",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Performance Profiling Verification"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Chrome / Edge DevTools Flame Chart Evolution"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Initial State (Baseline):**",
+              "children": [
+                "**Minor GC:** 29.7 MB – 32.7 MB per frame.",
+                "**Bottlenecks:** `RenderPass.execute`, `Entity.update` traversal, `Raycaster.cast` on pointer move."
+              ]
+            },
+            {
+              "text": "**Intermediate Optimization:**",
+              "children": [
+                "**Minor GC:** Dropped to 0.0 kB.",
+                "**Scripting Time:** Dropped to ~8.0 ms (dominated by matrix multiplication `apply() -> mul()`)."
+              ]
+            },
+            {
+              "text": "**Memoization & Scene Caching:**",
+              "children": [
+                "**Scripting Time:** Dropped to ~1.0 ms.",
+                "**Bottleneck Identified:** Repeated `copyFrom()` (1.92M floats copied into bump allocator)."
+              ]
+            },
+            {
+              "text": "**Final State (True Zero-Copy Persistent Retained Slots):**",
+              "children": [
+                "**Minor GC:** **0.0 kB (Permanently Zero GC)**.",
+                "**`copyFrom` Calls:** **0 (Completely Eliminated)**.",
+                "**`getDrawCalls` Latency:** **< 0.001 ms**.",
+                "**Total Frame CPU Time:** **< 0.05 ms (600+ FPS capable)**."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-best-practices-for-retiam-engine-development",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Best Practices for Retiam Engine Development"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Retain Object & Array Allocations in Hot Paths:**",
+              "children": [
+                "Never use inline array/object literals (`[{ ... }]`, `{ ... }`) in `getDrawCalls()`, `getPasses()`, `update()`, or `render()`.",
+                "Pre-allocate scratchpads and cached arrays on class instances."
+              ]
+            },
+            {
+              "text": "**Use Indexed Loops:**",
+              "children": [
+                "Avoid `Array.prototype.forEach`, `.map`, `.filter` in per-frame update and render loops to prevent closure instantiations."
+              ]
+            },
+            {
+              "text": "**Leverage Version Invalidation:**",
+              "children": [
+                "When modifying custom entity properties that impact GPU rendering, bump the component's `version` or call `entity.invalidate()` to trigger coalesced GPU streaming without forcing full scene graph re-evaluations."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

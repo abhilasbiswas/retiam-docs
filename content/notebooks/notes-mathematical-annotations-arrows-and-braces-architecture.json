@@ -1,0 +1,234 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-mathematical-annotations-arrows-and-braces-architecture",
+  "title": "Mathematical Annotations: Arrows, Braces & Pixel Grids Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/MATHEMATICAL_ANNOTATIONS_ARROWS_AND_BRACES_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/MATHEMATICAL_ANNOTATIONS_ARROWS_AND_BRACES_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/MATHEMATICAL_ANNOTATIONS_ARROWS_AND_BRACES_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Arrow](/api-entities-composites-geometry#arrow), [Arrow3D](/api-entities-composites-geometry#arrow3d), [Brace](/api-entities-composites-geometry#brace), [Text](/api-entities-composites-text#text), [Tex](/api-entities-composites-text#tex), [PixelGrid](/api-entities-composites-geometry#pixelgrid), [Dot](/api-entities-primitives-2d#dot), [ArrowTipType](/api-entities-composites-geometry#arrow), [Entity](/api-core-entity#entity), [AABB](/api-math#aabb), [Group](/api-core#group), [UP](/api-core#constants), [DOWN](/api-core#constants), [LEFT](/api-core#constants), [RIGHT](/api-core#constants), [Usage](/api-utils#gpu-utils), [Scene](/api-core-scene#scene), [Rect](/api-entities-primitives-2d#rect), [Color](/api-math#color), [Create](/api-animation-creation#create), [WHITE](/api-core#constants)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-system-rationale",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & System Rationale"
+        },
+        {
+          "type": "paragraph",
+          "text": "Technical communication, calculus visualizations, and mathematical pedagogy require specialized annotation entities:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**[`Arrow`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow.ts) & [`Arrow3D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Arrow3D.ts)**: Configurable vector arrows, dimension markers, and curved connectors with 10 tip geometry types and independent start/end heads.",
+            "**[`Brace`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/Brace.ts)**: Procedural mathematical curly brackets that conform to entity bounding boxes and position label annotations (`Text`, `Tex`) at their central cusp.",
+            "**[`PixelGrid`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/geometry/PixelGrid.ts)**: Subdivided 2D tile matrices for visual matrix arithmetic, image processing explanations, and conformal space deformations."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-advanced-arrow-architecture-arrow-ts-src-engine-entities-composites-geometry-arrow-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Advanced Arrow Architecture ([Arrow.ts](../src/engine/entities/composites/geometry/Arrow.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Arrow` composite combines an extruded path shaft with procedurally generated arrowhead geometry:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Start Tip                               Shaft                               End Tip\n(Bar / Dot)                 (Straight or Curved Bézier)                    (Stealth)\n   │                                     │                                     │\n   ▼                                     ▼                                     ▼\n   ╠═══════════════════════════════════════════════════════════════════════════▷"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Arrow Tip Taxonomy (ArrowTipType)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides 10 tip geometries tailored for distinct technical fields:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`triangle`**: Classical Manim equilateral arrow tip.",
+            "**`stealth`**: Aerodynamic swept-wing arrowhead with indented base.",
+            "**`line`**: Open wireframe chevron arrow.",
+            "**`circle` & `dot`**: Filled and unfilled circular terminals for network graphs and state machines.",
+            "**`diamond`**: Rhomboid pointer for UML and flowcharts.",
+            "**`bar` & `tee`**: Orthogonal end-caps for engineering dimension lines and interval markers.",
+            "**`square`**: Structural terminal blocks.",
+            "**`none`**: Standard path termination."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Arrowhead Geometry Mathematics"
+        },
+        {
+          "type": "paragraph",
+          "text": "To prevent the shaft from protruding through the arrowhead, the shaft is trimmed back along its tangent vector:"
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{u}_{\\text{tangent}} = \\frac{\\mathbf{p}_{\\text{end}} - \\mathbf{p}_{\\text{prev}}}{\\|\\mathbf{p}_{\\text{end}} - \\mathbf{p}_{\\text{prev}}\\|}"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}'_{\\text{end}} = \\mathbf{p}_{\\text{end}} - d_{\\text{trim}} \\cdot \\vec{u}_{\\text{tangent}}"
+        },
+        {
+          "type": "paragraph",
+          "text": "For a stealth or triangle head with length $L$, half-width $W$, and back-inset factor $k \\in [0, 1)$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{v}_{\\text{tip}} = \\mathbf{p}_{\\text{end}}"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{v}_{\\text{left}} = \\mathbf{p}_{\\text{end}} - L \\cdot \\vec{u}_{\\text{tangent}} + W \\cdot \\vec{u}_{\\text{normal}}"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{v}_{\\text{right}} = \\mathbf{p}_{\\text{end}} - L \\cdot \\vec{u}_{\\text{tangent}} - W \\cdot \\vec{u}_{\\text{normal}}"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{v}_{\\text{notch}} = \\mathbf{p}_{\\text{end}} - (L \\cdot k) \\cdot \\vec{u}_{\\text{tangent}}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Entity-to-Entity Connection (Arrow.between())"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Arrow.between(entA, entB)` computes the ray between entity centroids, intersects each entity's AABB boundary, adds clearance margins, and registers reactive listeners via `scene.always()` so the arrow tracks moving targets smoothly."
+        }
+      ]
+    },
+    {
+      "id": "3-mathematical-curly-braces-brace-ts-src-engine-entities-composites-geometry-brace-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Mathematical Curly Braces ([Brace.ts](../src/engine/entities/composites/geometry/Brace.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `Brace` entity constructs a symmetrical, cubic Bézier curly bracket bounding a single entity, an array of entities, or a [`Group`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts)."
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "╭───────────────╮\n    │  Target Entity │\n    ╰───────────────╯\n ────────────────────── (padding: 0.2)\n ⎰                   ⎱\n  \\                 /\n   \\               /\n    \\             /\n     ⎱     ★     ⎰  (Cusp position for LaTeX Label)\n           │\n           ▼\n     \\int_0^1 f(x) dx"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Procedural Curve Formulation"
+        },
+        {
+          "type": "paragraph",
+          "text": "A brace consists of four coordinated cubic Bézier segments parameterized by length $L$, directional normal $\\vec{n} \\in \\{\\text{UP}, \\text{DOWN}, \\text{LEFT}, \\text{RIGHT}\\}$, and sharpness $r$:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Outer End Quarter 1**: Curves from the outer boundary toward the center line.",
+            "**Outer Straight Inset**: Linear connector along the span.",
+            "**Central Cusp Outward**: Curves outward to form the pointing tip ($\\star$).",
+            "**Symmetrical Return**: Mirrored segments completing the bracket."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Automatic Label Positioning"
+        },
+        {
+          "type": "paragraph",
+          "text": "The cusp coordinates are computed analytically from the bounding box center and direction vector:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}_{\\text{cusp}} = \\text{AABB}.\\text{center} + \\vec{n} \\cdot \\left(\\frac{\\text{AABB}.\\text{extent}}{2} + \\text{padding} + h_{\\text{brace}}\\right)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Calling `brace.getLabel(textOrTex, options)` instantiates a [`Text`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts) or [`Tex`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts) entity anchored to $\\mathbf{p}_{\\text{cusp}}$."
+        }
+      ]
+    },
+    {
+      "id": "4-subdivided-pixel-grids-pixelgrid-ts-src-engine-entities-composites-geometry-pixelgrid-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Subdivided Pixel Grids ([PixelGrid.ts](../src/engine/entities/composites/geometry/PixelGrid.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `PixelGrid` renders a 2D matrix of colored cells with subdivided perimeter vertices:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Edge Subdivisions (`edgeSubdivisions: 6`)**: Rather than 4 rigid corner vertices, each tile edge contains multiple collinear points.",
+            "**Deformation Resiliency**: When subjected to non-linear spatial mappings (such as complex conformal functions $f(z) = z^2$ or gravity vector fields), each individual pixel tile bends and curves smoothly along the grid lines without breaking topology."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-usage-example",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Usage Example"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Rect, Arrow, Brace, Tex, Color, DOWN } from \"retiam\";\n\nconst scene = new Scene({ canvas });\n\n// 1. Create annotated subject\nconst matrixBox = new Rect(6.0, 3.5, {\n    fill: Color.fromHex(\"#1e293b\"),\n    stroke: Color.fromHex(\"#475569\"),\n    stroke_width: 0.05\n});\nscene.add(matrixBox);\n\n// 2. Attach curly brace to the bottom edge\nconst brace = new Brace(matrixBox, {\n    direction: DOWN,\n    padding: 0.25,\n    color: Color.fromHex(\"#38bdf8\")\n});\nscene.add(brace);\n\n// 3. Attach LaTeX label to the brace cusp\nconst label = new Tex(\"\\\\text{Rank}(\\\\mathbf{A}) = 3\", {\n    fontSize: 24,\n    fill: Color.WHITE\n});\nlabel.nextTo(brace, DOWN, 0.2);\nscene.add(label);\n\n// 4. Connect with an annotated arrow\nconst arrow = new Arrow({\n    points: [[-5, -3, 0], [-2, -1.8, 0]],\n    tipType: \"stealth\",\n    headLength: 0.4,\n    headWidth: 0.25,\n    stroke: Color.fromHex(\"#f59e0b\"),\n    stroke_width: 0.06\n});\nscene.add(arrow);"
+        }
+      ]
+    }
+  ]
+}

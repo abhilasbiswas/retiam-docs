@@ -1,0 +1,604 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-libs-physics-3d-components",
+  "title": "physics / 3d / components API",
+  "group": "Library API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rigidbodycomponent",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RigidBodyComponent"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/3d/components/RigidBodyComponent.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/3d/components/RigidBodyComponent.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "INativeRigidBody3D: Common interface for native physics bodies across backends (Rapier, Jolt, etc.)",
+                "RigidBodyComponent: Retiam ECS Component synchronizing 3D rigid bodies with the Entity Transform. Operates with flat getters/setters directly on transformation matrices."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "INativeRigidBody3D",
+                    "Interface",
+                    "Common interface for native physics bodies across backends (Rapier, Jolt, etc.)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "RigidBodyComponent",
+                    "Class",
+                    "Retiam ECS Component synchronizing 3D rigid bodies with the Entity Transform. Operates with flat getters/setters directly on transformation matrices."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface INativeRigidBody3D {\n    applyForce?(fx: number, fy: number, fz: number): void;\n    applyImpulse?(ix: number, iy: number, iz: number): void;\n    setVelocity?(vx: number, vy: number, vz: number): void;\n    getVelocity?(): {\n        x: number;\n        y: number;\n        z: number;\n    };\n    setAngularVelocity?(wx: number, wy: number, wz: number): void;\n    getAngularVelocity?(): {\n        x: number;\n        y: number;\n        z: number;\n    };\n    setKinematic?(kinematic: boolean): void;\n    destroy?(): void;\n}\nexport declare class RigidBodyComponent extends Component {\n    body: any;\n    collider?: any;\n    world?: any;\n    kinematic: boolean;\n    syncTransform?: (dtSeconds?: number) => void;\n    customApplyForce?: (fx: number, fy: number, fz: number) => void;\n    customApplyImpulse?: (ix: number, iy: number, iz: number) => void;\n    customSetVelocity?: (vx: number, vy: number, vz: number) => void;\n    customGetVelocity?: () => {\n        x: number;\n        y: number;\n        z: number;\n    };\n    customSetAngularVelocity?: (wx: number, wy: number, wz: number) => void;\n    customGetAngularVelocity?: () => {\n        x: number;\n        y: number;\n        z: number;\n    };\n    customSetPosition?: (x: number, y: number, z: number) => void;\n    customGetPosition?: () => {\n        x: number;\n        y: number;\n        z: number;\n    };\n    customSetRotation?: (x: number, y: number, z: number, w: number) => void;\n    customGetRotation?: () => {\n        x: number;\n        y: number;\n        z: number;\n        w: number;\n    };\n    customLockTranslations?: (lx: boolean, ly: boolean, lz: boolean) => void;\n    customSetKinematic?: (kinematic: boolean) => void;\n    customDestroy?: () => void;\n    constructor(body: any, kinematic?: boolean, collider?: any, world?: any);\n    onCollisionStart(callback: (other: any, event: any) => void): this;\n    onCollisionEnd(callback: (other: any, event: any) => void): this;\n    _dispatchCollision(other: any, event: any): void;\n    update(t: number, dt: number): void;\n    applyForce(force: Vec3 | [\n        number,\n        number,\n        number\n    ]): void;\n    applyImpulse(impulse: Vec3 | [\n        number,\n        number,\n        number\n    ]): void;\n    setVelocity(velocity: Vec3 | [\n        number,\n        number,\n        number\n    ]): void;\n    getVelocity(): Vec3;\n    setAngularVelocity(angVel: Vec3 | [\n        number,\n        number,\n        number\n    ]): void;\n    getAngularVelocity(): Vec3;\n    setKinematic(kinematic: boolean): void;\n    setPosition(position: Vec3 | [\n        number,\n        number,\n        number\n    ] | {\n        x: number;\n        y: number;\n        z: number;\n    }): void;\n    getPosition(): Vec3;\n    setRotation(rotation: {\n        x: number;\n        y: number;\n        z: number;\n        w: number;\n    } | [\n        number,\n        number,\n        number,\n        number\n    ]): void;\n    getRotation(): {\n        x: number;\n        y: number;\n        z: number;\n        w: number;\n    };\n    lockTranslations(lockX?: boolean, lockY?: boolean, lockZ?: boolean): void;\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `INativeRigidBody3D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "applyForce?(fx: number, fy: number, fz: number): void;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "applyImpulse?(ix: number, iy: number, iz: number): void;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setVelocity?(vx: number, vy: number, vz: number): void;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getVelocity?(): { x: number; y: number; z: number };",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setAngularVelocity?(wx: number, wy: number, wz: number): void;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "getAngularVelocity?(): { x: number; y: number; z: number };",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "setKinematic?(kinematic: boolean): void;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "destroy?(): void;",
+                    "—",
+                    "Interface method contract; the implementing class supplies the body. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L18)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RigidBodyComponent` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public body: any",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public collider?: any",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public world?: any",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public kinematic: boolean",
+                    "false",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncTransform?: (dtSeconds?: number)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customApplyForce?: (fx: number, fy: number, fz: number)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customApplyImpulse?: (ix: number, iy: number, iz: number)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customSetVelocity?: (vx: number, vy: number, vz: number)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customGetVelocity?: ()",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customSetAngularVelocity?: (wx: number, wy: number, wz: number)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customGetAngularVelocity?: ()",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customSetPosition?: (x: number, y: number, z: number)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customGetPosition?: ()",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customSetRotation?: (x: number, y: number, z: number, w: number)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 41](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L41)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customGetRotation?: ()",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 42](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L42)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customLockTranslations?: (lx: boolean, ly: boolean, lz: boolean)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customSetKinematic?: (kinematic: boolean)",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public customDestroy?: ()",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 45](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L45)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        body: any,\n        kinematic: boolean = false,\n        collider?: any,\n        world?: any\n    )",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.body`, `this.kinematic`, `this.collider`, `this.world`. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onCollisionStart(callback: (other: any, event: any) => void): this",
+                    "—",
+                    "Registers a callback when this body starts colliding with another entity [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onCollisionEnd(callback: (other: any, event: any) => void): this",
+                    "—",
+                    "Registers a callback when this body stops colliding with another entity [Source line 76](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L76)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public _dispatchCollision(other: any, event: any): void",
+                    "—",
+                    "Internal: Dispatches collision event to registered entity-level listeners [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.syncTransform`, `this.body.setNextKinematicTranslation`, `this.body.setNextKinematicRotation`, `this.body.setTranslation`, `this.body.setRotation`, `this.body.translation`, `this.body.rotation`, `this.entity.transform.setPositionXYZ` and additional helpers. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyForce(force: Vec3 | [number, number, number]): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customApplyForce`, `this.body.addForce`. [Source line 123](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L123)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyImpulse(impulse: Vec3 | [number, number, number]): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customApplyImpulse`, `this.body.applyImpulse`. [Source line 136](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L136)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setVelocity(velocity: Vec3 | [number, number, number]): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customSetVelocity`, `this.body.setLinvel`. [Source line 149](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L149)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getVelocity(): Vec3",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `this.customGetVelocity`, `this.body.linvel`; return paths including `new Vec3()`, `new Vec3(v.x, v.y, v.z)`. [Source line 162](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L162)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setAngularVelocity(angVel: Vec3 | [number, number, number]): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customSetAngularVelocity`, `this.body.setAngvel`. [Source line 175](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L175)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getAngularVelocity(): Vec3",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `this.customGetAngularVelocity`, `this.body.angvel`; return paths including `new Vec3()`, `new Vec3(w.x, w.y, w.z)`. [Source line 188](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L188)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setKinematic(kinematic: boolean): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.kinematic`; calls to `this.customSetKinematic`, `this.body.setBodyType`. [Source line 201](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L201)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPosition(position: Vec3 | [number, number, number] | { x: number; y: number; z: number }): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.entity.transform.setPositionXYZ`, `this.customSetPosition`, `this.body.setTranslation`, `this.body.getRotation`, `this.body.setTransform`. [Source line 210](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L210)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPosition(): Vec3",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Vec3`; calls to `this.customGetPosition`, `this.body.translation`, `this.body.getPosition`; return paths including `new Vec3()`, `new Vec3(p.x, p.y, p.z)`. [Source line 230](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L230)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setRotation(rotation: { x: number; y: number; z: number; w: number } | [number, number, number, number]): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.entity.transform.setRotationQuaternionXYZW`, `this.customSetRotation`, `this.body.setRotation`, `this.body.getPosition`, `this.body.setTransform`. [Source line 247](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L247)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getRotation(): { x: number; y: number; z: number; w: number }",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customGetRotation`, `this.body.rotation`, `this.body.getRotation`; return paths including `{ x: 0, y: 0, z: 0, w: 1 }`, `this.customGetRotation()`, `this.body.rotation()`. [Source line 268](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L268)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lockTranslations(lockX: boolean = false, lockY: boolean = false, lockZ: boolean = false): void",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.customLockTranslations`, `this.body.setEnabledTranslations`, `this.body.getMotionLocks`, `this.body.setMotionLocks`. [Source line 282](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L282)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.body`, `this.collider`, `this._collisionStartListeners`, `this._collisionEndListeners`; calls to `this.customDestroy`, `this.world.removeRigidBody`. [Source line 299](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/RigidBodyComponent.ts#L299)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Component](/api-core#component)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "softbodycomponent",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SoftBodyComponent"
+        },
+        {
+          "type": "api-reference",
+          "source": "libs/physics/3d/components/SoftBodyComponent.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [libs/physics/3d/components/SoftBodyComponent.ts](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam/physics`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "SoftBodyComponent: Retiam ECS Component synchronizing 3D soft bodies, cloth, and deformables. Directly streams simulated vertex displacements into Retiam's WebGPU geometry buffers."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SoftBodyComponent",
+                    "Class",
+                    "Retiam ECS Component synchronizing 3D soft bodies, cloth, and deformables. Directly streams simulated vertex displacements into Retiam's WebGPU geometry buffers."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class SoftBodyComponent extends Component {\n    body: any;\n    world: any;\n    updateVertices?: (outPositions: Float32Array) => void;\n    syncTransform?: () => void;\n    vertexCount: number;\n    constructor(body: any, world: any, vertexCount?: number);\n    onInit(): void;\n    update(t: number, dt: number): void;\n    onDestroy(): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `SoftBodyComponent` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public body: any",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public world: any",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateVertices?: (outPositions: Float32Array)",
+                    "—",
+                    "Callback provided by backend to extract current frame vertex positions [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public syncTransform?: ()",
+                    "—",
+                    "Callback provided by backend to sync root entity transform [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public vertexCount: number",
+                    "0",
+                    "Total number of simulated vertices [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(body: any, world: any, vertexCount: number = 0)",
+                    "—",
+                    "Implementation: `super(); this.body = body; this.world = world; this.vertexCount = vertexCount; if (vertexCount > 0) { this._vertexPositions = new Float32Array(vertexCount * 3); }`. [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onInit(): void",
+                    "—",
+                    "Implementation: `super.onInit(); this.resolveTargetModel();`. [Source line 39](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L39)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public update(t: number, dt: number): void",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Float32Array`; calls to `this.syncTransform`, `this.resolveTargetModel`, `this.updateVertices`, `geo.setMesh`. [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public onDestroy(): void",
+                    "—",
+                    "Implementation: `if (this.world && typeof this.world.removeSoftBody === 'function' && this.body) { this.world.removeSoftBody(this.body); } this.body = null; this._vertexPositions = null; this._targetModel = null;`. [Source line 95](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L95)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "SoftBodyComponent.resolveTargetModel: private resolveTargetModel(): void",
+                    "Finds the underlying Model or ModelGeometry on the entity hierarchy. Body operations (including nested callbacks): assignments to `this._targetModel`; 1 explicit loop.",
+                    "[Line 47](https://github.com/abhilasbiswas/Retiam/blob/main/libs/physics/3d/components/SoftBodyComponent.ts#L47)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Component](/api-core#component)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

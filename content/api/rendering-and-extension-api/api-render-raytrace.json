@@ -1,0 +1,612 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-render-raytrace",
+  "title": "render / raytrace API",
+  "group": "Rendering and extension API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bvhbuilder",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "BVHBuilder"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/raytrace/BVHBuilder.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/raytrace/BVHBuilder.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "buildMeshBVH",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "buildTLAS",
+                    "Function",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare function buildMeshBVH(meshTriangles: any[], method?: 'spatial' | 'sah'): {\n    flatNodes: any[];\n    triangles: any[];\n    order: Uint32Array;\n};\nexport declare function buildTLAS(instances: {\n    min: number[];\n    max: number[];\n    centroid: number[];\n    meshId: number;\n}[]): {\n    flatNodes: any[];\n};"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "buildMeshBVH: Body operations (including nested callbacks): construction of `Uint32Array`, `Float32Array`, `Int32Array`, `Float64Array`; calls to `_sahBinCounts.fill`, `_sahLeftArea.fill`, `_sahLeftCount.fill`, `getSurfaceArea`, `subdivide`, `flatNodes.push`, `flatten`, `orderedTriangles.push`; return paths including `{ flatNodes: [], triangles: [], order: new Uint32Array(0) }`, `2.0 * (ext0 * ext1 + ext1 * ext2 + ext2 * ext0)`, `node`; 16 explicit loops.",
+                "buildTLAS: Body operations (including nested callbacks): construction of `Uint32Array`; calls to `subdivide`, `flatNodes.push`, `flatten`; return paths including `{ flatNodes: [] }`, `node`, `{ flatNodes }`; 4 explicit loops."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "getSurfaceArea: function getSurfaceArea(min: Float64Array, minOff: number, max: Float64Array, maxOff: number)",
+                    "Implementation: `let ext0 = max[maxOff] - min[minOff], ext1 = max[maxOff + 1] - min[minOff + 1], ext2 = max[maxOff + 2] - min[minOff + 2]; return 2.0 * (ext0 * ext1 + ext1 * ext2 + ext2 * ext0);`.",
+                    "[Line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts#L20)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "subdivide: function subdivide(leftFirst: number, triCount: number): any",
+                    "Body operations (including nested callbacks): calls to `_sahBinCounts.fill`, `_sahLeftArea.fill`, `_sahLeftCount.fill`, `getSurfaceArea`, `subdivide`; return paths including `node`; 14 explicit loops.",
+                    "[Line 39](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts#L39)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "flatten: function flatten(node: any)",
+                    "Body operations (including nested callbacks): calls to `flatNodes.push`, `flatten`.",
+                    "[Line 187](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts#L187)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "subdivide: function subdivide(leftFirst: number, count: number): any",
+                    "Body operations (including nested callbacks): calls to `subdivide`; return paths including `node`; 3 explicit loops.",
+                    "[Line 214](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts#L214)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "flatten: function flatten(node: any)",
+                    "Body operations (including nested callbacks): calls to `flatNodes.push`, `flatten`.",
+                    "[Line 265](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/BVHBuilder.ts#L265)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gpuarena",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GPUArena"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/raytrace/GPUArena.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/raytrace/GPUArena.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GPUArena",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class GPUArena {\n    device: GPUDevice;\n    label: string;\n    bytesPerElement: number;\n    usage: GPUBufferUsageFlags;\n    maxBytesAllowed: number;\n    maxCapacity: number;\n    capacity: number;\n    cpuBuffer: ArrayBuffer;\n    f32: Float32Array;\n    i32: Int32Array;\n    u32: Uint32Array;\n    u8: Uint8Array;\n    gpuBuffer: GPUBuffer;\n    constructor(device: GPUDevice, label: string, initialCapacity: number, bytesPerElement: number, usage: GPUBufferUsageFlags);\n    ensureCapacity(requiredElements: number): boolean;\n    upload(queue: GPUQueue, activeElements: number): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `GPUArena` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "device: GPUDevice",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 5](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L5)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "label: string",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 6](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L6)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "bytesPerElement: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 7](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L7)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "usage: GPUBufferUsageFlags",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 8](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L8)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxBytesAllowed: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 9](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L9)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "maxCapacity: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "capacity: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "cpuBuffer!: ArrayBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "f32!: Float32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 14](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L14)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "i32!: Int32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "u32!: Uint32Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "u8!: Uint8Array",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "gpuBuffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(device: GPUDevice, label: string, initialCapacity: number, bytesPerElement: number, usage: GPUBufferUsageFlags)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.device`, `this.label`, `this.bytesPerElement`, `this.usage`, `this.maxBytesAllowed`, `this.maxCapacity`, `this.capacity`; calls to `this._allocateCPU`, `this._allocateGPU`. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public ensureCapacity(requiredElements: number): boolean",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.capacity`; calls to `this._allocateCPU`, `this._allocateGPU`; return paths including `false`, `true`. [Source line 53](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L53)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public upload(queue: GPUQueue, activeElements: number)",
+                    "—",
+                    "Implementation: `if (activeElements === 0) return; const activeBytes = activeElements * this.bytesPerElement; queue.writeBuffer(this.gpuBuffer, 0, this.u8.subarray(0, activeBytes).buffer);`. [Source line 66](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L66)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "GPUArena._allocateCPU: private _allocateCPU(oldU8Array: Uint8Array | null = null)",
+                    "Body operations (including nested callbacks): assignments to `this.cpuBuffer`, `this.f32`, `this.i32`, `this.u32`, `this.u8`; construction of `ArrayBuffer`, `Float32Array`, `Int32Array`, `Uint32Array`, `Uint8Array`; calls to `this.u8.set`.",
+                    "[Line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L34)"
+                  ]
+                },
+                {
+                  "cells": [
+                    "GPUArena._allocateGPU: private _allocateGPU()",
+                    "Body operations (including nested callbacks): assignments to `this.gpuBuffer`; calls to `Renderer.destroyBuffers`, `GPUAllocator.safeCreateBuffer`.",
+                    "[Line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/GPUArena.ts#L44)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "raytracemanager",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RaytraceManager"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/raytrace/RaytraceManager.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/raytrace/RaytraceManager.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RaytraceManager",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class RaytraceManager {\n    device: GPUDevice;\n    cameraBuffer: GPUBuffer;\n    meshArena: GPUArena;\n    triangleArena: GPUArena;\n    bvhArena: GPUArena;\n    tlasArena: GPUArena;\n    emitterArena: GPUArena;\n    accumulatedFrames: number;\n    config: RenderConfig;\n    init(device: GPUDevice, config?: RenderConfig): void;\n    resize(width: number, height: number): void;\n    getPrevTexture(): GPUTexture;\n    getCurrTexture(): GPUTexture;\n    swapTextures(): void;\n    resetAccumulation(): void;\n    bakeMeshes(entities: Entity[], cullingMask?: number): void;\n    updateUniforms(camera: Camera, width: number, height: number, render_queue: RenderCommand[]): void;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `RaytraceManager` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public device!: GPUDevice",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cameraBuffer!: GPUBuffer",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 32](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L32)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public meshArena!: GPUArena",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public triangleArena!: GPUArena",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bvhArena!: GPUArena",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public tlasArena!: GPUArena",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public emitterArena!: GPUArena",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public accumulatedFrames",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public config: RenderConfig",
+                    "new RenderConfig()",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 55](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L55)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public init(device: GPUDevice, config?: RenderConfig)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.device`, `this.config`, `this.meshArena`, `this.triangleArena`, `this.bvhArena`, `this.tlasArena`, `this.emitterArena`, `this.cameraBuffer`; construction of `GPUArena`; calls to `GPUAllocator.safeCreateBuffer`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resize(width: number, height: number)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.accumTexA`, `this.accumTexB`; calls to `Renderer.destroyBuffers`, `this.device.createTexture`, `this.resetAccumulation`. [Source line 73](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L73)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getPrevTexture(): GPUTexture",
+                    "—",
+                    "Implementation: `return this.pingPong ? this.accumTexB : this.accumTexA;`. [Source line 87](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L87)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCurrTexture(): GPUTexture",
+                    "—",
+                    "Implementation: `return this.pingPong ? this.accumTexA : this.accumTexB;`. [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public swapTextures()",
+                    "—",
+                    "Implementation: `this.pingPong = !this.pingPong;`. [Source line 89](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L89)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resetAccumulation()",
+                    "—",
+                    "Implementation: `this.accumulatedFrames = 0;`. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public bakeMeshes(entities: Entity[], cullingMask: number = 0xFFFFFFFF)",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.rtEntities`; construction of `Int32Array`, `Uint32Array`; calls to `ent.getComponent`, `this.rtEntities.push`, `ent.children.forEach`, `entities.forEach`, `this.rtEntities.map(e => e.entity.id).join`, `this.rtEntities.map`, `this.rtEntities.forEach`, `this.extractTriangles` and additional helpers; 11 explicit loops. [Source line 118](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L118)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public updateUniforms(camera: Camera, width: number, height: number, render_queue: RenderCommand[])",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.meshArena.u32[offsetIdx + 66]`, `this.meshArena.u32[offsetIdx + 70]`, `this.totalTlasNodes`; construction of `Vec3`; calls to `new Vec3(-camera.forward.x, -camera.forward.y, -camera.forward.z).normalize`, `camera.up.cross(zAxis).normalize`, `camera.up.cross`, `zAxis.cross(xAxis).normalize`, `zAxis.cross`, `this.rtEntities.forEach`, `this.emitterArena.ensureCapacity`, `render_queue.find` and additional helpers; 3 explicit loops. [Source line 277](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L277)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RaytraceManager.extractTriangles: private extractTriangles(mesh: WebGPUMesh): any[]",
+                    "Body operations (including nested callbacks): calls to `tris.push`; return paths including `tris`; 1 explicit loop.",
+                    "[Line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceManager.ts#L92)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "raytraceshaders",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "RaytraceShaders"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/render/raytrace/RaytraceShaders.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/render/raytrace/RaytraceShaders.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/raytrace/RaytraceShaders.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "RTShaders",
+                    "First",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare const RTShaders: {\n    common: string;\n    gbuffer: string;\n    classic: string;\n};"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

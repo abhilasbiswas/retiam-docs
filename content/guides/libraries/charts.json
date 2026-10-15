@@ -1,0 +1,141 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "charts",
+  "title": "Charts, scales, themes and tooltips",
+  "group": "Libraries",
+  "summary": "Build animated charts from data with scales, themes, axes and tooltips.",
+  "sections": [
+    {
+      "id": "data-and-coordinate-ownership",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Data and coordinate ownership"
+        },
+        {
+          "type": "paragraph",
+          "text": "Chart extends VGroup and manages axes/grid/data composites. LinearScale, BandScale and OrdinalScale map data domains to scene ranges and colors. BarChart data uses category and value fields. LineChart and AreaChart use their declared data contracts; PieChart uses slice data. Width and height are world dimensions of the chart."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { BarChart } from \"retiam/charts\";\nimport { hex } from \"retiam\";\nconst chart = new BarChart({\n  data: [{ category: \"A\", value: 12 }, { category: \"B\", value: 20 }],\n  width: 8, height: 5, barColor: hex(\"#38BDF8\")\n});\nthis.add(chart);\nawait this.play(chart.animateIn({ duration: 1200 }));\nawait this.play(chart.animateData([{ category: \"A\", value: 24 }, { category: \"B\", value: 10 }], { duration: 1500 }));"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Chart](/api-libs-charts-core#chart), [BarChart](/api-libs-charts-cartesian#barchart), [LineChart](/api-libs-charts-cartesian#linechart), [AreaChart](/api-libs-charts-cartesian#areachart), [PieChart](/api-libs-charts-polar#piechart), [LinearScale](/api-libs-charts-core#scale), [BandScale](/api-libs-charts-core#scale)."
+        }
+      ]
+    },
+    {
+      "id": "domains-and-data-updates",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Keep data values separate from scene dimensions"
+        },
+        {
+          "type": "paragraph",
+          "text": "A value of 20 is mapped through a scale before becoming a bar height. Width and height set the chart's local geometry, while yRange sets the numeric domain. Use the same explicit domain when comparing two datasets; otherwise a taller-looking bar can represent a smaller value in a separately scaled chart. The card and header extend beyond the nominal plotting dimensions, so frame the complete chart's bounds."
+        },
+        {
+          "type": "paragraph",
+          "text": "BarChart.animateData updates existing bars by array index using the original numeric scale. It does not match category names, add or remove bars, recompute the axis, replace category labels, recolor marks or refresh tooltip closures. Keep category count and order stable, and use the animation for changing values. Recreate the chart when its category layout or scale must change; calling build again appends another set of geometry instead of replacing the old one."
+        },
+        {
+          "type": "paragraph",
+          "text": "The current BarChart maps the lower domain endpoint to a positive-height baseline and clamps bar heights to at least 0.01. It does not create signed bars extending below a zero axis. For negative values, use a line plot with an explicit domain or construct a signed bar layout. LinearScale extrapolates values outside its domain, so a data update can move a bar beyond the original chart area."
+        },
+        {
+          "type": "paragraph",
+          "text": "LineChart connects points in their supplied order. Sort samples before construction when x should advance monotonically, and provide explicit xRange/yRange for constant or all-negative datasets. Formatters receive data tick values, not world coordinates; changing their displayed strings leaves scale mapping unchanged."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "Current entrance animation limits",
+          "content": "LineChart.animateIn and AreaChart.animateIn index dots against a combined array across series. Disable dots for multi-series entrance animations when this would move the wrong samples. AreaChart also expects an area for each animated series, so provide at least two points in every series. The API reference documents these current constraints."
+        }
+      ]
+    },
+    {
+      "id": "themes-and-interaction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Themes and interaction"
+        },
+        {
+          "type": "paragraph",
+          "text": "Themes configure chart colors, label/grid styles and other defaults. Tooltip is a composite following interaction on eligible geometry. Keep data category identity stable across animated updates so the viewer can track the same item. If adding or removing categories changes layout, inspect transition behavior and axis range rather than assuming value interpolation alone handles the change."
+        }
+      ]
+    },
+    {
+      "id": "best-practices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Best practices"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Make the numerical domain explicit when comparing charts across scenes.",
+            "Use category labels consistently; labels in a chart are data semantics, not only decoration.",
+            "Animate toward a new dataset through the chart’s public method rather than editing child bar positions directly.",
+            "Verify labels and tooltips after changing font scale or camera framing."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One dataset becomes one bar chart."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-barchart"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Graphs, layouts and automata](/graphs).",
+            "Build it step by step: [Build an animated chart](/project-animated-chart)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Layout, arrangement and framing](/layout)"
+  ]
+}

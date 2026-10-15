@@ -1,0 +1,110 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "scene-composition",
+  "title": "Scenes, composer and subscenes",
+  "group": "Core authoring",
+  "summary": "Choose between one scene, a shared composer and subscenes, and understand their rendering boundaries.",
+  "sections": [
+    {
+      "id": "ownership-boundaries",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Ownership boundaries"
+        },
+        {
+          "type": "paragraph",
+          "text": "Scene owns script execution, entities, animation queues, update callbacks and local timeline state. SceneComposer owns the device, renderer, texture manager, shared state managers, views, offline rendering and the requestAnimationFrame loop. Scenes added to one composer share those resources; they do not each allocate a new GPU context."
+        },
+        {
+          "type": "paragraph",
+          "text": "Scene.start is convenient for one scene. For multiple scenes, initialize a composer once, add scenes, start the composer and explicitly launch each script. Adding a scene does not itself mean its asynchronous run has been invoked."
+        }
+      ]
+    },
+    {
+      "id": "compose-multiple-scene-scripts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Compose multiple scene scripts"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { SceneComposer } from \"retiam\";\n\nconst composer = new SceneComposer();\nawait composer.init(canvas);\ncomposer.add(worldScene, { zIndex: 0 });\ncomposer.add(overlayScene, { zIndex: 10 });\ncomposer.start();\nawait Promise.all([worldScene.run(), overlayScene.run()]);\n// Later, when disposing the host:\ncomposer.destroy();"
+        },
+        {
+          "type": "paragraph",
+          "text": "The composer stack zIndex orders scene composition; entity z_index orders entity drawing. These are distinct from bitmask layers and from camera viewport order. Scene-level ALPHA can be animated with fadeTo for transitions."
+        }
+      ]
+    },
+    {
+      "id": "subscene-versus-independent-views",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SubScene versus independent views"
+        },
+        {
+          "type": "paragraph",
+          "text": "SubScene wraps a child Scene as an Entity so its content participates in the parent hierarchy, transforms and lifecycle while sharing GPU resources. A RenderView is a camera/viewport/target descriptor. Use SubScene for encapsulated scene logic; use views for observing content through different cameras or render targets."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Scene](/api-core-scene#scene), [SceneComposer](/api-core-scenecomposer#scenecomposer), [SubScene](/api-entities#subscene), [RenderView](/api-camera#renderview)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scenes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow one entity through a scene timeline, then see one parent-child relationship."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-firstscene"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-hierarchyscene"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Layout, arrangement and framing](/layout)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Entities, components and ownership](/entities)"
+  ]
+}

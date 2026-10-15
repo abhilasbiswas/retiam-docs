@@ -1,0 +1,607 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-sequential-and-concurrent-animation-architecture",
+  "title": "Sequential & Concurrent Composite Animation Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/SEQUENTIAL_AND_CONCURRENT_ANIMATION_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/SEQUENTIAL_AND_CONCURRENT_ANIMATION_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/SEQUENTIAL_AND_CONCURRENT_ANIMATION_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Sequential](/api-animation#sequential), [Concurrent](/api-animation#concurrent), [Animation](/api-animation#animation), [State](/api-core#state), [FadeIn](/api-animation#fadein), [StateAnimation](/api-animation#stateanimation), [Create](/api-animation-creation#create), [PopHighlight](/api-libs-highlights-motion#pophighlight), [SparkleBurst](/api-libs-highlights-finish#sparkleburst), [AnimOptions](/api-animation#animoptions), [Pass](/api-render-frame-graph#pass), [Arc](/api-entities-primitives-2d#arc), [Excalidraw](/api-style-excalidraw#excalidraw), [BoilAnimation](/api-style-excalidraw#excalidrawanimation), [TrackBuilder](/api-animation#trackbuilder), [Model](/api-entities-primitives-3d#model), [TrackAnimation](/api-animation#trackanimation), [ColorTint](/api-libs-highlights-material#colortint), [CascadeIn](/api-animation-creation#cascadein), [Flash](/api-libs-highlights-finish#flash), [Complex](/api-math#complex), [Usage](/api-utils#gpu-utils), [Delay](/api-animation#delay), [Rate](/api-animation#rate)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In high-fidelity cinematic and mathematical visualizations, visual narratives rarely consist of isolated, independent movements. Instead, complex choreographies require **multi-stage temporal progression**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Staged Introductions**: Outlining a geometric boundary $\\rightarrow$ Pausing $\\rightarrow$ Fading in interior fill $\\rightarrow$ Displaying mathematical annotations.",
+            "**State Anticipation & Settle**: Rapid expansion beyond equilibrium (anticipation/pop) $\\rightarrow$ Elastic harmonic settling back to standard scale.",
+            "**Compound Storytelling**: Revealing an initial equation $\\rightarrow$ Highlighting a specific variable $\\rightarrow$ Morphing to a simplified term."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides two complementary, first-class composite [`Animation`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Animation.ts) primitives based on the **Composite Pattern**:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "[`Sequential`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts): Orchestrates an ordered list of animations **strictly in series** (one after another).",
+            "[`Concurrent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts): Orchestrates an ordered list of animations **simultaneously in parallel**, with optional start staggering via `lagRatio`."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Because both `Sequential` and `Concurrent` extend `Animation`, they can be passed directly to `scene.play()`, nested within each other to form arbitrary animation trees, or subclassed to create reusable, parameterizable visual effects."
+        }
+      ]
+    },
+    {
+      "id": "2-core-architectural-principles",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Architectural Principles"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            {
+              "text": "**Duality of Composition**:",
+              "children": [
+                "`Sequential` handles **temporal serial progression** ($A \\longrightarrow B \\longrightarrow C$).",
+                "`Concurrent` handles **temporal concurrence & parallel waves** ($A \\parallel B \\parallel C$)."
+              ]
+            },
+            "**Composable Tree Hierarchy (Composite Pattern)**: A `Sequential` can contain atomic animations (`FadeIn`, `StateAnimation`, `Create`), parallel clusters (`Concurrent`), or nested sub-sequences.",
+            {
+              "text": "**Natural Duration Accumulation**:",
+              "children": [
+                "In `Sequential`: Total duration is automatically computed as the sum of its constituent animations' durations ($\\sum D_i$).",
+                "In `Concurrent`: Animations run simultaneously within the allotted `this.duration`, mathematically distributed according to `lagRatio`."
+              ]
+            },
+            "**Proportional Time Scaling**: Modifying the composite duration (via `scene.play(anim, { duration: T })` or `applyOptions`) scales each child's duration and delay proportionally, preserving the relative rhythm and choreography.",
+            "**Completion-Boundary Scheduling**: The scheduler divides a frame at real animation boundaries. Completion promises may queue the next work, which is advanced through the same frame's remaining time without exposing a timing remainder.",
+            "**Recursive State Preparation**: Calling `.prepare()` traverses the animation hierarchy, allowing all child animations to freeze their initial transforms and pre-bake paths before playback commences."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-class-structure-hierarchy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Class Structure & Hierarchy"
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "Animation",
+              "description": "duration · delay · fps",
+              "children": [
+                {
+                  "label": "Concurrent",
+                  "description": "Parallel execution",
+                  "children": [
+                    {
+                      "label": "SparkleBurst",
+                      "description": "Concurrent of SparkleSeqs"
+                    }
+                  ]
+                },
+                {
+                  "label": "Sequential",
+                  "description": "Serial execution",
+                  "children": [
+                    {
+                      "label": "PopHighlight",
+                      "description": "Sequential of two Concurrent groups"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-runtime-execution-mechanics",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Runtime Execution Mechanics"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.1 Sequential: Duration Calculation & Proportional Scaling"
+        },
+        {
+          "type": "paragraph",
+          "text": "When initialized, a `Sequential` sets its natural duration as:"
+        },
+        {
+          "type": "math",
+          "tex": "D_{\\text{total}} = \\sum_{i=0}^{N-1} D_i"
+        },
+        {
+          "type": "paragraph",
+          "text": "When caller options (such as playback speed adjustments or explicit scene duration overrides) specify a new duration $D_{\\text{target}}$, the sequence calculates a scale factor:"
+        },
+        {
+          "type": "math",
+          "tex": "S = \\frac{D_{\\text{target}}}{D_{\\text{initial}}}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every child animation's duration and delay are then scaled proportionally:"
+        },
+        {
+          "type": "math",
+          "tex": "D_i \\leftarrow D_i \\times S, \\qquad \\text{delay}_i \\leftarrow \\text{delay}_i \\times S"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "public applyOptions(options?: AnimOptions): void {\n    if (!options) return;\n\n    const oldDuration = this.duration;\n    super.applyOptions(options);\n\n    if (oldDuration > 0 && this.duration !== oldDuration) {\n        const scale = this.duration / oldDuration;\n        for (const animation of this.animations) {\n            animation.applyOptions({\n                rate_func: this.rate_func,\n                fps: options.fps ?? this.fps,\n                interval: options.interval ?? this.interval,\n                duration: animation.duration * scale,\n                delay: animation.delay * scale,\n            });\n        }\n    }\n}"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Passing `duration: scaledDuration, delay: scaledDelay` into `anim.applyOptions` ensures that if any child animation is a composite animation (such as `Concurrent`, `Create`, or a nested `Sequential`), the duration scales recursively down the entire animation hierarchy. Furthermore, `new Sequential(anims, { duration: T })` respects `options.duration` on initialization, proportionally scaling its children to fit $T$ rather than discarding the caller's target duration."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.2 Completion-Boundary Handoffs"
+        },
+        {
+          "type": "paragraph",
+          "text": "Frames are scheduled around boundaries, not around a numeric timing value returned by an animation. If animation $A$ has 10 ms remaining in a 16.67 ms frame, the scheduler advances to that boundary, completes $A$, then resumes its play continuation."
+        },
+        {
+          "type": "paragraph",
+          "text": "The continuation can queue $B$ before the scheduler consumes the remaining 6.67 ms. $B$ therefore begins in the same rendered frame, without a one-frame gap or a user-visible balance-time value."
+        },
+        {
+          "type": "paragraph",
+          "text": "The same shared scheduler serves scene, composer, and nested scene queues; Sequential follows the same boundary contract for its children:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n  F[\"Frame step<br/>dt = 16.67ms\"] --> A[\"Advance to A's boundary<br/>10ms: A completes\"]\n  A --> C[\"Drain await continuation<br/>B is queued\"] --> B[\"Advance B<br/>remaining 6.67ms\"]"
+        },
+        {
+          "type": "paragraph",
+          "text": "A custom animation reports a boolean completion state and resolves its `Promise<void>` through `complete()`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "public update(dt: number): boolean {\n    this.elapsed += dt;\n    this.applyProgress(Math.min(1, this.elapsed / this.duration));\n\n    if (this.elapsed < this.duration) return false;\n\n    this.complete();\n    return true;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.3 Concurrent: Stagger Distribution & Arc-Length Scheduling"
+        },
+        {
+          "type": "paragraph",
+          "text": "Located at [`src/engine/animation/Concurrent.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts):"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Concurrent` orchestrates child animations running simultaneously or in staggered sequences. It supports three staggering modes via `stagger` / `lagRatio`:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`stagger: 'simultaneous'` (`lagRatio = 0.0`): All child animations start at $t = 0$ with duration equal to `this.duration`.",
+            "`stagger: 'sequential'` (`lagRatio = 1.0`): Child animations execute strictly one after another in series.",
+            "`stagger: number` ($0 < \\text{lagRatio} < 1.0$, e.g. `0.08`): Overlapping cascade wave where each subsequent child begins after fraction `lagRatio` of the previous child's duration."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Duration Distribution Strategies (distribution)"
+        },
+        {
+          "type": "paragraph",
+          "text": "When animating composite vector entities comprising multiple paths (such as SVGs, Excalidraw sketches, and VGroups), dividing total time equally among all paths can cause tiny dots or accents to freeze on screen for hundreds of milliseconds while long outlines rush by."
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides three duration distribution strategies:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Strategy",
+            "Formula",
+            "Behavior"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`'equal'` (default)",
+                  "type": "text"
+                },
+                {
+                  "text": "$w_i = 1$"
+                },
+                {
+                  "text": "Identical duration slice per child."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'length'`",
+                  "type": "text"
+                },
+                {
+                  "text": "$w_i = L_i$"
+                },
+                {
+                  "text": "Strict physical constant pen drawing velocity based on geometric arc length (`path.getArcLength()`)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`'balanced'`",
+                  "type": "text"
+                },
+                {
+                  "text": "$w_i = L_i^{0.6}$"
+                },
+                {
+                  "text": "Sub-linear power-law curve. Keeps micro-paths and dots snappy ($\\approx 16\\text{--}40\\text{ms}$) while giving large outlines and hatches ample time."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Weighted Scheduling Formula"
+        },
+        {
+          "type": "paragraph",
+          "text": "For non-uniform weights $w_0, \\dots, w_{N-1}$ and stagger ratio $k = \\text{lagRatio} \\in (0, 1]$:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{denom} = k \\sum_{j=0}^{N-2} w_j + w_{N-1}"
+        },
+        {
+          "type": "math",
+          "tex": "S = \\frac{T}{\\text{denom}}"
+        },
+        {
+          "type": "math",
+          "tex": "D_i = \\max(\\text{minChildDuration}, w_i \\cdot S)"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{delay}_0 = 0, \\quad \\text{delay}_i = \\text{delay}_{i-1} + k \\cdot D_{i-1}"
+        },
+        {
+          "type": "paragraph",
+          "text": "A final normalization step scales $(D_i, \\text{delay}_i)$ by $\\frac{T}{\\text{finish}_{\\text{last}}}$ to guarantee that the last child completes at *exactly* $T$."
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Hierarchical Duration Propagation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In `Concurrent.applyOptions`, `duration: durations[index]` and `delay: delays[index]` are passed directly into each child's `anim.applyOptions(...)`. This enables nested composite structures (such as `Excalidraw.createAnim`, which groups `Create` and `BoilAnimation` in parallel) to propagate scaled durations down to all leaf paths."
+        }
+      ]
+    },
+    {
+      "id": "5-architectural-comparison",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Architectural Comparison"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Dimension",
+            "`Sequential`",
+            "`Concurrent`",
+            "`TrackBuilder`",
+            "Imperative `await scene.play()`"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Execution Model**",
+                  "type": "text"
+                },
+                {
+                  "text": "Serial (in series)"
+                },
+                {
+                  "text": "Parallel (simultaneous / staggered)"
+                },
+                {
+                  "text": "Multi-track timeline (parallel + serial + delays)"
+                },
+                {
+                  "text": "Scripted synchronous timeline steps"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Total Duration**",
+                  "type": "text"
+                },
+                {
+                  "text": "$\\sum D_i$"
+                },
+                {
+                  "text": "Simultaneous span (fits `duration`)"
+                },
+                {
+                  "text": "$\\max(\\text{delay}_i + D_i)$"
+                },
+                {
+                  "text": "$\\sum \\text{step duration}$"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Encapsulation**",
+                  "type": "text"
+                },
+                {
+                  "text": "High (usable as single `Animation` object)"
+                },
+                {
+                  "text": "High (usable as single `Animation` object)"
+                },
+                {
+                  "text": "Medium (used inside `createAnim` or builders)"
+                },
+                {
+                  "text": "Low (procedural logic inside scene script)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Nesting Support**",
+                  "type": "text"
+                },
+                {
+                  "text": "Yes (sub-element of any composite)"
+                },
+                {
+                  "text": "Yes (sub-element of any composite)"
+                },
+                {
+                  "text": "Compiles to `TrackAnimation`"
+                },
+                {
+                  "text": "No (cannot be nested)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Subclassable**",
+                  "type": "text"
+                },
+                {
+                  "text": "Yes (e.g., `PopHighlight`, `ColorTint`)"
+                },
+                {
+                  "text": "Yes (e.g., `Create`, `CascadeIn`, `Flash`)"
+                },
+                {
+                  "text": "N/A (fluent helper)"
+                },
+                {
+                  "text": "N/A"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Best Used For**",
+                  "type": "text"
+                },
+                {
+                  "text": "Multi-phase atomic transitions, composite effects"
+                },
+                {
+                  "text": "Simultaneous actions, staggered entrances (`lagRatio`)"
+                },
+                {
+                  "text": "Complex entity entrance routines with mixed timings"
+                },
+                {
+                  "text": "High-level scene direction and script narration"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6-practical-usage-patterns",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Practical Usage Patterns"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.1 Basic Linear Sequence with Delay"
+        },
+        {
+          "type": "paragraph",
+          "text": "You can interleave active animations with [`Delay`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Delay.ts) to introduce pauses without breaking animation encapsulation:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Sequential, Create, FadeIn, Delay } from \"retiam\";\n\nconst entrance = new Sequential([\n    new Create(box, { duration: 600 }),\n    new Delay(200), // Hold for 200ms\n    new FadeIn(title, { duration: 400 }),\n    new FadeIn(subtext, { duration: 400 }),\n]);\n\nawait scene.play(entrance);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.2 Nested Composite Hierarchy (Concurrent inside Sequential)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Visual transitions often require running parallel actions in distinct, sequential phases:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Sequential, Concurrent, StateAnimation, Rate } from \"retiam\";\n\n// Phase 1: Parallel reveal of background card and icon\nconst phase1 = new Concurrent([\n    new StateAnimation(card, cardVisibleState, { duration: 500 }),\n    new StateAnimation(icon, iconVisibleState, { duration: 500 }),\n]);\n\n// Phase 2: Parallel focus pulse and color shift\nconst phase2 = new Concurrent([\n    new StateAnimation(card, cardHighlightState, { duration: 300, rate_func: Rate.rushInto() }),\n    new StateAnimation(icon, iconTintState, { duration: 300 }),\n]);\n\n// Phase 3: Settle back\nconst phase3 = new StateAnimation(card, cardRestingState, { duration: 400, rate_func: Rate.easeOutElastic() });\n\n// Execute all 3 phases sequentially as one animation\nconst cardPresentation = new Sequential([phase1, phase2, phase3]);\nawait scene.play(cardPresentation);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.3 Building Reusable Compound Animations by Subclassing Sequential"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam's highlight library (`libs/highlights`) leverages `Sequential` and `Concurrent` to expose self-contained, turnkey motion presets."
+        },
+        {
+          "type": "paragraph",
+          "text": "Example from [`PopHighlight.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/motion/PopHighlight.ts):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Entity, Sequential, Concurrent, StateAnimation, Vec3, Rate } from \"retiam\";\nimport { PopHighlightOptions } from \"../core/types\";\n\nexport class PopHighlight extends Sequential {\n    constructor(target: Entity | Entity[], options: PopHighlightOptions = {}) {\n        const duration = options.duration ?? 500;\n        const scaleFactor = options.scaleFactor ?? 1.2;\n        const targets = Array.isArray(target) ? target : [target];\n\n        const popAnims: StateAnimation[] = [];\n        const settleAnims: StateAnimation[] = [];\n\n        const popDuration = duration * 0.4;\n        const settleDuration = duration * 0.6;\n\n        for (const ent of targets) {\n            const originalState = ent.state.copy();\n            const poppedState = originalState.copy();\n\n            const cur = ent.transform.scaling;\n            poppedState.transform.setScale(\n                new Vec3(cur.x * scaleFactor, cur.y * scaleFactor, cur.z)\n            );\n\n            // Phase 1: Quick punch out\n            popAnims.push(\n                new StateAnimation(ent, poppedState, {\n                    duration: popDuration,\n                    rate_func: Rate.easeOutQuad(),\n                })\n            );\n\n            // Phase 2: Elastic settle back\n            settleAnims.push(\n                new StateAnimation(ent, originalState, {\n                    duration: settleDuration,\n                    rate_func: Rate.easeOutElastic(),\n                })\n            );\n        }\n\n        // Pass child groups to Sequential super constructor\n        super(\n            [new Concurrent(popAnims), new Concurrent(settleAnims)],\n            options\n        );\n\n        this.LABEL = \"PopHighlight\";\n        this.entity = target;\n    }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "The user of `PopHighlight` simply calls:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "await scene.play(new PopHighlight(formulaNode, { duration: 600, scaleFactor: 1.3 }));"
+        },
+        {
+          "type": "paragraph",
+          "text": "All proportional scaling, phase sequencing, and completion-boundary handoffs are handled automatically by `Sequential` and the frame scheduler."
+        }
+      ]
+    },
+    {
+      "id": "7-best-practices-invariants",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Best Practices & Invariants"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Avoid Post-Construction Mutation of Sub-Animations**:"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "When passed to `new Sequential(anims)`, the sequence caches the sum of their initial durations. Do not manually mutate `anim.duration` directly on child objects after passing them into the sequence; use `seq.applyOptions({ duration: ... })` instead to trigger proportional recalculation."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Deterministic Preparation**:"
+          ],
+          "start": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "`Sequential.prepare()` iterates over every child animation in forward order. If child animations depend on entity state transformations pre-calculated by earlier children, ensure states are cleanly copied (via `ent.state.copy()`) rather than mutated in place during initialization."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Combine with Concurrent for Complex Choreographies**:"
+          ],
+          "start": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Use `Concurrent` to express *spatial concurrence* (what moves together) and `Sequential` to express *temporal progression* (what moves when). Combining both produces clean, tree-structured motion choreography with mathematical determinism."
+        }
+      ]
+    }
+  ]
+}

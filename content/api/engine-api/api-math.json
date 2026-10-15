@@ -1,0 +1,1914 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-math",
+  "title": "math API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aabb",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "AABB"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/AABB.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/AABB.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "AABB: Axis-Aligned Bounding Box (AABB) in 3D coordinate space. Used for volume estimation, intersection calculations, and BVH structures."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "AABB",
+                    "Class",
+                    "Axis-Aligned Bounding Box (AABB) in 3D coordinate space. Used for volume estimation, intersection calculations, and BVH structures."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class AABB {\n    min: Vec3;\n    max: Vec3;\n    constructor(min?: Vec3, max?: Vec3);\n    get center(): Vec3;\n    get size(): Vec3;\n    expandByPoint(p: Vec3): this;\n    expandByAABB(aabb: AABB): this;\n    union(aabb: AABB): this;\n    reset(): this;\n    isEmpty(): boolean;\n    intersects(other: AABB): boolean;\n    intersect(other: AABB): AABB;\n    getCorners(): Vec3[];\n    containsPoint(p: Vec3): boolean;\n    getCenter(dst?: Vec3): Vec3;\n    clone(): AABB;\n    getBoundaryPoint(direction: Vec3Type): Vec3;\n    copyFrom(other: AABB): this;\n    transform(matrix: Mat4, dst?: AABB): AABB;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `AABB` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public min: Vec3",
+                    "—",
+                    "Minimum boundary point of the box. [Source line 18](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L18)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public max: Vec3",
+                    "—",
+                    "Maximum boundary point of the box. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(\n        min: Vec3 = new Vec3(Infinity, Infinity, Infinity),\n        max: Vec3 = new Vec3(-Infinity, -Infinity, -Infinity)\n    )",
+                    "—",
+                    "Creates a new AABB. Param: min Minimum boundary vector. Param: max Maximum boundary vector. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L28)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get center(): Vec3",
+                    "—",
+                    "Center position point of the bounding box volume. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get size(): Vec3",
+                    "—",
+                    "Bounding dimensions size vector [width, height, depth]. [Source line 46](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L46)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public expandByPoint(p: Vec3): this",
+                    "—",
+                    "Expands AABB boundaries to contain a 3D coordinate point. Param: p Point coordinates. [Source line 59](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L59)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public expandByAABB(aabb: AABB): this",
+                    "—",
+                    "Merges another AABB boundaries into this box volume. Param: aabb Target box to merge. [Source line 74](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L74)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public union(aabb: AABB): this",
+                    "—",
+                    "Merges another AABB into this bounding box volume (fluent alias for expandByAABB). Param: aabb Target box to merge. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public reset(): this",
+                    "—",
+                    "Resets the bounding box to an empty state. [Source line 93](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L93)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public isEmpty(): boolean",
+                    "—",
+                    "Returns true if boundaries are invalid or empty. [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public intersects(other: AABB): boolean",
+                    "—",
+                    "Returns true if this AABB overlaps with another AABB. Param: other The AABB to test against. [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public intersect(other: AABB): AABB",
+                    "—",
+                    "Returns a new AABB representing the intersection of this and another AABB. [Source line 121](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L121)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCorners(): Vec3[]",
+                    "—",
+                    "Gets all 8 corners of the bounding box. [Source line 139](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L139)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public containsPoint(p: Vec3): boolean",
+                    "—",
+                    "Returns true if the given point lies within this AABB (inclusive of boundaries). Param: p The point to test. [Source line 157](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L157)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCenter(dst?: Vec3): Vec3",
+                    "—",
+                    "Computes the center of the bounding box into an optional destination Vec3. Use this over the `center` getter in hot paths to avoid allocations. Param: dst Optional destination Vec3. If omitted, a new Vec3 is allocated. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L172)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clone(): AABB",
+                    "—",
+                    "Implementation: `return new AABB(this.min.clone(), this.max.clone());`. [Source line 182](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L182)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getBoundaryPoint(direction: Vec3Type): Vec3",
+                    "—",
+                    "Retrieves a point on the physical boundary of the bounding box based on a direction vector. Param: direction The direction vector mapping the anchor (e.g. UP, LEFT, DL). [Source line 193](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L193)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public copyFrom(other: AABB): this",
+                    "—",
+                    "Copies dimensions from another AABB without allocating memory. [Source line 205](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L205)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public transform(matrix: Mat4, dst?: AABB): AABB",
+                    "—",
+                    "Transforms the bounding box corner points by a projection matrix and returns the new enclosing bounding box. Param: matrix 4x4 transform projection matrix. Param: dst Optional destination AABB to prevent memory allocations. [Source line 218](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/AABB.ts#L218)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "color",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Color"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/Color.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/Color.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "ColorLike: Any value that can be coerced into a Color: Color instance, hex string, or keyword ('transparent' / 'none').",
+                "Color: A renderable RGBA color class wrapping a Float32Array. Extends the GPU-bindable GPUType for automated layout serialization."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ColorLike",
+                    "TypeAlias",
+                    "Any value that can be coerced into a Color: Color instance, hex string, or keyword ('transparent' / 'none')."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Color",
+                    "Class",
+                    "A renderable RGBA color class wrapping a Float32Array. Extends the GPU-bindable GPUType for automated layout serialization."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type ColorLike = Color | string;\nexport declare class Color extends GPUType {\n    onChange?: () => void;\n    byteSize(): number;\n    getData(): Float32Array;\n    dataType(): string;\n    readonly _rgba: Float32Array;\n    static WHITE: Color;\n    static BLACK: Color;\n    static RED: Color;\n    static GREEN: Color;\n    static BLUE: Color;\n    static GREY: Color;\n    static DARK_GREY: Color;\n    static LIGHT_GREY: Color;\n    static YELLOW: Color;\n    static CYAN: Color;\n    static MAGENTA: Color;\n    static ORANGE: Color;\n    static PURPLE: Color;\n    static PINK: Color;\n    static LIME: Color;\n    static BROWN: Color;\n    static TEAL: Color;\n    static NAVY: Color;\n    static INDIGO: Color;\n    static CORAL: Color;\n    static SALMON: Color;\n    static GOLD: Color;\n    static MAROON: Color;\n    static OLIVE: Color;\n    static TURQUOISE: Color;\n    static VIOLET: Color;\n    static SKY_BLUE: Color;\n    static NONE: Color;\n    static Grey(lightness: number, alpha?: number): Color;\n    static Red(intensity: number, alpha?: number): Color;\n    static Green(intensity: number, alpha?: number): Color;\n    static Blue(intensity: number, alpha?: number): Color;\n    static Alpha(base: Color, alpha: number): Color;\n    constructor(r: number | Float32Array, g?: number, b?: number, a?: number);\n    get r(): number;\n    set r(r: number);\n    get g(): number;\n    set g(g: number);\n    get b(): number;\n    set b(b: number);\n    get a(): number;\n    set a(a: number);\n    get rgba(): Float32Array;\n    set rgba(rgba: Float32Array);\n    set(r: number | Color | number[] | Float32Array, g?: number, b?: number, a?: number): this;\n    alpha(alpha: number): Color;\n    red(red: number): Color;\n    green(green: number): Color;\n    blue(blue: number): Color;\n    static size(): number;\n    add(v: Color): Color;\n    sub(v: Color): Color;\n    equals(v: Color | null | undefined): boolean;\n    lerp(target: Color, t: number, dst?: Color): Color;\n    static lerp(a: Color, b: Color, t: number, dst?: Color): Color;\n    copy(): Color;\n    static random(): Color;\n    static fromHex(hex: string): Color;\n    static from(val: ColorLike): Color;\n    static from(val: ColorLike | null | undefined, fallback: ColorLike): Color;\n    static from(val: ColorLike | null | undefined, fallback: null): Color | null;\n    static fromHSV(h: number, s: number, v: number, a?: number): Color;\n    static fromHSL(h: number, s: number, l: number, a?: number): Color;\n    static gradient(colors: ColorLike[], angleInDegrees?: number): FillEffect;\n    static radialGradient(colors: ColorLike[], centerX?: number, centerY?: number, radius?: number): FillEffect;\n    toHex(includeAlpha?: boolean): string;\n    toString(): string;\n    static fromRGB(r: number, g: number, b: number, a?: number): Color;\n    toHSL(): {\n        h: number;\n        s: number;\n        l: number;\n        a: number;\n    };\n    clone(): Color;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Color` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public onChange?: ()",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 26](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L26)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public byteSize(): number",
+                    "—",
+                    "Returns the GPU byte size of a Color (16 bytes = 4 × Float32). [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getData(): Float32Array",
+                    "—",
+                    "Implementation: `return this._rgba;`. [Source line 34](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L34)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public dataType(): string",
+                    "—",
+                    "Implementation: `return \"vec4f\";`. [Source line 38](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L38)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly _rgba: Float32Array",
+                    "—",
+                    "Underlying WebGPU-compatible 4-component vector float buffer. [Source line 43](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L43)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static WHITE",
+                    "new Color(1, 1, 1, 1)",
+                    "Pure white (1,1,1,1). [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static BLACK",
+                    "new Color(0, 0, 0, 1)",
+                    "Pure black (0,0,0,1). [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static RED",
+                    "new Color(1, 0, 0, 1)",
+                    "Pure red (1,0,0,1). [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static GREEN",
+                    "new Color(0, 1, 0, 1)",
+                    "Pure green (0,1,0,1). [Source line 56](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L56)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static BLUE",
+                    "new Color(0, 0, 1, 1)",
+                    "Pure blue (0,0,1,1). [Source line 58](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L58)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static GREY",
+                    "new Color(0.5, 0.5, 0.5, 1)",
+                    "50% grey (0.5,0.5,0.5,1). [Source line 61](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L61)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static DARK_GREY",
+                    "new Color(0.25, 0.25, 0.25, 1)",
+                    "25% grey — dark (0.25,0.25,0.25,1). [Source line 63](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L63)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static LIGHT_GREY",
+                    "new Color(0.75, 0.75, 0.75, 1)",
+                    "75% grey — light (0.75,0.75,0.75,1). [Source line 65](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L65)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static YELLOW",
+                    "new Color(1, 1, 0, 1)",
+                    "Yellow (1,1,0,1). [Source line 68](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L68)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static CYAN",
+                    "new Color(0, 1, 1, 1)",
+                    "Cyan (0,1,1,1). [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static MAGENTA",
+                    "new Color(1, 0, 1, 1)",
+                    "Magenta (1,0,1,1). [Source line 72](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L72)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static ORANGE",
+                    "new Color(1, 0.647, 0, 1)",
+                    "Orange (1,0.647,0,1). [Source line 75](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L75)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static PURPLE",
+                    "new Color(0.502, 0, 0.502, 1)",
+                    "Purple (0.502,0,0.502,1). [Source line 77](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L77)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static PINK",
+                    "new Color(1, 0.753, 0.796, 1)",
+                    "Pink (1,0.753,0.796,1). [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static LIME",
+                    "new Color(0.5, 1, 0, 1)",
+                    "Lime green (0.5,1,0,1). [Source line 81](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L81)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static BROWN",
+                    "new Color(0.396, 0.263, 0.129, 1)",
+                    "Brown (0.396,0.263,0.129,1). [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static TEAL",
+                    "new Color(0, 0.502, 0.502, 1)",
+                    "Teal (0,0.502,0.502,1). [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static NAVY",
+                    "new Color(0, 0, 0.502, 1)",
+                    "Navy blue (0,0,0.502,1). [Source line 88](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L88)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static INDIGO",
+                    "new Color(0.294, 0, 0.510, 1)",
+                    "Indigo (0.294,0,0.510,1). [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static CORAL",
+                    "new Color(1, 0.498, 0.314, 1)",
+                    "Coral (1,0.498,0.314,1). [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static SALMON",
+                    "new Color(0.980, 0.502, 0.447, 1)",
+                    "Salmon (0.980,0.502,0.447,1). [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static GOLD",
+                    "new Color(1, 0.843, 0, 1)",
+                    "Gold (1,0.843,0,1). [Source line 96](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L96)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static MAROON",
+                    "new Color(0.502, 0, 0, 1)",
+                    "Maroon (0.502,0,0,1). [Source line 98](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L98)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static OLIVE",
+                    "new Color(0.502, 0.502, 0, 1)",
+                    "Olive (0.502,0.502,0,1). [Source line 100](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L100)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static TURQUOISE",
+                    "new Color(0.251, 0.878, 0.816, 1)",
+                    "Turquoise (0.251,0.878,0.816,1). [Source line 102](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L102)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static VIOLET",
+                    "new Color(0.933, 0.510, 0.933, 1)",
+                    "Violet (0.933,0.510,0.933,1). [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static SKY_BLUE",
+                    "new Color(0.529, 0.808, 0.922, 1)",
+                    "Sky blue (0.529,0.808,0.922,1). [Source line 106](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L106)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static NONE",
+                    "new Color(0, 0, 0, 0)",
+                    "Fully transparent (0,0,0,0). [Source line 109](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L109)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Grey(lightness: number, alpha: number = 1): Color",
+                    "—",
+                    "Creates a grey color with the given lightness. `Color.Grey(0)` = black, `Color.Grey(0.5)` = mid grey, `Color.Grey(1)` = white. Param: lightness Lightness value [0.0 to 1.0]. Param: alpha Alpha opacity [0.0 to 1.0] (defaults to 1.0). [Source line 122](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L122)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Red(intensity: number, alpha: number = 1): Color",
+                    "—",
+                    "Creates a red-channel color with the given intensity. `Color.Red(1)` = pure red, `Color.Red(0.5)` = darker red. Param: intensity Red intensity [0.0 to 1.0]. Param: alpha Alpha opacity [0.0 to 1.0] (defaults to 1.0). [Source line 133](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L133)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Green(intensity: number, alpha: number = 1): Color",
+                    "—",
+                    "Creates a green-channel color with the given intensity. Param: intensity Green intensity [0.0 to 1.0]. Param: alpha Alpha opacity [0.0 to 1.0] (defaults to 1.0). [Source line 143](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L143)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Blue(intensity: number, alpha: number = 1): Color",
+                    "—",
+                    "Creates a blue-channel color with the given intensity. Param: intensity Blue intensity [0.0 to 1.0]. Param: alpha Alpha opacity [0.0 to 1.0] (defaults to 1.0). [Source line 153](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L153)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static Alpha(base: Color, alpha: number): Color",
+                    "—",
+                    "Creates a copy of a base color with a different alpha. Useful for quick transparency: `Color.Alpha(Color.RED, 0.5)`. Param: base The source color to copy RGB from. Param: alpha Alpha opacity [0.0 to 1.0]. [Source line 164](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L164)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constructor(r: number | Float32Array, g: number = 0, b: number = 0, a: number = 0)",
+                    "—",
+                    "Creates a new Color instance. Param: r Red component [0.0 to 1.0], or a pre-allocated Float32Array. Param: g Green component [0.0 to 1.0]. Param: b Blue component [0.0 to 1.0]. Param: a Alpha opacity component [0.0 to 1.0]. [Source line 176](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L176)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get r(): number",
+                    "—",
+                    "Implementation: `return this._rgba[0]`. [Source line 191](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L191)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set r(r: number)",
+                    "—",
+                    "Implementation: `this._rgba[0] = r; this.triggerChange();`. [Source line 192](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L192)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get g(): number",
+                    "—",
+                    "Implementation: `return this._rgba[1]`. [Source line 194](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L194)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set g(g: number)",
+                    "—",
+                    "Implementation: `this._rgba[1] = g; this.triggerChange();`. [Source line 195](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L195)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get b(): number",
+                    "—",
+                    "Implementation: `return this._rgba[2]`. [Source line 197](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L197)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set b(b: number)",
+                    "—",
+                    "Implementation: `this._rgba[2] = b; this.triggerChange();`. [Source line 198](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L198)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get a(): number",
+                    "—",
+                    "Implementation: `return this._rgba[3]`. [Source line 200](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L200)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set a(a: number)",
+                    "—",
+                    "Implementation: `this._rgba[3] = a; this.triggerChange();`. [Source line 201](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L201)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "get rgba(): Float32Array",
+                    "—",
+                    "Implementation: `return this._rgba`. [Source line 203](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L203)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "set rgba(rgba: Float32Array)",
+                    "—",
+                    "Implementation: `this._rgba[0] = rgba[0]; this._rgba[1] = rgba[1]; this._rgba[2] = rgba[2]; this._rgba[3] = rgba[3]; this.triggerChange();`. [Source line 204](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L204)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set(r: number | Color | number[] | Float32Array, g?: number, b?: number, a: number = 1): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this._rgba[0]`, `this._rgba[1]`, `this._rgba[2]`, `this._rgba[3]`; calls to `this.triggerChange`; return paths including `this`. [Source line 212](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L212)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public alpha(alpha: number): Color",
+                    "—",
+                    "Implementation: `this._rgba[3] = alpha; return this;`. [Source line 239](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L239)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public red(red: number): Color",
+                    "—",
+                    "Implementation: `this._rgba[0] = red; return this;`. [Source line 243](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L243)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public green(green: number): Color",
+                    "—",
+                    "Implementation: `this._rgba[1] = green; return this;`. [Source line 247](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L247)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public blue(blue: number): Color",
+                    "—",
+                    "Implementation: `this._rgba[2] = blue; return this;`. [Source line 251](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L251)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static size(): number",
+                    "—",
+                    "Size of the color vector in bytes (16 bytes). [Source line 257](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L257)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add(v: Color): Color",
+                    "—",
+                    "Implementation: `return new Color(this.r + v.r, this.g + v.g, this.b + v.b, this.a + v.a);`. [Source line 261](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L261)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sub(v: Color): Color",
+                    "—",
+                    "Implementation: `return new Color(this.r - v.r, this.g - v.g, this.b - v.b, this.a - v.a);`. [Source line 265](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L265)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public equals(v: Color | null | undefined): boolean",
+                    "—",
+                    "Implementation: `if (!v) return false; return Math.abs(this.r - v.r) < 1e-4 && Math.abs(this.g - v.g) < 1e-4 && Math.abs(this.b - v.b) < 1e-4 && Math.abs(this.a - v.a) < 1e-4;`. [Source line 269](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L269)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public lerp(target: Color, t: number, dst?: Color): Color",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Color`; return paths including `dst`. [Source line 277](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L277)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static lerp(a: Color, b: Color, t: number, dst?: Color): Color",
+                    "—",
+                    "Implementation: `dst = dst || new Color(0, 0, 0, 0); dst.r = a.r + (b.r - a.r) * t; dst.g = a.g + (b.g - a.g) * t; dst.b = a.b + (b.b - a.b) * t; dst.a = a.a + (b.a - a.a) * t; return dst;`. [Source line 286](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L286)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public copy(): Color",
+                    "—",
+                    "Implementation: `return new Color(this.r, this.g, this.b, this.a);`. [Source line 295](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L295)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static random()",
+                    "—",
+                    "Returns a color with randomized RGBA values. [Source line 300](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L300)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fromHex(hex: string): Color",
+                    "—",
+                    "Parses a hexadecimal color string (e.g., \"#ff0055\", \"#f05\", \"#ff005580\") into a Color instance. Completely zero-string-allocation with direct bitwise decoding. Supports variable-length hex formats: 3 (#RGB), 4 (#RGBA), 6 (#RRGGBB), and 8 (#RRGGBBAA) hex digits. Param: hex The hexadecimal color string with optional leading '#'. Returns: A new Color instance with normalized [0.0 - 1.0] components. [Source line 312](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L312)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static from(val: ColorLike): Color;",
+                    "—",
+                    "Converts a ColorLike value (Color instance, hex string, or 'transparent'/'none') into a Color. If input is null/undefined and a fallback is provided, the fallback is resolved. Throws an error if the input is missing/invalid and no fallback is given. [Source line 354](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L354)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static from(val: ColorLike | null | undefined, fallback: ColorLike): Color;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 355](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L355)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static from(val: ColorLike | null | undefined, fallback: null): Color | null;",
+                    "—",
+                    "Declared contract; see the implementation linked above. [Source line 356](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L356)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static from(val?: ColorLike | null, fallback?: ColorLike | null): Color | null",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Error`, `Color`; calls to `candidate.charCodeAt`, `Color.fromHex`, `candidate.trim().toLowerCase`, `candidate.trim`; return paths including `null`, `candidate`, `Color.fromHex(candidate)`; rejection paths a template-literal expression (see source), a template-literal expression (see source). [Source line 357](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L357)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fromHSV(h: number, s: number, v: number, a: number = 1.0): Color",
+                    "—",
+                    "Converts HSV (Hue [0..1], Saturation [0..1], Value [0..1]) to a Color instance. Param: h Hue value [0.0 to 1.0]. Param: s Saturation value [0.0 to 1.0]. Param: v Value / brightness [0.0 to 1.0]. Param: a Alpha opacity [0.0 to 1.0] (defaults to 1.0). [Source line 393](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L393)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fromHSL(h: number, s: number, l: number, a: number = 1.0): Color",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Color`; calls to `hue2rgb`; return paths including `new Color(l, l, l, a)`, `p + (q - p) * 6 * t`, `q`. [Source line 421](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L421)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static gradient(colors: ColorLike[], angleInDegrees: number = 90): FillEffect",
+                    "—",
+                    "Creates a linear gradient WGSL fill shader for shading shapes and backgrounds. Param: colors Array of Color instances or hexadecimal color strings. Param: angleInDegrees Gradient angle in degrees (default: 90). [Source line 455](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L455)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static radialGradient(colors: ColorLike[], centerX: number = 0, centerY: number = 0, radius: number = 1.0): FillEffect",
+                    "—",
+                    "Creates a radial gradient WGSL fill shader for shading shapes and backgrounds. Param: colors Array of Color instances or hexadecimal color strings. Param: centerX Center X coordinate (default: 0). Param: centerY Center Y coordinate (default: 0). Param: radius Radial effect radius (default: 1.0). [Source line 473](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L473)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toHex(includeAlpha?: boolean): string",
+                    "—",
+                    "Formats this Color instance as a hexadecimal color string. Param: includeAlpha Whether to append the 2-character alpha component. If omitted, alpha is included automatically when a < 1.0. [Source line 483](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L483)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toString()",
+                    "—",
+                    "Body operations (including nested callbacks): return paths including a template-literal expression (see source). [Source line 490](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L490)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static fromRGB(r: number, g: number, b: number, a: number = 255): Color",
+                    "—",
+                    "Creates a Color from integer 0-255 byte values instead of normalized 0.0-1.0 floats. Param: r Red byte [0..255]. Param: g Green byte [0..255]. Param: b Blue byte [0..255]. Param: a Alpha byte [0..255] (defaults to 255 = fully opaque). [Source line 506](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L506)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toHSL(): { h: number; s: number; l: number; a: number }",
+                    "—",
+                    "Converts this Color to HSL components. Returns: An object with `h` (hue [0..1]), `s` (saturation [0..1]), `l` (lightness [0..1]), and `a` (alpha [0..1]). [Source line 515](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L515)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clone(): Color",
+                    "—",
+                    "Implementation: `return new Color(this.r, this.g, this.b, this.a);`. [Source line 535](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L535)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Color.triggerChange: private triggerChange()",
+                    "Implementation: `if (this.onChange) { this.onChange(); }`.",
+                    "[Line 233](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Color.ts#L233)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`[Color.fromHex] Invalid hex color string: \"${hex}\"`)",
+                "new Error(`[Color.from] Expected Color or string, but received: ${val}`)",
+                "new Error(`[Color.from] Expected Color or string, but received: ${candidate}`)"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [GPUType](/api-math-vector#gpudata)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "complex",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Complex"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/Complex.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/Complex.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Complex: High-performance, immutable-by-default complex number class designed for mathematical visualizations, conformal mappings, and algebraic animations."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "ComplexLike",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Complex",
+                    "Class",
+                    "High-performance, immutable-by-default complex number class designed for mathematical visualizations, conformal mappings, and algebraic animations."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type ComplexLike = number | Complex | {\n    re?: number;\n    im?: number;\n} | [\n    number,\n    number\n];\nexport declare class Complex {\n    readonly re: number;\n    readonly im: number;\n    static readonly ZERO: Complex;\n    static readonly ONE: Complex;\n    static readonly I: Complex;\n    constructor(re?: number, im?: number);\n    static from(value: ComplexLike): Complex;\n    static polar(r: number, theta: number): Complex;\n    clone(): Complex;\n    add(other: ComplexLike): Complex;\n    sub(other: ComplexLike): Complex;\n    mul(other: ComplexLike): Complex;\n    div(other: ComplexLike): Complex;\n    scale(scalar: number): Complex;\n    neg(): Complex;\n    conj(): Complex;\n    inv(): Complex;\n    abs(): number;\n    absSq(): number;\n    arg(): number;\n    exp(): Complex;\n    log(): Complex;\n    sqrt(): Complex;\n    pow(exponent: ComplexLike): Complex;\n    sin(): Complex;\n    cos(): Complex;\n    tan(): Complex;\n    asin(): Complex;\n    acos(): Complex;\n    atan(): Complex;\n    sinh(): Complex;\n    cosh(): Complex;\n    tanh(): Complex;\n    equals(other: ComplexLike, epsilon?: number): boolean;\n    toString(): string;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Complex` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public readonly re: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 12](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L12)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public readonly im: number",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static readonly ZERO",
+                    "new Complex(0, 0)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static readonly ONE",
+                    "new Complex(1, 0)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 16](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L16)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static readonly I",
+                    "new Complex(0, 1)",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(re: number = 0, im: number = 0)",
+                    "—",
+                    "Implementation: `this.re = re; this.im = im;`. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static from(value: ComplexLike): Complex",
+                    "—",
+                    "Converts a number, tuple, object or Complex into a Complex instance. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public static polar(r: number, theta: number): Complex",
+                    "—",
+                    "Creates a complex number from polar coordinates: r * e^(i * theta). [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public clone(): Complex",
+                    "—",
+                    "Implementation: `return new Complex(this.re, this.im);`. [Source line 44](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L44)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public add(other: ComplexLike): Complex",
+                    "—",
+                    "Implementation: `const o = Complex.from(other); return new Complex(this.re + o.re, this.im + o.im);`. [Source line 52](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L52)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sub(other: ComplexLike): Complex",
+                    "—",
+                    "Implementation: `const o = Complex.from(other); return new Complex(this.re - o.re, this.im - o.im);`. [Source line 57](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L57)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public mul(other: ComplexLike): Complex",
+                    "—",
+                    "Implementation: `const o = Complex.from(other); return new Complex( this.re * o.re - this.im * o.im, this.re * o.im + this.im * o.re );`. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public div(other: ComplexLike): Complex",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Complex`; calls to `Complex.from`; return paths including `new Complex(Number.NaN, Number.NaN)`, `new Complex( (this.re * o.re + this.im * o.im) / denom, (this.im * o.re - this.re * o.im) / denom )`. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public scale(scalar: number): Complex",
+                    "—",
+                    "Implementation: `return new Complex(this.re * scalar, this.im * scalar);`. [Source line 82](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L82)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public neg(): Complex",
+                    "—",
+                    "Implementation: `return new Complex(-this.re, -this.im);`. [Source line 86](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L86)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public conj(): Complex",
+                    "—",
+                    "Implementation: `return new Complex(this.re, -this.im);`. [Source line 90](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L90)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public inv(): Complex",
+                    "—",
+                    "Implementation: `const denom = this.re * this.re + this.im * this.im; if (denom === 0) return new Complex(Number.NaN, Number.NaN); return new Complex(this.re / denom, -this.im / denom);`. [Source line 94](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L94)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abs(): number",
+                    "—",
+                    "Implementation: `return Math.hypot(this.re, this.im);`. [Source line 104](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L104)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public absSq(): number",
+                    "—",
+                    "Implementation: `return this.re * this.re + this.im * this.im;`. [Source line 108](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L108)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public arg(): number",
+                    "—",
+                    "Implementation: `return Math.atan2(this.im, this.re);`. [Source line 112](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L112)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public exp(): Complex",
+                    "—",
+                    "Implementation: `const r = Math.exp(this.re); return new Complex(r * Math.cos(this.im), r * Math.sin(this.im));`. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public log(): Complex",
+                    "—",
+                    "Implementation: `return new Complex(Math.log(this.abs()), this.arg());`. [Source line 125](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L125)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sqrt(): Complex",
+                    "—",
+                    "Implementation: `const r = Math.sqrt(this.abs()); const theta = this.arg() / 2; return new Complex(r * Math.cos(theta), r * Math.sin(theta));`. [Source line 129](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L129)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public pow(exponent: ComplexLike): Complex",
+                    "—",
+                    "Implementation: `const exp = Complex.from(exponent); if (this.re === 0 && this.im === 0) { return exp.re === 0 && exp.im === 0 ? Complex.ONE : Complex.ZERO; } return this.log().mul(exp).exp();`. [Source line 135](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L135)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sin(): Complex",
+                    "—",
+                    "Implementation: `const x = this.re; const y = this.im; return new Complex( Math.sin(x) * Math.cosh(y), Math.cos(x) * Math.sinh(y) );`. [Source line 148](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L148)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cos(): Complex",
+                    "—",
+                    "Implementation: `const x = this.re; const y = this.im; return new Complex( Math.cos(x) * Math.cosh(y), -Math.sin(x) * Math.sinh(y) );`. [Source line 158](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L158)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public tan(): Complex",
+                    "—",
+                    "Implementation: `return this.sin().div(this.cos());`. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public asin(): Complex",
+                    "—",
+                    "Body operations (including nested callbacks): construction of `Complex`; calls to `Complex.ONE.sub`, `this.mul`, `oneMinusZ2.sqrt`, `iz.add`, `inside.log`; return paths including `new Complex(logInside.im, -logInside.re)`. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L172)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public acos(): Complex",
+                    "—",
+                    "Implementation: `return new Complex(Math.PI / 2, 0).sub(this.asin());`. [Source line 182](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L182)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public atan(): Complex",
+                    "—",
+                    "Implementation: `const iPlusZ = Complex.I.add(this); const iMinusZ = Complex.I.sub(this); const ratio = iPlusZ.div(iMinusZ); const logRatio = ratio.log(); return new Complex(-logRatio.im * 0.5, logRatio.re * 0.5);`. [Source line 187](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L187)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public sinh(): Complex",
+                    "—",
+                    "Implementation: `const x = this.re; const y = this.im; return new Complex( Math.sinh(x) * Math.cos(y), Math.cosh(x) * Math.sin(y) );`. [Source line 200](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L200)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public cosh(): Complex",
+                    "—",
+                    "Implementation: `const x = this.re; const y = this.im; return new Complex( Math.cosh(x) * Math.cos(y), Math.sinh(x) * Math.sin(y) );`. [Source line 210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L210)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public tanh(): Complex",
+                    "—",
+                    "Implementation: `return this.sinh().div(this.cosh());`. [Source line 220](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L220)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public equals(other: ComplexLike, epsilon: number = 1e-9): boolean",
+                    "—",
+                    "Implementation: `const o = Complex.from(other); return Math.abs(this.re - o.re) <= epsilon && Math.abs(this.im - o.im) <= epsilon;`. [Source line 228](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L228)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toString(): string",
+                    "—",
+                    "Body operations (including nested callbacks): calls to `this.re.toFixed`; return paths including a template-literal expression (see source). [Source line 233](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Complex.ts#L233)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fouriertransform",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "FourierTransform"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/FourierTransform.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/FourierTransform.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "FourierCoefficient: A single Fourier harmonic coefficient representing a rotating circle and vector.",
+                "EpicycleStep: Instantaneous state of a single epicycle in the rotating chain at phase t in [0, 1].",
+                "FourierTransform: High-performance Discrete Fourier Transform (DFT) engine for 2D parametric curves. Given sampled complex points z_k = x_k + i*y_k along a curve, calculates complex Fourier coefficients c_n such that: Z(t) = c_0 + sum_{n != 0} c_n * exp(i * 2 * PI * n * t) Recreates the exact mathematical visualization style pioneered by Grant Sanderson (3Blue1Brown) and Manim, where epicycles can be sorted by magnitude so the largest dominant circles rotate first, followed by increasingly fine detailed sub-epicycles."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FourierCoefficient",
+                    "Interface",
+                    "A single Fourier harmonic coefficient representing a rotating circle and vector."
+                  ]
+                },
+                {
+                  "cells": [
+                    "EpicycleStep",
+                    "Interface",
+                    "Instantaneous state of a single epicycle in the rotating chain at phase t in [0, 1]."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FourierSortMethod",
+                    "TypeAlias",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "FourierTransform",
+                    "Class",
+                    "High-performance Discrete Fourier Transform (DFT) engine for 2D parametric curves. Given sampled complex points z_k = x_k + i*y_k along a curve, calculates complex Fourier coefficients c_n such that: Z(t) = c_0 + sum_{n != 0} c_n * exp(i * 2 * PI * n * t) Recreates the exact mathematical visualization style pioneered by Grant Sanderson (3Blue1Brown) and Manim, where epicycles can be sorted by magnitude so the largest dominant circles rotate first, followed by increasingly fine detailed sub-epicycles."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export interface FourierCoefficient {\n    freq: number;\n    coef: Complex;\n    radius: number;\n    phase: number;\n}\nexport interface EpicycleStep {\n    center: Vec2;\n    tip: Vec2;\n    radius: number;\n    angle: number;\n    freq: number;\n    coef: Complex;\n}\nexport type FourierSortMethod = 'magnitude' | 'frequency' | 'none';\nexport declare class FourierTransform {\n    constructor(points?: (Vec2 | Complex | [\n        number,\n        number\n    ])[], maxFrequencies?: number, sortMethod?: FourierSortMethod);\n    compute(points: (Vec2 | Complex | [\n        number,\n        number\n    ])[], maxFrequencies?: number): this;\n    get dcOffset(): Complex;\n    getCoefficients(): readonly FourierCoefficient[];\n    get count(): number;\n    get sortMethod(): FourierSortMethod;\n    set sortMethod(method: FourierSortMethod);\n    getEpicycles(t: number, count?: number, originOffset?: Vec2): EpicycleStep[];\n    evaluateTip(t: number, count?: number, originOffset?: Vec2): Vec2;\n    evaluateReconstructedPath(numSamples?: number, count?: number, originOffset?: Vec2): Vec2[];\n    computeRMSError(originalPoints: Vec2[], count?: number): number;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FourierCoefficient` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "freq: number;",
+                    "—",
+                    "Frequency index (angular velocity in multiples of 2*PI radians per cycle). [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "coef: Complex;",
+                    "—",
+                    "Complex coefficient c_n. [Source line 15](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L15)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius: number;",
+                    "—",
+                    "Radius / amplitude |c_n| of the epicycle circle. [Source line 17](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L17)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "phase: number;",
+                    "—",
+                    "Initial phase angle in radians atan2(im, re). [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L19)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `EpicycleStep` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "center: Vec2;",
+                    "—",
+                    "Center of this epicycle in 2D space. [Source line 27](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L27)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "tip: Vec2;",
+                    "—",
+                    "Tip of the rotating vector (also the center of the next epicycle). [Source line 29](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L29)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "radius: number;",
+                    "—",
+                    "Radius of this epicycle. [Source line 31](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L31)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "angle: number;",
+                    "—",
+                    "Current absolute angle of the rotating vector in radians. [Source line 33](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L33)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "freq: number;",
+                    "—",
+                    "Frequency of this harmonic. [Source line 35](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L35)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "coef: Complex;",
+                    "—",
+                    "Complex coefficient of this harmonic. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L37)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FourierTransform` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "constructor(\n        points?: (Vec2 | Complex | [number, number])[],\n        maxFrequencies?: number,\n        sortMethod: FourierSortMethod = 'magnitude'\n    )",
+                    "—",
+                    "Constructs and computes the Fourier Transform for the given 2D points. Param: points Sampled points along the path (Vec2[], Complex[], or [number, number][]). Param: maxFrequencies Optional maximum harmonic frequency (defaults to floor(points.length / 2)). Param: sortMethod Sorting method for the epicycles ('magnitude' | 'frequency' | 'none'). [Source line 67](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L67)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public compute(\n        points: (Vec2 | Complex | [number, number])[],\n        maxFrequencies?: number\n    ): this",
+                    "—",
+                    "Computes the Discrete Fourier Transform of 2D points. Param: points Array of 2D points. Param: maxFrequencies Maximum harmonic order M. Defaults to floor(N / 2). [Source line 84](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L84)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get dcOffset(): Complex",
+                    "—",
+                    "Gets constant DC center of mass offset c_0. [Source line 165](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L165)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getCoefficients(): readonly FourierCoefficient[]",
+                    "—",
+                    "Gets all calculated rotating Fourier coefficients in the current sort order. [Source line 172](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L172)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get count(): number",
+                    "—",
+                    "Gets total number of computed coefficients. [Source line 179](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L179)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public get sortMethod(): FourierSortMethod",
+                    "—",
+                    "Current sorting method. [Source line 186](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L186)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public set sortMethod(method: FourierSortMethod)",
+                    "—",
+                    "Implementation: `if (this._sortMethod !== method) { this._sortMethod = method; this.resort(); }`. [Source line 190](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L190)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getEpicycles(\n        t: number,\n        count?: number,\n        originOffset: Vec2 = new Vec2(0, 0)\n    ): EpicycleStep[]",
+                    "—",
+                    "Calculates the epicycles state at time progress t in [0, 1]. Param: t Progress along the cycle (0.0 to 1.0). Param: count Number of active coefficients to include (defaults to all). Param: originOffset Optional world space anchor offset for the initial circle center. Returns: Ordered array of epicycle steps from root to tip. [Source line 231](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L231)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluateTip(\n        t: number,\n        count?: number,\n        originOffset: Vec2 = new Vec2(0, 0)\n    ): Vec2",
+                    "—",
+                    "Evaluates the final pen tip coordinate at time progress t in [0, 1]. Param: t Progress in [0, 1]. Param: count Number of coefficients to sum. Param: originOffset Optional base translation offset. [Source line 285](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L285)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public evaluateReconstructedPath(\n        numSamples: number = 512,\n        count?: number,\n        originOffset: Vec2 = new Vec2(0, 0)\n    ): Vec2[]",
+                    "—",
+                    "Precomputes the entire reconstructed path for a full cycle t in [0, 1]. Param: numSamples Number of points to sample along the closed path (e.g. 512, 1024). Param: count Number of Fourier coefficients to use for reconstruction. Param: originOffset Optional world space anchor offset. Returns: Array of Vec2 points representing the reconstructed path polyline. [Source line 322](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L322)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeRMSError(originalPoints: Vec2[], count?: number): number",
+                    "—",
+                    "Computes the Root Mean Square Error (RMSE) between original points and the Fourier reconstruction. Param: originalPoints Ground truth sampled points. Param: count Number of coefficients to evaluate. [Source line 343](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L343)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FourierTransform.resort: private resort()",
+                    "Re-sorts coefficients according to the active sort strategy. Body operations (including nested callbacks): assignments to `this._sortedCoefficients`; calls to `list.sort`; return paths including `absA - absB`, `b.freq - a.freq`.",
+                    "[Line 200](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/FourierTransform.ts#L200)"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "frustum",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Frustum"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/Frustum.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/Frustum.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "Frustum: 6-Plane View Frustum extractor for high-performance zero-allocation Frustum Culling."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "FrustumPlane",
+                    "Class",
+                    "Declared in this module; its precise contract appears below."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Frustum",
+                    "Class",
+                    "6-Plane View Frustum extractor for high-performance zero-allocation Frustum Culling."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare class FrustumPlane {\n    normal: Vec3;\n    constant: number;\n    setComponents(x: number, y: number, z: number, w: number): this;\n    distanceToPoint(point: Vec3): number;\n}\nexport declare class Frustum {\n    planes: FrustumPlane[];\n    setFromMatrix(matrix: Mat4): this;\n    intersectsSphere(center: Vec3, radius: number): boolean;\n    intersectsAABB(box: AABB): boolean;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `FrustumPlane` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public normal: Vec3",
+                    "new Vec3()",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 10](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts#L10)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public constant: number",
+                    "0",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 11](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts#L11)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setComponents(x: number, y: number, z: number, w: number): this",
+                    "—",
+                    "Body operations (including nested callbacks): assignments to `this.normal.x`, `this.normal.y`, `this.normal.z`, `this.constant`; calls to `this.normal.set`; return paths including `this`. [Source line 13](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts#L13)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public distanceToPoint(point: Vec3): number",
+                    "—",
+                    "Implementation: `return this.normal.x * point.x + this.normal.y * point.y + this.normal.z * point.z + this.constant;`. [Source line 28](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts#L28)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Frustum` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "public planes: FrustumPlane[]",
+                    "[\n        new FrustumPlane(), // 0: Left\n        new FrustumPlane(), // 1: Right\n        new FrustumPlane(), // 2: Bottom\n        new FrustumPlane(), // 3: Top\n        new FrustumPlane(), // 4: Near\n        new FrustumPlane(), // 5: Far\n    ]",
+                    "Instance or static field initialized with the expression in the initializer column. [Source line 37](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts#L37)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setFromMatrix(matrix: Mat4): this",
+                    "—",
+                    "Extracts all 6 frustum clipping planes from a 4x4 View-Projection matrix. Compatible with WebGPU [0, 1] clip space and Reversed-Z depth buffers. [Source line 50](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts#L50)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public intersectsSphere(center: Vec3, radius: number): boolean",
+                    "—",
+                    "Fast sphere-frustum intersection test (0 allocations). Returns true if the bounding sphere intersects or is inside the frustum. [Source line 79](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts#L79)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public intersectsAABB(box: AABB): boolean",
+                    "—",
+                    "Fast AABB-frustum intersection test using positive-vertex test (0 allocations). Returns true if the bounding box intersects or is inside the frustum. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Frustum.ts#L92)."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math3d",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Math3D"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/math/Math3D.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/math/Math3D.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "VertexInput: Accepted input formats representing 3D vertex coordinates arrays.",
+                "IndexInput: Accepted input formats representing face indices sequences.",
+                "WebGPUMesh: Standard data layout representing a WebGPU-compatible 3D mesh structure.",
+                "Math3D: Geometry & 3D Math utility class. Computes face normals, smooth vertex normals, OBJ file loading, and primitive mesh shapes."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VertexInput",
+                    "TypeAlias",
+                    "Accepted input formats representing 3D vertex coordinates arrays."
+                  ]
+                },
+                {
+                  "cells": [
+                    "IndexInput",
+                    "TypeAlias",
+                    "Accepted input formats representing face indices sequences."
+                  ]
+                },
+                {
+                  "cells": [
+                    "WebGPUMesh",
+                    "Interface",
+                    "Standard data layout representing a WebGPU-compatible 3D mesh structure."
+                  ]
+                },
+                {
+                  "cells": [
+                    "Math3D",
+                    "Class",
+                    "Geometry & 3D Math utility class. Computes face normals, smooth vertex normals, OBJ file loading, and primitive mesh shapes."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export type VertexInput = number[] | Float32Array | Vec3[];\nexport type IndexInput = number[] | Uint16Array | Uint32Array;\nexport interface WebGPUMesh {\n    vertices: Float32Array;\n    normals: Float32Array;\n    uvs?: Float32Array;\n    indices?: Uint32Array;\n}\nexport declare class Math3D {\n    static packExplode(v: Vec3 | Color, count: number): Float32Array;\n    static packFaceData(normals: Float32Array, colors: Float32Array): Float32Array;\n    static alignVertexData(input: number[] | Vec3[] | Float32Array): Float32Array;\n    static computeFaceNormalsPacked(positions: Float32Array | Vec3[] | number[], indices: Uint32Array | number[]): Float32Array;\n    static packToF32Array(vertices: WebGPUMesh): Float32Array;\n    static computeSmoothShading(inputVertices: VertexInput, inputIndices: IndexInput, inputUvs?: Float32Array | number[]): WebGPUMesh;\n    static computeFlatShading(inputVertices: VertexInput, inputIndices: IndexInput, inputUvs?: Float32Array | number[]): WebGPUMesh;\n    static unifiedToF32Array(verts: VertexInput): Float32Array;\n    static createCube(size?: number): WebGPUMesh;\n    static createSphere(radius?: number, widthSegments?: number, heightSegments?: number): WebGPUMesh;\n    static createParametricSurface(func: (u: number, v: number) => Vec3, uSegments?: number, vSegments?: number, normalFunc?: (u: number, v: number) => Vec3): WebGPUMesh;\n    static loadOBJ(url: string): Promise<{\n        positions: Float32Array;\n        indices: Uint32Array;\n    }>;\n    static createQuadXY(width: number, height: number): WebGPUMesh;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `WebGPUMesh` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "vertices: Float32Array;",
+                    "—",
+                    "3D vertex position coordinates. [Source line 19](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L19)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "normals: Float32Array;",
+                    "—",
+                    "3D normal vector coordinates. [Source line 21](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L21)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "uvs?: Float32Array;",
+                    "—",
+                    "Optional 2D UV mapping coordinates. [Source line 23](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L23)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "indices?: Uint32Array;",
+                    "—",
+                    "Optional face indices sequence. [Source line 25](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L25)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `Math3D` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "static packExplode(v: Vec3 | Color, count: number): Float32Array",
+                    "—",
+                    "Packs coordinate vector or color data into a continuous float buffer. Param: v Source vector or color parameter. Param: count Target elements quantity. [Source line 40](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L40)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static packFaceData(normals: Float32Array, colors: Float32Array): Float32Array",
+                    "—",
+                    "Packs separate normal and color buffers into an interleaved buffer layout. Param: normals Normals float array. Param: colors Colors float array. [Source line 70](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L70)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static alignVertexData(input: number[] | Vec3[] | Float32Array): Float32Array",
+                    "—",
+                    "Expands 3D vertex tuples to include float padding (aligns standard vec3 to vec4 limits). Param: input Raw 3-component input arrays. [Source line 92](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L92)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static computeFaceNormalsPacked(positions: Float32Array | Vec3[] | number[], indices: Uint32Array | number[]): Float32Array",
+                    "—",
+                    "Computes flat perpendicular face normals for storage buffers. Param: positions Vertices source array. Param: indices Face index lists. [Source line 137](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L137)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static packToF32Array(vertices: WebGPUMesh): Float32Array",
+                    "—",
+                    "Interleaves vertex position, normal, and UV data into a single flat Float32Array. Param: vertices Source mesh dataset. [Source line 210](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L210)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static computeSmoothShading(\n        inputVertices: VertexInput,\n        inputIndices: IndexInput,\n        inputUvs?: Float32Array | number[]\n    ): WebGPUMesh",
+                    "—",
+                    "Computes smooth shading normal mappings by averaging connected face normals and merging seams for coincident coordinates. Param: inputVertices Vertex array parameters. Param: inputIndices Mesh indices sequence. Param: inputUvs Texture mapping UVs. [Source line 243](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L243)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static computeFlatShading(\n        inputVertices: VertexInput,\n        inputIndices: IndexInput,\n        inputUvs?: Float32Array | number[]\n    ): WebGPUMesh",
+                    "—",
+                    "Computes flat perpendicular shading normal maps by duplicating vertices. Param: inputVertices Vertex array parameters. Param: inputIndices Mesh indices sequence. Param: inputUvs Texture mapping UVs. [Source line 330](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L330)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static unifiedToF32Array(verts: VertexInput): Float32Array",
+                    "—",
+                    "Normalizes alternative coordinates structures into a flat Float32Array. Param: verts Input points representation. [Source line 392](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L392)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static createCube(size: number = 1.0): WebGPUMesh",
+                    "—",
+                    "Generates a standard renderable 3D box model. Param: size Length dimensions. [Source line 417](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L417)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static createSphere(radius: number = 1.0, widthSegments: number = 64, heightSegments: number = 64): WebGPUMesh",
+                    "—",
+                    "Generates a standard renderable 3D sphere. Param: radius Bounding sphere radius. Param: widthSegments Radial segment resolution. Param: heightSegments Elevation segment resolution. [Source line 465](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L465)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static createParametricSurface(\n        func: (u: number, v: number) => Vec3,\n        uSegments: number = 64,\n        vSegments: number = 64,\n        normalFunc?: (u: number, v: number) => Vec3\n    ): WebGPUMesh",
+                    "—",
+                    "Creates a parametric surface mesh from mathematical functions. Param: func Mathematical function (u, v) => Vec3 where u, v in [0, 1] Param: uSegments Number of grid segments in U direction Param: vSegments Number of grid segments in V direction Param: normalFunc Optional analytic normal function (u, v) => Vec3 [Source line 542](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L542)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static async loadOBJ(url: string): Promise<{ positions: Float32Array, indices: Uint32Array }>",
+                    "—",
+                    "Downloads and parses an .obj file from a given URL. Param: url The path or URL to the OBJ file. [Source line 656](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L656)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "static createQuadXY(width: number, height: number): WebGPUMesh",
+                    "—",
+                    "Generates a flat 2D quad layout in the XY plane. Param: width Dimensions width. Param: height Dimensions height. [Source line 726](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L726)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Private and file-local implementation helpers below are not callable public APIs. Their operation notes expose the implementation work behind the public contract."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Internal helper / signature",
+                "Implementation operations",
+                "Source"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "Math3D.parseOBJText: private static parseOBJText(objText: string): { positions: Float32Array, indices: Uint32Array }",
+                    "Body operations (including nested callbacks): construction of `Float32Array`, `Uint32Array`; calls to `objText.split`, `lines[i].trim`, `line.startsWith`, `line.split`, `tempPositions.push`, `parseFloat`, `parts[j].split`, `parseInt` and additional helpers; return paths including `{ positions: new Float32Array(tempPositions), indices: new Uint32Array(tempIndices) }`; 3 explicit loops.",
+                    "[Line 667](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/math/Math3D.ts#L667)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Explicit runtime rejection paths in this module:"
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "new Error(`Failed to load OBJ file from ${url}: ${response.status} ${response.statusText}`)"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,439 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-compute-and-compute-kernel-architecture",
+  "title": "GPU Compute & ComputeKernel Architecture & Guide",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/COMPUTE_AND_COMPUTE_KERNEL_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/COMPUTE_AND_COMPUTE_KERNEL_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/COMPUTE_AND_COMPUTE_KERNEL_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Compute](/api-compute#compute), [ComputeKernel](/api-compute#computekernel), [FrameGraph](/api-render-frame-graph#framegraph), [ShaderBuilder](/api-render-shader-system#shaderbuilder), [PipelineCache](/api-render-shader-system#pipelinecache), [ComputeBufferPool](/api-utils#gpu-utils), [Pipeline](/api-render-pipelines#pipeline), [Shader](/api-entities-primitives-2d#shader), [Res](/api-render-shader-system-schemas#shadertypes), [ComputeCommand](/api-compute#compute), [ComputeUpdate](/api-render-passes#computeupdate), [Pass](/api-render-frame-graph#pass), [Instanced](/api-entities#instanced), [Storage](/api-render-pipelines#resourcelayouts), [Uniform](/api-render-pipelines#resourcelayouts), [Texture](/api-render-pipelines#resourcelayouts), [Sampler](/api-render-pipelines#resourcelayouts), [ShaderResource](/api-render-shader-system-schemas#shadertypes), [GraphBuilder](/api-render-frame-graph#graphbuilder), [RenderContext](/api-render-frame-graph#rendercontext), [ComputeType](/api-compute#compute), [Arc](/api-entities-primitives-2d#arc), [Code](/api-entities-composites-text#code), [Scene](/api-core-scene#scene)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an exhaustive, bit-by-bit technical breakdown of the **GPU Compute Subsystem** in the Retiam WebGPU Engine. It covers the declarative user-facing [`ComputeKernel`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts) API, low-level engine compute pipelines ([`Compute.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts)), parallel prefix scan algorithms, marching cubes volumetric extraction, and seamless integration with the FrameGraph and hardware instancing."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-dual-compute-paradigms",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Dual Compute Paradigms"
+        },
+        {
+          "type": "paragraph",
+          "text": "WebGPU treats Compute Shaders as first-class citizens alongside graphics rasterization. Retiam provides **two complementary compute layers**:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**High-Level Declarative Compute ([`ComputeKernel`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts))**:",
+              "children": [
+                "Fluent, descriptor-driven shader creation.",
+                "Automatic `@group(0)` bind group layout generation and WGSL boilerplate injection via `ShaderBuilder`.",
+                "Lazy pipeline compilation with global pipeline caching (`PipelineCache`).",
+                "Zero-allocation per-frame dispatching (`scene.addCompute(cmd)`)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Low-Level Native Engine Compute Core ([`Compute.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts))**:",
+              "children": [
+                "23+ optimized built-in kernels for geometric stroke extrusion, parallel prefix scans, 3D contour reconstruction, bezier subdivision, and morph interpolation.",
+                "Transient compute buffer pooling (`ComputeBufferPool`)."
+              ]
+            }
+          ],
+          "start": 2
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph \"Compute Pipeline Creation\"\n        A[\"User WGSL Source / Shader String\"] --> B[\"ComputeKernel(resources, wgslCode, workgroupSize)\"]\n        C[\"Res Helper (Res.buffer, Res.uniform, Res.storageTexture)\"] --> B\n        B --> D[\"ShaderBuilder: Auto Layout & Header Generation\"]\n        D --> E[\"PipelineCache: GPUComputePipeline & GPUBindGroupLayout\"]\n    end\n\n    subgraph \"Per-Frame Execution Loop\"\n        F[\"kernel.dispatch(device, dispatchX, dispatchY, dispatchZ)\"] --> G[\"ComputeCommand Object\"]\n        G --> H[\"scene.addCompute(cmd)\"]\n        H --> I[\"sceneData.compute_queue\"]\n        I --> J[\"FrameGraph: ComputeUpdate Pass (Batched Single Compute Encoder)\"]\n        J --> K[\"GPU Hardware Workgroup Execution\"]\n    end\n    \n    K -->|\"Updated Buffer Data\"| L[\"Instanced Geometry / Vertex Buffers / Textures\"]"
+        }
+      ]
+    },
+    {
+      "id": "2-declarative-user-compute-computekernel",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Declarative User Compute: ComputeKernel"
+        },
+        {
+          "type": "paragraph",
+          "text": "[`ComputeKernel`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/ComputeKernel.ts) is the primary entry point for authoring custom GPU compute logic."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Resource Declarations via Res Helper"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`Res`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/shader_system/schemas/ShaderTypes.ts#L52) helper formats JavaScript and WebGPU resources into typed declarations:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Helper Method",
+            "WebGPU Binding Type",
+            "WGSL Syntax Generated"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`Res.buffer(wgslType, buffer, 'read_write')`",
+                  "type": "text"
+                },
+                {
+                  "text": "Storage Buffer"
+                },
+                {
+                  "text": "`@group(0) @binding(N) var<storage, read_write> name: wgslType;`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Res.buffer(wgslType, buffer, 'read')`",
+                  "type": "text"
+                },
+                {
+                  "text": "Read-Only Storage Buffer"
+                },
+                {
+                  "text": "`@group(0) @binding(N) var<storage, read> name: wgslType;`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Res.uniform(wgslType, buffer)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Uniform Buffer"
+                },
+                {
+                  "text": "`@group(0) @binding(N) var<uniform> name: wgslType;`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Res.storageTexture(view, format, access)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Storage Texture"
+                },
+                {
+                  "text": "`@group(0) @binding(N) var name: texture_storage_2d<format, access>;`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Res.texture(view, sampleType)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Sampled Texture"
+                },
+                {
+                  "text": "`@group(0) @binding(N) var name: texture_2d<f32>;`"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`Res.sampler(sampler)`",
+                  "type": "text"
+                },
+                {
+                  "text": "Filtering/Comparison Sampler"
+                },
+                {
+                  "text": "`@group(0) @binding(N) var name: sampler;`"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Class Interface & Lifecycle"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class ComputeKernel {\n    constructor(\n        resources: Record<string, ShaderResource>,\n        wgslCode: string,\n        workgroupSize: [number, number, number] = [64, 1, 1]\n    );\n\n    // Swap buffers without recompiling shader pipelines:\n    public setResource(name: string, resource: ShaderResource): void;\n\n    // Dispatches workgroups and returns a cached ComputeCommand:\n    public dispatch(device: GPUDevice, dispatchX: number, dispatchY: number = 1, dispatchZ: number = 1): ComputeCommand;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Zero-Allocation Dispatching"
+        },
+        {
+          "type": "paragraph",
+          "text": "When `dispatch()` is called:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**First Frame**: Compiles WGSL via `ShaderBuilder`, creates `GPUBindGroupLayout`, queries `PipelineCache`, and allocates `GPUBindGroup`.",
+            "**Subsequent Frames**: Returns the pre-built `ComputeCommand` with updated dispatch counts. **0.0 KB garbage collection allocations** per frame."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-the-framegraph-compute-dispatch-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. The FrameGraph Compute Dispatch Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "All compute commands registered via `scene.addCompute(...)` are batched and executed by [`ComputeUpdate.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/ComputeUpdate.ts) at the beginning of the frame:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class ComputeUpdate extends Pass {\n    public setup(builder: GraphBuilder) {\n        builder.markUnculled(); // Guaranteed execution before raster passes\n    }\n\n    public execute(context: RenderContext) {\n        const queue = context.sceneData.compute_queue;\n        if (queue.length === 0) return;\n\n        const pass = context.commandEncoder.beginComputePass();\n        let lastPipeline: GPUComputePipeline | null = null;\n        let lastBindGroup: GPUBindGroup | null = null;\n\n        for (const command of queue) {\n            if (command.pipeline !== lastPipeline) {\n                pass.setPipeline(command.pipeline);\n                lastPipeline = command.pipeline;\n            }\n            if (command.bind_group !== lastBindGroup) {\n                pass.setBindGroup(0, command.bind_group);\n                lastBindGroup = command.bind_group;\n            }\n            const d = command.dispatch_count;\n            if (Array.isArray(d)) pass.dispatchWorkgroups(d[0], d[1], d[2]);\n            else pass.dispatchWorkgroups(d);\n        }\n        pass.end();\n    }\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-built-in-engine-compute-kernels-compute-ts-src-engine-compute-compute-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Built-In Engine Compute Kernels ([Compute.ts](../src/engine/compute/Compute.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "The Retiam core includes 23+ optimized GPU compute operations organized under the [`ComputeType`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/compute/Compute.ts#L35) enumeration:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Category",
+            "`ComputeType` Identifier",
+            "Description & Shader File"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Vector Geometry & Mesh Generation**",
+                  "type": "text"
+                },
+                {
+                  "text": "`POLY_LINE_MESH` `POLY_LINE_ENDS` `POLYGON_MESH` `PATH_ENCODER` `OFFSET`"
+                },
+                {
+                  "text": "Parallel 2D ribbon mesh generation (`mesh_generator.wgsl`), end caps (`mesh_generator_ends.wgsl`), earcut polygon triangulation, and vertex normal offset displacement."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Parallel Prefix Scan (Blelloch)**",
+                  "type": "text"
+                },
+                {
+                  "text": "`PREFIX_SUM` `PREFIX_COPY`"
+                },
+                {
+                  "text": "Work-efficient parallel scan (`prefix_sum.wgsl` & `prefix_copy.wgsl`) for GPU stream compaction and variable-length contour index allocation."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Curve Subdivision & Morphing**",
+                  "type": "text"
+                },
+                {
+                  "text": "`BEZIER_POINT_GEN` `CHAIKIN_SMOOTH` `INTERPOLATE` `MORPH_INTERPOLATE` `SWARM_MORPH`"
+                },
+                {
+                  "text": "Evaluates dense bézier curves, Chaikin corner-cutting subdivision, linear shape morphing, and 3D Simplex noise swarm transforms (`swarm_morph.wgsl`)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Physical Arc Length & Metrics**",
+                  "type": "text"
+                },
+                {
+                  "text": "`ARC_LENGTH` `COMPUTE_LENGTH` `NORMALIZE` `EXTRACT_LINE3D_LEN` `PACK_PATH_LEN`"
+                },
+                {
+                  "text": "High-precision numerical integration of bézier and 3D line arc lengths for screen-space invariant dash patterns and write animations."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Implicit 3D Volumes & Surfaces**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDF_MARCHING_CUBES` `DUAL_CONTOURING_PASS1` `DUAL_CONTOURING_PASS2`"
+                },
+                {
+                  "text": "GPU Marching Cubes iso-surface extraction (`sdf_marching_cubes.wgsl`) and Dual Contouring for real-time mathematical 3D plotting."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-step-by-step-tutorials-code-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Step-by-Step Tutorials & Code Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 1: 100,000 Particle Physics Simulation Streaming into Instanced"
+        },
+        {
+          "type": "paragraph",
+          "text": "This example simulates 100,000 orbiting particles directly on the GPU, updating instance transforms and colors with zero CPU overhead:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Circle, Instanced, ComputeKernel, Res, createBuffer, Color } from \"retiam\";\n\nexport class ParticleGalaxyScene extends Scene {\n    public async run() {\n        const COUNT = 100000; // 100k instances!\n        this.camera.position.set([0, 40, 180]);\n\n        // 1. Create Instanced Circle template\n        const baseCircle = new Circle(0.3, { fill: Color.WHITE });\n        const swarm = new Instanced(baseCircle, COUNT);\n        this.add(swarm);\n\n        // Prepare geometry and retrieve instance GPU storage buffer (Stride = 12 floats)\n        swarm.geo.prepare(this);\n        const instanceBuffer = swarm.getInstanceGPUBuffer();\n\n        // 2. Uniform Buffer for time and simulation parameters\n        const uniformBuffer = createBuffer(this.device, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, 16);\n\n        // 3. Declare the WebGPU Compute Kernel\n        const kernel = new ComputeKernel({\n            \"instances\": Res.buffer(\"array<vec4f>\", instanceBuffer, \"read_write\"),\n            \"params\": Res.uniform(\"vec4f\", uniformBuffer)\n        }, `\n            let idx = global_id.x;\n            if (idx >= ${COUNT}u) { return; }\n\n            let time = params.x;\n            let fIdx = f32(idx);\n\n            // Double Helix Vortex Dynamics\n            let arm = fIdx % 4.0;\n            let armAngle = arm * 1.5707963;\n            let radius = 12.0 + (fIdx / ${COUNT}.0) * 85.0;\n            let speed = (100.0 / radius) * 0.4;\n            let angle = armAngle + (fIdx * 0.002) + time * speed;\n\n            let px = cos(angle) * radius;\n            let py = sin(time * 2.0 + radius * 0.1) * 6.0 + (sin(fIdx) * 4.0);\n            let pz = sin(angle) * radius;\n            let scale = 0.25 + 0.15 * sin(time * 3.0 + fIdx);\n\n            // 1. Write Position (xyz) and Scale (w)\n            instances[idx * 3u + 0u] = vec4f(px, py, pz, scale);\n\n            // 2. Write Color (rgba) - Bioluminescent Rainbow\n            let hue = (fIdx / ${COUNT}.0 + time * 0.05) % 1.0;\n            let r = sin(hue * 6.28318) * 0.5 + 0.5;\n            let g = sin((hue + 0.33) * 6.28318) * 0.5 + 0.5;\n            let b = sin((hue + 0.66) * 6.28318) * 0.5 + 0.5;\n            instances[idx * 3u + 1u] = vec4f(r, g, b, 0.85);\n\n            // 3. Write 3D Rotation Quaternion (Identity)\n            instances[idx * 3u + 2u] = vec4f(0.0, 0.0, 0.0, 1.0);\n        `, [64, 1, 1]);\n\n        const uniformData = new Float32Array(4);\n        const workgroups = Math.ceil(COUNT / 64);\n\n        // 4. Dispatch Compute in Frame Loop\n        this.always(() => {\n            uniformData[0] = this.time * 0.001; // Current elapsed time\n            this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);\n\n            // Queue the compute dispatch for execution in ComputeUpdate pass:\n            const cmd = kernel.dispatch(this.device, workgroups);\n            this.addCompute(cmd);\n\n            this.invalidate();\n        });\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Example 2: Procedural Noise Generation into a Storage Texture"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { ComputeKernel, Res } from \"retiam\";\n\nexport function createProceduralNoiseGenerator(device: GPUDevice, targetView: GPUTextureView, width: number, height: number): ComputeKernel {\n    return new ComputeKernel({\n        \"outputTex\": Res.storageTexture(targetView, \"rgba8unorm\", \"write\")\n    }, `\n        let coord = vec2i(global_id.xy);\n        if (coord.x >= ${width} || coord.y >= ${height}) { return; }\n\n        let uv = vec2f(coord) / vec2f(${width}.0, ${height}.0);\n        let n = fract(sin(dot(uv, vec2f(12.9898, 78.233))) * 43758.5453);\n\n        textureStore(outputTex, coord, vec4f(n, n, n, 1.0));\n    `, [16, 16, 1]);\n}"
+        }
+      ]
+    },
+    {
+      "id": "6-best-practices-workgroup-sizing-gpu-hardware-limits",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Best Practices, Workgroup Sizing & GPU Hardware Limits"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Workgroup Size Tuning**:",
+              "children": [
+                "**1D Buffers / Particles**: Use `[64, 1, 1]` or `[128, 1, 1]`. This aligns with hardware wave/warp sizes (32 on NVIDIA, 64 on AMD) and avoids thread underutilization.",
+                "**2D Textures / Images**: Use `[16, 16, 1]` or `[8, 8, 1]` ($16 \\times 16 = 256$ threads per workgroup)."
+              ]
+            },
+            {
+              "text": "**Buffer Alignment**:",
+              "children": [
+                "Storage buffer sizes and copy offsets must be multiples of **4 bytes** (32-bit aligned).",
+                "Uniform buffer bindings must align to **256 bytes** (`minUniformBufferOffsetAlignment`)."
+              ]
+            },
+            {
+              "text": "**Preventing Workgroup Out-of-Bounds**:",
+              "children": [
+                "Always guard kernels with boundary checks:"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let idx = global_id.x;\n     if (idx >= totalElementCount) { return; }"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "**Workgroup Shared Memory & Synchronization**:",
+              "children": [
+                "Use `var<workgroup> sharedData: array<f32, 64>;` for inter-thread reductions within the same workgroup.",
+                "Always call `workgroupBarrier()` to synchronize memory reads and writes across threads in a workgroup."
+              ]
+            }
+          ],
+          "start": 4
+        }
+      ]
+    }
+  ]
+}

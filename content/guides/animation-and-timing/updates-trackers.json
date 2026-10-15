@@ -1,0 +1,79 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "updates-trackers",
+  "title": "Update loops, trackers and redraw",
+  "group": "Animation and timing",
+  "summary": "Drive changing values with trackers and update callbacks, then request frames when the result changes.",
+  "sections": [
+    {
+      "id": "update-scheduling",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Update scheduling"
+        },
+        {
+          "type": "paragraph",
+          "text": "always receives `(time, dt, context)`, with time and dt in milliseconds. The first numeric argument is absolute timeline time. Scene tasks run in pre, update or post phases. Pre executes before animation stepping; update executes after animations and before entity updates; post executes after entities. Use post for camera following that should see the completed frame’s positions."
+        },
+        {
+          "type": "paragraph",
+          "text": "Completion-boundary scheduling can split animation work internally, but each always callback runs once per rendered frame. It is never re-run for each internal boundary slice."
+        },
+        {
+          "type": "paragraph",
+          "text": "AlwaysOptions supports interval/fps throttling, delay, duration, repetition, conditions, priority and phases. Handles can pause, resume or unregister a task; returning false unregisters it. Mutation during stepping is managed by the registry. A registered updater and the decision to keep the composer rendering continuously are separate concerns."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-updatescene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [AlwaysOptions](/api-core-always#always), [AlwaysHandle](/api-core-always#always), [AlwaysRegistry](/api-core-always#always)."
+        }
+      ]
+    },
+    {
+      "id": "valuetracker",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ValueTracker"
+        },
+        {
+          "type": "paragraph",
+          "text": "ValueTracker stores a scalar in the entity transform’s t1 register. value is the friendly accessor; animateValue produces an Animator. Connect the scalar to graph updates or other geometry using an updater, keeping the geometry instance stable."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-trackerscene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [ValueTracker](/api-entities-composites-trackers#valuetrackers), [FunctionGraph2D](/api-entities-composites-plotting#functiongraph2d)."
+        }
+      ]
+    },
+    {
+      "id": "alwaysredraw-and-allocation-tradeoffs",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "alwaysRedraw and allocation tradeoffs"
+        },
+        {
+          "type": "paragraph",
+          "text": "alwaysRedraw invokes a factory and transfers compatible GPU buffers, pipelines and retained state from the previous result. Compatibility depends on constructors and child structure. It still creates JavaScript entities when the factory creates them; it does not guarantee zero allocations. Prefer mutable updateGraph/setVertices methods when they express the change directly, and use alwaysRedraw for convenient reconstruction when necessary."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [alwaysRedraw](/api-entities-composites-trackers#alwaysredraw)."
+        }
+      ]
+    }
+  ]
+}

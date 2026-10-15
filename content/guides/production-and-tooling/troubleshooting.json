@@ -1,0 +1,172 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "troubleshooting",
+  "title": "Diagnose a scene from the first missing frame",
+  "group": "Production quality",
+  "summary": "Trace a missing or incorrect frame back to startup, camera, geometry, assets or export configuration.",
+  "sections": [
+    {
+      "id": "first-frame",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Reduce the failure to one primitive"
+        },
+        {
+          "type": "paragraph",
+          "text": "Start with the [npm first scene](/installation#create-a-consumer-application) and one Circle. Remove imported assets and custom passes temporarily. Establish that the canvas has nonzero CSS and pixel dimensions, `scene.start(canvas)` completed, the camera faces the object and the configured CDN module loads successfully. Then restore the feature that failed. A blank frame alone does not tell you whether loading, state, geometry or shading broke."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Symptom",
+            "Small reproduction",
+            "Check and repair"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Canvas has no drawing",
+                "Render one cyan circle with an orthographic camera at [0,0,20].",
+                "Inspect startup errors and navigator.gpu, canvas dimensions and secure browser context. Check camera lookAt, near/far and layerMask/cullingMask."
+              ]
+            },
+            {
+              "cells": [
+                "Font parser reports an HTML/OpenType signature error",
+                "Run the npm starter with its vite.config.ts, then inspect the font request URL.",
+                "A missing font can return the HTML fallback. Preserve package asset URLs with optimizeDeps.exclude: ['retiam']; check the response status and content instead of treating HTML as font data."
+              ]
+            },
+            {
+              "cells": [
+                "Preview cannot load Retiam",
+                "Open the configured cdnUrl directly and inspect the browser console.",
+                "Check the URL, published package version, ESM response and CORS headers. See [runtime setup](/docs-authoring#engine-cdn)."
+              ]
+            },
+            {
+              "cells": [
+                "Object is clipped at a narrow width",
+                "Resize the preview with the same geometry.",
+                "Orthographic scale is the vertical span; horizontal span depends on aspect. Frame after assets resolve or use an aspect-aware scale."
+              ]
+            },
+            {
+              "cells": [
+                "Geometry stays stale",
+                "Mutate one vertex array element and compare with the public setVertices/updateGraph method.",
+                "Use the supported setter/rebuild path. A scene invalidation alone does not rebuild a geometry cache whose version never changed."
+              ]
+            },
+            {
+              "cells": [
+                "Updater seems frozen",
+                "Replace it with a moving retained circle.",
+                "Confirm its handle is active and the owning composer is advancing. Continuous procedural motion needs ALWAYS_UPDATE or another active timeline producer."
+              ]
+            },
+            {
+              "cells": [
+                "Mesh ignores a paint setting",
+                "Compare a Path and a Model.",
+                "Vector paint and mesh material are separate. Use material setters for Model color/roughness/opacity; use paint for path fill and stroke."
+              ]
+            },
+            {
+              "cells": [
+                "Transparent objects overlap incorrectly",
+                "Put two translucent surfaces through one another.",
+                "Inspect depth writes and blending/OIT mode. Changing alpha does not select a transparency algorithm."
+              ]
+            },
+            {
+              "cells": [
+                "Text disappears or shifts after layout",
+                "Measure before and after awaiting the font.",
+                "Load the required charset, await the font, then build/arrange/frame. Rebuild invalidates old character references."
+              ]
+            },
+            {
+              "cells": [
+                "GPU reports a destroyed buffer",
+                "Close and immediately reopen a preview.",
+                "Stop the old composer first; retire owned allocations through the deferred queue. Avoid destroying shared geometry from an individual consumer."
+              ]
+            },
+            {
+              "cells": [
+                "Scene looks different in the MP4",
+                "Render a fixed camera, font and input at an explicit size/fps.",
+                "Compare aspect, pixel ratio, assets, deterministic timing, audio start and randomness; browser wall-clock screenshots are not offline frame exports."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Each repair narrows one layer. Keep the browser console open while reproducing and record the exact first error, engine build, browser/GPU, dimensions, scene file and CLI arguments. Subsequent WebGPU errors often come from the first invalid binding or destroyed resource."
+        }
+      ]
+    },
+    {
+      "id": "framing",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Separate camera scale from shape size"
+        },
+        {
+          "type": "example",
+          "example": "labs/compare-local-world"
+        },
+        {
+          "type": "paragraph",
+          "text": "This scene keeps the comparison visible at narrow widths by increasing the vertical span when the aspect ratio shrinks. Try removing that aspect-aware update. The objects keep their world positions; the visible horizontal world range changes. That is a camera/framing issue, not geometry stretching. For normal authoring, `Camera.frame` can fit the loaded entities once their bounds are valid."
+        }
+      ]
+    },
+    {
+      "id": "shader-errors",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Read a shader failure as a contract failure"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-shader-uniform"
+        },
+        {
+          "type": "paragraph",
+          "text": "A shader that compiles but shows wrong colors often has the right binding and the wrong byte layout. In this lab the vec2 occupies the first eight bytes, the first vec4 begins at byte 16, the next at byte 32, and the scalar at byte 48. `UniformSchema` computes those offsets and a 64-byte allocation. Packing the first color immediately after the vec2 violates alignment."
+        },
+        {
+          "type": "paragraph",
+          "text": "For a compilation error, inspect the generated shader and its named resource declarations. Duplicate @group/@binding declarations, a mismatched texture sample type, missing varyings and a wrong storage access mode are different failures. First use one known geometry/fragment pair; then add your resource and update path. See [extension workshop](/extension-workshop)."
+        }
+      ]
+    },
+    {
+      "id": "export-errors",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Trace the output pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "If no browser starts, check the CLI’s Chrome and peer-tool setup. If the browser starts but no scene loads, check the host’s `?file=` import and default export. If frames arrive but no movie appears, inspect FFmpeg, the output directory and the WebSocket connection. If only media is missing, verify local asset paths and service endpoints in the rendering browser. The [export guide](/export) gives the actual commands and the current independent-embed limitation."
+        },
+        {
+          "type": "paragraph",
+          "text": "For speech failures, separate provider audio generation, browser playback permission and subtitle timing. A static documentation host does not create a Microsoft Edge proxy or a Kokoro service automatically. Test a local audio file first, then the configured provider. A scene that never awaits failed narration can appear frozen even though WebGPU is working."
+        }
+      ]
+    }
+  ]
+}

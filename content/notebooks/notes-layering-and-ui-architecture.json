@@ -1,0 +1,490 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-layering-and-ui-architecture",
+  "title": "Layering & UI Subsystem Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/LAYERING_AND_UI_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/LAYERING_AND_UI_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/LAYERING_AND_UI_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Camera](/api-camera#camera), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Entity](/api-core-entity#entity), [Text](/api-entities-composites-text#text), [SceneComposer](/api-core-scenecomposer#scenecomposer), [Queue](/api-utils#utility), [RenderPass](/api-render-passes#renderpass), [Color](/api-math#color), [Write](/api-animation#write), [Pass](/api-render-frame-graph#pass), [Axes](/api-entities-composites-coordinates#axes), [Model](/api-entities-primitives-3d#model), [Mask](/api-entities-layout#mask), [SDFText](/api-entities-composites-text#sdftext), [Tex](/api-entities-composites-text#tex), [Group](/api-core#group), [UIManager](/api-core#uimanager), [RenderView](/api-camera#renderview), [CameraModel](/api-camera#camera), [Code](/api-entities-composites-text#code), [ThreeDAxes](/api-entities-composites-coordinates#threedaxes), [OrbitCameraController](/api-camera#orbitcameracontroller), [Vec3](/api-math-vector#vec3)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a comprehensive technical guide to the **Bitmask Layering System**, **Camera Culling**, and **UI Overlay Architecture** in the Retiam WebGPU Engine."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-philosophy-overview",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Philosophy & Overview"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam uses a **32-bit bitwise layer mask system** coupled with a **multi-view frame execution pipeline**. This architecture separates 3D world geometry, 2D vector animations, dedicated render targets, and screen-space user interface (UI) overlays into distinct rendering passes while sharing a single unified GPU state buffer and scene graph."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph SG1[\"1. Scene Graph and Entities\"]\n        E1[\"3D Mesh / Plot (Layer 0)\"]\n        E2[\"Vector Shape (Layer 0)\"]\n        E3[\"Custom Target Entity (Layer 2)\"]\n        EUI[\"UI Title / HUD Text (Layer 31)\"]\n    end\n\n    subgraph SG2[\"2. SceneComposer Frame Loop\"]\n        Queue[\"Global Sorted Render Queue\"]\n    end\n\n    subgraph SG3[\"3. RenderPass View Iteration\"]\n        V0[\"View 0: Main 3D Camera (cullingMask = 1)\"]\n        V1[\"View 1: UI Orthographic Camera (cullingMask = 0x80000000)\"]\n        Frame3D[\"Render 3D World (Color and Depth Write)\"]\n        Skip3D[\"Skip UI in 3D Space\"]\n        SkipUI[\"Skip 3D World in UI Pass\"]\n        FrameUI[\"Clear Depth and Render UI Overlay\"]\n    end\n\n    Composite[\"Final Screen Output\"]\n\n    E1 --> Queue\n    E2 --> Queue\n    E3 --> Queue\n    EUI --> Queue\n\n    Queue --> V0\n    Queue --> V1\n\n    V0 -->|\"Matches Layer 0\"| Frame3D\n    V0 -->|\"Ignores Layer 31\"| Skip3D\n\n    V1 -->|\"Ignores Layer 0\"| SkipUI\n    V1 -->|\"Matches Layer 31\"| FrameUI\n\n    Frame3D --> Composite\n    FrameUI --> Composite"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "+---------------------------------------------------------------------------------------+\n| 1. SCENE GRAPH & ENTITIES                                                             |\n|   - 3D Plots, Meshes, Axes  --> layerMask: 1 (Layer 0)                                |\n|   - Custom Render Targets   --> layerMask: 1 << N (Layer N)                           |\n|   - Screen Titles, HUD, UI  --> layerMask: 1 << 31 (Layer 31, Entity.UI_LAYER)         |\n+---------------------------------------------------------------------------------------+\n                                           |\n                                           v\n+---------------------------------------------------------------------------------------+\n| 2. ZERO-GC RENDER QUEUE DISPATCH (SceneComposer)                                      |\n|   Single sorted draw queue containing all active entity packets                       |\n+---------------------------------------------------------------------------------------+\n                      |                                            |\n                      v                                            v\n+------------------------------------------+ +------------------------------------------+\n| 3. VIEW 0: MAIN 3D CAMERA PASS           | | 4. VIEW 1: UI ORTHOGRAPHIC CAMERA PASS   |\n| - Camera Model: PERSPECTIVE (or 2D)      | | - Camera Model: ORTHOGRAPHIC             |\n| - cullingMask: 1 (Layer 0)               | | - cullingMask: 1 << 31 (UI_LAYER)        |\n| - Loads/Clears Color & Depth Buffer      | | - Loads Color Buffer, Clears Depth Buffer|\n|                                          | |                                          |\n| -> Renders 3D geometry in world space    | | -> Ignores 3D geometry                   |\n| -> Skips Layer 31 (UI Title/HUD)         | | -> Renders Layer 31 flat on top of scene |\n+------------------------------------------+ +------------------------------------------+\n                      \\                                            /\n                       \\                                          /\n                        v                                        v\n+---------------------------------------------------------------------------------------+\n| 5. COMPOSITED OUTPUT TEXTURE (Frame Buffer / Canvas)                                  |\n+---------------------------------------------------------------------------------------+"
+        }
+      ]
+    },
+    {
+      "id": "2-bitmask-layer-structure",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Bitmask Layer Structure"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each entity and camera holds a 32-bit integer representing layer memberships and visibility filters:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Visible if: } (\\text{Entity.layerMask} \\ \\& \\ \\text{Camera.cullingMask}) \\neq 0"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Layer Index",
+            "Bit Offset (`1 << N`)",
+            "Hex Mask",
+            "Standard Retiam Engine Purpose"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Layer 0**",
+                  "type": "text"
+                },
+                {
+                  "text": "`1 << 0`"
+                },
+                {
+                  "text": "`0x00000001`"
+                },
+                {
+                  "text": "**Default World Layer**: Standard 3D meshes, 2D vectors, plots, axes, particles."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Layers 1–30**",
+                  "type": "text"
+                },
+                {
+                  "text": "`1 << 1` ... `1 << 30`"
+                },
+                {
+                  "text": "`0x00000002` ... `0x40000000`"
+                },
+                {
+                  "text": "**Custom User Layers**: Render targets, minimaps, offscreen passes, reflection probes, selective post-processing."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Layer 31**",
+                  "type": "text"
+                },
+                {
+                  "text": "`1 << 31`"
+                },
+                {
+                  "text": "`0x80000000`"
+                },
+                {
+                  "text": "**Dedicated UI Layer (`Entity.UI_LAYER`)**: Screen-pinned HUDs, titles, labels, buttons, profiler counters."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-entity-layer-api-entity-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Entity Layer API (Entity.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every scene graph node ([`Entity`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Entity.ts)) manages its layer bits through direct properties and helper methods that can recursively apply to child hierarchies."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class Entity {\n    /** \n     * 32-bit bitmask representing which layers this entity belongs to.\n     * Default: 1 (Layer 0).\n     */\n    public layerMask: number = 1;\n\n    /** \n     * Indicates whether this entity is flagged as a UI element.\n     * Default: false.\n     */\n    public isUI: boolean = false;\n\n    public static readonly UI_LAYER = 31;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Entity Methods"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "setAsUI(includeChildren: boolean = true): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Marks the entity as a UI element, assigns it to `Entity.UI_LAYER` (bit 31), and automatically triggers UI camera initialization if attached to an active scene."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const title = new SDFText(\"Simulation Dashboard\", { fontSize: 1 });\ntitle.setAsUI(); // Sets layerMask = (1 << 31) and isUI = true"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "setLayers(layers: number[], includeChildren: boolean = true): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Overwrites the entity's layer mask to belong **only** to the specified layer indices."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "entity.setLayers([0, 2]); // layerMask = (1 << 0) | (1 << 2) = 5"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "addLayer(layer: number, includeChildren: boolean = true): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Adds the entity to an additional layer without removing existing layer memberships."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "entity.addLayer(3); // layerMask |= (1 << 3)"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "removeLayer(layer: number, includeChildren: boolean = true): this"
+        },
+        {
+          "type": "paragraph",
+          "text": "Removes the entity from a specific layer."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "entity.removeLayer(0); // layerMask &= ~(1 << 0)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Hierarchical Propagation"
+        },
+        {
+          "type": "paragraph",
+          "text": "When composite entities ([`SDFText`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/SDFText.ts), [`Text`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Text.ts), [`Tex`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/composites/text/Tex.ts), [`Group`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Group.ts)) generate internal child glyphs or sub-paths, they automatically propagate their `layerMask` and `isUI` state down to their children."
+        }
+      ]
+    },
+    {
+      "id": "4-camera-culling-api-camera-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Camera Culling API (Camera.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The [`Camera`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/Camera.ts) entity acts as a viewing frustum and filter during frame rendering."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export class Camera extends Entity {\n    /**\n     * Bitmask controlling which layers this camera renders.\n     * Default: 1 (Layer 0 only).\n     */\n    public cullingMask: number = 1;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Camera Methods"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "Bitwise Operation",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "`seeOnlyLayers(layers: number[])`",
+                  "type": "text"
+                },
+                {
+                  "text": "`cullingMask = Σ (1 << l)`"
+                },
+                {
+                  "text": "Replaces the culling mask so the camera **only** renders the specified layers."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`seeLayer(layer: number)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`cullingMask \\|= (1 << layer)`"
+                },
+                {
+                  "text": "Adds visibility for an additional layer."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`ignoreLayer(layer: number)`",
+                  "type": "text"
+                },
+                {
+                  "text": "`cullingMask &= ~(1 << layer)`"
+                },
+                {
+                  "text": "Hides a specific layer from this camera."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "`seeAllLayers()`",
+                  "type": "text"
+                },
+                {
+                  "text": "`cullingMask = 0xFFFFFFFF`"
+                },
+                {
+                  "text": "Renders all 32 layers (Caution: will render UI in 3D if UI layers are active)."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-ui-subsystem-dedicated-ui-camera",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. UI Subsystem & Dedicated UI Camera"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Automatic Initialization Workflow"
+        },
+        {
+          "type": "paragraph",
+          "text": "When a UI entity is added to the scene:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "`entity.setAsUI()` sets `isUI = true` and `layerMask = 1 << 31`.",
+            "[`Scene.add()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/Scene.ts#L365-L372) traverses the entity tree and detects `ent.isUI === true`.",
+            "The scene calls [`composer.setupUICamera()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts#L587-L599), delegating to [`UIManager.setupUICamera()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/UIManager.ts#L27-L45).",
+            "A dedicated [`RenderView`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/camera/RenderView.ts) is instantiated with the following configuration:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// UIManager.ts\nnewUIView.camera.LABEL = \"UI_Orthographic_Camera\";\nnewUIView.camera.model = CameraModel.ORTHOGRAPHIC;\nnewUIView.camera.orthoScale = 10;\nnewUIView.camera.seeOnlyLayers([Entity.UI_LAYER]); // cullingMask = 1 << 31\nnewUIView.camera.position.set([0, 0, 100]);\nnewUIView.camera.lookAtTarget = null;\nnewUIView.clearDepth = true; // Prevents 3D scene geometry from clipping UI elements"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "UI Coordinate Space & Viewport Mapping"
+        },
+        {
+          "type": "paragraph",
+          "text": "With `orthoScale = 10` and `CameraModel.ORTHOGRAPHIC`, the coordinate space is screen-anchored and aspect-ratio dependent:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Vertical bounds ($Y$)**: $[-5.0, +5.0]$ (Top is $+5.0$, Bottom is $-5.0$, Center is $0.0$).",
+            {
+              "text": "**Horizontal bounds ($X$)**: $[-5.0 \\times \\text{aspect}, +5.0 \\times \\text{aspect}]$.",
+              "children": [
+                {
+                  "text": "For standard 16:9 aspect ratio ($16/9 \\approx 1.777$):",
+                  "children": [
+                    "Left edge: $X \\approx -8.88$",
+                    "Right edge: $X \\approx +8.88$",
+                    "Top-left corner: $[-8.0, 4.2, 0]$ (comfortable margin)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Y = +5.0 (Top)\n        ┌────────────────────────────────────────┐\n        │ [-8.0, 4.2] (HUD / Title)              │\n        │                                        │\nX = -8.88                                 X = +8.88\n (Left) │               [0, 0]                   │ (Right)\n        │              (Center)                  │\n        │                                        │\n        │                        [7.5, -4.2]     │\n        │                       (FPS Counter)    │\n        └────────────────────────────────────────┘\n                       Y = -5.0 (Bottom)"
+        }
+      ]
+    },
+    {
+      "id": "6-multi-pass-render-loop-execution-renderpass-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Multi-Pass Render Loop Execution (RenderPass.ts)"
+        },
+        {
+          "type": "paragraph",
+          "text": "During each frame, [`RenderPass.execute()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/passes/RenderPass.ts#L158-L297) iterates over all active views in `context.sceneData.views`:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "for (const view of views) {\n    // 1. Color attachment load/clear logic\n    // First view clears the frame buffer; subsequent views load the color buffer\n    const isLoad = isRT || !firstView;\n    \n    // 2. Depth buffer load/clear logic\n    // If view.clearDepth is true (as in UI view), depth buffer is cleared to 0.0\n    const isLoadDepth = isRT || (!firstView && !view.clearDepth);\n\n    // 3. Render Queue Filtering\n    for (let pIdx = 0; pIdx < render_queue.length; pIdx++) {\n        const packet = render_queue[pIdx];\n        \n        // Bitmask culling check:\n        if ((packet.entity.layerMask & view.camera.cullingMask) === 0) {\n            continue; // Skip rendering this packet for this view\n        }\n        \n        // Draw packet...\n    }\n    firstView = false;\n}"
+        }
+      ]
+    },
+    {
+      "id": "7-practical-use-cases-code-recipes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Practical Use Cases & Code Recipes"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 1: Adding a Pinned Screen Title / HUD to a 3D Scene"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, SDFText, Color, ThreeDAxes, OrbitCameraController, Vec3 } from \"retiam\";\n\nexport class My3DScene extends Scene {\n    public async run() {\n        // 1. 3D Camera Controls (operates on default_view / Layer 0)\n        this.camera.position.set([0, 5, 10]);\n        new OrbitCameraController(this, this.camera, new Vec3(0, 0, 0));\n\n        // 2. Add 3D World Geometry (Layer 0 by default)\n        const axes = new ThreeDAxes({ width: 10, height: 5, depth: 10 });\n        this.add(axes);\n\n        // 3. Add Screen UI Title (Layer 31)\n        const title = new SDFText(\"3D Surface Visualizer\", { fontSize: 0.8 });\n        title.setAsUI();\n        title.transform.position.set([-7.5, 4.0, 0]); // Top-left corner\n        title.paint.fill = new Color(1, 1, 1, 1);\n        this.add(title);\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 2: Live Performance Profiler / FPS Counter"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const profiler = new SDFText(\"FPS: 60 | DrawCalls: 12\", { fontSize: 0.35 });\nprofiler.setAsUI();\nprofiler.transform.position.set([5.0, 4.3, 0]); // Top-right corner\nprofiler.paint.fill = new Color(0.2, 1.0, 0.4, 1.0);\nthis.add(profiler);\n\nthis.always(() => {\n    profiler.text = `FPS: ${Math.round(1000 / this.dt)}`;\n});"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 3: Multi-View Picture-in-Picture (Minimap / Rear-View Mirror)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Create main scene entities on Layer 0\nconst mainWorld = new Cube(2);\nthis.add(mainWorld);\n\n// 2. Create minimap marker on Layer 2 only\nconst minimapMarker = new Sphere(1);\nminimapMarker.setLayers([2]);\nthis.add(minimapMarker);\n\n// 3. Main Camera sees Layer 0 (World) but ignores Minimap Marker\nthis.camera.seeOnlyLayers([0]);\n\n// 4. Create Minimap View (Top-Down Orthographic View in corner viewport)\nconst minimapView = this.composer.createView(200, 200);\nminimapView.viewport = { x: 0.75, y: 0.05, w: 0.2, h: 0.2 }; // Normalized screen rect\nminimapView.camera.model = CameraModel.ORTHOGRAPHIC;\nminimapView.camera.position.set([0, 50, 0]);\nminimapView.camera.lookAtTarget = new Vec3(0, 0, 0);\nminimapView.camera.seeOnlyLayers([0, 2]); // Sees both world and minimap marker"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Recipe 4: Dedicated Offscreen Render Target (Portal / Security Camera)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { RenderTarget } from \"retiam\";\n\n// 1. Allocate an offscreen render target with its own layer (e.g. Layer 3)\nconst portalTarget = new RenderTarget(\"PortalCamera\", 512, 512);\n\n// 2. Assign secret/portal room entities to the target's layer\nsecretRoomEntity.setLayers([portalTarget.allocatedLayer]);\n\n// 3. Apply the rendered texture as a material fill in the main scene\nconst screenDisplay = new Rect(4, 3);\nscreenDisplay.material.albedoTexture = portalTarget.texture;\nthis.add(screenDisplay);"
+        }
+      ]
+    },
+    {
+      "id": "8-critical-gotchas-best-practices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Critical Gotchas & Best Practices"
+        },
+        {
+          "type": "callout",
+          "variant": "warning",
+          "content": "**Never set `Camera.cullingMask = 0xFFFFFFFF` on the main scene camera when UI elements are present.** Setting `cullingMask = 0xFFFFFFFF` instructs the main perspective camera to render Layer 31 in 3D world space, resulting in **double text** (one 3D tilted copy and one 2D flat overlay copy). The main scene camera must keep `cullingMask = 1` or explicitly exclude `Entity.UI_LAYER`."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "**Always call `setAsUI()` before or immediately upon adding to the scene.** Calling `entity.setAsUI()` configures the internal layer bits and notifies [`SceneComposer`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/SceneComposer.ts) to allocate the orthographic UI pass and clear depth for the UI layer."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "**UI Layer Depth Clearing:** The UI camera pass executes with `clearDepth = true`. This ensures UI elements always render on top of 3D objects, even if their $Z$ coordinate is behind objects in 3D world coordinates. Use `z_index` on the entity's paint/transform for stacking order between multiple UI elements."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "labs/lab-transforms": {
+    "title": "Where does rotation happen?",
+    "description": "Turn the rectangle around the amber marker. A local anchor chooses a point on the rectangle; a world pivot chooses a coordinate in the scene. Edit one entry in `values` at a time and watch which point stays still.",
+    "walkthrough": [
+      "The cyan rectangle starts to the right of the world origin. Its bounds supply the center, left, right and top anchors through `Entity.getBoundaryPoint`.",
+      "The scene calls `Entity.setPivot` before applying rotation and scale. Setting the pivot preserves the rectangle’s visible placement; the following operations then act around that point. The marker shows the chosen world coordinate.",
+      "The rectangle is rebuilt from its initial state before rotation and scale are applied. This gives each run the same starting point, even though `Entity.rotate` and `Entity.scale` apply incremental changes."
+    ],
+    "experiments": [
+      "In `values`, set anchor to \"left\" and increase angle. The left edge stays at the marker while the rectangle swings around it.",
+      "Set mode to \"world pivot\" and pivotX to zero. The rectangle now orbits the origin instead of turning around its own center.",
+      "Increase scale to 2. Notice that the distance from the pivot grows together with the geometry."
+    ],
+    "related": [
+      "Entity.setPivot",
+      "Entity.getBoundaryPoint",
+      "Entity.rotate",
+      "Entity.scale",
+      "TransformOption"
+    ]
+  },
+  "labs/lab-easing": {
+    "title": "Feel the difference between easing curves",
+    "description": "Both dots cover the same distance in the same duration. The amber dot uses linear progress; the cyan dot uses the curve you choose. Watch their separation rather than just their finish time.",
+    "walkthrough": [
+      "The update callback receives `dt` in milliseconds. Dividing accumulated time by duration gives normalized progress between zero and one.",
+      "`Rate.linear` leaves that progress unchanged. The selected rate function remaps it before the scene computes the cyan dot’s position. Easing changes the distribution of movement within the duration.",
+      "There is a short hold at the end of each pass, then the comparison repeats. Change `duration` to adjust the pace of both dots."
+    ],
+    "experiments": [
+      "Set easing to \"smooth\". Near the start, the cyan dot accelerates gently while the amber dot already moves at full speed.",
+      "Set easing to \"bounce\" and watch the final part of the pass. Progress changes direction near the destination.",
+      "Increase duration without changing the easing. The shape of the motion stays the same while its pace changes."
+    ],
+    "related": [
+      "Rate",
+      "Rate.linear",
+      "Rate.smooth",
+      "Rate.easeOutBounce",
+      "Scene.always",
+      "AnimOptions"
+    ]
+  },
+  "labs/lab-paint": {
+    "title": "See how paint changes a shape",
+    "description": "The cyan circle overlaps an amber rectangle. This gives opacity something visible to reveal, and makes the circle’s white outline easy to inspect.",
+    "walkthrough": [
+      "`Paint` controls the circle’s vector appearance. The geometry remains a circle when you change opacity or stroke width.",
+      "Opacity blends the foreground with the rectangle behind it. Stroke width is measured in scene units, so its appearance also depends on camera framing.",
+      "Scaling the circle changes its transform. Changing stroke width alone changes its paint. Compare the two by editing the calls in `run`."
+    ],
+    "experiments": [
+      "After adding the circle, call `this.circle.setOpacity(0.5)` and inspect the overlap. Restore it to 1 to see the foreground cover the background.",
+      "Increase stroke width while keeping the size fixed. The outline becomes more prominent without changing the circle’s scale.",
+      "Shrink the circle, then choose a thinner stroke to keep the visual proportions balanced."
+    ],
+    "related": [
+      "Paint",
+      "Entity.setOpacity",
+      "Entity.setStrokeWidth",
+      "Circle",
+      "Entity.scale"
+    ]
+  },
+  "labs/lab-bezier": {
+    "title": "Shape a curve with your hands",
+    "description": "Drag the amber control points. The thin control polygon shows the inputs, while the cyan curve shows the result. Its interior control points pull the curve without becoming points on the curve.",
+    "walkthrough": [
+      "Four control points define this cubic Bézier curve. The first and last points are endpoints; the middle two set the tangent directions and the bend.",
+      "Each handle owns an `InteractionComponent`. Drag callbacks update the point array, move the handle, and call `Bezier.setPoints` and `Line.setVertices` so the curve and its guide stay synchronized.",
+      "The scene calls `Scene.invalidate` after these changes, allowing an otherwise still scene to redraw when input arrives."
+    ],
+    "experiments": [
+      "Move an interior point across the line between the endpoints. Watch the curve change its direction of bend.",
+      "Put the two interior points near one another. Then spread them far apart to compare a tight bend with a wider sweep.",
+      "Drag an endpoint and notice that the curve follows it exactly."
+    ],
+    "related": [
+      "Bezier",
+      "Bezier.setPoints",
+      "InteractionComponent",
+      "InteractionManager",
+      "Line.setVertices"
+    ]
+  },
+  "labs/lab-hierarchy": {
+    "title": "A child moves in its parent’s space",
+    "description": "The rectangle and amber dot belong to one group. Rotate or scale that parent, then move the dot along its local X axis. The dot’s path tells you which coordinate system is being used.",
+    "walkthrough": [
+      "`VGroup` establishes a parent-child relationship. The group’s transform affects both the rectangle and the dot.",
+      "The child’s `Entity.move` receives coordinates relative to its parent. A horizontal local movement therefore appears tilted after the group rotates.",
+      "`Entity.setRotation` and `Entity.setScale` assign absolute values. Edit angle, childX and scale in `values` to compare how the parent transform affects the child."
+    ],
+    "experiments": [
+      "Set angle to 90 in `values`, then change childX. Local horizontal motion becomes vertical on screen.",
+      "Double the parent scale. Both the dot’s size and its distance from the parent origin grow.",
+      "Restore angle to zero and compare the same child coordinates."
+    ],
+    "related": [
+      "VGroup",
+      "Entity.move",
+      "Entity.setRotation",
+      "Entity.setScale",
+      "Entity.localToWorld",
+      "Entity.worldToLocal"
+    ]
+  },
+  "labs/lab-camera": {
+    "title": "Projection changes what distance looks like",
+    "description": "These two circles have the same radius but different depths. Switch between orthographic and perspective projection, then move the camera to see how depth affects apparent size.",
+    "walkthrough": [
+      "The cyan circle is closer to the camera and the amber circle is farther away. Neither circle changes its geometry as you move the camera.",
+      "Orthographic projection gives equal-sized objects equal apparent size at these depths. `Camera.orthoScale` controls how much of the scene fits in the frame.",
+      "Perspective projection makes nearby objects appear larger. Camera distance and field of view both influence framing; `Camera.fov` takes radians."
+    ],
+    "experiments": [
+      "Change the camera model in `run` to `CameraModel.PERSPECTIVE` and reduce its Z position from 20 to 12. The difference between the circles becomes easier to see.",
+      "Switch back to `CameraModel.ORTHOGRAPHIC` and repeat the distance change. Change `Camera.orthoScale` to adjust framing instead. Turn off Preserve State when experimenting with camera settings.",
+      "In perspective mode, narrow the field of view and then move farther away to recover similar framing."
+    ],
+    "related": [
+      "Camera",
+      "CameraModel",
+      "Camera.fov",
+      "Camera.orthoScale",
+      "Camera.frame"
+    ]
+  }
+}

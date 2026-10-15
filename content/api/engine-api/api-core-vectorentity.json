@@ -1,0 +1,276 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "api-core-vectorentity",
+  "title": "VectorEntity API",
+  "group": "Engine API",
+  "sections": [
+    {
+      "id": "reading-this-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Explore this reference"
+        },
+        {
+          "type": "details",
+          "title": "How to read this reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Public members are shown by default. Include internal and protected members when exploring implementation details. A direct member link reveals and opens its target automatically, even when it is internal. Large types are grouped by behavior."
+            },
+            {
+              "type": "paragraph",
+              "text": "Start with the class or option type you need, then open a member to see its signature, arguments, defaults and return type. Use Find a member to narrow the list. Type names link to their own references, inherited members link to their base class, and Read implementation opens the checked-out source directly on this page."
+            },
+            {
+              "type": "paragraph",
+              "text": "The reference follows the TypeScript implementation, including constructor overloads and accessors. Where a live scene is available, run it beside the contract and use View source to experiment. The workflow links connect individual APIs to the guides that explain how to use them together."
+            },
+            {
+              "type": "paragraph",
+              "text": "Protected members support extensions; members marked internal expose engine machinery and are best understood alongside the rendering guides. Source comments and authored notes explain behavior where available. The collapsed declaration snapshot retains the earlier implementation inventory. See [current behavior and limitations](/limitations) for known differences between older comments and runtime behavior."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vectorentity",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "VectorEntity"
+        },
+        {
+          "type": "api-reference",
+          "source": "src/engine/_core/VectorEntity.ts"
+        },
+        {
+          "type": "details",
+          "title": "Declaration snapshot and implementation notes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Implementation: [src/engine/_core/VectorEntity.ts](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Package entry points: `retiam`."
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "items": [
+                "VectorEntity: Abstract base class for all 2D vector-based entities. Guarantees support for mathematical path extraction, morphing, and sub-path animations."
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Exported declaration",
+                "Kind",
+                "Role / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "VectorEntity",
+                    "Class",
+                    "Abstract base class for all 2D vector-based entities. Guarantees support for mathematical path extraction, morphing, and sub-path animations."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "export declare abstract class VectorEntity extends Entity {\n    children: VectorEntity[];\n    constructor(options?: EntityOptions);\n    abstract toPaths(): Path[];\n    toSvg(): string;\n    toSvgPath(): string;\n    getVertices(): Vec2[];\n    getVertex(i: number): Vec2;\n    getSubEntities(): VectorEntity[];\n    decompose(): this;\n    extractAllPaths(): Path[];\n    getArcLength(): number;\n    computeLocalTolerance(pixelTolerance?: number, camera?: Camera, viewportHeight?: number): number;\n    applyPixelTolerance(pixelTolerance?: number, camera?: Camera, viewportHeight?: number): this;\n    setPixelTolerance(pixelTolerance?: number, camera?: Camera, viewportHeight?: number): this;\n    setAdaptivePixelTolerance(adaptivePixelTolerance?: number, adaptiveToleranceMargin?: number, options?: {\n        minTolerance?: number;\n        maxTolerance?: number;\n    }): this;\n    disableAdaptivePixelTolerance(): this;\n    prepareForNonlinearTransform(options?: number | SubdivisionOptions): this;\n    applyField(field: ISpatialField | SpatialMappingFunction, t?: number): this;\n    applyHomotopy(homotopy: HomotopyFunction, t: number): this;\n    applyFunction(fn: (p: Vec3) => Vec3, alpha?: number): this;\n    applyComplexFunction(fn: ComplexMappingFunction | ((z: any) => any), alpha?: number): this;\n    resetDeformation(): this;\n    forEachPath(fn: (path: Path, index: number) => void): this;\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Members declared on `VectorEntity` (base-class members are inherited)."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Member / source signature",
+                "Initializer",
+                "Behavior / contract"
+              ],
+              "rows": [
+                {
+                  "cells": [
+                    "declare public children: VectorEntity[]",
+                    "—",
+                    "Instance or static field; its value is populated by initialization or a later operation. [Source line 20](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L20)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "constructor(options?: EntityOptions)",
+                    "—",
+                    "Implementation: `super(options);`. [Source line 22](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L22)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public abstract toPaths(): Path[];",
+                    "—",
+                    "Extracts raw GPU-ready Path primitives from this entity. Used mathematically for Morphing (VectorTransform). [Source line 30](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L30)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toSvg(): string",
+                    "—",
+                    "Returns the combined SVG path command string for this vector entity. For single paths, returns its SVG path string. For composites or groups, joins the SVG path strings of all child paths. [Source line 36](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L36)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public toSvgPath(): string",
+                    "—",
+                    "Alias for {@link toSvg}. Returns the SVG path command string. [Source line 54](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L54)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getVertices(): Vec2[]",
+                    "—",
+                    "Returns the array of 2D vertices defining this entity's geometry in local coordinates. Subclasses (e.g. {@link Poly}, {@link Triangle}) may override this with custom representations. [Source line 62](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L62)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getVertex(i: number): Vec2",
+                    "—",
+                    "Returns the 2D vertex at index `i` in local coordinates, or `null` if the index is out of bounds. Supports negative indexing (e.g. `-1` returns the last vertex). Param: i Zero-based vertex index. [Source line 83](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L83)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getSubEntities(): VectorEntity[]",
+                    "—",
+                    "Returns the animatable sub-components of this entity. For composite shapes (Text, SVG), returns the individual letters/paths. For primitives, returns itself. [Source line 110](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L110)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public decompose(): this",
+                    "—",
+                    "Decomposes the entity into individual animatable sub-paths (e.g. separating letters). Subclasses (e.g. {@link Text}, {@link SDFText}, {@link Tex}) override this with real decomposition logic. @remarks Calling `decompose()` on an entity that does not override it is a no-op. [Source line 120](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L120)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public extractAllPaths(): Path[]",
+                    "—",
+                    "Traverses the scenegraph to extract all child paths belonging to VectorEntities. Safely traverses standard groupings (like <g> or Entity wrappers) to find leaf paths. [Source line 128](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L128)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public getArcLength(): number",
+                    "—",
+                    "Returns the total geometric arc length of all paths comprising this entity. For primitives (Path, Rect, Circle), computes their direct perimeter / arc length. For composites (Text, SVG, VGroup), sums the arc lengths across all child paths. [Source line 145](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L145)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public computeLocalTolerance(\n        pixelTolerance: number = 0.5,\n        camera?: Camera,\n        viewportHeight?: number\n    ): number",
+                    "—",
+                    "Converts a screen-space pixel tolerance into the corresponding local-space geometric tolerance, taking into account the camera projection (perspective/orthographic, FOV), camera distance, viewport height, and the entity's hierarchical world-space scaling. Param: pixelTolerance Maximum allowable deviation in screen pixels (default is 0.5px). Param: camera Optional Camera reference. Defaults to the active scene camera. Param: viewportHeight Optional viewport height in pixels. Defaults to canvas height or 1080. Returns: Local geometric tolerance suitable for tessellation. [Source line 168](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L168)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyPixelTolerance(\n        pixelTolerance: number = 0.5,\n        camera?: Camera,\n        viewportHeight?: number\n    ): this",
+                    "—",
+                    "One-time explicit application of a screen-space pixel tolerance. Computes the equivalent local tolerance and applies it statically to all underlying Path geometries. Param: pixelTolerance Maximum allowable deviation in screen pixels (default is 0.5px). Param: camera Optional Camera reference. Defaults to the active scene camera. Param: viewportHeight Optional viewport height in pixels. Defaults to canvas height or 1080. [Source line 216](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L216)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setPixelTolerance(\n        pixelTolerance: number = 0.5,\n        camera?: Camera,\n        viewportHeight?: number\n    ): this",
+                    "—",
+                    "Backward-compatibility alias for {@link applyPixelTolerance}. [Source line 237](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L237)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public setAdaptivePixelTolerance(\n        adaptivePixelTolerance: number = 1.0,\n        adaptiveToleranceMargin?: number,\n        options?: { minTolerance?: number; maxTolerance?: number }\n    ): this",
+                    "—",
+                    "Enables automatic, dynamic camera/zoom-adaptive pixel tolerance tracking across all underlying Path geometries. Automatically triggers in-place re-tessellation when current pixel error drifts outside `adaptivePixelTolerance ± adaptiveToleranceMargin`. Param: adaptivePixelTolerance Target error in screen pixels (e.g. 1.0px). Param: adaptiveToleranceMargin Hysteresis threshold in screen pixels (defaults to 0.5 * adaptivePixelTolerance). Param: options Optional min/max local tolerance clamping limits. [Source line 253](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L253)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public disableAdaptivePixelTolerance(): this",
+                    "—",
+                    "Disables dynamic camera/zoom-adaptive pixel tolerance tracking, retaining the current static tolerance. [Source line 276](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L276)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public prepareForNonlinearTransform(options: number | SubdivisionOptions = 30): this",
+                    "—",
+                    "Recursively prepares this entity and all child vector entities for smooth non-linear transformations by subdividing straight lines and edges into dense vertices. Param: options Number of subdivisions or a {@link SubdivisionOptions} object (maxSegmentLength, accuracy, tolerance). [Source line 298](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L298)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyField(field: ISpatialField | SpatialMappingFunction, t: number = 1.0): this",
+                    "—",
+                    "Applies a spatial vector field (ISpatialField or mapping callback) across this entity and all child entities. Param: field An ISpatialField instance or a function (p: Vec3, t?: number) => Vec3. Param: t Progress factor [0.0 to 1.0] (default 1.0). [Source line 314](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L314)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyHomotopy(homotopy: HomotopyFunction, t: number): this",
+                    "—",
+                    "Applies a mathematical homotopy H(p, t) across this entity and all child entities. Param: homotopy Mathematical homotopy function (p: Vec3, t: number) => Vec3. Param: t Progress factor [0.0 to 1.0]. [Source line 325](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L325)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyFunction(fn: (p: Vec3) => Vec3, alpha: number = 1.0): this",
+                    "—",
+                    "Applies a non-linear spatial deformation function across this entity and all child entities. Param: fn Mathematical mapping function (x, y, z) => (x', y', z'). Param: alpha Interpolation factor [0.0 to 1.0] (default 1.0). [Source line 335](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L335)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public applyComplexFunction(\n        fn: ComplexMappingFunction | ((z: any) => any),\n        alpha: number = 1.0\n    ): this",
+                    "—",
+                    "Applies a complex mapping function f(z): C -> C across this entity and all child entities. Param: fn Complex function z = x + iy => w = u + iv. Param: alpha Interpolation factor [0.0 to 1.0] (default 1.0). [Source line 352](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L352)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public resetDeformation(): this",
+                    "—",
+                    "Restores the entity and all its children to their undeformed state. [Source line 367](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L367)."
+                  ]
+                },
+                {
+                  "cells": [
+                    "public forEachPath(fn: (path: Path, index: number) => void): this",
+                    "—",
+                    "Traverses the scenegraph hierarchy and executes the callback for every leaf Path entity. Safely passes through standard Entity grouping containers (e.g. `<g>`) and nested composites. Param: fn Callback invoked for each leaf Path instance along with its sequential index. [Source line 381](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/_core/VectorEntity.ts#L381)."
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Exact contracts: [Entity](/api-core-entity#entity)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,780 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-analytical-path-architecture",
+  "title": "Analytical Path Architecture, SDF Geometry & Stencil Pipeline",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/ANALYTICAL_PATH_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/ANALYTICAL_PATH_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/ANALYTICAL_PATH_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Path](/api-entities-primitives-2d#path), [Pipeline](/api-render-pipelines#pipeline), [SVG](/api-entities-composites-svg#svg), [Fill](/api-core#fill), [PathGeometryUtils](/api-utils#pathgeometryutils), [Arc](/api-entities-primitives-2d#arc), [GlobalAnalyticalAllocator](/api-render-allocator#globalanalyticalallocator), [Storage](/api-render-pipelines#resourcelayouts), [GlobalAnalyticalPipeline](/api-render-allocator#globalanalyticalpipeline), [Compute](/api-compute#compute), [RenderPass](/api-render-passes#renderpass), [PathRenderer](/api-components-renderers#pathrenderer), [Triangle](/api-entities-primitives-2d#triangle), [Line](/api-entities-primitives-2d#line), [Point](/api-math-vector#point), [AnalyticalAllocationRange](/api-render-allocator#globalanalyticalallocator), [Pass](/api-render-frame-graph#pass), [Intersection](/api-entities-composites-geometry#booleanops), [Shader](/api-entities-primitives-2d#shader), [Color](/api-math#color), [Mode](/api-render-frame-graph#resource), [GlobalGeometryAllocator](/api-render-allocator#globalgeometryallocator), [PathGeometry](/api-components-geometry#pathgeometry)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides an exhaustive, bit-by-bit technical breakdown of the **Analytical Path Rendering Architecture** in the Retiam WebGPU Engine. It covers SVG decomposition, intermediate quadratic representations, global GPU memory allocations, vertex data layouts, GPU compute encoders, Cardano cubic root solvers, and the dual Stencil-and-Cover Fill & Analytical SDF Stroke pipelines."
+        }
+      ]
+    },
+    {
+      "id": "1-high-level-architectural-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. High-Level Architectural Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam's `analytical` path pipeline provides **infinite mathematical resolution** and **pixel-perfect anti-aliasing** without geometric tessellation artifacts at extreme zoom levels."
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    A[\"SVG Path String ('d')\"] --> B[\"PathGeometryUtils.decode()\"]\n    B -->|\"Cubic to Quadratic Subdivision<br/>Arc to Quadratic Decomposition\"| C[\"Contour Points (vertex_data: Float32Array)<br/>Indices (indices: Uint32Array)\"]\n    \n    C --> D[\"GlobalAnalyticalAllocator\"]\n    D -->|\"Sub-allocates Ranges\"| E[\"5 Unified Global GPU Storage Buffers\"]\n    \n    E --> F[\"GlobalAnalyticalPipeline (GPU Compute Dispatches)\"]\n    F -->|\"batched_path_encoder.wgsl\"| G[\"Stroke Mesh (13 vec4f per segment)\"]\n    F -->|\"batched_arc_length.wgsl\"| H[\"Arc Lengths (11 floats per segment)\"]\n    \n    subgraph \"RenderPass Execution (PathRenderer.ts)\"\n        subgraph \"Fill Pipeline (Stencil-and-Cover)\"\n            I1[\"1. stencil_chain: Triangle Fan Winding\"] --> I2[\"2. stencil_quad: Quadratic Parabola Stencil\"]\n            I2 --> I3[\"3. fill_cover: Screen Quad Coverage + Stencil Test\"]\n            I3 --> I4[\"4. clear: Bitmask Stencil Cleanup\"]\n        end\n        \n        subgraph \"Stroke Pipeline (Analytical GPU SDF)\"\n            J1[\"1. path_stroke_hard: 13-Vertex Strip Rasterization\"]\n            J2[\"2. sdBezier(): Exact Cardano Cubic Equation Solver\"]\n            J3[\"3. Anti-Aliasing & Dash Evaluation via arc_len_buf\"]\n        end\n    end\n    \n    G --> J1\n    H --> J3"
+        }
+      ]
+    },
+    {
+      "id": "2-path-decomposition-intermediate-quadratic-representation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Path Decomposition & Intermediate Quadratic Representation"
+        },
+        {
+          "type": "paragraph",
+          "text": "All vector curves (cubic béziers, arcs, lines, polylines) are parsed and converted into **piecewise quadratic béziers** ($p_0, p_1, p_2$) during decoding in [`PathGeometryUtils.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/PathGeometryUtils.ts)."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Quadratic Bézier Mathematical Definition"
+        },
+        {
+          "type": "paragraph",
+          "text": "A quadratic bézier curve $B(t)$ with start point $p_0$, control point $p_1$, and end point $p_2$ is parameterized by $t \\in [0, 1]$:"
+        },
+        {
+          "type": "math",
+          "tex": "B(t) = (1-t)^2 p_0 + 2(1-t)t p_1 + t^2 p_2 = p_0 + 2t(p_1 - p_0) + t^2(p_0 - 2p_1 + p_2)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Cubic-to-Quadratic Subdivision"
+        },
+        {
+          "type": "paragraph",
+          "text": "Cubic béziers $C(t) = (1-t)^3 c_0 + 3(1-t)^2 t c_1 + 3(1-t)t^2 c_2 + t^3 c_3$ are recursively subdivided into quadratic segments such that the maximum Hausdorff distance between the cubic and the approximating quadratics remains within a relative tolerance $\\epsilon \\le 0.01$."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Line & Arc Conversion"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Straight Lines (`L`, `Z`, `H`, `V`)**: Formed into quadratic curves with the control point placed collinear along the chord:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "p_1 = p_0 + 0.7 \\cdot (p_2 - p_0)"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Elliptical Arcs (`A`)**: Decomposed into circular/elliptical quadratic arc splines with angular spans $\\le 45^\\circ$."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Contour Self-Overlap & Hole Resolution"
+        },
+        {
+          "type": "paragraph",
+          "text": "To eliminate even-odd winding artifacts on intricate font glyphs and complex overlapping vector art, [`PathGeometryUtils.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/utils/PathGeometryUtils.ts#L154) executes `removeContainedSameDirectionContours()` using the Shoelace signed area formula and ray-casting containment tests before buffer upload."
+        }
+      ]
+    },
+    {
+      "id": "3-in-depth-vertex-data-structure-point-organization",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. In-Depth Vertex Data Structure & Point Organization"
+        },
+        {
+          "type": "paragraph",
+          "text": "The vertex data architecture in Retiam's analytical path subsystem operates across two representations:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**CPU Staging Buffers**: `vertex_data` (interleaved coordinates) and `indices` (contour prefixes).",
+            "**GPU Storage Buffers**: 5 dedicated global bindless arrays managing control points, contour metadata, stroke bounding strips, arc lengths, and clip quads."
+          ]
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Point",
+            "Coordinates",
+            "Role"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "0",
+                "`(p0x, p0y)`",
+                "Start of segment 0"
+              ]
+            },
+            {
+              "cells": [
+                "1",
+                "`(p1x, p1y)`",
+                "Control point of segment 0"
+              ]
+            },
+            {
+              "cells": [
+                "2",
+                "`(p2x, p2y)`",
+                "Endpoint of segment 0; start of segment 1"
+              ]
+            },
+            {
+              "cells": [
+                "3",
+                "`(p3x, p3y)`",
+                "Control point of segment 1"
+              ]
+            },
+            {
+              "cells": [
+                "…",
+                "…",
+                "Continue interleaving points in `vertex_data`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Point Indexing & Shared Endpoints"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each quadratic bézier segment $k$ is defined by 3 points:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{Segment } k = \\begin{cases} p_0 = \\text{points}[2k] & (\\text{Start Point}) \\\\ p_1 = \\text{points}[2k + 1] & (\\text{Quadratic Control Point}) \\\\ p_2 = \\text{points}[2k + 2] & (\\text{End Point / Next Start Point}) \\end{cases}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because consecutive segments within a contour share endpoints ($p_{2k+2} = p_{2(k+1)}$):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "A contour with $S$ quadratic segments contains **$2S + 1$ control points** ($4S + 2$ 32-bit floats).",
+            "Point $0$ is the contour origin $(x_0, y_0)$.",
+            "Segment $k$ starts at point index $2k$, has its off-curve control point at $2k + 1$, and ends at $2k + 2$."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. CPU Contour Array Structure"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`vertex_data: number[]`**: Interleaved $[x, y]$ coordinate sequence for all segments:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "[p_{0x}, p_{0y}, \\underbrace{p_{1x}, p_{1y}}_{\\text{Control Pt}}, \\underbrace{p_{2x}, p_{2y}}_{\\text{Endpoint}}, \\underbrace{p_{3x}, p_{3y}}_{\\text{Next Control Pt}}, \\underbrace{p_{4x}, p_{4y}}_{\\text{Next Endpoint}}, \\dots]"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`indices: number[]`**: Prefix-sum contour boundaries:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\text{indices} = [0, N_0, N_0 + N_1, N_0 + N_1 + N_2, \\dots]"
+        },
+        {
+          "type": "paragraph",
+          "text": "Where $N_c$ is the number of coordinate pairs ($2 \\times \\text{points}$) in contour $c$."
+        }
+      ]
+    },
+    {
+      "id": "4-global-gpu-memory-architecture-globalanalyticalallocator-ts-src-engine-render-allocator-globalanalyticalallocator-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Global GPU Memory Architecture ([GlobalAnalyticalAllocator.ts](../src/engine/render/allocator/GlobalAnalyticalAllocator.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "All analytical paths in the scene are sub-allocated from **5 unified GPU storage buffers** managed by [`GlobalAnalyticalAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Buffer",
+            "Element type",
+            "Storage per item",
+            "Packed contents"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "gpuGlobalPoints",
+                "`array<vec2f>`",
+                "8 bytes per point",
+                "`(px, py)`"
+              ]
+            },
+            {
+              "cells": [
+                "gpuGlobalIndices",
+                "`array<u32>`",
+                "8 bytes per contour: 2 × u32",
+                "`[point_start, seg_start]`"
+              ]
+            },
+            {
+              "cells": [
+                "gpuGlobalStrokeMesh",
+                "`array<vec4f>`",
+                "208 bytes per segment: 13 × vec4f",
+                "13 vertices: `(q0x, q0y, G0, H0)` through `(q12x, q12y, G12, H12)`"
+              ]
+            },
+            {
+              "cells": [
+                "gpuGlobalArcLengths",
+                "`array<f32>`",
+                "44 bytes per segment: 11 × f32",
+                "`L(0.0), L(0.1), …, L(1.0)`"
+              ]
+            },
+            {
+              "cells": [
+                "gpuGlobalClipQuads",
+                "`array<vec2f>`",
+                "32 bytes per contour: 4 × vec2f",
+                "`(minX, minY), (minX, maxY), (maxX, minY), (maxX, maxY)`"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Exact Buffer Layout Specifications:"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Buffer",
+            "WGSL Storage Binding",
+            "Stride / Size",
+            "Contents & Channel Mapping"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`gpuGlobalPoints`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`var<storage> points: array<vec2f>`"
+                },
+                {
+                  "text": "8 bytes (`vec2f`)"
+                },
+                {
+                  "text": "`(x, y)` coordinates of on-curve endpoints and off-curve control points."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`gpuGlobalIndices`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`var<storage> indices: array<u32>`"
+                },
+                {
+                  "text": "8 bytes ($2 \\times \\text{u32}$)"
+                },
+                {
+                  "text": "`indices[contour_idx * 2u + 0u]` = `point_start` `indices[contour_idx * 2u + 1u]` = `segment_start`."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`gpuGlobalStrokeMesh`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`var<storage> vertices: array<vec4f>`"
+                },
+                {
+                  "text": "208 bytes ($13 \\times \\text{vec4f}$)"
+                },
+                {
+                  "text": "Per-vertex: `xy` = 2D bounding position $(q_x, q_y)$, `zw` = Cardano implicit roots $(G, H)$."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`gpuGlobalArcLengths`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`var<storage> arc_len: array<f32>`"
+                },
+                {
+                  "text": "44 bytes ($11 \\times \\text{f32}$)"
+                },
+                {
+                  "text": "10-interval cumulative physical lengths ($t = 0.0, 0.1, \\dots 1.0$)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`gpuGlobalClipQuads`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`var<storage> clip: array<vec2f>`"
+                },
+                {
+                  "text": "32 bytes ($4 \\times \\text{vec2f}$)"
+                },
+                {
+                  "text": "Axis-aligned bounding quad expanded with safety padding $+1.5\\text{px}$."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Memory Allocation Range (AnalyticalAllocationRange):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface AnalyticalAllocationRange {\n    id: number;\n    pointStartIndex: number;       // Offset into gpuGlobalPoints (in vec2f)\n    pointLength: number;\n    contourStartIndex: number;     // Offset into gpuGlobalIndices (in pairs)\n    contourLength: number;\n    segmentStartIndex: number;     // Offset into stroke mesh / arc segments\n    segmentLength: number;\n    strokeMeshStartIndex: number;  // Offset in vec4f (segmentStartIndex * 13)\n    arcLenStartIndex: number;      // Offset in f32 (segmentStartIndex * 11)\n}"
+        }
+      ]
+    },
+    {
+      "id": "5-gpu-compute-pipelines-globalanalyticalpipeline-ts-src-engine-render-allocator-globalanalyticalpipeline-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. GPU Compute Pipelines ([GlobalAnalyticalPipeline.ts](../src/engine/render/allocator/GlobalAnalyticalPipeline.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Before rasterization, Retiam executes two batched GPU compute passes across all analytical paths:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pass 1: Batched Path Encoder (batchedpathencoder.wgsl)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Computes conservative bounding geometry for each quadratic curve to enclose the stroke envelope (width $w$) and handle cusps, miters, and bevel joins:"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "1. Normal & Tangent Evaluation:"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{t}_0 = \\frac{p_1 - p_0}{\\|p_1 - p_0\\|}, \\quad \\mathbf{n}_0 = (-\\mathbf{t}_{0y}, \\mathbf{t}_{0x}), \\quad \\mathbf{t}_1 = \\frac{p_2 - p_1}{\\|p_2 - p_1\\|}, \\quad \\mathbf{n}_1 = (-\\mathbf{t}_{1y}, \\mathbf{t}_{1x})"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "2. The 13-Vertex Conservative Strip:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "q8 ───────────── q0 ───────────── q2 ───────────── q4 ───────────── q6 ───────────── qx\n        │ \\             │ \\             │ \\             │ \\             │ \\             │\n        │   \\   Join 1  │   \\           │   \\           │   \\           │   \\   Join 2  │\n        │     \\         │     \\         │     \\         │     \\         │     \\         │\n        p0 ───── qz ─── q1 ───── q3 ─── p1 ───── q5 ─── p2 ───── q7\n                                (Cusp inflection / offset)"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Strip Vertex Channel Mapping:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let ix = strokeOutBase + (k * 13u);\nvertex[ix + 0u]  = vec4f(q8, GH(q8, p0, p1, p2));  // Outer Join 1 Corner\nvertex[ix + 1u]  = vec4f(p0, GH(p0, p0, p1, p2));  // Segment Start Anchor\nvertex[ix + 2u]  = vec4f(qz, GH(qz, p0, p1, p2));  // Inner Join 1 Bisector\nvertex[ix + 3u]  = vec4f(q0, GH(q0, p0, p1, p2));  // Start Normal +w/2\nvertex[ix + 4u]  = vec4f(q1, GH(q1, p0, p1, p2));  // Start Normal -w/2\nvertex[ix + 5u]  = vec4f(q2, GH(q2, p0, p1, p2));  // Midpoint Tangent Intersection +w/2\nvertex[ix + 6u]  = vec4f(q3, GH(q3, p0, p1, p2));  // Central Offset Envelope (Cusp Adaptive)\nvertex[ix + 7u]  = vec4f(q4, GH(q4, p0, p1, p2));  // Midpoint Tangent Intersection -w/2\nvertex[ix + 8u]  = vec4f(q5, GH(q5, p0, p1, p2));  // End Normal +w/2\nvertex[ix + 9u]  = vec4f(q6, GH(q6, p0, p1, p2));  // End Normal -w/2\nvertex[ix + 10u] = vec4f(p2, GH(p2, p0, p1, p2));  // Segment End Anchor\nvertex[ix + 11u] = vec4f(qx, GH(qx, p0, p1, p2));  // Outer Join 2 Corner\nvertex[ix + 12u] = vec4f(q7, GH(q7, p0, p1, p2));  // Inner Join 2 Bisector"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "3. Cardano Constants Injection ($G, H$):"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{a} = \\mathbf{p}_1 - \\mathbf{p}_0, \\quad \\mathbf{b} = \\mathbf{p}_0 - 2\\mathbf{p}_1 + \\mathbf{p}_2, \\quad \\mathbf{d} = \\mathbf{p}_0 - \\mathbf{q}"
+        },
+        {
+          "type": "math",
+          "tex": "G = \\mathbf{b} \\cdot \\mathbf{b}, \\quad H = 3(\\mathbf{a} \\cdot \\mathbf{b}), \\quad I = 2(\\mathbf{a} \\cdot \\mathbf{a}) + (\\mathbf{d} \\cdot \\mathbf{b}), \\quad J = \\mathbf{d} \\cdot \\mathbf{a}"
+        },
+        {
+          "type": "math",
+          "tex": "P = \\frac{3 G I - H^2}{3 G^2}, \\quad Q = \\frac{2 H^3 - 9 G H I + 27 G^2 J}{27 G^3}"
+        },
+        {
+          "type": "paragraph",
+          "text": "The precomputed values $(P, Q)$ are stored directly into `vertex.zw`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Pass 2: Batched Arc Length Extractor (batchedarclength.wgsl)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Computes high-precision physical arc lengths along each quadratic bézier curve using **Gaussian-Legendre Quadrature**:"
+        },
+        {
+          "type": "math",
+          "tex": "L(t) = \\int_0^t \\|\\mathbf{B}'(u)\\| \\, du = \\int_0^t \\sqrt{4 \\|p_1 - p_0 + u(p_0 - 2p_1 + p_2)\\|^2} \\, du"
+        },
+        {
+          "type": "paragraph",
+          "text": "Stores 10 cumulative sub-interval lengths per segment into `gpuGlobalArcLengths`, enabling screen-space invariant dash patterns and progressive write animations."
+        }
+      ]
+    },
+    {
+      "id": "6-vertex-shader-index-derivations-point-mapping",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Vertex Shader Index Derivations & Point Mapping"
+        },
+        {
+          "type": "paragraph",
+          "text": "During render passes, the GPU vertex shader unpacks control points branchlessly using `vertex_index` and the contour index stored in `state.pad2`:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1. Stencil Chain Point Mapping (stencilchain):"
+        },
+        {
+          "type": "paragraph",
+          "text": "Renders triangle fans $(p_0, p_{2k}, p_{2k+2})$ connecting the origin to each segment endpoint:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let contour_idx = u32(state.pad2) + getLocalIndex(instance_index);\nlet base = indices[contour_idx * 2u];\nlet index = vertex_index - base;\nvar offset = index % 3u;\nvar seg = (index - offset) / 3u;\n\n// Branchless mapping to endpoints:\nvar i = select((seg << 1u) + (offset << 1u), 0u, offset == 2u);\nvar p = vertices[base + i];\nout.position = clip2D(p, instance_index);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2. Stencil Quad Point Mapping (stencilquad):"
+        },
+        {
+          "type": "paragraph",
+          "text": "Renders quadratic control bounding triangles $(p_{2k}, p_{2k+1}, p_{2k+2})$ with UV coordinates:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let contour_idx = u32(state.pad2) + getLocalIndex(instance_index);\nlet base = indices[contour_idx * 2u];\nlet index = vertex_index - base;\nvar offset = index % 3u;\nvar seg = index / 3u;\n\n// Fetch p0, p1, or p2:\nlet i = base + (seg << 1u) + offset;\nvar p = vertices[i];\nout.position = clip2D(p, instance_index);\nout.uv = array<vec2f, 3>(vec2f(0.0, 0.0), vec2f(0.5, 0.0), vec2f(1.0, 1.0))[offset];"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "3. Stroke Strip Point Mapping (pathstroke):"
+        },
+        {
+          "type": "paragraph",
+          "text": "Fetches all 3 quadratic control points and interpolated Cardano parameters:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "let segment_no = vertex_index / 13u;\nlet contour_idx = u32(state.pad2) + getLocalIndex(instance_index);\nlet contour_pt_start = indices[contour_idx * 2u];\nlet contour_base_seg = indices[contour_idx * 2u + 1u];\n\nlet local_seg = segment_no - contour_base_seg;\nlet k = contour_pt_start + local_seg * 2u;\n\n// Control Points:\nlet p0 = points[k];\nlet p1 = points[k + 1u];\nlet p2 = points[k + 2u];\n\n// 13-Vertex Strip Attributes:\nlet v = vertices[vertex_index];\nout.p = v.xy;\nout.GH = v.zw;"
+        }
+      ]
+    },
+    {
+      "id": "7-fill-rendering-stencil-and-cover-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "7. Fill Rendering: Stencil-and-Cover Pipeline"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  A[\"1. Stencil chain pass<br/>Triangle fans to origin\"] --> C[\"3. Fill cover pass<br/>Screen quad with stencil\"]\n  B[\"2. Stencil quad pass<br/>Parabolic sign curve\"] --> C\n  C --> D[\"4. Clear stencil pass<br/>Reset stencil bitmask\"]"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**`stencil_chain`**: Flips stencil bits for triangle fans from origin to endpoints. Color write disabled.",
+            "**`stencil_quad`**: Evaluates $uv.x^2 - uv.y < 0$ to flip stencil bits for curved lobes between chord lines and true quadratic béziers.",
+            "**`fill_cover`**: Renders bounding clip quad testing `stencil != 0`, executing solid/gradient/texture fill fragment shaders.",
+            "**`clear`**: Resets stencil bitmask to `0` using `atomicAnd(&stencil[idx], ~bit_mask)`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8-stroke-rendering-exact-cardano-analytical-sdf",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "8. Stroke Rendering: Exact Cardano Analytical SDF"
+        },
+        {
+          "type": "paragraph",
+          "text": "Given point $\\mathbf{p}$ and quadratic curve $\\mathbf{B}(t) = \\mathbf{a} t^2 + \\mathbf{b} t + \\mathbf{c}$, the minimum distance equation $\\frac{d}{dt} \\|\\mathbf{B}(t) - \\mathbf{p}\\|^2 = 0$ reduces to the depressed cubic:"
+        },
+        {
+          "type": "math",
+          "tex": "t^3 + P t + Q = 0"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Cardano's Exact Trigonometric Root Solver ([pathutils.wgsl](../src/engine/shaders/includes/pathutils.wgsl#L21-L37)):"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn solveCubic(p: f32, q: f32, offset: f32) -> vec3f {\n    let p3 = select(p * p * p, 0.0001, p == 0.0);\n    let d  = q * q + p3 * 0.148148; // Discriminant: q^2 + (4/27) p^3\n    \n    if (d >= 0.0) {\n        let z = sqrt(d);\n        let x = (vec2f(z, -z) - q) * 0.5;\n        let uv = sign(x) * pow(abs(x), vec2f(0.3333333));\n        return vec3f(offset + uv.x + uv.y);\n    }\n    \n    let v = acos(-sqrt(-27.0 / p3) * q * 0.5) * 0.3333333;\n    let m = cos(v);\n    let n = sin(v) * 1.732050808; // sqrt(3.0)\n    return vec3<f32>(m + m, -n - m, n - m) * sqrt(-p * 0.3333333) + offset;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Anti-Aliased Alpha Output:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{alpha} = \\text{clamp}\\left(0.5 - \\frac{\\text{sdBezier}(\\mathbf{p}) - \\frac{w}{2}}{\\text{fwidth}(\\text{distance})}, \\, 0.0, \\, 1.0\\right) \\times \\text{paint.opacity}"
+        }
+      ]
+    },
+    {
+      "id": "9-comparison-analytical-vs-fast-triangulated-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "9. Comparison: analytical vs. fast Triangulated Pipeline"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Feature",
+            "`analytical` Mode",
+            "`fast` Mode"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Underlying Math**",
+                  "type": "text"
+                },
+                {
+                  "text": "Implicit Parabolic Stencil + Cardano Cubic SDF"
+                },
+                {
+                  "text": "Earcut CPU Triangulation + Quad/Triangle Mesh"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Curve Quality**",
+                  "type": "text"
+                },
+                {
+                  "text": "**Infinite Zoom Precision** (mathematically exact)"
+                },
+                {
+                  "text": "Polyline Approximation (Adaptive Hysteresis LOD)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**GPU Passes**",
+                  "type": "text"
+                },
+                {
+                  "text": "5 to 6 passes (`stencil_chain`, `quad`, `cover`, `stroke`, `clear`)"
+                },
+                {
+                  "text": "**Single Pass (`main`)**"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Draw Calls for Single Path**",
+                  "type": "text"
+                },
+                {
+                  "text": "Multiple contour draws per pass"
+                },
+                {
+                  "text": "**Exactly 2 Draw Calls** (Fill + Stroke)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Hardware Instancing**",
+                  "type": "text"
+                },
+                {
+                  "text": "Unsuitable (stencil buffer collisions)"
+                },
+                {
+                  "text": "**Ideal** (10,000+ instances in 2 draw calls)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**GPU Memory Allocation**",
+                  "type": "text"
+                },
+                {
+                  "text": "`GlobalAnalyticalAllocator` (5 buffers)"
+                },
+                {
+                  "text": "`GlobalGeometryAllocator` (contiguous sub-allocations)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Custom Stroke Shaders**",
+                  "type": "text"
+                },
+                {
+                  "text": "Full SDF access (`t`, `distance`, `total_arc_len`)"
+                },
+                {
+                  "text": "Standard vertex-interpolated UVs and colors"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10-summary-of-engine-components-file-roles",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "10. Summary of Engine Components & File Roles"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**[`src/engine/components/geometry/PathGeometry.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/geometry/PathGeometry.ts)**: Primary analytical geometry component. Manages SVG decoding, contour indexing, and pass configurations.",
+            "**[`src/engine/components/renderers/PathRenderer.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/components/renderers/PathRenderer.ts)**: Orchestrates stencil-and-cover fill passes and SDF stroke draw execution.",
+            "**[`src/engine/render/allocator/GlobalAnalyticalAllocator.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalAllocator.ts)**: Manages continuous global storage buffers (`gpuGlobalPoints`, `gpuGlobalIndices`, `gpuGlobalStrokeMesh`, `gpuGlobalArcLengths`, `gpuGlobalClipQuads`).",
+            "**[`src/engine/render/allocator/GlobalAnalyticalPipeline.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/render/allocator/GlobalAnalyticalPipeline.ts)**: Executes compute shaders for bounding envelope encoding and arc length extraction.",
+            "**[`src/engine/shaders/includes/path_utils.wgsl`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/path_utils.wgsl)**: Analytical cubic root solver and signed distance evaluation functions.",
+            "**[`src/engine/shaders/includes/stencil_ops.wgsl`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/shaders/includes/stencil_ops.wgsl)**: Stencil bitmask manipulation, Even-Odd rules, and atomic clearing operations."
+          ]
+        }
+      ]
+    }
+  ]
+}

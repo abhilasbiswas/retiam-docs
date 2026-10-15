@@ -1,0 +1,630 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-dynamic-stroke-and-line-weight-architecture",
+  "title": "Dynamic Line Weight & Artistic Stroke Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/DYNAMIC_STROKE_AND_LINE_WEIGHT_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/DYNAMIC_STROKE_AND_LINE_WEIGHT_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/DYNAMIC_STROKE_AND_LINE_WEIGHT_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Line](/api-entities-primitives-2d#line), [Path](/api-entities-primitives-2d#path), [Pipeline](/api-render-pipelines#pipeline), [PathEffect](/api-material#patheffect), [Scene](/api-core-scene#scene), [Circle](/api-entities-primitives-2d#circle), [Entity](/api-core-entity#entity), [PathOptions](/api-entities-primitives-2d#path), [Pass](/api-render-frame-graph#pass), [Shader](/api-entities-primitives-2d#shader), [Input](/api-camera#camera), [Noise](/api-math-noise#noise), [Color](/api-math#color), [Cross](/api-libs-shapes-2d#cross), [DynamicStrokeOptions](/api-material-path-effects#dynamicstrokeshader), [Excalidraw](/api-style-excalidraw#excalidraw), [Usage](/api-utils#gpu-utils), [Code](/api-entities-composites-text#code), [Uniform](/api-render-pipelines#resourcelayouts), [Create](/api-animation-creation#create), [Rate](/api-animation#rate), [WobbleModifier](/api-modifiers-path#wobblemodifier), [ExcalidrawModifier](/api-modifiers-path#excalidrawmodifier)."
+        }
+      ]
+    },
+    {
+      "id": "notebook-introduction",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Notebook introduction"
+        },
+        {
+          "type": "paragraph",
+          "text": "This document provides a comprehensive technical breakdown of the **Dynamic Line Weight & Artistic Path Effect Subsystem** in the Retiam WebGPU Engine. It details the physical calligraphic modeling, the asymmetric dual-boundary (\"Spine & Belly\") cross-section mechanics, the multi-layered deterministic pseudo-random noise pipeline, mathematical formulations for width variance and lateral asymmetry, closed-loop periodic continuity, and developer usage patterns."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In traditional vector engines and mathematical animation software, path strokes are rendered with rigid, uniform thicknesses or simplistic symmetric offset meshes. While mathematically precise, uniform strokes lack life, expressiveness, fluidity, and visual soul. Real-world hand gestures, flexible fountain pen nibs, and Asian ink brushes exhibit living thickness variations:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Muscular pressure cadence**: Rhythmic breathing swells along the stroke trajectory.",
+            "**Asymmetric cross-sections**: Flexible nibs and angled brushes produce strokes where the two boundaries are never mirror reflections; one edge curves expressively (\"belly\") while the opposite edge stays disciplined (\"spine\").",
+            "**Deterministic pseudo-random noise**: Natural hand tremor and substrate paper-tooth interaction without grid artifacts or frame-to-frame jitter.",
+            "**Controlled randomness weight**: The ability to dial smoothly between pristine mathematical uniformity and wild, spontaneous organic flourishes.",
+            "**Closed loop continuity**: Seamless $360^\\circ$ periodic wrapping on closed paths (circles, ellipses, closed polygons) without artificial tapering notches or seams.",
+            "**Ink surface tension**: Capillary ink pooling and meniscus darkening at stroke contours."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "WebGPU Fragment Evaluation Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam implements this entire pipeline directly inside WebGPU fragment shaders via [`PathEffect`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts), avoiding expensive CPU geometry remeshing or dynamic tessellation:"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n    subgraph \"CPU Scene Construction\"\n        PathDef[\"Path / Circle / Polygon Entity\"] --> PathOpt[\"PathOptions (stroke_width, strokeShader)\"]\n        PathOpt --> PE[\"PathEffect.DynamicStroke(options)\"]\n        PE --> Compile[\"PathEffect.compile() -> WGSL String\"]\n    end\n\n    subgraph \"WebGPU Render Pass (Analytical Fragment Shader)\"\n        FragIn[\"Fragment Input (t: arc-length, w: lateral coordinate)\"] --> AutoSeed[\"Auto-Seed: hash11(arc_len + seed)\"]\n        AutoSeed --> Noise[\"Multi-Octave Deterministic Noise (fBm1D / Loop 2D)\"]\n        Noise --> Baseline[\"Full-Bodied Profile: norm_top, norm_bot\"]\n        Baseline --> Asym[\"Belly Roll & Lateral Tilt: scale_top, scale_bot\"]\n        Asym --> Radii[\"Dual Boundary Radii: w_plus (top), w_minus (bottom)\"]\n        Radii --> SDF[\"Signed Distance: d_edge = min(w_plus - w, w - w_minus)\"]\n        SDF --> Feather[\"Smoothstep Coverage Anti-Aliasing\"]\n        Feather --> Ink[\"Ink Pooling & Meniscus Pigment Density\"]\n        Ink --> Out[\"Final Fragment Color: vec4f(rgb, alpha)\"]\n    end"
+        }
+      ]
+    },
+    {
+      "id": "2-mathematical-foundations",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Mathematical Foundations"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Asymmetric Dual-Boundary Cross-Section (\"Spine & Belly\")"
+        },
+        {
+          "type": "paragraph",
+          "text": "Traditional stroke SDFs assume symmetric line width: $d(w) = \\frac{\\text{width}}{2} - |w|$. Retiam decouples the upper and lower lateral boundaries into independent signed parametric profiles $W^+(t)$ and $W^-(t)$:"
+        },
+        {
+          "type": "math",
+          "tex": "W^+(t) = r_{\\text{top}}(t) > 0"
+        },
+        {
+          "type": "math",
+          "tex": "W^-(t) = -r_{\\text{bot}}(t) < 0"
+        },
+        {
+          "type": "paragraph",
+          "text": "For any fragment at normalized lateral distance $w \\in [-1, 1]$ across the stroke envelope, the signed distance to the stroke boundary is:"
+        },
+        {
+          "type": "math",
+          "tex": "d(w, t) = \\min\\big(W^+(t) - w,\\; w - W^-(t)\\big)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Coverage is computed using anti-aliased smoothstep feathering:"
+        },
+        {
+          "type": "math",
+          "tex": "\\alpha_{\\text{cov}} = \\text{smoothstep}(-\\text{feather},\\; \\text{feather},\\; d(w, t))"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "code": "Top Boundary W+(t) (Belly: swells out dynamically)\n         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Centerline (w = 0)\n         ─────────────────────────────────────────────────────\n           Bottom Boundary W-(t) (Spine: disciplined, taut edge)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Deterministic Pseudo-Random Noise Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "To eliminate trigonometric floating-point inconsistencies across GPU vendors (Apple Silicon, NVIDIA, AMD, Intel) while guaranteeing temporal determinism, Retiam utilizes Dave Hoskins' hash functions:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{hash}_{11}(p) = \\text{fract}\\big((\\text{fract}(|p| + 17.13 \\cdot 0.1031) \\cdot \\dots)\\big)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every stroke automatically derives a unique base seed from its physical world arc length and user seed:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{auto\\_seed} = \\text{hash}_{11}(\\text{total\\_arc\\_len} \\cdot 17.31 + \\text{seed} \\cdot 100.0) \\cdot 100.0"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Continuous $C^2$ Quintic Gradient Noise (pedsgradnoise1d)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Unlike value noise (which produces plateaus and sharp ridges), Retiam evaluates gradient noise with random slopes $g_0, g_1$:"
+        },
+        {
+          "type": "math",
+          "tex": "n_0 = g_0 \\cdot f, \\quad n_1 = g_1 \\cdot (f - 1.0)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Interpolated via the quintic polynomial:"
+        },
+        {
+          "type": "math",
+          "tex": "u(f) = 6f^5 - 15f^4 + 10f^3, \\quad \\frac{du}{df}\\Big|_{0,1} = 0, \\quad \\frac{d^2u}{df^2}\\Big|_{0,1} = 0"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "4-Octave Fractal Brownian Motion (pedsfbm1d)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Four octaves with golden-ratio frequency scaling ($2.137$) and geometric amplitude decay ($0.50$):"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{fBm}(s) = \\sum_{k=0}^{3} 0.5^k \\cdot \\text{noise}(s \\cdot 2.137^k + 19.19 \\cdot k)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The top and bottom boundaries sample phase-decorrelated noise coordinates:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{noise}_{\\text{top}} = \\text{fBm}(s), \\quad \\text{noise}_{\\text{bot}} = \\text{fBm}(s + 41.618)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Width Variation Amplitude (variation)"
+        },
+        {
+          "type": "paragraph",
+          "text": "The `variation` parameter scales the magnitude of all stochastic width variations:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`variation = 0.0`**: all variations disappear completely, producing a uniform, equal line weight throughout the stroke.",
+            "**`variation = 0.3`**: Subtle, elegant organic breathing.",
+            "**`variation = 1.0`**: Full-bodied natural dynamic line weight.",
+            "**`variation > 1.0`**: Dramatic, highly expressive surges."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Lateral Asymmetry Mechanics (asymmetry / bellyBias)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Governs the lateral ratio between top and bottom expansion:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{belly\\_roll} = \\text{gradnoise1d}(s \\cdot 0.35 + \\text{auto\\_seed} \\cdot 0.5) \\cdot \\text{asymmetry} \\cdot \\text{randomness}"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{scale}_{\\text{top}} = \\max(0.25,\\; 1.0 + \\text{belly\\_roll} \\cdot 1.15 + \\text{asymmetry} \\cdot 0.30)"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{scale}_{\\text{bot}} = \\max(0.25,\\; 1.0 - \\text{belly\\_roll} \\cdot 1.15 - \\text{asymmetry} \\cdot 0.30)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. Closed Loop Continuity (isClosed: true)"
+        },
+        {
+          "type": "paragraph",
+          "text": "For closed paths (such as [`Circle`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/2d/Circle.ts), closed Bézier loops, or polygons), $t=0.0$ and $t=1.0$ meet at the same spatial vertex. Sampling 1D linear noise across $t \\in [0, 1]$ would create an abrupt seam where $f(s_0) \\ne f(s_0 + L)$."
+        },
+        {
+          "type": "paragraph",
+          "text": "When `isClosed: true`, Retiam maps $t$ into a periodic polar coordinate in 2D noise space:"
+        },
+        {
+          "type": "math",
+          "tex": "\\theta = 2\\pi t"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{p}_{\\text{loop}} = \\begin{bmatrix} \\cos(\\theta) \\\\ \\sin(\\theta) \\end{bmatrix} \\cdot R + \\mathbf{s}_{\\text{offset}}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because $\\cos(0) = \\cos(2\\pi) = 1$ and $\\sin(0) = \\sin(2\\pi) = 0$, evaluating 2D fractal noise $\\text{fBm}_{2D}(\\mathbf{p}_{\\text{loop}})$ produces **$C^2$ continuous line weight variations with zero seam, zero pinch, and automatic taper suppression**."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "F. Ink Pooling & Meniscus Darkening"
+        },
+        {
+          "type": "paragraph",
+          "text": "Real fluid ink pools in wide swells and concentrates at boundary edges due to surface tension:"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{core\\_density} = \\text{mix}(0.76,\\; 1.0,\\; \\text{smoothstep}(\\text{minWidth},\\; \\text{maxWidth},\\; r_{\\text{top}} + r_{\\text{bot}}))"
+        },
+        {
+          "type": "math",
+          "tex": "\\text{meniscus} = 1.0 + \\text{inkDensity} \\cdot 0.24 \\cdot \\text{smoothstep}(0.55,\\; 0.96,\\; \\frac{|w|}{r})"
+        },
+        {
+          "type": "math",
+          "tex": "\\mathbf{C}_{\\text{rgb}} = \\mathbf{C}_{\\text{base}} \\cdot \\big(1.0 - (1.0 - \\text{core\\_density}) \\cdot \\text{inkDensity} \\cdot 0.30\\big) \\cdot \\text{meniscus}"
+        }
+      ]
+    },
+    {
+      "id": "3-configuration-options-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Configuration Options Reference"
+        },
+        {
+          "type": "paragraph",
+          "text": "Defined in [`DynamicStrokeOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts#L108). All features are governed by **10 intuitive, orthogonal parameters**:"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Primary Meaningful Parameters"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Parameter",
+            "Type",
+            "Default",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**`variation`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`1.0`"
+                },
+                {
+                  "text": "**Width variation amplitude** `[0.0 - 2.0+]`. Directly controls how dynamically the stroke breathes along its length. • `0.0`: Completely uniform width (zero swelling or thinning). • `1.0`: Natural, organic line weight variation. • `> 1.0`: Dramatic swells and sharp thinning."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`frequency`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`1.2`"
+                },
+                {
+                  "text": "**Spatial frequency of width swells**. Lower values (`0.6 - 1.0`) create long, sweeping gestures; higher values (`2.0+`) create tighter rhythmic variations."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`minWidth`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.08`"
+                },
+                {
+                  "text": "**Minimum relative stroke width envelope** `[0.0 - 1.0]`. Governs the narrowest hairlines and pinched sections."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`maxWidth`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.95`"
+                },
+                {
+                  "text": "**Maximum relative stroke width envelope** `[0.0 - 1.0]`. Governs the widest swells and crests."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`asymmetry`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.40`"
+                },
+                {
+                  "text": "**Calligraphic nib tilt / lateral inequality** `[-1.0 to 1.0]`. Controls whether the top or bottom side of the centerline swells more. • `0.0`: Symmetrical swelling on both sides. • `> 0.0`: Top boundary curves out into an expressive belly while bottom stays taut (like a tilted nib)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`taper`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number \\| [number, number]`"
+                },
+                {
+                  "text": "`0.0`"
+                },
+                {
+                  "text": "**Stroke end tapering** `[0.0 - 0.5]`. • Number (e.g. `0.1`): tapers both stroke start and end. • Tuple `[entry, exit]`: separate start and end tapers. • `0.0`: natural full-width body from start to end (default for general lines)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`wobble`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.0`"
+                },
+                {
+                  "text": "**Human hand tremor & sketch centerline wander** `[0.0 - 2.0]`. Multi-tier hand jitter (arm drift + wrist wander + finger micro-tremor) for loose sketch lines."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`roughness`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.0`"
+                },
+                {
+                  "text": "**Paper tooth texture & edge roughness** `[0.0 - 1.0]`. • `0.0`: Smooth liquid ink line. • `> 0.15`: Activates graphite lead shading. • `> 0.40`: Activates dual-strand loose sketch passes (Excalidraw style)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`isClosed`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`boolean`"
+                },
+                {
+                  "text": "`false`"
+                },
+                {
+                  "text": "Set to `true` for closed loops (circles, ellipses, closed polygons). Automatically disables tapers and wraps noise in periodic 2D circular coordinates with seamless $360^\\circ$ continuity."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**`seed`**",
+                  "type": "text"
+                },
+                {
+                  "text": "`number`"
+                },
+                {
+                  "text": "`0.0`"
+                },
+                {
+                  "text": "User random seed for reproducible variation across multiple strokes."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-expressive-presets-aliases",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Expressive Presets & Aliases"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides 7 curated artistic presets for instant use:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// 1. Master Dynamic Line Weight\nPathEffect.DynamicStroke(options?)\n\n// 2. Sketch pen: random artistic width within [minWidth, maxWidth] of the stroke, pressure at the ends\nPathEffect.Sketch(options?)\nPathEffect.Excalidraw(options?)\n\n// 3. Hand-Written Graphite Pencil (paper tooth, pencil pressure skips, lead core)\nPathEffect.Pencil(options?)\n\n// 4. Flexible Calligraphic Nib (high dynamic range, razor hairlines, dramatic nib tilt)\nPathEffect.Calligraphic(options?)\n\n// 5. Sumi-e Japanese Ink Brush / Sable Watercolor (fluid swells, rich ink pooling)\nPathEffect.Brush(options?)\nPathEffect.InkBrush(options?)   // Alias\n\n// 6. Spontaneous Gesture Drawing (energetic flourishes, lively hand sketch)\nPathEffect.Spontaneous(options?)\n\n// 7. Silky Undulating Ribbon (hypnotic liquid stream, zero harshness)\nPathEffect.Fluid(options?)"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Semantic Aliases"
+        },
+        {
+          "type": "paragraph",
+          "text": "To integrate seamlessly into different workflow mindsets, `PathEffect.DynamicStroke` has identical aliases:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "[`PathEffect.DynamicLineWeight()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts#L587)",
+            "[`PathEffect.ArtisticStroke()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts#L594)",
+            "[`PathEffect.OrganicStroke()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts#L601)",
+            "[`PathEffect.SoulfulStroke()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts#L608)",
+            "[`PathEffect.Excalidraw()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts#L650)",
+            "[`PathEffect.Rough()`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/material/PathEffect.ts#L657)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5-usage-guide-code-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Usage Guide & Code Examples"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "A. Subtle, Controlled Organic Line (Low Randomness Weight)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Path, PathEffect, hex } from \"retiam\";\n\nconst subtleLine = new Path(\"M -20 0 C -10 12, 10 -12, 20 0\", {\n    strokeShader: PathEffect.DynamicStroke({\n        randomness: 0.25,   // low randomness -> gentle, subtle breathing\n        asymmetry: 0.20,    // mild lateral inequality\n        spontaneity: 0.30\n    })\n});\nsubtleLine.paint.setStroke(1.2, hex(\"#38bdf8\"));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "B. Dramatic, Expressive Calligraphic Flourish"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const dramaticFlourish = new Path(\"M -30 0 C -15 25, 15 -25, 30 0\", {\n    strokeShader: PathEffect.Calligraphic({\n        variation: 1.5,     // boosted variation -> wild expressive swells\n        asymmetry: 0.70,    // strong belly-vs-spine lateral tilt\n        taper: [0.15, 0.22] // graceful touchdown and tail tapers\n    })\n});\ndramaticFlourish.paint.setStroke(1.8, hex(\"#f472b6\"));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "C. Completely Uniform, Predictable Line (Zero Variation)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const uniformLine = new Path(\"M -20 0 L 20 0\", {\n    strokeShader: PathEffect.DynamicStroke({\n        variation: 0.0,     // completely turns off width variation\n        asymmetry: 0.0      // symmetric edges\n    })\n});\nuniformLine.paint.setStroke(1.0, hex(\"#ffffff\"));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "D. Seamless Breathing Closed Circle (isClosed: true)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Circle, PathEffect, hex, Color } from \"retiam\";\n\nconst breathingCircle = new Circle(5.0, {\n    strokeShader: PathEffect.Brush({\n        frequency: 2.0,\n        asymmetry: 0.35,\n        inkDensity: 0.55,\n        isClosed: true      // wraps periodic 2D noise around 360° with zero seam\n    })\n});\nbreathingCircle.paint.setStroke(1.4, hex(\"#34d399\"));\nbreathingCircle.paint.fill = new Color(0.02, 0.12, 0.08, 0.3);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "E. Multi-Stage Pipeline Chaining (Gradient + DynamicStroke + Glow)"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const chainedShader = PathEffect.Gradient([hex(\"#38bdf8\"), hex(\"#ec4899\"), hex(\"#fbbf24\")])\n    .DynamicStroke({\n        variation: 1.2,\n        asymmetry: 0.50,\n        inkDensity: 0.45\n    })\n    .Glow(0.25);\n\nconst glowingRibbon = new Path(\"M -25 -5 C -10 15, 10 -15, 25 5\", {\n    strokeShader: chainedShader\n});\nglowingRibbon.paint.setStroke(1.6, hex(\"#ffffff\"));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "F. Animated Real-Time Path Creation"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Scene, Path, PathEffect, Create, Rate, hex } from \"retiam\";\n\nexport class DynamicDrawingScene extends Scene {\n    public async run() {\n        const signature = new Path(\"M -25 0 C -15 20, 0 -20, 15 15 S 30 -10, 35 0\", {\n            strokeShader: PathEffect.Brush({\n                frequency: 1.5,\n                spontaneity: 0.40,\n                inkDensity: 0.50\n            })\n        });\n        signature.paint.setStroke(1.5, hex(\"#2dd4bf\"));\n        this.add(signature);\n\n        await this.play(new Create(signature, {\n            duration: 2500,\n            rate_func: Rate.easeInOutCubic()\n        }));\n    }\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "G. Excalidraw Sketch Pen"
+        },
+        {
+          "type": "paragraph",
+          "text": "`PathEffect.Sketch` is a pen only: it varies the width, never the centerline. The stroke width of the path is the heaviest the pen gets (the effect can only carve narrower), and `minWidth` is the lightest as a fraction of it. Pair it with geometry wobble from `WobbleModifier` or `ExcalidrawModifier` so the continuous contour gets organic pressure variation."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Path, PathEffect, WobbleModifier, hex } from \"retiam\";\n\nconst sketchLine = new Path(\"M -30 0 C -15 10, 15 -10, 30 0\", {\n    strokeShader: PathEffect.Sketch({\n        minWidth: 0.5,      // lightest the pen gets (default 0.5)\n        maxWidth: 1.0,      // heaviest the pen gets (default 1.0, never above the stroke width)\n        variation: 1.0,     // how strongly the width swells and thins\n        bias: 0.0,          // > 0 stays heavy, < 0 stays light\n        wavelength: 1.5,    // world units per swell\n        pressure: 0.6,      // lighter where the pen lands and lifts\n        grain: 0.0          // optional paper-tooth edge grain\n    })\n});\nsketchLine.paint.setStroke(1.7, hex(\"#38bdf8\"));\nsketchLine.setModifier(new WobbleModifier({ roughness: 0.3 }));"
+        },
+        {
+          "type": "paragraph",
+          "text": "The width is always inside `[minWidth, maxWidth]`: smooth noise is squashed through `tanh`, so it never sticks to a limit. Noise is sampled by physical arc length and the seed comes from the user seed and the stroke length. `isClosed: true` wraps the width around a loop seamlessly and disables the end pressure."
+        }
+      ]
+    },
+    {
+      "id": "6-verification-performance-characteristics",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Verification & Performance Characteristics"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Zero CPU Meshing**: Evaluated purely per-fragment in analytical WebGPU stroke pipelines.",
+            "**60+ FPS Rendering**: Even with multi-octave fBm and dual boundary evaluations, the fragment shader overhead is negligible ($< 0.08\\text{ ms}$ on integrated GPUs).",
+            "**Unit Test Coverage**: Automated test suite in [`test/dynamic_stroke_test.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/test/dynamic_stroke_test.ts) validates compilation, WGSL helper injection, option mapping, presets, closed-loop 2D wrapping, and multi-stage chaining.",
+            "**Interactive Demo**: Live demonstration scene registered in [`examples/demos/shapes_paths_2d/dynamic_stroke_demo.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/shapes_paths_2d/dynamic_stroke_demo.ts)."
+          ]
+        }
+      ]
+    }
+  ]
+}

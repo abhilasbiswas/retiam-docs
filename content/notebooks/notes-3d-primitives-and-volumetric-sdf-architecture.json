@@ -1,0 +1,432 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-3d-primitives-and-volumetric-sdf-architecture",
+  "title": "3D Primitives, Volumetric SDF & CSG Raymarching Architecture",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/3D_PRIMITIVES_AND_VOLUMETRIC_SDF_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/3D_PRIMITIVES_AND_VOLUMETRIC_SDF_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/3D_PRIMITIVES_AND_VOLUMETRIC_SDF_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Pipeline](/api-render-pipelines#pipeline), [Box](/api-entities-primitives-3d#box), [Sphere](/api-entities-primitives-3d#sphere), [Cylinder](/api-entities-primitives-3d#cylinder), [Torus](/api-entities-primitives-3d#torus), [Model](/api-entities-primitives-3d#model), [Terrain3D](/api-entities-primitives-3d#terrain3d), [ParametricModel](/api-entities-primitives-3d#parametricmodel), [Field](/api-math-fields#standardfields), [Entity](/api-core-entity#entity), [ModelGeometry](/api-components-geometry#modelgeometry), [SDFNode](/api-entities-sdf#sdfnode), [Path](/api-entities-primitives-2d#path), [SDFVolume](/api-entities-primitives-3d#sdfvolume), [FrameGraph](/api-render-frame-graph#framegraph), [Pass](/api-render-frame-graph#pass), [Cone](/api-entities-primitives-3d#cone), [Plane](/api-entities-primitives-3d#plane), [MorphModel](/api-entities-primitives-3d#morphmodel), [RTImage](/api-entities-primitives-3d#rtimage), [RTVideo](/api-entities-primitives-3d#rtvideo), [RTHTML](/api-entities-primitives-3d#rthtml), [TracePath](/api-entities-primitives-3d#tracepath), [Ray](/api-utils#raycaster)."
+        }
+      ]
+    },
+    {
+      "id": "1-architectural-overview-design-philosophy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Architectural Overview & Design Philosophy"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam features a dual 3D graphics pipeline:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Explicit Polygonal Mesh Pipeline**: Classical vertex/index buffer rasterization and path tracing for standard primitives (`Box`, `Sphere`, `Cylinder`, `Torus`, `Model`, `Terrain3D`, `ParametricModel`).",
+            "**Volumetric Signed Distance Field (SDF) Raymarching Pipeline**: Raymarched mathematical surfaces with exact smooth Constructive Solid Geometry (CSG), domain repetition, shelling, twisting, and continuous topological morphing."
+          ]
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart TD\n  E[\"3D entity specification\"] --> M[\"Polygonal meshes<br/>ModelGeometry / VBO / IBO\"]\n  E --> S[\"Implicit SDF volumes<br/>SDFNode AST / WGSL\"]\n  M --> R[\"WebGPU rasterizer<br/>GBuffer / Shadow\"]\n  M --> T[\"WebGPU path tracer<br/>TLAS / BLAS / MIS\"]\n  S --> V[\"WebGPU raymarcher<br/>SDFVolume bounding box\"]\n  R --> C[\"FrameGraph composite pass\"]\n  T --> C\n  V --> C"
+        }
+      ]
+    },
+    {
+      "id": "2-3d-polygonal-primitives-catalogue",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. 3D Polygonal Primitives Catalogue"
+        },
+        {
+          "type": "paragraph",
+          "text": "Located in [`src/engine/entities/primitives/3d/`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/primitives/3d):"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Geometric Primitives"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`Box`**: Configurable width, height, depth with UV mapping and normal generation.",
+            "**`Sphere`**: UV-sphere tessellated with configurable rings and segments.",
+            "**`Cylinder` & `Cone`**: Cap tessellation and smooth cylindrical normals.",
+            "**`Torus`**: Ring radius $R$ and tube radius $r$ parameterized over $(u, v) \\in [0, 2\\pi]^2$.",
+            "**`Plane`**: Subdivided quadrilateral ground plane.",
+            "**`Terrain3D`**: Heightmap-driven terrain generated from simplex/perlin noise or custom height evaluation functions."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Parametric & Morphing Surfaces"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`ParametricModel`**: Generates complex 3D manifolds by evaluating continuous parametric functions:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "(u, v) \\mapsto \\big(x(u, v), y(u, v), z(u, v)\\big)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Includes automatic finite-difference normal calculation:"
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{n} = \\frac{\\partial \\mathbf{S}}{\\partial u} \\times \\frac{\\partial \\mathbf{S}}{\\partial v}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`MorphModel`**: Hardware-interpolated morphing between two distinct 3D topological meshes (`meshA` and `meshB`)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Rich Media & Motion Tracers"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**`RTImage` & `RTVideo`**: 3D textured quad elements capable of binding HTML5 video textures directly to GPU samplers via `texture_external`.",
+            "**`RTHTML`**: 3D floating DOM elements projected into world coordinates.",
+            "**`TracePath`**: Dynamically extruded ribbon mesh that continuously traces the trajectory of moving entities or particles over time."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-volumetric-raymarching-sdfvolume-ts-src-engine-entities-primitives-3d-sdfvolume-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Volumetric Raymarching ([SDFVolume.ts](../src/engine/entities/primitives/3d/SDFVolume.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rather than raymarching across the entire screen, Retiam encapsulates implicit math surfaces inside **tightly-bounded oriented bounding boxes**:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "The rasterizer renders the outer faces of the bounding box.",
+            "The fragment shader casts a ray starting from the box's entry point along the camera viewing direction:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "\\vec{r}(t) = \\vec{p}_{\\text{entry}} + t \\cdot \\vec{d}_{\\text{ray}}"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Ray stepping uses sphere tracing:"
+          ]
+        },
+        {
+          "type": "math",
+          "tex": "t_{k+1} = t_k + d(\\vec{r}(t_k))"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "If $d < \\epsilon$, a surface hit is registered. If $t > t_{\\text{exit}}$, the ray exits the volume without hitting."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Accurate Normal Estimation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Surface normals are computed on the GPU via central differences:"
+        },
+        {
+          "type": "code",
+          "language": "wgsl",
+          "code": "fn calcNormal(p: vec3<f32>) -> vec3<f32> {\n    let e = vec2<f32>(0.001, -0.001);\n    return normalize(\n        e.xyy * map(p + e.xyy) +\n        e.yyx * map(p + e.yyx) +\n        e.yxy * map(p + e.yxy) +\n        e.xxx * map(p + e.xxx)\n    );\n}"
+        }
+      ]
+    },
+    {
+      "id": "4-constructive-solid-geometry-csg-ast-sdfnode-ts-src-engine-entities-sdf-sdfnode-ts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Constructive Solid Geometry (CSG) AST ([SDFNode.ts](../src/engine/entities/sdf/SDFNode.ts))"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam provides a fluent TypeScript AST that compiles directly into optimized WGSL shader logic:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Construct a smooth union of a sphere and a rounded box with a hollowed center:\nconst sphere = new SDFSphere(1.2);\nconst box = new SDFBox([1.0, 1.0, 1.0]).round(0.1);\nconst csgTree = sphere.union(box, 0.2).subtract(new SDFCylinder(0.5, 2.0));\n\n// Instantiate the entity\nconst entity = new SDFEntity3D(csgTree);\nscene.add(entity);"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "CSG AST Hierarchy & WGSL Compilation"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Operation",
+            "AST Node Class",
+            "WGSL Function Output",
+            "Description"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Union**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFUnion`"
+                },
+                {
+                  "text": "`opUnion(a, b)` or `opSmoothUnion(a, b, k)`"
+                },
+                {
+                  "text": "Combines shapes with optional polynomial smooth blend ($k$)."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Subtract**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFSubtract`"
+                },
+                {
+                  "text": "`opSubtraction(b, a)` or `opSmoothSubtraction(b, a, k)`"
+                },
+                {
+                  "text": "Carves shape $a$ out of shape $b$."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Intersect**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFIntersect`"
+                },
+                {
+                  "text": "`opIntersection(a, b)` or `opSmoothIntersection(a, b, k)`"
+                },
+                {
+                  "text": "Keeps only overlapping volume."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Translate**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFTranslate`"
+                },
+                {
+                  "text": "`map(p - offset)`"
+                },
+                {
+                  "text": "Moves the local sampling coordinate."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Rotate**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFRotate`"
+                },
+                {
+                  "text": "`map(R^T * p)`"
+                },
+                {
+                  "text": "Rotates the evaluation domain."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Scale**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFScale`"
+                },
+                {
+                  "text": "`map(p / s) * s`"
+                },
+                {
+                  "text": "Isotropically scales the distance field."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Repeat**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFRepeat`"
+                },
+                {
+                  "text": "`opRepeat(p, spacing)`"
+                },
+                {
+                  "text": "Infinitely tiles the geometry across space in $O(1)$ cost."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Mirror**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFMirror`"
+                },
+                {
+                  "text": "`map(abs(p))`"
+                },
+                {
+                  "text": "Reflects geometry across coordinate axes."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Twist**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFTwist`"
+                },
+                {
+                  "text": "`opTwist(p, k)`"
+                },
+                {
+                  "text": "Twists coordinate space around the vertical axis."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Shell**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFShell`"
+                },
+                {
+                  "text": "`abs(map(p)) - thickness`"
+                },
+                {
+                  "text": "Converts a solid volume into a hollow shell."
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Morph**",
+                  "type": "text"
+                },
+                {
+                  "text": "`SDFMorph`"
+                },
+                {
+                  "text": "`mix(mapA(p), mapB(p), weight)`"
+                },
+                {
+                  "text": "Dynamically transitions between two completely arbitrary topologies."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Bounding Box Propagation (getAABB())"
+        },
+        {
+          "type": "paragraph",
+          "text": "Every node in the AST calculates its exact Axis-Aligned Bounding Box:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Unions compute bounding box unions ($\\min(\\text{min}_A, \\text{min}_B)$, $\\max(\\text{max}_A, \\text{max}_B)$).",
+            "Translations and rotations transform the bounding bounds.",
+            "The parent [`SDFEntity3D`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/entities/sdf/SDFEntity3D.ts) uses the root AABB to size the `SDFVolume`, ensuring zero raymarching overhead outside the shape bounds."
+          ]
+        }
+      ]
+    }
+  ]
+}

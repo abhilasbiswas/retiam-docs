@@ -1,0 +1,142 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tutorial-frame-graph",
+  "title": "Chain custom FrameGraph passes",
+  "group": "Extending Retiam",
+  "summary": "Connect two image passes with explicit texture dependencies and follow their output to presentation.",
+  "prerequisites": [
+    "[Custom shader tutorial](/tutorial-custom-shader)",
+    "[FrameGraph concepts](/frame-graph)"
+  ],
+  "outcome": "A color/luminance comparison followed by a vignette, built as a two-pass image chain.",
+  "difficulty": "advanced",
+  "estimatedMinutes": 30,
+  "sections": [
+    {
+      "id": "result",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "What you will build"
+        },
+        {
+          "type": "paragraph",
+          "text": "The first pass converts the right half of the rendered scene to luminance. The second applies a vignette to that result. Both process the image, so the underlying entity materials stay available for other views and effects."
+        }
+      ]
+    },
+    {
+      "id": "first",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Read the rendered image"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const gray = new PostProcessPass('Luminance', this.renderer.finalOutputHandle,\n  PostProcessPass.getDefaultShader(`\n    let value = dot(color.rgb, vec3f(0.2126, 0.7152, 0.0722));\n    return vec4f(select(color.rgb, vec3f(value), uv.x > 0.5), color.a);\n  `));"
+        },
+        {
+          "type": "paragraph",
+          "text": "Scene.addPass post-processing starts from renderer.finalOutputHandle. The helper supplies a fullscreen triangle, texture sampling and view bindings. Your fragment receives color and uv and must return the result."
+        }
+      ]
+    },
+    {
+      "id": "chain",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Connect the second pass"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "const vignette = new PostProcessPass('Vignette', gray.presentationOutput,\n  PostProcessPass.getDefaultShader(`\n    let edge = smoothstep(0.2, 0.7, length(uv - vec2f(0.5)));\n    return vec4f(color.rgb * (1.0 - 0.5 * edge), color.a);\n  `));\nthis.addPass(gray);\nthis.addPass(vignette);"
+        },
+        {
+          "type": "paragraph",
+          "text": "The second pass reads the first pass’s handle. Scene.addPass also rewires PostProcessPass inputs in registration order, starting at finalOutputHandle and routing each presentationOutput to the next pass. For a graph assembled directly by a plugin, your own handle declarations establish the dependency. Preserve alpha when changing RGB."
+        }
+      ]
+    },
+    {
+      "id": "complete",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Run the complete chain"
+        },
+        {
+          "type": "example",
+          "example": "labs/tutorial-frame-graph"
+        },
+        {
+          "type": "code",
+          "language": "mermaid",
+          "code": "flowchart LR\n  Scene[\"Rendered scene\"] --> Gray[\"Half luminance\"]\n  Gray --> Vignette[\"Vignette\"]\n  Vignette --> Present[\"Presentation\"]"
+        }
+      ]
+    },
+    {
+      "id": "custom-pass",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Understand the lower-level contract"
+        },
+        {
+          "type": "paragraph",
+          "text": "PostProcessPass extends Pass. Its @read input and @create output declare resources; setup creates a canvas-relative target and calls markUnculled. execute resolves current texture views and encodes GPU commands. A custom subclass follows the same setup(GraphBuilder) and execute(RenderContext) contract. FrameGraph.addPass takes a Pass instance; declare dependencies using the decorators or handle arrays. See [Pass and GraphBuilder](/api-render-frame-graph)."
+        }
+      ]
+    },
+    {
+      "id": "lifetime",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Handle rebuilds and lifetimes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Graph setup describes structure; execute describes one frame. Graph compilation orders dependencies, rejects cycles and culls branches that do not reach an active sink. PostProcessPass marks itself unculled. Relative textures resize during graph rebuilding. Keep transient handles rather than retaining physical views across their lifetime; owners of imported textures must refresh imports when allocations change."
+        }
+      ]
+    },
+    {
+      "id": "practice-and-next",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Practice and continue"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Return color unchanged in the first pass and observe that the vignette still runs.",
+            "Remove the first pass with this.removePass(gray) and observe the vignette without the luminance effect.",
+            "Resize the preview and confirm both effects still cover the image."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Check the result: If the final image omits an effect, trace each input handle and presentation output. For compute producers, continue with [CustomComputePass](/api-render-passes#customcomputepass) and [FrameGraph](/frame-graph)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Package an effect as a plugin](/tutorial-custom-plugin). Use the [tutorial index](/tutorials) to choose another project."
+        }
+      ]
+    }
+  ]
+}

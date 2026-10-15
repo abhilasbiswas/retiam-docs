@@ -1,0 +1,237 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "typography",
+  "title": "Text, LaTeX, code and fonts",
+  "group": "Text and media",
+  "summary": "Create text, equations and code displays, then animate their words, glyphs and lines.",
+  "sections": [
+    {
+      "id": "select-a-text-pipeline",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Select a text pipeline"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Entity",
+            "Rendering model",
+            "Use"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Text",
+                "OpenType vector outlines",
+                "Stroke writing, path effects and glyph deformation"
+              ]
+            },
+            {
+              "cells": [
+                "SDFText",
+                "MSDF atlas geometry and sampling",
+                "Labels, subtitles and many glyphs"
+              ]
+            },
+            {
+              "cells": [
+                "Tex",
+                "MathJax layout converted to vector geometry",
+                "Mathematical formulas and symbol matching"
+              ]
+            },
+            {
+              "cells": [
+                "MarkupText",
+                "Styled runs and text layout",
+                "Rich mixed-style text"
+              ]
+            },
+            {
+              "cells": [
+                "Code",
+                "Prism tokens, vector text and window/line composites",
+                "Source code presentations and highlighting"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Font size is a geometry scale in the chosen scene. Do not blindly copy the default font sizes from one pipeline to another. Frame the actual bounds or use an explicit camera scale. Keep mathematical expressions in Tex rather than assuming plain SDF text understands LaTeX."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [font loading, caches, atlas generation and glyph geometry](/font-pipeline) for the implementation and asset workflow."
+        }
+      ]
+    },
+    {
+      "id": "write-a-formula",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Write a formula"
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-formulascene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Escape the backslash in TypeScript string literals. Tex supports display/inline layout and the default, Excalifont and Virgil font styles. A setLatex or font-style change rebuilds glyph geometry; do it intentionally rather than synthesizing an entire new formula every frame."
+        }
+      ]
+    },
+    {
+      "id": "loading-fonts-and-atlases",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Loading fonts and atlases"
+        },
+        {
+          "type": "paragraph",
+          "text": "FontResolver accepts local/remote font sources and known family/style shortcuts. VectorFont extracts OpenType paths; Font and MSDFGenerator manage raster distance-field atlases. Built-in Roboto assets are loaded by composer initialization. Other fonts may require asynchronous loading and fetching. The current implementation generates custom MSDF assets in the browser and no longer requires the old WebSocket font server mentioned in historical notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Load a needed font before splitting text or measuring its final layout. A remote family requires access to its CSS and binary URLs. For reproducible offline rendering, freeze those assets locally instead of relying on a changing remote CSS response."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [FontSource](/api-font#types), [FontResolver](/api-font#fontresolver), [Font](/api-font#font), [VectorFont](/api-font#types), [MSDFGenerator](/api-font#msdfgenerator)."
+        }
+      ]
+    },
+    {
+      "id": "code-annotations-and-splitting",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Code annotations and splitting"
+        },
+        {
+          "type": "paragraph",
+          "text": "Code exposes line, block and substring highlights, deletion marks, error squiggles, focus ranges, tooltips, cursor placement, scrolling and text extraction. showLineNumbers is the current option name. Use the following conventions when mapping an editor selection to those methods."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Argument",
+            "Convention",
+            "Example"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "lineNum / startLine / endLine",
+                "Displayed numbering begins at startLineNumber, which defaults to 1. This still applies when numbers are hidden.",
+                "With startLineNumber: 40, `Code.highlightLine(41)` selects the second source row."
+              ]
+            },
+            {
+              "cells": [
+                "Block and focus ranges",
+                "Inclusive line endpoints, normalized when reversed and clipped to the source.",
+                "`Code.highlightBlock(40, 42)` includes all three displayed lines."
+              ]
+            },
+            {
+              "cells": [
+                "Cursor columns",
+                "Zero-based UTF-16 source offsets; tabs count as one code unit before visual expansion.",
+                "`Code.addCursor(40, 6)` places the cursor after the first six source code units."
+              ]
+            },
+            {
+              "cells": [
+                "Extraction columns",
+                "Zero-based start and exclusive end. The method clamps to the original line length.",
+                "`Code.extractTextByIndices(40, 6, 12)` selects the six-letter name in const amount = 12;."
+              ]
+            },
+            {
+              "cells": [
+                "Substring occurrence",
+                "Positive one-based count of case-sensitive, nonoverlapping matches across source lines. A match cannot span a newline.",
+                "`Code.highlightText(\"amount\", undefined, 2)` highlights the second occurrence, even on another row."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Deletion marks are visual annotations; they do not edit the stored source. Extraction with removeOriginal: true hides the original glyph paths and adds copied fragments to the code's scroll group. Those fragments still follow the code's transforms and scrolling. For exact selections, prefer `Code.extractTextByIndices`: the current `Code.extractText` repeats a global occurrence number within the selected line, which can fail for a match on a later row."
+        },
+        {
+          "type": "paragraph",
+          "text": "This scene selects the name amount on displayed line 40 and the second occurrence on line 41. Change startLineNumber and update the line arguments together; substring matching remains independent of displayed numbering."
+        },
+        {
+          "type": "example",
+          "example": "labs/lab-code-indices"
+        },
+        {
+          "type": "paragraph",
+          "text": "`Code.scrollToLine` changes the group's transform immediately; `Code.getScrollAnimation` returns an animation for Scene.play. Both clamp their displayed line to the available source range. Cursor and extraction offsets use JavaScript string code units, so normalize external grapheme-based selections before passing them in."
+        },
+        {
+          "type": "paragraph",
+          "text": "TextSplitter and Tex.split turn a composite into independently addressable tokens or paths. Replacement can change scene membership and local origins. Split before animating tokens and retain references to the resulting parts. TransformMatchingText/Tex match recurring symbols instead of assuming both strings have the same child count."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Code](/api-entities-composites-text#code), [Text](/api-entities-composites-text#text), [SDFText](/api-entities-composites-text#sdftext), [Tex](/api-entities-composites-text#tex), [MarkupText](/api-entities-composites-text#markuptext), [TransformMatchingTex](/api-animation-transform#transformmatchingtex), [TransformMatchingText](/api-animation-transform#transformmatchingtext)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "One sentence splits into independent word entities."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-text-split"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [SVG, sprites and texture atlases](/svg-sprites)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Your first scene](/first-scene)"
+  ]
+}

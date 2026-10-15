@@ -1,0 +1,160 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "tutorial-custom-plugin",
+  "title": "Create behavior and rendering plugins",
+  "group": "Extending Retiam",
+  "summary": "Package an update task and an image effect as removable plugins with explicit resource ownership.",
+  "prerequisites": [
+    "[Custom component tutorial](/tutorial-custom-component)",
+    "[Custom pass tutorial](/tutorial-frame-graph)"
+  ],
+  "outcome": "A rotating tile and a luminance effect that can be independently installed and removed.",
+  "difficulty": "advanced",
+  "estimatedMinutes": 35,
+  "sections": [
+    {
+      "id": "result",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "What you will build"
+        },
+        {
+          "type": "paragraph",
+          "text": "One plugin owns a rotation task; another inserts an image pass. Click the cyan circle to toggle luminance. Click the tile to remove or reinstall rotation. This demonstrates the two independent capabilities of IPlugin."
+        }
+      ]
+    },
+    {
+      "id": "choose",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Choose the plugin boundary"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use a component for behavior attached to one entity. Use a plugin when installing an optional feature on a scene or composer, configuring settings, retaining tasks or connecting renderer stages. IPlugin requires a unique name and optionally implements install, registerPasses, dispose and priority."
+        }
+      ]
+    },
+    {
+      "id": "behavior",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Own an installation task"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "class RotationPlugin implements IPlugin {\n  readonly name = 'TutorialRotation';\n  private task?: AlwaysHandle;\n  constructor(private target: Entity, private speed = 0.5) {}\n  install(scene?: Scene) {\n    this.task?.stop();\n    this.task = scene?.always((_time, dt) => this.target.rotate(this.speed * dt / 1000));\n  }\n  dispose() { this.task?.stop(); this.task = undefined; }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "Scene.use calls install with a scene and its current composer. SceneComposer.use supplies the composer without a scene. This behavior plugin deliberately needs a scene. Installation can happen before a GPU context exists; allocate device-dependent resources only when available. Keep the exact task handle so removal stops the installed work."
+        }
+      ]
+    },
+    {
+      "id": "rendering",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Connect a render feature"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "class PreAAPass extends PostProcessPass {\n  constructor(input: TextureHandle, private scale: number, shader: string) {\n    super('Luminance', input, shader);\n  }\n  setup(builder: GraphBuilder) {\n    builder.createTexture(this.outputTexture, {\n      format: navigator.gpu.getPreferredCanvasFormat(),\n      mode: 'relative', scale: this.scale,\n      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING\n    });\n    builder.markUnculled();\n  }\n}\n\n// Inside HalfLuminancePlugin:\nregisterPasses(graph: FrameGraph, renderer: Renderer, io: RenderIO): RenderIO {\n  const pass = new PreAAPass(io.resolvedColor, renderer.config.AA, shaderCode);\n  graph.addPass(pass);\n  io.resolvedColor = pass.presentationOutput;\n  return io;\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "This method runs when the graph is built. Plugins extend the pipeline before its final antialiasing stage, using io.resolvedColor. Scene.addPass post-processes use the renderer’s final output instead. Updating io.resolvedColor connects later features to your result. Lower priority runs earlier during feature insertion; dependency declarations still control graph ordering."
+        },
+        {
+          "type": "paragraph",
+          "text": "Keep the resolved input and output at the same supersampled dimensions. The default PostProcessPass creates a canvas-size output and its helper normalizes pixel positions using input texture dimensions. Using it unchanged before antialiasing would crop the image with the default AA scale of 2. PreAAPass creates an output at renderer.config.AA while retaining the inherited resource declarations and execute method."
+        }
+      ]
+    },
+    {
+      "id": "complete",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. Install, remove and reinstall"
+        },
+        {
+          "type": "example",
+          "example": "labs/tutorial-custom-plugin"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "scene.use(new RotationPlugin(tile));\nscene.hasPlugin('TutorialRotation');\nscene.removePlugin('TutorialRotation');"
+        },
+        {
+          "type": "paragraph",
+          "text": "Installing another plugin with the same name disposes and replaces the previous instance. Removal unregisters its render feature and calls dispose. PluginOwner also removes both tutorial plugins when its entity is destroyed, so editor restarts release the behavior task. The luminance plugin creates only graph-managed output textures and retains no external allocations."
+        }
+      ]
+    },
+    {
+      "id": "capabilities",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Design a reusable extension"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Document whether settings update uniforms, shader declarations or graph structure.",
+            "Use RenderIO channels for shared texture handles, and declare consumers and producers in the passes.",
+            "Keep buffer/texture ownership separate from binding ownership.",
+            "Support repeated removal safely and test replacement without duplicated listeners or tasks."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The current public package exports [OutlinePlugin](/api-plugins#outlineplugin). Study its pass integration in [plugins](/plugins), then package your own classes with explicit exports and consumer examples."
+        }
+      ]
+    },
+    {
+      "id": "practice-and-next",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Practice and continue"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Remove rotation while leaving the image effect active.",
+            "Change the rotation speed by replacing the plugin with another instance of the same name.",
+            "Toggle the image effect repeatedly, then reset the editor."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Check the result: Rotation should stop immediately on removal. Reinstallation should restore one update task; multiple rotations indicate owned work was not stopped."
+        },
+        {
+          "type": "paragraph",
+          "text": "Continue with [Plugin concepts and API](/plugins). Use the [tutorial index](/tutorials) to choose another project."
+        }
+      ]
+    }
+  ]
+}

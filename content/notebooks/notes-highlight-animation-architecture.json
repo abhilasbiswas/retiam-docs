@@ -1,0 +1,961 @@
+{
+  "$schema": "../../src/data/docs-authoring-schema.json",
+  "id": "notes-highlight-animation-architecture",
+  "title": "Highlight Animation Architecture & Subsystem Specification",
+  "group": "Engineering notebooks",
+  "sections": [
+    {
+      "id": "current-contracts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Context and current contracts"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "content": "Engineering notebook from `docs/HIGHLIGHT_ANIMATION_ARCHITECTURE.md`. This archive preserves the project’s original rationale, equations, performance reports and illustrative code. Historical paths, API names, claims and sketches can differ from the current engine. For copy-ready programs use the guides and demos; for current callable signatures use the source-derived API. Performance figures here describe reported experiments, not guaranteed frame rates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Original document: [docs/HIGHLIGHT_ANIMATION_ARCHITECTURE.md](https://github.com/abhilasbiswas/Retiam/blob/main/docs/HIGHLIGHT_ANIMATION_ARCHITECTURE.md). See [current limitations](/limitations) for concrete compatibility notes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Animation](/api-animation#animation), [Flash](/api-libs-highlights-finish#flash), [Blink](/api-libs-highlights-material#blink), [Scene](/api-core-scene#scene), [Graph](/api-libs-graphs-graph#graph), [Entity](/api-core-entity#entity), [Text](/api-entities-composites-text#text), [Poly](/api-entities-primitives-2d#poly), [Group](/api-core#group), [AABB](/api-math#aabb), [Material](/api-core-material#material), [Circumscribe](/api-libs-highlights-boundary#circumscribe), [ShimmerSweep](/api-libs-highlights-finish#shimmersweep), [CornerBrackets](/api-libs-highlights-boundary#cornerbrackets), [SparkleBurst](/api-libs-highlights-finish#sparkleburst), [ColorTint](/api-libs-highlights-material#colortint), [Underline](/api-libs-highlights-boundary#underline), [FlashFinish](/api-libs-highlights-finish#flashfinish), [PulseGlow](/api-libs-highlights-material#pulseglow), [BoundaryRipple](/api-libs-highlights-boundary#boundaryripple), [MarkerSweep](/api-libs-highlights-backdrop#markersweep), [PopHighlight](/api-libs-highlights-motion#pophighlight), [BackdropFade](/api-libs-highlights-backdrop#backdropfade), [Line](/api-entities-primitives-2d#line)."
+        }
+      ]
+    },
+    {
+      "id": "1-overview-motivation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "1. Overview & Motivation"
+        },
+        {
+          "type": "paragraph",
+          "text": "In motion graphics, technical presentations, educational tutorials, and algorithmic visualizers, drawing the viewer's attention to specific visual entities is a critical pattern. Common use cases include:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Circling a key mathematical equation or code token.",
+            "Underlining an important takeaway or headline.",
+            "Sweeping a translucent highlighter pen behind a line of text.",
+            "Bursting sparkles, light gleams, or flash rings when an entity finishes generating.",
+            "Pulsing or wiggling an element to communicate an alert, hover, or invalid state."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1.1 Problems in Previous Implementations"
+        },
+        {
+          "type": "paragraph",
+          "text": "Prior to this architecture, highlight effects in Retiam suffered from several architectural issues:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**Core Engine Bloat**: Miscellaneous visual effects such as `Flash` and `Blink` were coupled directly into `src/engine/animation/indication/`, polluting the core graphics pipeline with non-engine UI idioms.",
+            "**Scattered Ad-Hoc Geometries**: Callout boxes and underline strokes had to be manually constructed by calculating bounding boxes in scene scripts, placing boilerplate clutter in animations.",
+            "**Manual Scene Graph Management**: Developers had to explicitly invoke `scene.add(box)` and remember to `scene.remove(box)` afterwards. Failure to do so led to memory leaks and ghost meshes in the WebGPU frame graph.",
+            "**Target Entity Mutation**: Animating temporary emphasis often altered the target entity's own properties (`scale`, `rotation`, `color`) without restoring initial values on completion."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "1.2 The Retiam Solution"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam introduces a dedicated, modular **Highlight Animation Subsystem** located in [`libs/highlights/`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/index.ts) and exported under the package alias `\"retiam/highlights\"`."
+        },
+        {
+          "type": "paragraph",
+          "text": "The subsystem:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Completely removes indication logic from `src/engine/` to maintain a lean, core rendering engine.",
+            "Introduces **15 high-fidelity animations** spanning 5 distinct visual categories.",
+            "Automates bounding box resolution, coordinate alignment, and automatic scene injection.",
+            "Provides automatic, leak-free cleanup (`attachAutoCleanup`) while supporting permanent callouts via `{ persist: true }`.",
+            "Preserves and restores target entity state for all transform- and material-based animations."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-core-architectural-principles",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "2. Core Architectural Principles"
+        },
+        {
+          "type": "tree",
+          "variant": "horizontal",
+          "nodes": [
+            {
+              "label": "libs/highlights",
+              "description": "Target entity or array: Text, MathTex, Poly or Group.",
+              "children": [
+                {
+                  "label": "Boundary and backdrop",
+                  "description": "resolveTargetAABB calculates the bounds.",
+                  "children": [
+                    {
+                      "label": "Circumscribe"
+                    },
+                    {
+                      "label": "CornerBrackets"
+                    },
+                    {
+                      "label": "Underline"
+                    },
+                    {
+                      "label": "BoundaryRipple"
+                    },
+                    {
+                      "label": "MarkerSweep"
+                    },
+                    {
+                      "label": "BackdropFade"
+                    }
+                  ]
+                },
+                {
+                  "label": "Creation finish",
+                  "description": "Introducer overlays are inserted automatically.",
+                  "children": [
+                    {
+                      "label": "ShimmerSweep"
+                    },
+                    {
+                      "label": "SparkleBurst"
+                    },
+                    {
+                      "label": "FlashFinish"
+                    },
+                    {
+                      "label": "Flash"
+                    }
+                  ]
+                },
+                {
+                  "label": "Material and motion",
+                  "description": "Temporary changes clean up and revert.",
+                  "children": [
+                    {
+                      "label": "ColorTint"
+                    },
+                    {
+                      "label": "PulseGlow"
+                    },
+                    {
+                      "label": "Blink"
+                    },
+                    {
+                      "label": "PopHighlight"
+                    },
+                    {
+                      "label": "WiggleHighlight"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.1 Non-Invasive Overlay Pattern"
+        },
+        {
+          "type": "paragraph",
+          "text": "For boundary, backdrop, and particle effects, the highlight system dynamically constructs auxiliary vector entities (`Poly`, `Line`, `Group`, `Rectangle`). The target entity's children hierarchy is left untouched, preventing unintended layout or tree distortions."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.2 Auto-Injection via isIntroducer"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam's scene runner requires newly spawned entities to be registered with the active `Scene`. All transient highlight animations configure:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "this.isIntroducer = true;"
+        },
+        {
+          "type": "paragraph",
+          "text": "When passed to `scene.play(new Circumscribe(myText))`, the engine automatically registers the underlying visual overlay without requiring the caller to invoke `scene.add(highlightEntity)`."
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.3 Automated Lifecycle & Garbage Collection"
+        },
+        {
+          "type": "paragraph",
+          "text": "All transient highlight animations bind to their completion promise through [`attachAutoCleanup`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/utils.ts#L45-L70):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "attachAutoCleanup(anim: Animation, entities: Entity | Entity[], persist: boolean = false);"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**When `persist === false` (default)**: As soon as `anim.promise` resolves, all generated auxiliary entities are detached from the active `Scene` and destroyed via `entity.destroy()`, purging vertex and uniform buffers from GPU memory.",
+            "**When `persist === true`**: The highlight stays rendered at its final state indefinitely (useful for permanent callouts, sticky borders, or annotations)."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "2.4 State Restoration for Inherent Animations"
+        },
+        {
+          "type": "paragraph",
+          "text": "Inherent highlights that alter the target entity directly (e.g., [`ColorTint`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/material/ColorTint.ts), [`PopHighlight`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/motion/PopHighlight.ts), [`WiggleHighlight`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/motion/WiggleHighlight.ts)) snapshot original material and transform properties before execution:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Example: State restoration in WiggleHighlight\nconst origRot = target.transform.rotation.clone();\n// ... execute sinusoidal angular dampening ...\nthis.promise.then(() => {\n    target.transform.setRotation(origRot);\n});"
+        },
+        {
+          "type": "paragraph",
+          "text": "This guarantees zero property drift or unintended permanent transformations."
+        }
+      ]
+    },
+    {
+      "id": "3-subsystem-organization-taxonomy",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "3. Subsystem Organization & Taxonomy"
+        },
+        {
+          "type": "paragraph",
+          "text": "The highlight library is structured into 5 cohesive categories in [`libs/highlights/`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/index.ts):"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Category",
+            "Description",
+            "Animations"
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "text": "**Boundary**",
+                  "type": "text"
+                },
+                {
+                  "text": "Vector contours and technical framings encircling the target's bounding box."
+                },
+                {
+                  "text": "[`Circumscribe`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/boundary/Circumscribe.ts), [`CornerBrackets`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/boundary/CornerBrackets.ts), [`Underline`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/boundary/Underline.ts), [`BoundaryRipple`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/boundary/BoundaryRipple.ts)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Backdrop**",
+                  "type": "text"
+                },
+                {
+                  "text": "Plate and marker backgrounds sweeping or fading beneath target content."
+                },
+                {
+                  "text": "[`MarkerSweep`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/backdrop/MarkerSweep.ts), [`BackdropFade`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/backdrop/BackdropFade.ts)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Finish**",
+                  "type": "text"
+                },
+                {
+                  "text": "Celebration bursts, specular glints, and radial flashes indicating completion."
+                },
+                {
+                  "text": "[`ShimmerSweep`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/finish/ShimmerSweep.ts), [`SparkleBurst`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/finish/SparkleBurst.ts), [`FlashFinish`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/finish/FlashFinish.ts), [`Flash`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/finish/Flash.ts)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Material**",
+                  "type": "text"
+                },
+                {
+                  "text": "Inherent surface modulations including color transitions, aura pulsing, and blinking."
+                },
+                {
+                  "text": "[`ColorTint`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/material/ColorTint.ts), [`PulseGlow`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/material/PulseGlow.ts), [`Blink`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/material/Blink.ts)"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "text": "**Motion**",
+                  "type": "text"
+                },
+                {
+                  "text": "Dynamic kinetic impulses (elastic pops and harmonic wiggles)."
+                },
+                {
+                  "text": "[`PopHighlight`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/motion/PopHighlight.ts), [`WiggleHighlight`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/motion/WiggleHighlight.ts)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-api-reference",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "4. API Reference"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.1 Base Options"
+        },
+        {
+          "type": "paragraph",
+          "text": "All highlight animations extend [`BaseHighlightOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L10-L29):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "export interface BaseHighlightOptions extends AnimOptions {\n    /** Primary accent color. Defaults to vibrant gold (0xfacc15) or context accent. */\n    color?: Color;\n\n    /** Bounding padding around target. Scalar or [padX, padY]. Defaults to 0.2. */\n    padding?: number | [number, number];\n\n    /** If true, highlight remains in scene after animation finishes. Defaults to false. */\n    persist?: boolean;\n}"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.2 Boundary Highlights"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Circumscribe"
+        },
+        {
+          "type": "paragraph",
+          "text": "Draws a vector stroke path contour completely framing the target entity, then fades it out smoothly."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`Circumscribe`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/boundary/Circumscribe.ts) (extends [`Sequential`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts))",
+            {
+              "text": "**Options** ([`CircumscribeOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L34-L41)):",
+              "children": [
+                "`shape?: \"rect\" | \"circle\" | \"pill\"`: Geometry shape enclosing the target. Default: `\"rect\"`.",
+                "`cornerRadius?: number`: Corner rounding for rect and pill shapes. Default: `0.1`.",
+                "`stroke_width?: number`: Outline stroke thickness. Default: `0.06`.",
+                "`duration?: number`: Total animation time in ms. Default: `1000`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Circumscribe } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\n// Rectangle highlight\nawait scene.play(new Circumscribe(titleText));\n\n// Pill highlight around code token with custom gold accent\nawait scene.play(new Circumscribe(token, {\n    shape: \"pill\",\n    color: Color.fromHex(0xffd700),\n    padding: [0.3, 0.15],\n    duration: 1200\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "CornerBrackets"
+        },
+        {
+          "type": "paragraph",
+          "text": "Spawns 4 technical HUD corner brackets that frame the target's bounding box, sliding slightly inward while fading out."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`CornerBrackets`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/boundary/CornerBrackets.ts) (extends [`Sequential`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts))",
+            {
+              "text": "**Options** ([`CornerBracketsOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L46-L51)):",
+              "children": [
+                "`bracketLength?: number`: Arm length of each L-shaped bracket. Default: `0.4`.",
+                "`stroke_width?: number`: Line thickness. Default: `0.06`.",
+                "`duration?: number`: Total time in ms. Default: `900`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { CornerBrackets } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\nawait scene.play(new CornerBrackets(diagramNode, {\n    color: Color.fromHex(0x38bdf8), // Cyan HUD bracket\n    bracketLength: 0.5,\n    padding: 0.25\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Underline"
+        },
+        {
+          "type": "paragraph",
+          "text": "Draws a stylized underline stroke beneath the bottom edge of the target bounding box."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`Underline`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/boundary/Underline.ts) (extends [`Sequential`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts))",
+            {
+              "text": "**Options** ([`UnderlineOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L56-L65)):",
+              "children": [
+                "`style?: \"straight\" | \"wavy\"`: Style of the underline stroke. Default: `\"straight\"`.",
+                "`offset?: number`: Distance below the target bottom bounds. Default: `0.1`.",
+                "`waves?: number`: Number of oscillation cycles when `style: \"wavy\"`. Default: `4`.",
+                "`stroke_width?: number`: Thickness of the stroke line. Default: `0.06`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Underline } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\n// Straight underline that persists\nawait scene.play(new Underline(heading, {\n    color: Color.fromHex(0x3b82f6),\n    persist: true\n}));\n\n// Wavy warning underline\nawait scene.play(new Underline(errorWord, {\n    style: \"wavy\",\n    color: Color.fromHex(0xef4444),\n    waves: 5\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "BoundaryRipple"
+        },
+        {
+          "type": "paragraph",
+          "text": "Emits an expanding shockwave pulse from the target's perimeter that scales outward and dissolves into the background."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`BoundaryRipple`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/boundary/BoundaryRipple.ts) (extends [`Concurrent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts))",
+            {
+              "text": "**Options** ([`BoundaryRippleOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L70-L75)):",
+              "children": [
+                "`expandScale?: number`: Maximum expansion multiplier relative to target size. Default: `1.4`.",
+                "`stroke_width?: number`: Outline stroke thickness. Default: `0.05`.",
+                "`duration?: number`: Total ripple time in ms. Default: `800`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { BoundaryRipple } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\nawait scene.play(new BoundaryRipple(iconButton, {\n    color: Color.fromHex(0xa855f7),\n    expandScale: 1.5,\n    duration: 700\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.3 Backdrop Highlights"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "MarkerSweep"
+        },
+        {
+          "type": "paragraph",
+          "text": "Simulates a translucent fluorescent highlighter stroke drawn horizontally across the target."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`MarkerSweep`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/backdrop/MarkerSweep.ts) (extends [`Sequential`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts))",
+            {
+              "text": "**Options** ([`MarkerSweepOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L80-L87)):",
+              "children": [
+                "`opacity?: number`: Target fill opacity of the highlighter plate. Default: `0.35`.",
+                "`cornerRadius?: number`: Rounding on marker edges. Default: `0.08`.",
+                "`direction?: \"left-to-right\" | \"right-to-left\"`. Default: `\"left-to-right\"`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { MarkerSweep } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\nawait scene.play(new MarkerSweep(textBlock, {\n    color: Color.fromHex(0xfef08a), // Fluorescent pastel yellow\n    opacity: 0.4,\n    persist: true\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "BackdropFade"
+        },
+        {
+          "type": "paragraph",
+          "text": "Fades in a rounded plate directly behind the target entity and fades it out smoothly."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`BackdropFade`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/backdrop/BackdropFade.ts) (extends [`Sequential`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts))",
+            {
+              "text": "**Options** ([`BackdropFadeOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L92-L97)):",
+              "children": [
+                "`opacity?: number`: Peak opacity of the card plate. Default: `0.25`.",
+                "`cornerRadius?: number`: Corner rounding. Default: `0.15`.",
+                "`duration?: number`: Time in ms. Default: `1000`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { BackdropFade } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\nawait scene.play(new BackdropFade(cardWidget, {\n    color: Color.fromHex(0x6366f1),\n    padding: [0.4, 0.2]\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.4 Creation Finish Highlights"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "ShimmerSweep"
+        },
+        {
+          "type": "paragraph",
+          "text": "Sweeps a diagonal specular light beam across the target's bounding box, creating a premium gleam upon entity creation."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`ShimmerSweep`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/finish/ShimmerSweep.ts) (extends [`Concurrent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts))",
+            {
+              "text": "**Options** ([`ShimmerSweepOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L102-L107)):",
+              "children": [
+                "`bandWidth?: number`: Width of the specular sweep line. Default: `0.3`.",
+                "`duration?: number`: Duration in ms. Default: `750`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { ShimmerSweep } from \"retiam/highlights\";\nimport { Create, Text } from \"retiam\";\n\n// Play creation followed by a glossy shimmer gleam\nawait scene.play(new Create(badge));\nawait scene.play(new ShimmerSweep(badge));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "SparkleBurst"
+        },
+        {
+          "type": "paragraph",
+          "text": "Erupts 4-point star glints from the corners and perimeter of the entity that expand and vanish."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`SparkleBurst`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/finish/SparkleBurst.ts) (extends [`Concurrent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts))",
+            {
+              "text": "**Options** ([`SparkleBurstOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L112-L117)):",
+              "children": [
+                "`count?: number`: Number of sparkles spawned. Default: `4`.",
+                "`sparkleSize?: number`: Maximum arm radius of each sparkle. Default: `0.3`.",
+                "`duration?: number`: Time in ms. Default: `700`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { SparkleBurst } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\nawait scene.play(new SparkleBurst(starIcon, {\n    count: 6,\n    color: Color.fromHex(0xfbbf24),\n    sparkleSize: 0.35\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "FlashFinish"
+        },
+        {
+          "type": "paragraph",
+          "text": "Produces a camera-flash bloom disk and shockwave ring centered directly on the target."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`FlashFinish`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/finish/FlashFinish.ts) (extends [`Concurrent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts))",
+            {
+              "text": "**Options** ([`FlashFinishOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L122-L125)):",
+              "children": [
+                "`intensity?: number`: Flash scale multiplier. Default: `1.0`.",
+                "`duration?: number`: Time in ms. Default: `600`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { FlashFinish } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\nawait scene.play(new FlashFinish(achievementBadge, {\n    color: Color.fromHex(0xffffff),\n    intensity: 1.2\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Flash"
+        },
+        {
+          "type": "paragraph",
+          "text": "Animates a radial burst of outgoing vector line rays from the center of the entity."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`Flash`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/finish/Flash.ts) (extends [`Concurrent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts))",
+            {
+              "text": "**Options**:",
+              "children": [
+                "`num_lines?: number`: Number of radial rays. Default: `12`.",
+                "`line_length?: number`: Length of each ray. Default: `0.2`.",
+                "`flash_radius?: number`: Starting offset radius from center. Default: `0.5`.",
+                "`stroke_width?: number`: Thickness of the rays. Default: `0.04`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Flash } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\nawait scene.play(new Flash(centerNode, {\n    num_lines: 16,\n    color: Color.fromHex(0xf59e0b),\n    line_length: 0.35,\n    flash_radius: 0.7\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.5 Material Highlights"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "ColorTint"
+        },
+        {
+          "type": "paragraph",
+          "text": "Smoothly shifts the target entity's material color to the highlight accent, holds the color, and returns smoothly to original colors."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`ColorTint`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/material/ColorTint.ts) (extends [`StateAnimation`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/StateAnimation.ts))",
+            {
+              "text": "**Options** ([`ColorTintOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L130-L133)):",
+              "children": [
+                "`holdDuration?: number`: Milliseconds to sustain peak tint color. Default: `300`.",
+                "`duration?: number`: Total transition time in ms. Default: `900`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { ColorTint } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\n// Briefly flash active code token in green\nawait scene.play(new ColorTint(activeKeyword, {\n    color: Color.fromHex(0x10b981),\n    holdDuration: 400\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "PulseGlow"
+        },
+        {
+          "type": "paragraph",
+          "text": "Modulates a soft radiant glow plate behind the target using sinusoidal harmonic breathing pulses."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`PulseGlow`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/material/PulseGlow.ts) (extends [`Sequential`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts))",
+            {
+              "text": "**Options** ([`PulseGlowOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L138-L143)):",
+              "children": [
+                "`pulses?: number`: Total number of breathing cycles. Default: `2`.",
+                "`opacity?: number`: Peak glow opacity. Default: `0.4`.",
+                "`duration?: number`: Total duration in ms. Default: `1200`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { PulseGlow } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\nawait scene.play(new PulseGlow(statusIndicator, {\n    pulses: 3,\n    color: Color.fromHex(0x06b6d4),\n    duration: 1500\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "Blink"
+        },
+        {
+          "type": "paragraph",
+          "text": "Strobe-flashes the target entity's visibility on and off at a specified frequency."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`Blink`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/material/Blink.ts) (extends [`Animation`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Animation.ts))",
+            {
+              "text": "**Options**:",
+              "children": [
+                "`num_blinks?: number`: Number of blink cycles. Default: `3`.",
+                "`duration?: number`: Total time in ms. Default: `1000`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Blink } from \"retiam/highlights\";\n\nawait scene.play(new Blink(cursorEntity, {\n    num_blinks: 4,\n    duration: 1200\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "4.6 Motion Highlights"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "PopHighlight"
+        },
+        {
+          "type": "paragraph",
+          "text": "Applies an elastic scale impulse and rebound to the entity around its current anchor, instantly catching viewer focus without changing permanent layout dimensions."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`PopHighlight`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/motion/PopHighlight.ts) (extends [`StateAnimation`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/StateAnimation.ts))",
+            {
+              "text": "**Options** ([`PopHighlightOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L148-L151)):",
+              "children": [
+                "`scaleFactor?: number`: Maximum peak scale multiplier. Default: `1.2`.",
+                "`duration?: number`: Time in ms. Default: `500`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { PopHighlight } from \"retiam/highlights\";\n\nawait scene.play(new PopHighlight(activeTab, {\n    scaleFactor: 1.25,\n    duration: 450\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 5,
+          "text": "WiggleHighlight"
+        },
+        {
+          "type": "paragraph",
+          "text": "Applies a decaying sinusoidal angular oscillation (shake/wiggle) to indicate attention or invalid action."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**Class**: [`WiggleHighlight`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/motion/WiggleHighlight.ts) (extends [`StateAnimation`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/StateAnimation.ts))",
+            {
+              "text": "**Options** ([`WiggleHighlightOptions`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/types.ts#L156-L161)):",
+              "children": [
+                "`angle?: number`: Peak rotation amplitude in radians. Default: `0.12` (~7°).",
+                "`wiggles?: number`: Number of complete oscillation cycles. Default: `3`.",
+                "`duration?: number`: Total wiggle time in ms. Default: `600`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { WiggleHighlight } from \"retiam/highlights\";\n\nawait scene.play(new WiggleHighlight(inputField, {\n    angle: 0.15,\n    wiggles: 4,\n    duration: 550\n}));"
+        }
+      ]
+    },
+    {
+      "id": "5-usage-patterns-best-practices",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "5. Usage Patterns & Best Practices"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.1 Highlight Stacking & Parallel Choreography"
+        },
+        {
+          "type": "paragraph",
+          "text": "Highlight animations are standard Retiam animations. They compose seamlessly using `scene.play()`, [`Sequential`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Sequential.ts), or [`Concurrent`](https://github.com/abhilasbiswas/Retiam/blob/main/src/engine/animation/Concurrent.ts):"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { PopHighlight, Circumscribe, ShimmerSweep } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\n// Play an elastic pop together with a circumscribed boundary\nawait scene.play(\n    new PopHighlight(badge, { scaleFactor: 1.15, duration: 800 }),\n    new Circumscribe(badge, { color: Color.fromHex(0x38bdf8), duration: 800 })\n);\n\n// Follow up with a victory sheen\nawait scene.play(new ShimmerSweep(badge, { duration: 600 }));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.2 Multi-Target Highlighting"
+        },
+        {
+          "type": "paragraph",
+          "text": "The bounding utility [`resolveTargetAABB`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/core/utils.ts#L10-L22) accepts either a single `Entity` or an `Entity[]`. You can circumscribe or underline multiple entities as a unified cluster:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Circumscribe } from \"retiam/highlights\";\n\n// Highlights both code tokens together with a single unified bounding box\nawait scene.play(new Circumscribe([funcNameToken, paramToken], {\n    padding: [0.3, 0.15]\n}));"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "5.3 Permanent Annotations via persist: true"
+        },
+        {
+          "type": "paragraph",
+          "text": "Set `persist: true` when a highlight boundary or marker mark should remain on screen after the animation completes:"
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Underline, MarkerSweep } from \"retiam/highlights\";\nimport { Color } from \"retiam\";\n\n// The marker backdrop stays rendered permanently behind key takeaways\nawait scene.play(new MarkerSweep(keyTakeawayText, {\n    color: Color.fromHex(0x34d399),\n    opacity: 0.3,\n    persist: true\n}));"
+        }
+      ]
+    },
+    {
+      "id": "6-build-architecture-packaging",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "6. Build Architecture & Packaging"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.1 Sub-Library Build Pipeline"
+        },
+        {
+          "type": "paragraph",
+          "text": "Retiam's bundler scans the `libs/` directory for any subfolder with an `index.ts`."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Source entry: [`libs/highlights/index.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/libs/highlights/index.ts)",
+            "Dist output: `dist/libs/highlights/index.js` + `dist/libs/highlights/index.d.ts`",
+            "Package mapping:"
+          ]
+        },
+        {
+          "type": "code",
+          "language": "json",
+          "code": "\"exports\": {\n    \"./highlights\": {\n      \"import\": \"./dist/libs/highlights/index.js\",\n      \"types\": \"./dist/libs/highlights/index.d.ts\"\n    }\n  }"
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.2 Interactive Demos Catalogue"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each highlight animation has a dedicated, standalone demo scene in [`examples/demos/highlights/`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos/highlights) and is registered in [`examples/demos.ts`](https://github.com/abhilasbiswas/Retiam/blob/main/examples/demos.ts):"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "`circumscribe_demo.ts`",
+            "`corner_brackets_demo.ts`",
+            "`underline_demo.ts`",
+            "`boundary_ripple_demo.ts`",
+            "`marker_sweep_demo.ts`",
+            "`backdrop_fade_demo.ts`",
+            "`shimmer_sweep_demo.ts`",
+            "`sparkle_burst_demo.ts`",
+            "`flash_finish_demo.ts`",
+            "`flash_demo.ts`",
+            "`color_tint_demo.ts`",
+            "`pulse_glow_demo.ts`",
+            "`blink_demo.ts`",
+            "`pop_highlight_demo.ts`",
+            "`wiggle_highlight_demo.ts`"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "6.3 Automated Verification"
+        },
+        {
+          "type": "paragraph",
+          "text": "Automated unit tests are located in `test/highlights_test.ts` and verify:"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Instantiation and default options for all 15 animations.",
+            "Bounding box resolution (`resolveTargetAABB`) for single and grouped entities.",
+            "Non-persistence cleanup (`attachAutoCleanup`) and persistence retention flags.",
+            "Type safety and WebGPU pipeline decoupling."
+          ]
+        }
+      ]
+    }
+  ]
+}

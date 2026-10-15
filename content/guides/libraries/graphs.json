@@ -1,0 +1,124 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "graphs",
+  "title": "Graphs, layouts and automata",
+  "group": "Libraries",
+  "summary": "Represent nodes and edges, arrange their layout, and animate graph and automata behavior.",
+  "sections": [
+    {
+      "id": "create-connected-nodes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Create connected nodes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Graph extends VGroup and stores nodes by ID in a Map, with an ordered edge array. addNode takes an ID string and options; addEdge takes source/target ID strings and options. Missing nodes cause edge creation to throw. GraphNode and GraphEdge are composites with configurable labels, colors and directed geometry."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Graph, Layouts } from \"retiam/graphs\";\nconst graph = new Graph({ isDirected: true });\ngraph.addNode(\"A\", { label: \"Start\" });\ngraph.addNode(\"B\", { label: \"Work\" });\ngraph.addNode(\"C\", { label: \"Done\" });\ngraph.addEdge(\"A\", \"B\");\ngraph.addEdge(\"B\", \"C\");\ngraph.applyLayout(Layouts.circular([\"A\", \"B\", \"C\"], 3));\nthis.add(graph);\nawait this.play(graph.highlightPath([\"A\", \"B\", \"C\"]));"
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Graph](/api-libs-graphs-graph#graph), [GraphNode](/api-libs-graphs-core#graphnode), [GraphEdge](/api-libs-graphs-core#graphedge), [Layouts](/api-libs-graphs-core#layouts), [GraphTheme](/api-libs-graphs-core#graphtheme)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the [finite automaton walkthrough](/automata-walkthrough) to build a machine, inspect its trace and animate it."
+        }
+      ]
+    },
+    {
+      "id": "layout-and-animation",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Layout and animation"
+        },
+        {
+          "type": "paragraph",
+          "text": "Layouts includes circular, layered, bipartite and force-directed arrangements. applyLayout positions nodes immediately; morphToLayout animates positions while updating edges. updateAllEdges reconciles connectors after manual changes. Force-directed layout is a coordinate solver; it is not the same subsystem as rigid-body physics."
+        },
+        {
+          "type": "paragraph",
+          "text": "Seed force-layout randomness when comparing runs. A graph visualization does not implement a traversal algorithm by itself: compute BFS/Dijkstra or another algorithm in application code, then pass the resulting path/states to highlighting helpers."
+        }
+      ]
+    },
+    {
+      "id": "automata-and-tapes",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Automata and tapes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Automaton builds on Graph with start/accepting states and symbol-labeled transitions. addState/addTransition construct it; trace returns a simulation result and accepts returns a boolean. Tape visualizes symbols and a moving head. AutomatonRunner sequences visual steps and verdict displays."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { Automaton } from \"retiam/graphs\";\nconst automaton = new Automaton();\nautomaton.addState(\"q0\", { isStart: true });\nautomaton.addState(\"q1\", { isAccepting: true });\nautomaton.addTransition(\"q0\", \"q1\", \"1\");\nautomaton.addTransition(\"q1\", \"q1\", \"1\");\nconsole.log(automaton.accepts(\"111\"));"
+        },
+        {
+          "type": "paragraph",
+          "text": "The current Automaton models deterministic transition lookup. A Tape visual and an automaton runner do not by themselves provide a complete programmable Turing machine. Runner step-duration arguments use seconds in the current implementation; confirm units when combining them with millisecond Scene.play timing."
+        },
+        {
+          "type": "paragraph",
+          "text": "Exact contracts: [Automaton](/api-libs-graphs-automata#automaton), [Tape](/api-libs-graphs-automata#tape), [AutomatonRunner](/api-libs-graphs-automata#automatonrunner), [SimulationResult](/api-libs-graphs-automata#automaton)."
+        }
+      ]
+    },
+    {
+      "id": "worked-examples",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Focused scene"
+        },
+        {
+          "type": "paragraph",
+          "text": "Three nodes and two directed edges form one readable graph."
+        },
+        {
+          "type": "example",
+          "example": "labs/pg-graph"
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [2D and 3D physics](/physics).",
+            "Build it step by step: [Build a draggable diagram](/project-draggable-diagram)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Entities, components and ownership](/entities)"
+  ]
+}

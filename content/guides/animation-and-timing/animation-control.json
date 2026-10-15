@@ -1,0 +1,132 @@
+{
+  "$schema": "../../../src/data/docs-authoring-schema.json",
+  "id": "animation-control",
+  "title": "Interruptions, replay, seeking and overlapping animations",
+  "group": "Animation and timing",
+  "summary": "Control scheduled animations and understand interruption, reset, overlapping state changes and seeking.",
+  "sections": [
+    {
+      "id": "await-play",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Understand what awaiting play means"
+        },
+        {
+          "type": "paragraph",
+          "text": "`await this.play(...)` is the choreography boundary: the next statement waits for that scheduled work. The promise resolves with no timing value. If completion occurs within a rendered frame, the scheduler automatically gives a newly queued continuation that frame's remaining time. `Scene.start()` is a startup boundary and does not wait for the entire video. Consecutive awaits create a sequence; passing multiple animations to one play schedules them together. Durations and delays are milliseconds; angles are radians. See [animation basics](/animation) for the normal path."
+        },
+        {
+          "type": "paragraph",
+          "text": "An `Animator` snapshots state when constructed. Build it close to the play that needs it. Keeping an old builder while the entity moves elsewhere can interpolate from an old start state. `applyOptions` configures the animation; transforms and paint setters edit its target state. Pivot setup can also synchronize the live entity’s offset to preserve visual position."
+        }
+      ]
+    },
+    {
+      "id": "pause-stop",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Pause and stop one animation"
+        },
+        {
+          "type": "example",
+          "example": "labs/workshop-animation-control"
+        },
+        {
+          "type": "paragraph",
+          "text": "The lab retains `motion`, rather than asking `dot.animate` for a different builder when a click arrives. `pause()` preserves elapsed time; `resume()` continues it. `stop()` removes the remembered scheduled animation and resolves its pending play without a value, leaving the entity where it stopped. The statements after the await will run, so track whether completion was interrupted when that distinction matters. Calling stop before the builder has been played has no scheduled animation to remove."
+        },
+        {
+          "type": "paragraph",
+          "text": "`Animator.restart()` restarts its remembered animation from the entity’s current state toward the stored target, resets elapsed time and removes delay. It does not restore the original pose. For a repeatable demonstration, explicitly restore the pose and create a fresh builder. For whole-scene playback use `Scene.restart()` and reset application state in `run()`."
+        }
+      ]
+    },
+    {
+      "id": "reset-during-play",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Reset during an awaited sequence"
+        },
+        {
+          "type": "paragraph",
+          "text": "Reset rejects queued animation promises with an Error whose message is `Scene Reset`. Handle that expected cancellation without continuing the obsolete sequence. Do not catch every error and continue; a font or shader failure should still be visible. A generation counter also protects asynchronous application work that is not part of the animation queue."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Inside a Scene subclass; invoke this when rebuilding an interactive sequence.\nprivate generation = 0;\nasync replay() {\n  const generation = ++this.generation;\n  await this.reset();\n  if (generation !== this.generation) return;\n  try {\n    await this.run();\n  } catch (error) {\n    if (error instanceof Error && error.message === 'Scene Reset') return;\n    throw error;\n  }\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "This guards the sequence entry point, not every pending network request. After an asset await, compare the same generation before attaching its result. Reset clears registered engine tasks and entities; it cannot rewind your score variable, random generator, module cache or an external physics world automatically."
+        }
+      ]
+    },
+    {
+      "id": "overlapping-state",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Choose one writer per state channel"
+        },
+        {
+          "type": "paragraph",
+          "text": "Two simultaneous movements on one entity are competing writers. StateAnimation derives an interpolation mask from the difference between start and target, so disjoint state fields can be combined deliberately; overlapping fields still depend on scheduling and update order. A post updater that writes position can overwrite the animation’s result every frame. Prefer one target-state builder combining move, scale and paint changes, or let a tracker drive a single updater."
+        },
+        {
+          "type": "paragraph",
+          "text": "`GroupAnimator.move(target)` sends every member’s target position to the same coordinate; it is not a translation preserving spacing. `shift(delta)` moves each member relative to its own target state. A group anchor for rotate/scale comes from the combined bounds. Compare [group ownership](/entities#hierarchy-and-grouping) before treating a collection as a scene-graph parent."
+        }
+      ]
+    },
+    {
+      "id": "seek-and-loops",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Make replayable state a function of time"
+        },
+        {
+          "type": "paragraph",
+          "text": "Seeking forward runs the scene’s timeline toward the requested milliseconds; backward seeking rebuilds from reset and may use snapshots. Built-in state restoration covers supported engine data, not every JavaScript object or external simulation. Express a procedural position as `f(time)` when possible. If integrating `dt`, use a known initial condition, a fixed step and reproducible input, and test reverse seeks rather than assuming they reconstruct your closure variables."
+        },
+        {
+          "type": "paragraph",
+          "text": "A loop with random values, a fetch on every run, Date.now or live pointer input will not produce the same movie on replay. Freeze assets and input before offline rendering; reset counters and seed a local random source. For explicit looping, keep the loop’s cancellation condition under its owner, and never launch an unbounded queue of unawaited plays. See [scene testing](/testing-scenes) for key-frame and input checks."
+        }
+      ]
+    },
+    {
+      "id": "continue-learning",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Continue learning"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Continue with [Load assets once and make exports reproducible](/asset-workflows)."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow the guides in order using Previous and Next, or browse [Tutorials](/tutorials) for a practical lesson."
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    "[Animation and asynchronous choreography](/animation)"
+  ]
+}

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procedural Fish SVG</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #080c14;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow: hidden;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #fps {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: #94a3b8;
+            font-family: monospace;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 100;
+        }
+        header { position: absolute; top: 24px; left: 24px; pointer-events: none; z-index: 100; }
+        h1 { margin: 0; font-size: clamp(18px, 2vw, 26px); font-weight: 500; letter-spacing: -0.5px; }
+        p { margin: 8px 0 0; color: #94a3b8; font-size: 12px; line-height: 1.5; }
+        @media (max-width: 560px) { header { top: 20px; left: 20px; right: 20px; } #fps { top: auto; bottom: 20px; right: 20px; } }
+    </style>
+</head>
+
+<body>
+    <header><h1>Flowing forms</h1><p>1,500 procedural fish · move the pointer to guide the amber fish</p></header>
+    <div id="fps">FPS: 0</div>
+    <svg id="canvas">
+        <!-- scene centered with a small zoom factor -->
+        <g id="scene"></g>
+    </svg>
+
+    <script>
+        let sceneScale = 1.5;
+
+        class Vec2 {
+            constructor(x = 0, y = 0) {
+                this.x = x;
+                this.y = y;
+            }
+            add(v) { return new Vec2(this.x + v.x, this.y + v.y); }
+            sub(v) { return new Vec2(this.x - v.x, this.y - v.y); }
+            mag() { return Math.hypot(this.x, this.y); }
+            normalize(len = 1) {
+                const m = this.mag();
+                if (m === 0) return new Vec2(this.x, this.y);
+                return new Vec2((this.x / m) * len, (this.y / m) * len);
+            }
+            angle() { return Math.atan2(this.y, this.x); }
+            rotate(a) {
+                const cos = Math.cos(a);
+                const sin = Math.sin(a);
+                return new Vec2(this.x * cos - this.y * sin, this.x * sin + this.y * cos);
+            }
+        }
+
+        const directionAngle = (a, b) => b.sub(a).angle();
+
+        const clampAngle = (angle, refAngle, maxDelta) => {
+            let delta = angle - refAngle;
+            while (delta > Math.PI) delta -= 2 * Math.PI;
+            while (delta < -Math.PI) delta += 2 * Math.PI;
+            if (delta > maxDelta) delta = maxDelta;
+            if (delta < -maxDelta) delta = -maxDelta;
+            return refAngle + delta;
+        };
+
+        // Simplex Noise (2D) implementation
+        const F2 = 0.5 * (Math.sqrt(3.0) - 1.0);
+        const G2 = (3.0 - Math.sqrt(3.0)) / 6.0;
+        const p = new Uint8Array(256);
+        // Predefined seed for consistency like in Retiam (seed 42)
+        let seed = 42;
+        function random() {
+            let x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+        for (let i = 0; i < 256; i++) p[i] = Math.floor(random() * 256);
+        const perm = new Uint8Array(512);
+        const permMod12 = new Uint8Array(512);
+        for (let i = 0; i < 512; i++) {
+            perm[i] = p[i & 255];
+            permMod12[i] = (perm[i] % 12);
+        }
+
+        function dot(g, x, y) {
+            const grad3 = [
+                [1, 1, 0], [-1, 1, 0], [1, -1, 0], [-1, -1, 0],
+                [1, 0, 1], [-1, 0, 1], [1, 0, -1], [-1, 0, -1],
+                [0, 1, 1], [0, -1, 1], [0, 1, -1], [0, -1, -1]
+            ];
+            return grad3[g][0] * x + grad3[g][1] * y;
+        }
+
+        function sample2D(xin, yin) {
+            let n0, n1, n2;
+            const s = (xin + yin) * F2;
+            const i = Math.floor(xin + s);
+            const j = Math.floor(yin + s);
+            const t = (i + j) * G2;
+            const X0 = i - t;
+            const Y0 = j - t;
+            const x0 = xin - X0;
+            const y0 = yin - Y0;
+
+            let i1, j1;
+            if (x0 > y0) { i1 = 1; j1 = 0; }
+            else { i1 = 0; j1 = 1; }
+
+            const x1 = x0 - i1 + G2;
+            const y1 = y0 - j1 + G2;
+            const x2 = x0 - 1.0 + 2.0 * G2;
+            const y2 = y0 - 1.0 + 2.0 * G2;
+
+            const ii = i & 255;
+            const jj = j & 255;
+            const gi0 = permMod12[ii + perm[jj]];
+            const gi1 = permMod12[ii + i1 + perm[jj + j1]];
+            const gi2 = permMod12[ii + 1 + perm[jj + 1]];
+
+            let t0 = 0.5 - x0 * x0 - y0 * y0;
+            if (t0 < 0) n0 = 0.0;
+            else {
+                t0 *= t0;
+                n0 = t0 * t0 * dot(gi0, x0, y0);
+            }
+
+            let t1 = 0.5 - x1 * x1 - y1 * y1;
+            if (t1 < 0) n1 = 0.0;
+            else {
+                t1 *= t1;
+                n1 = t1 * t1 * dot(gi1, x1, y1);
+            }
+
+            let t2 = 0.5 - x2 * x2 - y2 * y2;
+            if (t2 < 0) n2 = 0.0;
+            else {
+                t2 *= t2;
+                n2 = t2 * t2 * dot(gi2, x2, y2);
+            }
+
+            return 70.0 * (n0 + n1 + n2);
+        }
+
+        const scene = document.getElementById("scene");
+
+        function drawSpline(points) {
+            if (points.length === 0) return "";
+            let d = `M ${points[0].x} ${points[0].y}`;
+
+            for (let i = 0; i < points.length; i++) {
+                const p0 = points[(i - 1 + points.length) % points.length];
+                const p1 = points[i];
+                const p2 = points[(i + 1) % points.length];
+                const p3 = points[(i + 2) % points.length];
+
+                const cp1x = p1.x + (p2.x - p0.x) / 6;
+                const cp1y = p1.y + (p2.y - p0.y) / 6;
+                const cp2x = p2.x - (p3.x - p1.x) / 6;
+                const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+                d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+            }
+            return d;
+        }
+
+        function createFish(n, rScale, bodyColor, strokeColor, strokeWidth, scale, startX, startY) {
+            const ds = [];
+            const baseSizes = [2.0, 3.0, 2.8, 2.2, 1.4, 0.5];
+            for (let i = 0; i < n; i++) {
+                ds.push((baseSizes[i % baseSizes.length] || ((n - i) * 0.5)) * scale);
+            }
+            const r = rScale * scale;
+            const dots = [];
+            for (let i = 0; i < n; i++) {
+                dots.push({
+                    pos: new Vec2(startX + r * 2 * i, startY),
+                    rot: 0
+                });
+            }
+
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("fill", bodyColor);
+            path.setAttribute("stroke", strokeColor);
+            path.setAttribute("stroke-width", strokeWidth * scale);
+            path.setAttribute("stroke-linejoin", "round");
+            path.setAttribute("stroke-linecap", "round");
+            scene.appendChild(path);
+
+            return { dots, ds, n, r, path };
+        }
+
+        function updateFishChain(fish, maxAngle) {
+            const { dots, ds, n, r, path } = fish;
+
+            for (let i = 1; i < n; i++) {
+                const diff = dots[i].pos.sub(dots[i - 1].pos).normalize(r);
+                dots[i].pos = dots[i - 1].pos.add(diff);
+            }
+
+            for (let i = 2; i < n; i++) {
+                const prevAngle = directionAngle(dots[i - 2].pos, dots[i - 1].pos);
+                const currAngle = directionAngle(dots[i - 1].pos, dots[i].pos);
+                const clamped = clampAngle(currAngle, prevAngle, maxAngle);
+                if (clamped !== currAngle) {
+                    dots[i].pos = dots[i - 1].pos.add(new Vec2(Math.cos(clamped) * r, Math.sin(clamped) * r));
+                }
+            }
+
+            dots[0].rot = directionAngle(dots[0].pos, dots[1].pos);
+            for (let i = 1; i < n - 1; i++) {
+                dots[i].rot = directionAngle(dots[i - 1].pos, dots[i + 1].pos);
+            }
+            dots[n - 1].rot = directionAngle(dots[n - 2].pos, dots[n - 1].pos);
+
+            const points1 = [];
+            const points2 = [];
+
+            let angle = dots[0].rot;
+            let offset = new Vec2(-ds[0], 0).rotate(angle);
+            points2.push(dots[0].pos.add(offset));
+
+            for (let i = 0; i < n; i++) {
+                const a = dots[i].rot;
+                const o1 = new Vec2(0, ds[i]).rotate(a);
+                const o2 = new Vec2(0, -ds[i]).rotate(a);
+                points1.push(dots[i].pos.add(o1));
+                points2.push(dots[i].pos.add(o2));
+            }
+
+            angle = dots[n - 1].rot;
+            offset = new Vec2(ds[n - 1], 0).rotate(angle);
+            points2.push(dots[n - 1].pos.add(offset));
+
+            path.setAttribute("d", drawSpline([...points1, ...points2.reverse()]));
+        }
+
+        const maxAngle = Math.PI / 4;
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            sceneScale = Math.min(1.5, (width - 40) / 640, (height - 140) / 460);
+            scene.setAttribute("transform", `translate(${width / 2}, ${height / 2 + 20}) scale(${sceneScale})`);
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        // 1. Hero fish
+        const hero = createFish(6, 4, "#f59e0b", "#fde68a", 0.3, 1.4, 0, 0);
+
+        // 2. Schooling fish
+        const SCHOOL_COUNT = 1500;
+        const schoolFish = [];
+        const fishColors = [
+            { r: 56, g: 189, b: 248 },
+            { r: 34, g: 211, b: 238 },
+            { r: 96, g: 165, b: 250 }
+        ];
+
+        for (let i = 0; i < SCHOOL_COUNT; i++) {
+            const scale = 0.35 + Math.random() * 0.35;
+            const colorObj = fishColors[i % fishColors.length];
+            const fillC = `rgb(${colorObj.r}, ${colorObj.g}, ${colorObj.b})`;
+            const startX = (Math.random() - 0.5) * 560;
+            const startY = (Math.random() - 0.5) * 360;
+
+            const fish = createFish(6, 4, fillC, "#bae6fd", 0.2, scale, startX, startY);
+            fish.path.setAttribute("opacity", "0.55");
+            schoolFish.push(fish);
+        }
+        scene.appendChild(hero.path);
+
+        // 3. GPU Instanced background fish (mapped to SVG ellipses)
+        const INSTANCE_COUNT = 200;
+        const particles = [];
+
+        for (let i = 0; i < INSTANCE_COUNT; i++) {
+            const el = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+            const s = 0.5 + Math.random() * 1.5;
+            el.setAttribute("rx", 1.2 * s * 1.5);
+            el.setAttribute("ry", 1.2 * s);
+
+            const hue = Math.floor((0.5 + Math.random() * 0.15) * 360);
+            const sat = Math.floor((0.4 + Math.random() * 0.4) * 100);
+            const lum = Math.floor((0.3 + Math.random() * 0.4) * 100);
+            const alpha = 0.4 + Math.random() * 0.4;
+            el.setAttribute("fill", `hsla(${hue}, ${sat}%, ${lum}%, ${alpha})`);
+
+            // To make particles render behind the fishes, let's insert them before the paths.
+            scene.insertBefore(el, scene.firstChild);
+
+            particles.push({
+                el,
+                x: (Math.random() - 0.5) * 600,
+                y: (Math.random() - 0.5) * 400,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3
+            });
+        }
+
+        let targetMouse = new Vec2(0, 0);
+        document.addEventListener("mousemove", (e) => {
+            targetMouse.x = (e.clientX - width / 2) / sceneScale;
+            targetMouse.y = (e.clientY - height / 2 - 20) / sceneScale;
+        });
+
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
+        const fpsElement = document.getElementById("fps");
+
+        function loop(time) {
+            const t = time * 0.001;
+
+            // Hero fish update
+            hero.dots[0].pos.x += (targetMouse.x - hero.dots[0].pos.x) * 0.1;
+            hero.dots[0].pos.y += (targetMouse.y - hero.dots[0].pos.y) * 0.1;
+            updateFishChain(hero, maxAngle);
+
+            // School fish update
+            for (let si = 0; si < SCHOOL_COUNT; si++) {
+                const f = schoolFish[si];
+                const head = f.dots[0].pos;
+
+                const nx = sample2D(head.x * 0.008 + t * 0.3, head.y * 0.008 + si * 10) * 0.6;
+                const ny = sample2D(head.x * 0.008 + 100 + si * 10, head.y * 0.008 + t * 0.3) * 0.6;
+
+                f.dots[0].pos = head.add(new Vec2(nx, ny));
+                updateFishChain(f, maxAngle);
+            }
+
+            // Particles update
+            for (let i = 0; i < INSTANCE_COUNT; i++) {
+                const p = particles[i];
+
+                const fx = sample2D(p.x * 0.005 + t * 0.2, p.y * 0.005 + i * 0.1) * 0.015;
+                const fy = sample2D(p.x * 0.005 + 50, p.y * 0.005 + t * 0.2 + i * 0.1) * 0.015;
+
+                p.vx = p.vx * 0.98 + fx;
+                p.vy = p.vy * 0.98 + fy;
+
+                const speed = Math.hypot(p.vx, p.vy);
+                if (speed > 0.5) { p.vx *= 0.5 / speed; p.vy *= 0.5 / speed; }
+
+                p.x += p.vx;
+                p.y += p.vy;
+
+                p.el.setAttribute("transform", `translate(${p.x}, ${p.y}) rotate(${Math.atan2(p.vy, p.vx) * 180 / Math.PI})`);
+            }
+
+            frameCount++;
+            if (time - lastFpsTime >= 1000) {
+                fpsElement.textContent = `FPS: ${frameCount}`;
+                frameCount = 0;
+                lastFpsTime = time;
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
+
+    </script>
+</body>
+
+</html>
