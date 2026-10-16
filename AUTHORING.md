@@ -33,19 +33,18 @@ Set the Retiam CDN module URL in `content/config.json`:
 
 ```json
 {
-  "cdnUrl": "https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js"
+  "cdnUrl": "https://cdn.jsdelivr.net/npm/retiam@latest/dist/retiam.es.min.js"
 }
 ```
 
-Local previews and deployed pages use this published module. Keep its version in
-sync with the pinned `retiam` development dependency. The example viewer's import map
+Local previews and deployed pages use this published module. Keep the module compatible with the installed `retiam` development dependency. The example viewer's import map
 also resolves sublibraries such as `retiam/charts` under the engine URL's directory.
 The documentation treats this module as an external dependency and does not compare
 source hashes or require the CDN to come from the same repository checkout.
 
 Run `npm run dev` to preview the docs using the public CDN. To test an unpublished
 engine build, temporarily set `cdnUrl` to its local module URL and enable CORS for
-the documentation origin. Restore the pinned public URL before deploying. Rebuild
+the documentation origin. Restore the public CDN URL before deploying. Rebuild
 the docs after changing the URL; the development server watches this setting
 automatically.
 
@@ -519,7 +518,7 @@ library assets from the engine CDN; explicit MSDF descriptors and their atlases
 used by a demo remain generated documentation assets. Demos with setup requirements
 start only after an explicit Run and explain missing service configuration.
 The viewer imports the engine and sublibraries from `cdnUrl`, which points to the
-published Retiam 1.0.0 release on jsDelivr. Editor drafts are saved
+configured published Retiam release on jsDelivr. Editor drafts are saved
 in browser storage under the example ID and a hash of its canonical source. They
 survive navigation and reloads; a changed canonical file starts a new draft revision.
 Reset Code clears that revision's draft and returns to the canonical file. If

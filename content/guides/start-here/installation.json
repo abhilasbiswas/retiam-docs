@@ -75,10 +75,8 @@
           "code": "npx create-retiam@latest my-animation"
         },
         {
-          "type": "callout",
-          "variant": "info",
-          "title": "Workflow versions",
-          "content": "The complete generated config.js and rendering workflow described here requires create-retiam 1.0.2 or newer and Retiam 1.0.1 or newer. The generator and engine are released separately."
+          "type": "paragraph",
+          "text": "Generated package.json files declare \"retiam\": \"latest\". The initial install resolves npm’s latest engine release. The package manager’s lockfile records the installed version, so later installs can reproduce that project until you update its dependencies."
         },
         {
           "type": "paragraph",
@@ -155,7 +153,7 @@
         },
         {
           "type": "paragraph",
-          "text": "Run CLI commands from this project folder, alongside package.json and config.js. Retiam 1.0.1 includes Puppeteer and RoughJS as required production dependencies. Video rendering also needs an installed Chrome with WebGPU support and FFmpeg on PATH."
+          "text": "Run CLI commands from this project folder, alongside package.json and config.js. Retiam includes Puppeteer and RoughJS as required production dependencies. Video rendering also needs an installed Chrome with WebGPU support and FFmpeg on PATH."
         },
         {
           "type": "code",
@@ -351,16 +349,16 @@
         },
         {
           "type": "paragraph",
-          "text": "Load the published ES module directly in a browser when you want a live scene without installing Retiam in that page. This is how the documentation’s editable examples load the engine. Retiam 1.0.0 is available at https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js."
+          "text": "Load the published ES module directly in a browser when you want a live scene without installing Retiam in that page. This is how the documentation’s editable examples load the engine. The latest Retiam release is available at https://cdn.jsdelivr.net/npm/retiam@latest/dist/retiam.es.min.js."
         },
         {
           "type": "paragraph",
-          "text": "This route runs JavaScript directly in the browser and needs no Retiam npm install or project generator. Use an import map to pin the engine and any sublibraries to the same package version. Serve the page over HTTPS or localhost with a WebGPU-capable browser."
+          "text": "This route runs JavaScript directly in the browser and needs no Retiam npm install or project generator. Use an import map to load the engine and any sublibraries through the same release tag. Serve the page over HTTPS or localhost with a WebGPU-capable browser."
         },
         {
           "type": "code",
           "language": "html",
-          "code": "<div style=\"height:540px\">\n  <canvas id=\"canvas\" style=\"display:block;width:100%;height:100%\"></canvas>\n</div>\n<script type=\"importmap\">\n{\n  \"imports\": {\n    \"retiam\": \"https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js\",\n    \"retiam/charts\": \"https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/libs/charts/index.js\"\n  }\n}\n</script>\n<script type=\"module\">\n  import { Scene, Circle, Create, CameraModel, hex } from \"retiam\";\n\n  class BrowserScene extends Scene {\n    async run() {\n      this.camera.model = CameraModel.ORTHOGRAPHIC;\n      this.camera.orthoScale = 12;\n      this.camera.position.set([0, 0, 20]);\n      this.camera.lookAt([0, 0, 0]);\n      const circle = new Circle(1, { fill: hex(\"#38BDF8\") });\n      this.add(circle);\n      await this.play(new Create(circle, { duration: 1200 }));\n      await this.wait(1000);\n    }\n  }\n\n  const scene = new BrowserScene();\n  scene.start(document.querySelector(\"#canvas\")).catch(console.error);\n</script>"
+          "code": "<div style=\"height:540px\">\n  <canvas id=\"canvas\" style=\"display:block;width:100%;height:100%\"></canvas>\n</div>\n<script type=\"importmap\">\n{\n  \"imports\": {\n    \"retiam\": \"https://cdn.jsdelivr.net/npm/retiam@latest/dist/retiam.es.min.js\",\n    \"retiam/charts\": \"https://cdn.jsdelivr.net/npm/retiam@latest/dist/libs/charts/index.js\"\n  }\n}\n</script>\n<script type=\"module\">\n  import { Scene, Circle, Create, CameraModel, hex } from \"retiam\";\n\n  class BrowserScene extends Scene {\n    async run() {\n      this.camera.model = CameraModel.ORTHOGRAPHIC;\n      this.camera.orthoScale = 12;\n      this.camera.position.set([0, 0, 20]);\n      this.camera.lookAt([0, 0, 0]);\n      const circle = new Circle(1, { fill: hex(\"#38BDF8\") });\n      this.add(circle);\n      await this.play(new Create(circle, { duration: 1200 }));\n      await this.wait(1000);\n    }\n  }\n\n  const scene = new BrowserScene();\n  scene.start(document.querySelector(\"#canvas\")).catch(console.error);\n</script>"
         },
         {
           "type": "paragraph",
@@ -368,7 +366,7 @@
         },
         {
           "type": "paragraph",
-          "text": "The import map pins both entries to Retiam 1.0.0 on jsDelivr, which also serves the engine’s emitted assets and sublibrary bundles with CORS enabled. Keep all entries on the same package version when upgrading. [Documentation authoring](/docs-authoring#engine-cdn) explains the documentation viewer’s configuration."
+          "text": "The import map uses the latest tag for both entries on jsDelivr, which also serves the engine’s emitted assets and sublibrary bundles with CORS enabled. Use the same release tag for all entries in the import map. [Documentation authoring](/docs-authoring#engine-cdn) explains the documentation viewer’s configuration."
         },
         {
           "type": "paragraph",
@@ -476,7 +474,7 @@
         },
         {
           "type": "paragraph",
-          "text": "The standalone retiam-docs repository prepares its own scene modules and assets, then imports Retiam from cdnUrl in content/config.json. Run npm ci and npm run dev in that project. Local previews and GitHub Pages both use https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js. The build uses the matching npm package for type checks and CLI tools. Optional speech and model services are configured under services in that file and hosted separately."
+          "text": "The standalone retiam-docs repository prepares its own scene modules and assets, then imports Retiam from cdnUrl in content/config.json. Run npm ci and npm run dev in that project. Local previews and GitHub Pages both use the configured public module URL. The build uses the installed npm package for type checks and CLI tools. Optional speech and model services are configured under services in that file and hosted separately."
         }
       ]
     },

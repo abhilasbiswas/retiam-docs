@@ -21,7 +21,7 @@ npm ci
 npm run dev
 ```
 
-Open [localhost:4000](http://localhost:4000/). This project installs and builds without a Retiam source checkout. Live scenes load the published [Retiam 1.0.0 module](https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js) configured in [content/config.json](content/config.json). Local previews use the same public CDN as the deployed site.
+Open [localhost:4000](http://localhost:4000/). This project installs and builds without a Retiam source checkout. Live scenes load the published Retiam module configured in [content/config.json](content/config.json). Local previews use the same public CDN as the deployed site.
 
 ```bash
 npm run lint
@@ -44,8 +44,7 @@ The production website is written to `dist/`. Keep generated files, dependencies
 See [AUTHORING.md](AUTHORING.md) for the content format. Edit examples and their notes together. Their media is fetched when the relevant scene runs.
 
 The getting-started guides cover `npx create-retiam@latest`, the generated Studio,
-and video rendering with the project's `config.js`. The complete configuration
-workflow targets `create-retiam@1.0.2` and `retiam@1.0.1` or newer. See
+and video rendering with the project's `config.js`. See
 [installation](content/guides/start-here/installation.json),
 [Studio and tooling](content/guides/production-and-tooling/tooling.json), and
 [rendering and export](content/guides/production-and-tooling/export.json).
@@ -56,24 +55,28 @@ It mirrors `packages/create-retiam/starter/config.js` in the engine repository;
 update the example when render defaults change. The documentation build embeds
 this local copy and needs no engine checkout.
 
+Generated projects use `"retiam": "latest"`.
+The initial install resolves npm's latest engine release, while the project's
+lockfile records the installed version. This is separate from this documentation
+site's pinned engine dependency and CDN configuration below.
+
 The public site includes documentation examples and API descriptions. It does not copy private engine implementation files or provide implementation-source downloads.
 
 ## Library version
 
-The development dependency is pinned to the published npm package `retiam@1.0.0` for declarations and CLI checks. Live examples use the matching version on jsDelivr.
+The development dependency supplies Retiam declarations and CLI checks. Live examples use the module URL configured in `content/config.json`.
 
-When upgrading Retiam, replace `1.0.0` with the new version and pin it:
+To update the development dependency to the latest published engine and record its resolved version:
 
 ```bash
-npm install --save-dev --save-exact retiam@1.0.0
+npm install --save-dev --save-exact retiam@latest
 ```
 
-Update `content/config.json` to the matching version-pinned CDN module URL, commit it with `package.json` and `package-lock.json`, and redeploy.
+Update `content/config.json` to the matching public CDN module URL, commit it with `package.json` and `package-lock.json`, and redeploy.
 
 Publish the required engine release before pointing the documentation runtime
-or a `create-retiam` starter at that version. Guides state minimum versions for
-new CLI and generator features; the live example runtime uses the pinned version
-described above.
+or a `create-retiam` starter at that release. Guides describe the current workflow;
+the live example runtime uses the configured engine module.
 
 API metadata is checked in so routine builds need no engine source. After an engine release, a maintainer with source access can refresh it explicitly:
 

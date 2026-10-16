@@ -5,7 +5,7 @@ This is a standalone Vite/React application. Publish only `dist/`. Its editable 
 ## GitHub Pages
 
 1. Create a public repository named `retiam-docs` and push this project to it.
-2. Keep `cdnUrl` in `content/config.json` set to `https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js`, matching the pinned npm dependency. jsDelivr serves its sublibraries, chunks, and assets at their original relative paths.
+2. Set `cdnUrl` in `content/config.json` to the published Retiam module URL, such as `https://cdn.jsdelivr.net/npm/retiam@latest/dist/retiam.es.min.js`, and keep it consistent with the installed engine. jsDelivr serves its sublibraries, chunks, and assets at their original relative paths.
 3. Open **Settings → Pages → Build and deployment** and set **Source → GitHub Actions**.
 4. Push to `main` or run **Actions → Documentation Pages → Run workflow**.
 5. Wait for the `build` and `deploy` jobs. The expected site is `https://abhilasbiswas.github.io/retiam-docs/`.
@@ -58,7 +58,7 @@ Optional public service configuration belongs in `content/config.json`:
 
 ```json
 {
-  "cdnUrl": "https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js",
+  "cdnUrl": "https://cdn.jsdelivr.net/npm/retiam@latest/dist/retiam.es.min.js",
   "services": {
     "msedgeEndpoint": "https://speech.example.org/api/tts/msedge"
   }
