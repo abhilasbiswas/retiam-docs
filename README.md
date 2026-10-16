@@ -4,6 +4,14 @@ Standalone React documentation, tutorials, API reference, and editable examples 
 
 **[Read the documentation](https://abhilasbiswas.github.io/retiam-docs/)**
 
+The handbook covers all three application workflows:
+
+| Workflow | Guide |
+| --- | --- |
+| Create a TypeScript project with Studio, render video and capture snapshots | [Project setup](https://abhilasbiswas.github.io/retiam-docs/installation/#create-with-studio) and [rendering](https://abhilasbiswas.github.io/retiam-docs/export/#cli-preview-and-final-render) |
+| Run a scene directly in a browser through jsDelivr | [CDN import-map example](https://abhilasbiswas.github.io/retiam-docs/installation/#use-the-cdn) |
+| Build a web component and host it on another website | [Independent npm embed recipe](https://abhilasbiswas.github.io/retiam-docs/export/#embed-from-npm) |
+
 ## Development
 
 Use Node.js 24.
@@ -35,6 +43,19 @@ The production website is written to `dist/`. Keep generated files, dependencies
 
 See [AUTHORING.md](AUTHORING.md) for the content format. Edit examples and their notes together. Their media is fetched when the relevant scene runs.
 
+The getting-started guides cover `npx create-retiam@latest`, the generated Studio,
+and video rendering with the project's `config.js`. The complete configuration
+workflow targets `create-retiam@1.0.2` and `retiam@1.0.1` or newer. See
+[installation](content/guides/start-here/installation.json),
+[Studio and tooling](content/guides/production-and-tooling/tooling.json), and
+[rendering and export](content/guides/production-and-tooling/export.json).
+
+The full config example lives in
+[content/playgrounds/render-config.js](content/playgrounds/render-config.js).
+It mirrors `packages/create-retiam/starter/config.js` in the engine repository;
+update the example when render defaults change. The documentation build embeds
+this local copy and needs no engine checkout.
+
 The public site includes documentation examples and API descriptions. It does not copy private engine implementation files or provide implementation-source downloads.
 
 ## Library version
@@ -48,6 +69,11 @@ npm install --save-dev --save-exact retiam@1.0.0
 ```
 
 Update `content/config.json` to the matching version-pinned CDN module URL, commit it with `package.json` and `package-lock.json`, and redeploy.
+
+Publish the required engine release before pointing the documentation runtime
+or a `create-retiam` starter at that version. Guides state minimum versions for
+new CLI and generator features; the live example runtime uses the pinned version
+described above.
 
 API metadata is checked in so routine builds need no engine source. After an engine release, a maintainer with source access can refresh it explicitly:
 

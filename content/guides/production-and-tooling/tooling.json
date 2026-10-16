@@ -3,7 +3,7 @@
   "id": "tooling",
   "title": "CLI, scripts and Studio",
   "group": "Assets and export",
-  "summary": "Use the CLI and project scripts to inspect, lint, preview, render and package scenes.",
+  "summary": "Create a Studio project, edit and preview scenes, configure CLI rendering, and use the project and engine scripts.",
   "sections": [
     {
       "id": "command-reference",
@@ -22,8 +22,14 @@
           "rows": [
             {
               "cells": [
-                "retiam scaffold / init",
-                "[file], --template math/geometry/physics/3d/minimal, --force, --json"
+                "npx create-retiam@latest [directory]",
+                "--title, --pm npm|pnpm|yarn|bun, --no-install, --no-start, --no-open; installs and opens a Studio project"
+              ]
+            },
+            {
+              "cells": [
+                "npx retiam init / create [directory]",
+                "--name, --title, --pm, --force, --yes, --install, --git, --json; the engine CLI’s basic project scaffolder"
               ]
             },
             {
@@ -41,7 +47,7 @@
             {
               "cells": [
                 "retiam render",
-                "[file], width/height/fps/duration/out, raytrace/no-raytrace, denoiser/raw, replay"
+                "[file], --width/--height/--fps/--duration/--out, --raytrace/--no-raytrace, --denoiser/--raw, --replay; reads project config.js, with retiam.config.js taking priority"
               ]
             },
             {
@@ -60,7 +66,70 @@
         },
         {
           "type": "paragraph",
-          "text": "Static lint catches a limited set of scene structure, async timing, dangling entity, coordinate and foreign-API patterns. Passing lint is not a TypeScript or GPU runtime proof. Some bundled scaffold templates retain old option names, so type-check the generated scene against this checkout before using it as a production template."
+          "text": "Use create-retiam for the project with Studio and the complete render config. The engine’s init/create command is a separate basic scaffolder. Static lint catches a limited set of structure, async timing, entity and foreign-API patterns; also run the project’s TypeScript check and verify the result in a browser."
+        }
+      ]
+    },
+    {
+      "id": "project-scripts",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Generated project scripts"
+        },
+        {
+          "type": "paragraph",
+          "text": "Run these scripts inside a project created with create-retiam. The generator installs dependencies and starts dev by default; --no-start performs the install without launching, and --no-install only creates files."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Command",
+            "Purpose"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "npm run dev",
+                "Prepare local Monaco/TypeScript assets, start Vite and open Studio."
+              ]
+            },
+            {
+              "cells": [
+                "npm run check",
+                "Type-check scene and host code."
+              ]
+            },
+            {
+              "cells": [
+                "npm run lint:scene",
+                "Run the Retiam scene linter on src/scenes/Retiam.ts."
+              ]
+            },
+            {
+              "cells": [
+                "npm run build",
+                "Type-check, prepare editor assets and build the plain canvas and Studio entries."
+              ]
+            },
+            {
+              "cells": [
+                "npm run preview",
+                "Preview the built Studio. Saving and evaluating edits require the development server."
+              ]
+            },
+            {
+              "cells": [
+                "npx retiam render src/scenes/Retiam.ts",
+                "Render video using config.js."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "See [project creation](/installation#create-with-studio) for the generated files and options, and [render configuration](/export#render-configuration) for all defaults and CLI overrides."
         }
       ]
     },
@@ -70,7 +139,7 @@
         {
           "type": "heading",
           "level": 2,
-          "text": "Root scripts"
+          "text": "Engine repository scripts"
         },
         {
           "type": "table",
@@ -123,12 +192,6 @@
             },
             {
               "cells": [
-                "scaffold",
-                "node ./bin/cli.js scaffold"
-              ]
-            },
-            {
-              "cells": [
                 "cdn",
                 "vite preview"
               ]
@@ -168,6 +231,36 @@
                 "gen-index",
                 "node ./tools/index_generator/generate-index.cjs"
               ]
+            },
+            {
+              "cells": [
+                "init / create",
+                "node ./bin/cli.js init / create"
+              ]
+            },
+            {
+              "cells": [
+                "test:distribution",
+                "Check package contents, portable assets and render configuration."
+              ]
+            },
+            {
+              "cells": [
+                "test:create",
+                "Check the packed project generator."
+              ]
+            },
+            {
+              "cells": [
+                "test:studio-layout",
+                "Check Studio layout and divider behavior in a browser."
+              ]
+            },
+            {
+              "cells": [
+                "prepack",
+                "Build the engine before npm pack or npm publish."
+              ]
             }
           ]
         },
@@ -187,15 +280,23 @@
         },
         {
           "type": "paragraph",
-          "text": "studio/index.html hosts the editor, inspector, scene preview, sidebar and playback controls. The viewer page runs scene code with Vite-supported imports. Monaco and AST utilities identify values under the cursor; the inspector can tune geometry, vectors, color, easing and other supported patterns. It is a repository application, separate from the documentation viewer."
+          "text": "Studio is available in generated projects and in the engine repository at studio/index.html. It provides a Monaco source editor, live scene preview, inspectors and playback controls. Generated projects use their installed npm engine and their own Studio files. The documentation viewer is a separate application."
         },
         {
           "type": "paragraph",
-          "text": "Use Studio for iteration, then lint/type-check and capture keyframes with the target rendering settings. State preservation helps editing but can hide initialization problems; verify a fresh start before recording a final result."
+          "text": "The editor starts below the preview. Drag the divider to resize the preview and editor, or dock the editor on the left or right with the layout control. Studio remembers your layout. In a generated single-scene project, the navigation and search are hidden; adding more Scene files under src/scenes/ and reloading reveals the browser."
         },
         {
           "type": "paragraph",
-          "text": "Studio implementation modules are cataloged on the [project map](/project-map)."
+          "text": "Edit src/scenes/Retiam.ts, then press Run or Ctrl/Command+Enter to apply and save changes through the development server. Inspectors tune supported geometry, vector, color and easing expressions. Turn off Preserve State to check the animation from a fresh start."
+        },
+        {
+          "type": "paragraph",
+          "text": "Use npm run dev for editing and npm run preview for the built playback experience. Lint, type-check and inspect keyframes before a final CLI render. config.js supplies CLI render settings; use [the full reference](/export#render-configuration) to set output size, fps and rendering features."
+        },
+        {
+          "type": "paragraph",
+          "text": "Updating the generator affects new projects. Existing projects keep their own Studio copy; update those files deliberately when adopting Studio fixes. Studio implementation modules are cataloged on the [project map](/project-map)."
         }
       ]
     },

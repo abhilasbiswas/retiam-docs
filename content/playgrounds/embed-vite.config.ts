@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
+    target: 'es2022',
     outDir: 'outputs/embed',
     lib: {
       entry: 'src/embed.ts',

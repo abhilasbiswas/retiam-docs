@@ -15,11 +15,11 @@
         },
         {
           "type": "paragraph",
-          "text": "The main Retiam workflow is to install the engine in your own npm project, write a Scene and generate an animation video. Keep scene source and assets in that project, preview the choreography, then render at your chosen resolution and frame rate. [Installation](/installation#create-a-consumer-application) provides a complete project and browser host."
+          "text": "Create a [Studio project](/installation#create-with-studio), write your Scene, preview the choreography and render video using config.js. The generator includes the canvas host, local Studio and render defaults. [Manual npm setup](/installation#create-a-consumer-application) is available for existing applications."
         },
         {
           "type": "paragraph",
-          "text": "The CLI launches a headless browser to execute the scene and sends captured frames to FFmpeg for encoding. It serves the calling project’s index.html and passes the selected scene through the file query parameter. The host must load that scene, as the installation example does; the CLI does not create that entry for you."
+          "text": "The CLI serves the calling project’s index.html, launches a headless browser and sends captured frames to FFmpeg. The generated host starts src/scenes/Retiam.ts. A custom host can load other scene paths from the CLI’s file query parameter, as shown in the manual installation guide."
         },
         {
           "type": "list",
@@ -29,6 +29,44 @@
             "Preview locally and check geometry, framing and timing.",
             "Render a short draft with explicit dimensions, FPS and maximum duration.",
             "Inspect the video, then increase output quality for the final render."
+          ]
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Output",
+            "Workflow",
+            "Receiving environment"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "MP4 video",
+                "[CLI render with config.js](/export#cli-preview-and-final-render)",
+                "Ordinary video playback; no Retiam runtime needed."
+              ]
+            },
+            {
+              "cells": [
+                "PNG preview images",
+                "npx retiam snapshot with --times in seconds",
+                "Static images."
+              ]
+            },
+            {
+              "cells": [
+                "Live CDN page",
+                "[Versioned browser import map](/installation#use-the-cdn)",
+                "WebGPU, the CDN modules and the scene’s media/services."
+              ]
+            },
+            {
+              "cells": [
+                "Independent web component",
+                "[npm/Vite embed build](/export#embed-from-npm)",
+                "WebGPU and the hosted output files; no separate engine CDN."
+              ]
+            }
           ]
         }
       ]
@@ -92,25 +130,33 @@
         },
         {
           "type": "paragraph",
-          "text": "Run these commands from the external animation project. In this checkout, the CLI also imports Vite, Puppeteer, ws and cli-progress; install the missing tools in the project. FFmpeg must be available on PATH, and the render command launches an installed Chrome browser with WebGPU enabled."
+          "text": "Run the following from a generated project folder containing package.json and config.js. Retiam 1.0.1 and later install Puppeteer, Vite, ws and cli-progress as required production dependencies; RoughJS is included for retiam/rough. Chrome must support WebGPU, and FFmpeg must be available on PATH."
         },
         {
           "type": "code",
           "language": "bash",
-          "code": "npm install --save-dev vite puppeteer ws cli-progress\nnpx retiam lint scenes/MyScene.ts --json\nnpx retiam render scenes/MyScene.ts -w 1280 -h 720 -f 30 -d 4000 -o outputs/video"
+          "code": "cd my-animation\nnpm run check\nnpx retiam lint src/scenes/Retiam.ts --json\nnpx retiam render src/scenes/Retiam.ts"
+        },
+        {
+          "type": "paragraph",
+          "text": "The render uses config.js without additional flags. With the generated defaults, the four-second starter produces a timestamped MP4 under outputs/video. For a smaller draft, override the dimensions and frame rate:"
         },
         {
           "type": "code",
           "language": "bash",
-          "code": "npx retiam snapshot scenes/MyScene.ts --times 1.0,2.2,3.0 --json\nnpx retiam render scenes/MyScene.ts -w 1920 -h 1080 -f 60 -d 4000 -o outputs/video"
+          "code": "npx retiam render src/scenes/Retiam.ts -w 1280 -h 720 -f 30 -d 4000\nnpx retiam snapshot src/scenes/Retiam.ts --times 1.0,2.2,3.0 --json"
         },
         {
           "type": "paragraph",
-          "text": "Render duration is milliseconds; snapshot --times is seconds. --out is an output directory, not an MP4 filename. Snapshot currently writes PNG files and does not implement a --format flag. Render output filenames contain a timestamp."
+          "text": "In a manually created project, replace src/scenes/Retiam.ts with the scene path used by its host, such as scenes/MyScene.ts. Use npm install retiam@1.0.1 to upgrade an older project before using the complete config workflow."
         },
         {
           "type": "paragraph",
-          "text": "The four-second installation scene produces a timestamped video in outputs/video. The maximum duration also bounds scenes with loops or ongoing updates. Keep a final hold in the choreography when the last state needs reading time. Snapshot currently waits by wall-clock time after loading the page and captures the viewport; its timestamps are approximate preview checks, not deterministic offline keyframes."
+          "text": "Render duration is milliseconds; snapshot --times is seconds. --out selects a directory. Snapshot writes PNG files; its wall-clock timing gives approximate preview checks. Render filenames include a timestamp."
+        },
+        {
+          "type": "paragraph",
+          "text": "maxDuration: 0 renders until the scene finishes. Set a positive millisecond limit for scenes with loops or ongoing updates, and keep a final hold when the last state needs reading time. Inspect the exported video for its first frame, transitions, final state and audio."
         }
       ]
     },
@@ -123,18 +169,115 @@
           "text": "Render configuration"
         },
         {
-          "type": "code",
-          "language": "javascript",
-          "code": "export default {\n  width: 1920, height: 1080, fps: 60,\n  maxDuration: 12000,\n  videoBitrate: \"20M\",\n  outputDir: \"outputs/video\",\n  outputFormat: \"mp4\",\n  raytraceEnabled: false,\n  AA: 2, sample_count: 4\n};"
+          "type": "paragraph",
+          "text": "Starting with create-retiam 1.0.2, every generated project contains config.js with all 33 CLI and engine render settings. Retiam 1.0.1 or newer forwards every supported engine field to the scene renderer. A manual project can copy the same file."
         },
         {
           "type": "paragraph",
-          "text": "Save as retiam.config.js in the calling project. bin/render.js falls back to config.js. Flags override supported values. The render script forwards a whitelist of RenderConfig fields; adding another setting to the file does not mean it will be forwarded."
+          "text": "The renderer begins with built-in defaults, loads the selected config file from the current project folder, then applies command-line overrides. If retiam.config.js exists, it takes priority over config.js. Only the selected file is loaded."
+        },
+        {
+          "type": "code",
+          "language": "javascript",
+          "codeFile": "playgrounds/render-config.js"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Setting",
+            "Default",
+            "Meaning"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "width / height",
+                "1920 / 1080",
+                "Output dimensions in pixels."
+              ]
+            },
+            {
+              "cells": [
+                "fps",
+                "60",
+                "Output frames per second."
+              ]
+            },
+            {
+              "cells": [
+                "videoBitrate",
+                "20M",
+                "Video bitrate passed to FFmpeg."
+              ]
+            },
+            {
+              "cells": [
+                "outputFormat",
+                "mp4",
+                "Output container/filename extension."
+              ]
+            },
+            {
+              "cells": [
+                "outputDir",
+                "./outputs/video",
+                "Output directory, resolved from the project root."
+              ]
+            },
+            {
+              "cells": [
+                "maxDuration",
+                "0",
+                "Maximum milliseconds; 0 runs until the scene finishes."
+              ]
+            },
+            {
+              "cells": [
+                "devServerPort / wsPort",
+                "5173 / 5001",
+                "Local HTTP and frame-transport WebSocket ports."
+              ]
+            },
+            {
+              "cells": [
+                "replayFile",
+                "null",
+                "Recorded input JSON path relative to the project root; --replay overrides it."
+              ]
+            },
+            {
+              "cells": [
+                "AA / sample_count",
+                "2 / 4",
+                "Supersampling scale and WebGPU MSAA sample count."
+              ]
+            },
+            {
+              "cells": [
+                "raytraceEnabled / denoiser",
+                "false / oidn",
+                "Raytracing is off by default; denoising is used when it is enabled."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The remaining settings control transparency layers, shadows and culling, PBR/Cel/Gooch/Clay shading, ray samples and bounces, accumulation, gamma, BVH construction and the OIDN model. The comments in the complete file list the selectable enum values. Exact contracts: [RenderConfig](/api-render#renderconfig)."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam render src/scenes/Retiam.ts -f 30 -d 4000 -o outputs/draft"
+        },
+        {
+          "type": "paragraph",
+          "text": "This command overrides fps, maxDuration and outputDir while keeping the other file settings. Partial config files also work: omitted fields use built-in defaults. These are CLI render settings; Studio’s interactive preview is controlled through its own UI and scene code."
         },
         {
           "type": "callout",
           "variant": "info",
-          "content": "The CLI imports puppeteer, ws and cli-progress, but the root manifest does not declare all of those tools as dependencies. A clean install may need those explicit tools as well as a usable Chrome and FFmpeg. See the tooling reference before configuring CI."
+          "content": "Puppeteer is a required production dependency of Retiam 1.0.1 and later. Video rendering also requires Chrome with WebGPU and FFmpeg. Native denoising additionally requires oidnDenoise; select raytraceEnabled: true and denoiser: \"native\", or pass --raytrace --raw."
         }
       ]
     },
@@ -148,7 +291,7 @@
         },
         {
           "type": "paragraph",
-          "text": "An independent embedded scene contains the exported scene and the engine code it needs. The receiving website loads the exported files and mounts a retiam-scene element; it needs no npm installation and no separate engine CDN. This delivers a running scene, while video rendering delivers an encoded video file."
+          "text": "An independent embed contains the scene and the engine code it needs. For a generated project or another external npm application, follow [the package-based recipe](/export#embed-from-npm) below. The CLI shown in this section is the repository-layout exporter, which emits a retiam-scene component."
         },
         {
           "type": "code",
@@ -182,7 +325,12 @@
         },
         {
           "type": "paragraph",
-          "text": "You can also bundle an embed directly from the external npm project in the installation guide. This route uses the package exports and Vite, so it does not depend on the repository-specific export CLI. Keep scenes/MyScene.ts from that guide and add the component entry below as src/embed.ts."
+          "text": "Bundle a scene directly from an external npm project using its installed package and Vite. Add the component entry below as src/embed.ts. The example imports scenes/MyScene.ts from manual setup; in a generated project, change the import to MyScene from \"./scenes/Retiam\". This recipe uses Vite 6, matching create-retiam; use the same version in a manually configured application."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "// Generated project: first line of src/embed.ts\nimport MyScene from \"./scenes/Retiam\";"
         },
         {
           "type": "code",
@@ -223,6 +371,14 @@
         {
           "type": "paragraph",
           "text": "Give a different scene bundle its own custom-element name. A browser registers a name once; loading two different bundles that both register my-retiam-scene does not create two selectable scene definitions. Test two instances, an element resize, and removal during startup before integrating the component into a client-side router."
+        },
+        {
+          "type": "paragraph",
+          "text": "For a CMS or blog that accepts custom HTML, host the build output on an HTTPS origin and paste the module script and custom element shown above. In React or another client-rendered application, load the module once and mount the same custom element; unmounting triggers its cleanup. Keep element dimensions explicit."
+        },
+        {
+          "type": "paragraph",
+          "text": "For a browser page that already hosts your authored code and can depend on jsDelivr, [the CDN method](/installation#use-the-cdn) avoids making a separate component bundle. Use the embed build when you want to deploy the finished scene and its emitted engine files together."
         }
       ]
     },

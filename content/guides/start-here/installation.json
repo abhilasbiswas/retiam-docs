@@ -3,7 +3,7 @@
   "id": "installation",
   "title": "Installation and project setup",
   "group": "Start here",
-  "summary": "Set up an external npm project, use the browser CDN, or prepare the documentation runtime.",
+  "summary": "Create a TypeScript project with Retiam Studio, configure video rendering, or integrate Retiam manually through npm and CDN modules.",
   "sections": [
     {
       "id": "choose-your-setup",
@@ -15,7 +15,7 @@
         },
         {
           "type": "paragraph",
-          "text": "Use Retiam as an npm library in your own project, load it through CDN modules, or export a finished scene as an independent embed. The main workflow in these guides is authoring an animation in an external npm project and generating a video. Running this documentation site is a separate repository task."
+          "text": "Create a project with create-retiam to start authoring in Studio, or integrate the npm package into an existing application. CDN modules run scenes directly in a browser, and an independent embed shares a finished scene. The animation project and this documentation site are separate applications."
         },
         {
           "type": "table",
@@ -25,6 +25,13 @@
             "What you deliver"
           ],
           "rows": [
+            {
+              "cells": [
+                "[Project generator + Studio](/installation#create-with-studio)",
+                "Start a TypeScript animation project with a live editor, preview and render config.",
+                "Scene source, a local Studio, snapshots and rendered video"
+              ]
+            },
             {
               "cells": [
                 "[npm package](/installation#create-a-consumer-application)",
@@ -51,21 +58,179 @@
       ]
     },
     {
+      "id": "create-with-studio",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Create a project with Studio"
+        },
+        {
+          "type": "paragraph",
+          "text": "Use Node.js 20.19 or newer and a browser with WebGPU support. The generator creates the project, installs its dependencies, starts Vite and opens Retiam Studio with a Write animation of “Retiam”."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx create-retiam@latest my-animation"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "Workflow versions",
+          "content": "The complete generated config.js and rendering workflow described here requires create-retiam 1.0.2 or newer and Retiam 1.0.1 or newer. The generator and engine are released separately."
+        },
+        {
+          "type": "paragraph",
+          "text": "The source editor opens below the preview. Drag the divider to resize the panes, or use the layout control to dock the editor on the left or right. Studio remembers the selected layout. Single-scene projects show the preview and editor; navigation and search appear when more scenes are added and the page reloads."
+        },
+        {
+          "type": "paragraph",
+          "text": "Edit src/scenes/Retiam.ts in your editor or Studio. Run, or Ctrl/Command+Enter, applies and saves Studio edits. Add default-exported Scene classes under src/scenes/ and reload the page to list them. Press Ctrl+C in the terminal to stop the server."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "cd my-animation\nnpm run dev"
+        },
+        {
+          "type": "paragraph",
+          "text": "Run npm run dev again whenever you want to reopen Studio. The generated files include:"
+        },
+        {
+          "type": "tree",
+          "variant": "folder",
+          "nodes": [
+            {
+              "label": "my-animation/",
+              "children": [
+                {
+                  "label": "config.js",
+                  "description": "All 33 CLI and engine render settings with defaults and comments"
+                },
+                {
+                  "label": "package.json",
+                  "description": "Project scripts and the installed Retiam dependency"
+                },
+                {
+                  "label": "index.html",
+                  "description": "Plain canvas host used by the render CLI"
+                },
+                {
+                  "label": "src/",
+                  "children": [
+                    {
+                      "label": "main.ts",
+                      "description": "Starts the starter scene on the plain canvas"
+                    },
+                    {
+                      "label": "scenes.ts",
+                      "description": "Discovers scenes for Studio"
+                    },
+                    {
+                      "label": "scenes/Retiam.ts",
+                      "description": "Your starter Write animation"
+                    }
+                  ]
+                },
+                {
+                  "label": "studio/",
+                  "description": "Local editor, preview, inspector and playback UI"
+                },
+                {
+                  "label": "tools/",
+                  "description": "Editor asset preparation and Vite integration"
+                },
+                {
+                  "label": "vite.config.ts",
+                  "description": "Development and production build entries"
+                },
+                {
+                  "label": "tsconfig.json",
+                  "description": "Scene type-checking and WebGPU types"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Run CLI commands from this project folder, alongside package.json and config.js. Retiam 1.0.1 includes Puppeteer and RoughJS as required production dependencies. Video rendering also needs an installed Chrome with WebGPU support and FFmpeg on PATH."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx retiam lint src/scenes/Retiam.ts --json\nnpx retiam render src/scenes/Retiam.ts"
+        },
+        {
+          "type": "paragraph",
+          "text": "Edit config.js to choose output dimensions, frame rate, bitrate, duration and engine settings. Defaults are 1920×1080, 60 fps, MP4 at 20M, and outputs/video. maxDuration is in milliseconds; 0 renders until the scene finishes. See the [complete render configuration](/export#render-configuration) for every option and CLI precedence."
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Generator option",
+            "Behavior"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "--no-start",
+                "Install dependencies and generate the project without starting Studio."
+              ]
+            },
+            {
+              "cells": [
+                "--no-install",
+                "Generate files without installing dependencies or starting Studio."
+              ]
+            },
+            {
+              "cells": [
+                "--no-open",
+                "Start the development server without opening a browser."
+              ]
+            },
+            {
+              "cells": [
+                "--title \"Hello\"",
+                "Change the starter text; the scene file remains src/scenes/Retiam.ts."
+              ]
+            },
+            {
+              "cells": [
+                "--pm npm|pnpm|yarn|bun",
+                "Choose the package manager; otherwise it is detected from the invoking command."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Existing nonempty destinations are preserved. Generator updates affect newly created projects; an existing project keeps its own Studio and config.js files. See [Studio and project scripts](/tooling#studio-workflow) for daily editing."
+        }
+      ]
+    },
+    {
       "id": "create-a-consumer-application",
       "blocks": [
         {
           "type": "heading",
           "level": 2,
-          "text": "1. Install Retiam in your own npm project"
+          "text": "Manual setup in an npm project"
         },
         {
           "type": "paragraph",
-          "text": "Create a project for your animations. Your scene imports the public package instead of reaching into the engine’s source tree. Core types come from retiam; specialized libraries use entry points such as retiam/charts, retiam/physics and retiam/shapes."
+          "text": "Use this route to add Retiam to an existing application or build the canvas host yourself. For a ready-made Studio project, use [the generator](/installation#create-with-studio). Core types come from retiam; specialized libraries use package entry points such as retiam/charts, retiam/physics and retiam/shapes."
         },
         {
           "type": "code",
           "language": "bash",
-          "code": "mkdir my-retiam-animation\ncd my-retiam-animation\nnpm init -y\nnpm pkg set type=module\nnpm install retiam\nnpm install --save-dev typescript vite @webgpu/types\nnpm pkg set scripts.dev=\"vite\" scripts.check=\"tsc --noEmit\""
+          "code": "mkdir my-retiam-animation\ncd my-retiam-animation\nnpm init -y\nnpm pkg set type=module\nnpm install retiam\nnpm install --save-dev typescript \"vite@^6.1.1\" @webgpu/types\nnpm pkg set scripts.dev=\"vite\" scripts.check=\"tsc --noEmit\""
+        },
+        {
+          "type": "paragraph",
+          "text": "The manual recipe uses Vite 6, matching the generated project and the engine’s CLI toolchain."
         },
         {
           "type": "paragraph",
@@ -109,8 +274,8 @@
                   ]
                 },
                 {
-                  "label": "retiam.config.js",
-                  "description": "Optional video output settings"
+                  "label": "config.js",
+                  "description": "Optional CLI and engine render settings; copy the complete defaults from the export guide"
                 },
                 {
                   "label": "vite.config.ts",
@@ -182,11 +347,15 @@
         {
           "type": "heading",
           "level": 2,
-          "text": "2. Load Retiam from a CDN"
+          "text": "Load Retiam from a CDN"
         },
         {
           "type": "paragraph",
           "text": "Load the published ES module directly in a browser when you want a live scene without installing Retiam in that page. This is how the documentation’s editable examples load the engine. Retiam 1.0.0 is available at https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js."
+        },
+        {
+          "type": "paragraph",
+          "text": "This route runs JavaScript directly in the browser and needs no Retiam npm install or project generator. Use an import map to pin the engine and any sublibraries to the same package version. Serve the page over HTTPS or localhost with a WebGPU-capable browser."
         },
         {
           "type": "code",
@@ -200,6 +369,10 @@
         {
           "type": "paragraph",
           "text": "The import map pins both entries to Retiam 1.0.0 on jsDelivr, which also serves the engine’s emitted assets and sublibrary bundles with CORS enabled. Keep all entries on the same package version when upgrading. [Documentation authoring](/docs-authoring#engine-cdn) explains the documentation viewer’s configuration."
+        },
+        {
+          "type": "paragraph",
+          "text": "The CDN loads the engine’s related chunks, fonts, workers and WASM from the same versioned package. Add import-map entries such as retiam/shapes or retiam/physics only when your scene imports them. Keep owned images, fonts and media available at the paths used by the page. This is a live scene; use [CLI rendering](/export#cli-preview-and-final-render) for MP4/PNG output or [an independent embed](/export#embed-from-npm) to bundle a finished scene for another site."
         }
       ]
     },
@@ -209,7 +382,7 @@
         {
           "type": "heading",
           "level": 2,
-          "text": "3. Export an independent embedded scene"
+          "text": "Export an independent embedded scene"
         },
         {
           "type": "paragraph",
@@ -218,6 +391,32 @@
         {
           "type": "paragraph",
           "text": "Continue with the [npm embed recipe](/export#embed-from-npm) for a complete package-based component entry, build configuration and receiving page. The [repository export CLI](/export#standalone-embeds) has separate setup requirements. Keep any emitted assets with the bundle. Fonts, videos, models or services referenced by remote URLs remain runtime dependencies until the scene packages or localizes them."
+        },
+        {
+          "type": "paragraph",
+          "text": "In an npm or generated project, create the custom-element entry and Vite config from [the complete export recipe](/export#embed-from-npm), then build it:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "npx vite build --config vite.embed.config.ts"
+        },
+        {
+          "type": "paragraph",
+          "text": "Copy the whole outputs/embed directory to the receiving website at /embeds/my-scene/, preserving its chunks and assets, and mount the component:"
+        },
+        {
+          "type": "code",
+          "language": "html",
+          "code": "<script type=\"module\" src=\"/embeds/my-scene/my-scene.js\"></script>\n<my-retiam-scene style=\"display:block;width:100%;height:540px\"></my-retiam-scene>"
+        },
+        {
+          "type": "paragraph",
+          "text": "The receiving page needs WebGPU and the exported files. It needs no npm install or separate engine CDN import. Give each different scene bundle a distinct custom-element name. For a video-only result, render an MP4 instead and use the browser’s video element."
+        },
+        {
+          "type": "paragraph",
+          "text": "The npx retiam export command is a separate repository-layout exporter that currently expects src/engine. The package-based Vite recipe works with external npm projects."
         }
       ]
     },
