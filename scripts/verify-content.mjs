@@ -45,17 +45,18 @@ const options = {
   lib: ['lib.es2022.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'], types: ['@webgpu/types', 'vite/client'],
   strict: false, skipLibCheck: true, noEmit: true, experimentalDecorators: true,
 };
-const directory = path.join(site, '.docs-validation');
-const virtual = new Map(examples.map((example, index) => [path.join(directory, `${index}.ts`), {
+const normalizeFile = file => path.resolve(file).replaceAll('\\', '/');
+const directory = normalizeFile(path.join(site, '.docs-validation'));
+const virtual = new Map(examples.map((example, index) => [normalizeFile(path.join(directory, `${index}.ts`)), {
   code: (example.type === 'playground' && !/^import\s/m.test(example.code) ? `import { ${reference.coreExports.join(', ')} } from 'retiam';\n` : '') + example.code,
   location: `${example.pageId}#${example.sectionId}: ${example.filename || 'complete class example'}`,
 }]));
 const host = ts.createCompilerHost(options);
 const originalRead = host.readFile, originalExists = host.fileExists, originalGet = host.getSourceFile, originalDirectory = host.directoryExists;
-host.readFile = file => virtual.has(file) ? virtual.get(file).code : originalRead(file);
-host.fileExists = file => virtual.has(file) || originalExists(file);
-host.directoryExists = file => file === directory || originalDirectory(file);
-host.getSourceFile = (file, language, onError, fresh) => virtual.has(file) ? ts.createSourceFile(file, virtual.get(file).code, language, true) : originalGet(file, language, onError, fresh);
+host.readFile = file => virtual.has(normalizeFile(file)) ? virtual.get(normalizeFile(file)).code : originalRead(file);
+host.fileExists = file => virtual.has(normalizeFile(file)) || originalExists(file);
+host.directoryExists = file => normalizeFile(file) === directory || originalDirectory(file);
+host.getSourceFile = (file, language, onError, fresh) => virtual.has(normalizeFile(file)) ? ts.createSourceFile(file, virtual.get(normalizeFile(file)).code, language, true) : originalGet(file, language, onError, fresh);
 const program = ts.createProgram([...virtual.keys()], options, host);
 for (const diagnostic of ts.getPreEmitDiagnostics(program).filter(item => !item.file || virtual.has(item.file.fileName))) {
   const position = diagnostic.file?.getLineAndCharacterOfPosition(diagnostic.start);

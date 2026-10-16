@@ -88,11 +88,6 @@ export const CATEGORIES: CategoryMetadata[] = [
         tag: "tts",
         demos: [
             {
-                id: "tts/kokoro_tts_demo",
-                name: "Kokoro 82M WebGPU Speech Synthesis",
-                description: "Client-side neural text-to-speech with Kokoro-82M on WebGPU, featuring 28 studio voices, synchronized subtitles, auto-ducking, and optical speech micro-pulses."
-            },
-            {
                 id: "tts/msedge_tts_demo",
                 name: "Microsoft Edge Neural TTS (320+ Voices)",
                 description: "Studio-quality speech synthesis via Microsoft Edge Read Aloud API, featuring 320+ natural voices across 70+ languages, word boundary metadata, and zero weight downloads."

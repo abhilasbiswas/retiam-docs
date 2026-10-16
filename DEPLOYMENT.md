@@ -64,12 +64,11 @@ Optional public service configuration belongs in `content/config.json`:
 {
   "cdnUrl": "https://cdn.example.org/retiam/dist/retiam.es.js",
   "services": {
-    "msedgeEndpoint": "https://speech.example.org/api/tts/msedge",
-    "modelBaseUrl": "https://models.example.org/models"
+    "msedgeEndpoint": "https://speech.example.org/api/tts/msedge"
   }
 }
 ```
 
-Edge synthesis in the browser requires a compatible proxy with CORS. Kokoro requires model and voice files hosted with CORS under its configured model directory. These services and downloaded models are not included in the site. Keep credentials on the service itself.
+Edge synthesis in the browser requires a compatible proxy with CORS. This service is not included in the site. Keep credentials on the service itself.
 
 Local Studio, recording services, and CLI rendering run separately from the static documentation. WebGPU availability depends on the visitor's browser and GPU. Features requiring cross-origin isolation need hosting that supplies the necessary headers; GitHub Pages does not provide custom response headers.

@@ -41,7 +41,7 @@ export function resolveDocsConfig(configuration, env = process.env) {
   const configuredServices = configuration.services === undefined ? {} : configuration.services;
   if (!configuredServices || typeof configuredServices !== 'object' || Array.isArray(configuredServices)) throw new Error('Documentation services must be an object.');
   const services = { ...configuredServices };
-  for (const [key, variable] of [['msedgeEndpoint', 'RETIAM_DOCS_MSEDGE_ENDPOINT'], ['modelBaseUrl', 'RETIAM_DOCS_MODEL_BASE_URL']]) {
+  for (const [key, variable] of [['msedgeEndpoint', 'RETIAM_DOCS_MSEDGE_ENDPOINT']]) {
     const value = env[variable] || services[key];
     if (value !== undefined) services[key] = moduleUrl(value, `services.${key}`, deployment).replace(/\/$/, '');
   }

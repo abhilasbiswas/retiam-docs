@@ -228,28 +228,13 @@
       "Reduce maxWidth and replay. Inspect wrapping and equation placement before changing font size."
     ]
   },
-  "tts/kokoro_tts_demo": {
-    "description": "Synthesize speech in the browser and coordinate captions with audio.",
-    "walkthrough": [
-      "The scene presents client-side Kokoro speech synthesis, with voice cards, a speaker visualization and Subtitles. It installs AudioPlugin with autoUnlock and checks TTS.isWebGPUSupported for the capability display. The engine library alone does not include the model weights; use the TTS configuration and network requirements shown with this example.",
-      "speakNarration awaits TTS.synthesize for a particular voice, retains the TTSAudioResult, synchronizes subtitles from its timing information, then awaits audio.play. Voices change between utterances. Synthesis readiness, an initialized audio graph and browser permission to produce sound are separate requirements.",
-      "The visualization first uses RMS from a Web Audio analyzer or the plugin’s bands. It also samples a 256-sample PCM window near the current utterance position and chooses the stronger energy estimate. Energy is clamped and smoothed before changing the speaker radius, halo, ring width/opacity and accent colors.",
-      "The fallback sample position is calculated from performance.now, in seconds, and the audio sample rate. That follows live wall time rather than the Retiam scene clock. A pause, seek or fixed-step export can therefore need a different timing source; do not assume this interactive fallback is a deterministic offline audio visualization.",
-      "Scene waits separate the spoken passages. duckingRatio reduces competing audio during speech, while volume sets playback level. These options do not choose a different voice or regenerate the speech. For a video, prepare the speech audio and subtitle cues before capture, then drive the visual envelope from the same export timeline.",
-      "When adapting the scene, dispose analyzers and application-owned audio/model resources according to their ownership, remove controls/listeners and handle synthesis failure visibly. The marketing text spoken in the demo is sample narration; it is not a guarantee about model download time, inference latency or every device’s support."
-    ],
-    "experiments": [
-      "After loading a voice, synthesize the same short sentence with two voice IDs and compare the duration and subtitle cues.",
-      "Pause the scene during an utterance and inspect the PCM envelope timing. Replace the wall-clock lookup with an audio/scene timeline lookup before relying on it for seeking or export."
-    ]
-  },
   "tts/msedge_tts_demo": {
     "description": "Four narrated beats use one provider, a subtitle object, a speaker animation and a quiet procedural music bed.",
     "walkthrough": [
-      "run selects the msedge provider, configures the audio buses and constructs a Rhodes-like ambient buffer scheduled on the BGM timeline. This locally synthesized bed is separate from the remote narration requests. Master, voiceover and BGM gains solve different mixing problems.",
+      "run configures the audio buses and constructs a Rhodes-like ambient buffer scheduled on the BGM timeline. This locally synthesized bed is separate from the remote narration requests. Master, voiceover and BGM gains solve different mixing problems.",
       "The visual stage is assembled before narration: header, provider/status labels, waveform/speaker geometry and a Subtitles instance. Those are retained entities. Status changes update text and paint; the speaker’s reaction is supplied through the entity option of speak, rather than by recreating the scene for each sentence.",
       "Before the first beat the scene waits for audio unlock when required. In a live documentation preview, click or interact when the browser asks for playback permission. Separately, the provider needs the configured Edge proxy endpoint: a user gesture does not repair a missing network service.",
-      "Each beat awaits speak with explicit provider, voice, speed, pitch, volume, subtitles and duckingRatio. Awaiting the result aligns the next step with narration completion. The 1600 ms waits between beats are scene-timeline pauses; changing narration speed changes spoken duration independently of those pauses.",
+      "Each beat awaits speak with an explicit voice, speed, pitch, volume, subtitles and duckingRatio. Awaiting the result aligns the next step with narration completion. The 1600 ms waits between beats are scene-timeline pauses; changing narration speed changes spoken duration independently of those pauses.",
       "Subtitles consume provider timing, while ducking reduces the music bus during speech. To inspect the synchronization, watch one short phrase first and compare audio start, subtitle transitions and the speaker’s visual response. A failed provider request should be surfaced before the rest of the sequence waits for unavailable audio.",
       "The final beat changes the ending label and stops the music. For repeatable movie generation, save generated audio and timing in the application’s assets, keep the voice configuration with the scene, and test the encoded audio track. A standalone scene bundle does not contain the proxy service or bypass browser playback rules."
     ],

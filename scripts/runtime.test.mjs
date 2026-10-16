@@ -46,13 +46,12 @@ test('AST rewriting covers URL values, template literals and static/dynamic impo
 });
 
 test('service requirements are explicit and do not start local services accidentally', () => {
-  const edge = inspectRuntimeSource(ts, `import { speak } from 'retiam/tts'; await speak(scene, 'Hello', { provider: 'msedge' });`);
+  const edge = inspectRuntimeSource(ts, `import { speak } from 'retiam/tts'; await speak(scene, 'Hello');`);
   assert.deepEqual(edge.services, ['msedgeEndpoint']);
   assert.match(runtimeRequirements(edge).join(' '), /RETIAM_DOCS_MSEDGE_ENDPOINT/);
   assert.deepEqual(runtimeRequirements(edge, { msedgeEndpoint: 'https://speech.example.org/api/tts' }), []);
-  const kokoro = inspectRuntimeSource(ts, `import { TTS } from 'retiam/tts'; TTS.synthesize('Hello');`);
-  assert.deepEqual(kokoro.services, ['modelBaseUrl']);
-  assert.deepEqual(runtimeRequirements(kokoro, { modelBaseUrl: 'https://assets.example.org/models/' }), []);
+  const facade = inspectRuntimeSource(ts, `import { TTS } from 'retiam/tts'; TTS.synthesize('Hello');`);
+  assert.deepEqual(facade.services, ['msedgeEndpoint']);
   const local = inspectRuntimeSource(ts, `// fetch('http://localhost:9999/comment')
     const document = 'http://localhost:5173/studio/index.html';`);
   assert.equal(local.localUrls.length, 1);

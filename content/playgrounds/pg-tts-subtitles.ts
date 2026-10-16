@@ -18,7 +18,7 @@ export default class TTSSubtitlesExample extends Scene {
     // synchronizes it to audio whenever the provider is available.
     subtitles.showText(sentence);
     await speak(this, sentence, {
-      provider: 'msedge', voice: 'en-US-AndrewNeural', speed: 0.96, subtitles,
+      voice: 'en-US-AndrewNeural', speed: 0.96, subtitles,
     });
     await this.wait(800);
   }

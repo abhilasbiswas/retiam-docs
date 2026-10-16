@@ -196,7 +196,6 @@ export interface DocsConfig {
   cdnUrl: string;
   services?: {
     msedgeEndpoint?: string;
-    modelBaseUrl?: string;
   };
 }
 

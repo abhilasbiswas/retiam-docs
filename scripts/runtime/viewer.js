@@ -127,7 +127,7 @@ async function start(code,restore){
     const runtime=await import('retiam').catch(cause=>{throw new Error(`Could not load Retiam from the configured CDN. Check content/config.json and the CDN's CORS settings, then retry. ${cause.message}`);});Object.assign(globalThis,runtime);
     if(requirements?.tts){
       const {TTS}=await import('retiam/tts');
-      TTS.configure({...(services.msedgeEndpoint?{msedgeEndpoint:services.msedgeEndpoint}:{}),...(services.modelBaseUrl?{localModelPath:services.modelBaseUrl}:{})});
+      TTS.configure(services.msedgeEndpoint ? {msedgeEndpoint:services.msedgeEndpoint} : {});
     }
     if(code!==undefined){blob=URL.createObjectURL(new Blob([js],{type:'application/javascript'}));module=await import(blob);}
     else module=await import(new URL(descriptor.module,location.href).href);

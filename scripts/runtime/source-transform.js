@@ -4,11 +4,10 @@ export const isDocsAsset = value => /^\/(?:res|fonts|vendor|assets|src\/assets\/
 
 export function inspectRuntimeSource(ts, code, fileName = 'scene.ts') {
   const source = ts.createSourceFile(fileName, code, ts.ScriptTarget.Latest, true);
-  const assets = new Set(), localUrls = new Set(), nodeImports = new Set(), values = new Set();
+  const assets = new Set(), localUrls = new Set(), nodeImports = new Set();
   let tts = false;
   function visit(node) {
     if (ts.isStringLiteralLike(node)) {
-      values.add(node.text);
       if (isDocsAsset(node.text)) assets.add(node.text);
       if (/^https?:\/\//i.test(node.text)) {
         try {
@@ -28,11 +27,7 @@ export function inspectRuntimeSource(ts, code, fileName = 'scene.ts') {
     ts.forEachChild(node, visit);
   }
   visit(source);
-  const services = [];
-  if (tts) {
-    if ([...values].some(value => value === 'msedge' || /^[a-z]{2}-[A-Z]{2}-.+Neural$/.test(value))) services.push('msedgeEndpoint');
-    if (!services.length || values.has('kokoro')) services.push('modelBaseUrl');
-  }
+  const services = tts ? ['msedgeEndpoint'] : [];
   return { assets: [...assets], services, localUrls: [...localUrls], nodeImports: [...nodeImports], tts };
 }
 
@@ -83,9 +78,7 @@ export function runtimeRequirements(metadata, services = {}, { allowLocalService
   const reasons = [];
   for (const service of metadata.services || []) {
     if (services[service]) continue;
-    reasons.push(service === 'msedgeEndpoint'
-      ? 'Live speech needs a Microsoft Edge TTS backend. Configure services.msedgeEndpoint in content/config.json (or RETIAM_DOCS_MSEDGE_ENDPOINT), then rebuild the documentation.'
-      : 'Kokoro speech needs separately hosted model files. Configure services.modelBaseUrl in content/config.json (or RETIAM_DOCS_MODEL_BASE_URL), then rebuild the documentation.');
+    reasons.push('Live speech needs a Microsoft Edge TTS backend. Configure services.msedgeEndpoint in content/config.json (or RETIAM_DOCS_MSEDGE_ENDPOINT), then rebuild the documentation.');
   }
   if (metadata.localUrls?.length && !allowLocalServices) reasons.push(`This example uses a local service: ${metadata.localUrls.join(', ')}. Edit the source to use a reachable HTTPS service, or run the example in your local development project.`);
   if (metadata.nodeImports?.length) reasons.push(`This example imports Node-only modules (${metadata.nodeImports.join(', ')}). Run it in the local Retiam development project.`);

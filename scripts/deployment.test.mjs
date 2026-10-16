@@ -10,10 +10,9 @@ test('local and public CDN deployment use the configuration file', () => {
   assert.deepEqual(resolveDocsConfig(local, { RETIAM_DOCS_DEPLOY: '1' }), local);
   const result = resolveDocsConfig({ ...local, cdnUrl: 'https://cdn.example.org/retiam@1.0.0/dist/retiam.es.js' }, {
     RETIAM_DOCS_DEPLOY: '1',
-    RETIAM_DOCS_MSEDGE_ENDPOINT: 'https://api.example.org/tts/', RETIAM_DOCS_MODEL_BASE_URL: 'https://models.example.org/',
+    RETIAM_DOCS_MSEDGE_ENDPOINT: 'https://api.example.org/tts/',
   });
   assert.equal(result.services.msedgeEndpoint, 'https://api.example.org/tts');
-  assert.equal(result.services.modelBaseUrl, 'https://models.example.org');
   assert.equal(local.cdnUrl, 'http://localhost:3000/retiam.es.js');
   for (const cdnUrl of ['http://127.0.0.1/lib.js', 'https://localhost./lib.js', 'http://engine.localhost:3000/lib.js', 'http://[::1]/lib.js', 'http://[::ffff:127.0.0.1]/lib.js', 'http://2130706433/lib.js']) {
     assert.equal(isLoopbackUrl(cdnUrl), true, cdnUrl);
@@ -26,9 +25,9 @@ test('local and public CDN deployment use the configuration file', () => {
   for (const cdnUrl of ['javascript:alert(1)', '/retiam.es.js', 'https://user:secret@example.org/lib.js', 'https://example.org/lib.js#fragment']) {
     assert.throws(() => resolveDocsConfig({ cdnUrl }, {}), /HTTP\(S\)/);
   }
-  assert.throws(() => resolveDocsConfig({ ...local, services: { modelBaseUrl: 'http://localhost:8000/models' } }, { RETIAM_DOCS_DEPLOY: '1' }), /public HTTPS/);
+  assert.throws(() => resolveDocsConfig({ ...local, services: { msedgeEndpoint: 'http://localhost:8000/tts' } }, { RETIAM_DOCS_DEPLOY: '1' }), /public HTTPS/);
   assert.throws(() => resolveDocsConfig({ cdnUrl: ['https://cdn.example.org/lib.js'] }, {}), /URL string/);
-  assert.throws(() => resolveDocsConfig({ ...local, services: { modelBaseUrl: ['https://models.example.org'] } }, {}), /URL string/);
+  assert.throws(() => resolveDocsConfig({ ...local, services: { msedgeEndpoint: ['https://speech.example.org'] } }, {}), /URL string/);
   assert.throws(() => resolveDocsConfig({ ...local, services: null }, {}), /services must be an object/);
 });
 

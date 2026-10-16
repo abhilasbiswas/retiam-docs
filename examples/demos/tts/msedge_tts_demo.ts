@@ -93,9 +93,6 @@ export default class MsEdgeTTSDemoScene extends Scene {
         this.clearColor(demoBackground()); // Deep obsidian substrate
         new Camera2DController(this, this.camera, { zoom: 48 });
 
-        // Configure default TTS provider to Microsoft Edge
-        TTS.useProvider("msedge");
-
         // Ensure maximum crispness and volume on Retiam's master & voiceover buses
         if (this.audio) {
             this.audio.setMasterVolume(1.0);
@@ -542,7 +539,6 @@ export default class MsEdgeTTSDemoScene extends Scene {
         speakerHalo.paint.fill = hex("#F59E0B");
 
         await speak(this, "What if a machine could explore multiple futures... simultaneously?", {
-            provider: "msedge",
             voice: "en-US-AndrewNeural",
             speed: 0.96,
             pitch: "+0Hz",
@@ -566,7 +562,6 @@ export default class MsEdgeTTSDemoScene extends Scene {
         speakerHalo.paint.fill = hex("#38BDF8");
 
         await speak(this, "In classical computation, a deterministic automaton is bound to a single reality, selecting exactly one transition for every input symbol in our alphabet, Sigma.", {
-            provider: "msedge",
             voice: "en-US-AndrewNeural",
             speed: 0.96,
             pitch: "+0Hz",
@@ -590,7 +585,6 @@ export default class MsEdgeTTSDemoScene extends Scene {
         speakerHalo.paint.fill = hex("#A78BFA");
 
         await speak(this, "Nondeterminism, however, grants the machine a form of clairvoyance, allowing it to branch across an entire superposition of configurations via instantaneous epsilon transitions.", {
-            provider: "msedge",
             voice: "en-US-AndrewNeural",
             speed: 0.96,
             pitch: "+0Hz",
@@ -614,7 +608,6 @@ export default class MsEdgeTTSDemoScene extends Scene {
         speakerHalo.paint.fill = hex("#10B981");
 
         await speak(this, "Yet, through the elegance of the Subset Construction theorem, any nondeterministic machine can be folded back into an equivalent deterministic universe, by tracking the power set of all reachable states.", {
-            provider: "msedge",
             voice: "en-US-AndrewNeural",
             speed: 0.96,
             pitch: "+0Hz",
