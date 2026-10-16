@@ -160,16 +160,16 @@
         },
         {
           "type": "paragraph",
-          "text": "Cel shading, Gooch illustration, and other material-level styles are **not plugins** — they're configuration on `RenderConfig` and `Material`:"
+          "text": "Surface shading is a material module, selected independently from render quality and video output settings."
         },
         {
           "type": "code",
           "language": "typescript",
-          "code": "// Global scene default style\nscene.renderConfig.setCel({ bands: 5, rimStrength: 0.9 });\nscene.renderConfig.setGooch({ warm: 0.6, cool: 0.4 });\n\n// Per-material override\nmyTorus.material.shadingStyle = ShadingStyle.CEL;\nmyTorus.material.celBands = 5;\n\nmySphere.material.shadingStyle = ShadingStyle.GOOCH;\nmySphere.material.goochWarm = 0.6;"
+          "code": "import { CelShading, GoochShading } from 'retiam';\n\n// Scene default for rasterized 3D models\nscene.shading = new CelShading({ bands: 5, rimStrength: 0.9 });\n\n// Override a material; null restores inheritance\nmySphere.material.shading = new GoochShading({ warm: 0.6, cool: 0.4 });\nmyTorus.material.shading = new CelShading({ bands: 3, rimStrength: 0.75 });"
         },
         {
           "type": "paragraph",
-          "text": "**Rationale**: These are one-liners. Wrapping them in a plugin class adds ceremony without value."
+          "text": "Each module owns its lighting WGSL and parameters. Textures, normals, shadows and final color handling remain shared. The renderer includes only the selected lighting model; numeric parameters use the existing material buffer."
         }
       ]
     },
@@ -647,7 +647,7 @@
                   "type": "text"
                 },
                 {
-                  "text": "`renderConfig.setCel()` / `setGooch()`"
+                  "text": "`scene.shading` / `material.shading`"
                 },
                 {
                   "text": "Material lighting model"

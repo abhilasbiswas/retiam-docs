@@ -28,14 +28,6 @@ export default {
     lightSize: 2.5,
     frustumCulling: true,
 
-    // 3D shading
-    shadingStyle: 'pbr', // 'pbr', 'cel', 'gooch', or 'clay'
-    celBands: 3,
-    celRimStrength: 0.6,
-    celRimPower: 0.5,
-    goochWarm: 0.45,
-    goochCool: 0.45,
-
     // Raytracing
     raytraceEnabled: false,
     rtSamples: 2,

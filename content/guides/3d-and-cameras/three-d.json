@@ -41,7 +41,16 @@
         },
         {
           "type": "paragraph",
-          "text": "PBR models use material and scene lighting. ManimSurfaceFragment provides an illustration-oriented surface with view-oriented normals and optional checkerboard treatment. Model.useManimShading and usePBRShading change the fragment path; RenderConfig.shadingStyle controls PBR/Gooch/Cel/Clay choices in supported pipelines."
+          "text": "Rasterized 3D models use PBRShading by default. Set scene.shading for a scene-wide default or material.shading for an object or group override. CelShading provides cartoon lighting bands, GoochShading provides warm/cool illustration lighting, and ClayShading provides a matte studio appearance. Shading modules own their parameters; config.js controls output and renderer quality. The raytracing path uses its own physically based lighting."
+        },
+        {
+          "type": "code",
+          "language": "typescript",
+          "code": "import { CelShading, GoochShading } from 'retiam';\n\n// Scene default for rasterized 3D models\nscene.shading = new CelShading({ bands: 5, rimStrength: 0.9 });\n\n// Override a material; null restores inheritance\nmySphere.material.shading = new GoochShading({ warm: 0.6, cool: 0.4 });\nmyTorus.material.shading = new CelShading({ bands: 3, rimStrength: 0.75 });\n\nconst cel = new CelShading({ bands: 3 });\nmyTorus.material.shading = cel;\ncel.bands = 5; // Changes GPU data without creating a different shader\nmyTorus.material.shading = null; // Inherit from its group or scene\n"
+        },
+        {
+          "type": "paragraph",
+          "text": "Each module contributes only its selected lighting WGSL. Texture sampling, normals, shadows and final color handling remain shared. Model.useManimShading and usePBRShading select the separate illustration/mesh fragment paths."
         },
         {
           "type": "paragraph",
