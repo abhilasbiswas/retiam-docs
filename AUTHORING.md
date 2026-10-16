@@ -33,25 +33,21 @@ Set the Retiam CDN module URL in `content/config.json`:
 
 ```json
 {
-  "cdnUrl": "http://localhost:3000/retiam.es.js"
+  "cdnUrl": "https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js"
 }
 ```
 
-Set `cdnUrl` in `content/config.json` to select the engine module used by the viewer.
-
-```json
-{
-  "cdnUrl": "https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.js"
-}
-```
-
-Replace the version with the one you published. The example viewer's import map
+Local previews and deployed pages use this published module. Keep its version in
+sync with the pinned `retiam` development dependency. The example viewer's import map
 also resolves sublibraries such as `retiam/charts` under the engine URL's directory.
 The documentation treats this module as an external dependency and does not compare
 source hashes or require the CDN to come from the same repository checkout.
 
-With the default local URL, run the engine's CDN separately on port 3000 before starting `npm run dev` in this project. You can also test the deployed Pages site against this CDN on your machine; allow local network access in the browser if prompted. Enable CORS for the documentation origin. When switching to the public CDN, use a pinned npm version instead of a moving `latest` URL. Rebuild the docs after changing the URL; the development server watches
-this setting automatically.
+Run `npm run dev` to preview the docs using the public CDN. To test an unpublished
+engine build, temporarily set `cdnUrl` to its local module URL and enable CORS for
+the documentation origin. Restore the pinned public URL before deploying. Rebuild
+the docs after changing the URL; the development server watches this setting
+automatically.
 
 ### Navigation
 
@@ -452,7 +448,7 @@ npm run test:consumer    # Type-check the documented npm and React hosts through
 npm run build            # Verify content, check React types, and build production assets
 ```
 
-`npm run dev` prepares the documentation runtime and starts this server. With the default engine URL, run the local engine CDN separately at port 3000. The documentation build uses its installed library dependency for type checks; it does not read the CDN server's source checkout.
+`npm run dev` prepares the documentation runtime and starts the viewer on port 4000. Examples load the published engine from jsDelivr. The documentation build uses its installed npm dependency for type checks.
 
 To add a page:
 
@@ -522,8 +518,8 @@ demo URLs under the configured deployment base. Built-in font aliases load emitt
 library assets from the engine CDN; explicit MSDF descriptors and their atlases
 used by a demo remain generated documentation assets. Demos with setup requirements
 start only after an explicit Run and explain missing service configuration.
-The viewer imports the engine and sublibraries from `cdnUrl`, which is initially
-set to the separate engine server on port 3000. Editor drafts are saved
+The viewer imports the engine and sublibraries from `cdnUrl`, which points to the
+published Retiam 1.0.0 release on jsDelivr. Editor drafts are saved
 in browser storage under the example ID and a hash of its canonical source. They
 survive navigation and reloads; a changed canonical file starts a new draft revision.
 Reset Code clears that revision's draft and returns to the canonical file. If

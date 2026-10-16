@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open [localhost:4000](http://localhost:4000/). This project installs and builds without a Retiam source checkout. Live scenes load the engine URL in [content/config.json](content/config.json), currently `http://localhost:3000/retiam.es.js`. Run that CDN separately when previewing scenes locally.
+Open [localhost:4000](http://localhost:4000/). This project installs and builds without a Retiam source checkout. Live scenes load the published [Retiam 1.0.0 module](https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js) configured in [content/config.json](content/config.json). Local previews use the same public CDN as the deployed site.
 
 ```bash
 npm run lint
@@ -39,15 +39,15 @@ The public site includes documentation examples and API descriptions. It does no
 
 ## Library version
 
-Before the first npm release, the development dependency uses `vendor/retiam-1.0.0.tgz`, a packaged library release containing compiled modules, declarations, assets, and CLI tools. It has no link to the private checkout. This archive is for local development until the library is ready to be published.
+The development dependency is pinned to the published npm package `retiam@1.0.0` for declarations and CLI checks. Live examples use the matching version on jsDelivr.
 
-Once the version exists on npm, replace the bootstrap dependency:
+When upgrading Retiam, replace `1.0.0` with the new version and pin it:
 
 ```bash
-npm install --save-dev retiam@1.0.0
+npm install --save-dev --save-exact retiam@1.0.0
 ```
 
-Then remove the unused archive from `vendor/` and commit `package.json` and `package-lock.json`. When switching from local testing to the published engine, update `content/config.json` to the matching public CDN module URL and redeploy.
+Update `content/config.json` to the matching version-pinned CDN module URL, commit it with `package.json` and `package-lock.json`, and redeploy.
 
 API metadata is checked in so routine builds need no engine source. After an engine release, a maintainer with source access can refresh it explicitly:
 
@@ -61,7 +61,7 @@ This optional command reads the private checkout to update reference data; it co
 
 Publish this project as the public `retiam-docs` repository. Set **Settings → Pages → Source → GitHub Actions** and push to `main`. The included workflow installs, tests, builds, checks, and deploys this repository without accessing the engine repository.
 
-You can test the Pages site with the local CDN running on your machine. Allow local network access if your browser prompts for it. GitHub Actions skips probing loopback URLs; other visitors need their own local CDN for live demos until the configuration points to a public release. See [DEPLOYMENT.md](DEPLOYMENT.md) for checks and optional services.
+Live demos load Retiam from the public CDN, which the workflow checks before deploying. See [DEPLOYMENT.md](DEPLOYMENT.md) for checks and optional services.
 
 ## License
 

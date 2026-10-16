@@ -5,16 +5,12 @@ This is a standalone Vite/React application. Publish only `dist/`. Its editable 
 ## GitHub Pages
 
 1. Create a public repository named `retiam-docs` and push this project to it.
-2. Keep `cdnUrl` in `content/config.json` set to your local engine URL while testing on your machine. After publishing the library, change it to a version-pinned public HTTPS module URL and redeploy. Keep emitted sublibraries, chunks, and assets at their original relative paths.
+2. Keep `cdnUrl` in `content/config.json` set to `https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js`, matching the pinned npm dependency. jsDelivr serves its sublibraries, chunks, and assets at their original relative paths.
 3. Open **Settings → Pages → Build and deployment** and set **Source → GitHub Actions**.
 4. Push to `main` or run **Actions → Documentation Pages → Run workflow**.
 5. Wait for the `build` and `deploy` jobs. The expected site is `https://abhilasbiswas.github.io/retiam-docs/`.
 
-The workflow gets its base path from Pages. Pull requests run validation without deploying. Engine URLs may use public HTTPS or loopback addresses for local testing. Optional service URLs must use public HTTPS for deployment. No repository CDN variable is required.
-
-For a Pages test with `http://localhost:3000/retiam.es.js`, start the engine CDN on your machine, open the Pages site in Chrome, and allow local network access if prompted. The CDN must allow cross-origin requests from the Pages origin. Loopback resources can load from secure pages ([MDN](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Mixed_content#loading_locally_delivered_mixed-resources)); recent Chrome versions require [local network permission](https://developer.chrome.com/blog/local-network-access). Browser support and permissions vary. Each visitor's localhost refers to their own machine, so live demos need a local engine there until you switch to the public CDN.
-
-GitHub Actions skips the network probe for loopback CDN URLs because the runner cannot reach your machine. Static hosting checks still run.
+The workflow gets its base path from Pages. Pull requests run validation without deploying. Local previews and the deployed site both load Retiam from the public CDN. The workflow checks its availability, JavaScript MIME type, and CORS before deploying. Optional service URLs must use public HTTPS for deployment. No repository CDN variable is required.
 
 The old engine repository needs no Pages workflow or documentation build scripts.
 
@@ -62,7 +58,7 @@ Optional public service configuration belongs in `content/config.json`:
 
 ```json
 {
-  "cdnUrl": "https://cdn.example.org/retiam/dist/retiam.es.js",
+  "cdnUrl": "https://cdn.jsdelivr.net/npm/retiam@1.0.0/dist/retiam.es.min.js",
   "services": {
     "msedgeEndpoint": "https://speech.example.org/api/tts/msedge"
   }
