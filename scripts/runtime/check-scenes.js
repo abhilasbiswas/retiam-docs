@@ -1,7 +1,9 @@
 const $ = id => document.getElementById(id);
 const options=new URLSearchParams(location.search);
 const results = [], discovered = await fetch('./check-scenes.json').then(r => r.json());
-const jobs=options.has('example')?discovered.filter(job=>job.id===options.get('example')):discovered;
+const selected=options.getAll('example');
+const prefixes=options.getAll('prefix');
+const jobs=discovered.filter(job=>(!selected.length||selected.includes(job.id))&&(!prefixes.length||prefixes.some(prefix=>job.id.startsWith(prefix)))&&(options.get('collection')!=='curriculum'||job.curriculum));
 let stopped = false, running = false, completed = 0;
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function run(job) {
@@ -53,6 +55,7 @@ $('start').onclick=async()=>{
     if(stopped)break;
     $('progress').textContent=`Checking ${++completed} / ${jobs.length}: ${job.id} (${job.export})`;
     const result=await run(job);results.push(result);row(result);
+    $('report').textContent=JSON.stringify(report(),null,2);
     $('progress').textContent=`${completed} / ${jobs.length} complete · ${JSON.stringify(report().summary)}`;
   }
   running=false;$('start').disabled=completed===jobs.length;$('stop').disabled=true;

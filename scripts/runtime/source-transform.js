@@ -21,7 +21,13 @@ export function inspectRuntimeSource(ts, code, fileName = 'scene.ts') {
     const specifier = (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) ? node.moduleSpecifier
       : ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword ? node.arguments[0] : undefined;
     if (specifier && ts.isStringLiteralLike(specifier) && !node.importClause?.isTypeOnly && !node.isTypeOnly) {
-      if (specifier.text === 'retiam/tts' || /(?:^|\/)libs\/tts(?:\/index)?$/.test(specifier.text)) tts = true;
+      if (specifier.text === 'retiam/tts' || /(?:^|\/)libs\/tts(?:\/index)?$/.test(specifier.text)) {
+        // Captions can use frozen local audio and do not need speech synthesis.
+        const bindings = node.importClause?.namedBindings;
+        const captionsOnly = bindings && ts.isNamedImports(bindings) && bindings.elements.every(element =>
+          element.isTypeOnly || ['Subtitles', 'SUBTITLE_PRESETS'].includes((element.propertyName || element.name).text));
+        if (!captionsOnly) tts = true;
+      }
       if (/^(?:node:|msedge-tts$|module$|fs$|path$|child_process$)/.test(specifier.text)) nodeImports.add(specifier.text);
     }
     ts.forEachChild(node, visit);

@@ -10,49 +10,57 @@
     "description": "Draw vector contours and reveal their fill, with a small stagger between components.",
     "notes": [
       "Write extends DrawBorderThenFill and defaults lagRatio to 0.05. It accepts vector entities; MSDF text has a different glyph representation and should use its supported animation or decomposition workflow."
-    ]
+    ],
+    "example": "labs/pg-reveal-write"
   },
   "CameraLookAt": {
     "description": "Animate camera orientation toward an entity or a world-space position.",
     "notes": [
       "prepare() samples the target position and computes the ending quaternion. The update interpolates orientation with spherical interpolation; it does not continuously track a moving target after preparation."
-    ]
+    ],
+    "example": "labs/pg-camera-look"
   },
   "CameraMove": {
     "description": "Animate camera position, yaw, pitch and field of view together.",
     "notes": [
       "The starting values are captured in the constructor, and omitted targets retain those values. Construct this animation close to the point where it will play if earlier camera movement could change its starting state."
-    ]
+    ],
+    "example": "labs/pg-camera-move"
   },
   "CameraOrbit": {
     "description": "Animate a camera around a target by a signed angle in radians.",
     "notes": [
       "The axis defaults to UP and a supplied axis is normalized. Use a camera controller for ongoing pointer-driven navigation and this animation for a scripted orbit."
-    ]
+    ],
+    "example": "labs/pg-camera-orbit"
   },
   "DrawBorderThenFill": {
     "description": "Decompose vector content into component animations that draw borders before revealing fills.",
     "notes": [
       "The constructor collects subentities after decomposition. Its outline width can come from the requested option, a text-size heuristic or the existing visible stroke. Set strokeWidth explicitly when you need consistent styling across mixed targets."
-    ]
+    ],
+    "example": "labs/pg-reveal-draw-border-then-fill"
   },
   "GrowFromCenter": {
     "description": "Introduce an entity by growing from zero scale to its saved state.",
     "notes": [
       "Construction snapshots the target state and immediately sets the entity scale to zero. Scene.play manages introduction of the entity. Avoid creating this animation far in advance if the entity should remain visible before playback."
-    ]
+    ],
+    "example": "labs/pg-reveal-grow-from-center"
   },
   "ModelTransform": {
     "description": "Animate between mesh models using the selected morph representation.",
     "notes": [
       "A temporary MorphModel renders the transition and is cleaned up on completion. Choose the mode for the geometry: matching parameter grids support direct interpolation, while a swarm transition uses particles and has a different performance cost."
-    ]
+    ],
+    "example": "labs/pg-morph-mesh"
   },
   "SDF3DTransform": {
     "description": "Animate between SDF entities using a temporary distance-field morph.",
     "notes": [
       "The transition builds an SDFMorph3D from the source and target node trees. Geometry, material and transform interpolation belong to this animation; it is separate from the mesh vertex correspondence used by ModelTransform."
-    ]
+    ],
+    "example": "labs/pg-morph-sdf"
   },
   "TransformMatchingShapes": {
     "description": "Match vector contours by geometric similarity and animate their correspondence.",
@@ -64,13 +72,15 @@
     "description": "Match decomposed formula paths by symbol identity and animate their new positions.",
     "notes": [
       "MathJax labels identify symbols where available; the implementation falls back to entity and bounds information. Repeated symbols require matching among multiple candidates, so inspect ambiguous equations with a simple example first."
-    ]
+    ],
+    "example": "labs/pg-matching-tex"
   },
   "TransformMatchingText": {
     "description": "Match repeated characters between two vector Text entities and animate their rearrangement.",
     "notes": [
       "Both texts are decomposed before matching. Whitespace is skipped when mapping visible characters; unmatched characters follow the options selected for the transition."
-    ]
+    ],
+    "example": "labs/pg-matching-text"
   },
   "VectorTransform": {
     "description": "Morph vector entities by matching and equalizing their path contours.",
@@ -89,31 +99,36 @@
     "description": "Map two-dimensional mathematical coordinates into a physical Cartesian drawing.",
     "notes": [
       "xRange and yRange describe numerical bounds and tick steps; width and height describe the drawing size. Use c2p and p2c to cross between coordinate values and scene positions rather than adding raw mathematical values to transforms."
-    ]
+    ],
+    "example": "labs/pg-coordinates-axes"
   },
   "PolarAxes": {
     "description": "Draw radial and angular coordinates and convert them into scene positions.",
     "notes": [
       "rMax is the numerical radial limit while radius is the physical drawing radius. Theta steps use radians. Keeping these quantities separate lets you change the data range without resizing the whole diagram."
-    ]
+    ],
+    "example": "labs/pg-coordinates-polaraxes"
   },
   "ThreeDAxes": {
     "description": "Map three mathematical ranges into a physical three-dimensional coordinate system.",
     "notes": [
       "The numerical xRange, yRange and zRange are independent of width, height and depth. Plot helpers use that mapping to place curves and surfaces; transforms then position the complete drawing in the scene."
-    ]
+    ],
+    "example": "labs/pg-coordinates-three-d"
   },
   "Arrow": {
     "description": "Draw a line or sampled curve with independently configurable start and end tips.",
     "notes": [
       "The composite owns a body path and separate tip geometry. putStartAndEndOn changes endpoints, while setPoints supports a longer path. Choose tip types and head sizes relative to the stroke and the available curve length."
-    ]
+    ],
+    "example": "labs/pg-primitive-arrow"
   },
   "Arrow3D": {
     "description": "Combine a three-dimensional line body with a conical arrowhead.",
     "notes": [
       "The constructor builds a Line3D body and a Cone head. headLength, headRadius and headSegments control the solid tip; use Arrow when a flat vector tip is the intended appearance."
-    ]
+    ],
+    "example": "labs/pg-arrow-3d"
   },
   "BooleanOps": {
     "description": "Combine evaluated vector regions in world coordinates using polygon clipping.",
@@ -125,43 +140,50 @@
     "description": "Create a Path containing the area covered by either of two vector entities.",
     "notes": [
       "Construction evaluates BooleanOps.combine once and copies the resulting geometry and paint. Moving an input afterward does not create a continuously linked Boolean computation."
-    ]
+    ],
+    "example": "labs/pg-boolean-union"
   },
   "Difference": {
     "description": "Create a Path representing the first vector region with the second region removed.",
     "notes": [
       "Operand order matters: Difference(A, B) cuts B out of A. The constructor evaluates the operation once; rebuild the result when changed inputs should alter the cutout."
-    ]
+    ],
+    "example": "labs/pg-boolean-difference"
   },
   "Intersection": {
     "description": "Create a Path containing only the overlap of two vector regions.",
     "notes": [
       "The output is evaluated geometry. A non-overlapping pair can produce an empty result; inspect transforms and world-space placement when an expected region disappears."
-    ]
+    ],
+    "example": "labs/pg-boolean-intersection"
   },
   "Exclusion": {
     "description": "Create a Path containing areas covered by exactly one of two vector regions.",
     "notes": [
       "This is the exclusive-or Boolean operation: shared overlap is removed while the non-overlapping portions remain. It evaluates the current input geometry at construction."
-    ]
+    ],
+    "example": "labs/pg-boolean-exclusion"
   },
   "Brace": {
     "description": "Draw a brace beside the bounds of an entity, entity list or group.",
     "notes": [
       "direction defaults to DOWN and padding defaults to 0.2. sync recalculates the brace from the target bounds; getText and getTex create aligned captions. Updating a caption is separate from changing the target geometry."
-    ]
+    ],
+    "example": "labs/pg-brace"
   },
   "ImplicitCurve2D": {
     "description": "Sample a CPU function over a coordinate system to extract an implicit contour or region.",
     "notes": [
       "The equality operator draws the zero contour. Other operators can supply inequality coverage when a fill is requested. Resolution controls the sampling grid and influences detail and CPU work."
-    ]
+    ],
+    "example": "labs/pg-plot-implicitcurve2d"
   },
   "ImplicitCurve2DGPU": {
     "description": "Evaluate a WGSL implicit equation over a quad mapped to a coordinate system.",
     "notes": [
       "The fragment implementation uses screen derivatives of the equation to estimate distance to its contour. It avoids CPU contour extraction but remains a shader-rendered surface, with resource bindings available through setResource."
-    ]
+    ],
+    "example": "labs/pg-plot-implicitcurve2dgpu"
   },
   "ImplicitSurface3D": {
     "description": "Generate an implicit surface on the GPU from a WGSL scalar field.",
@@ -173,19 +195,22 @@
     "description": "Build and sample a two-dimensional curve from one parameter.",
     "notes": [
       "The overloads accept a vector-valued function or separate coordinate functions. tRange supplies the parameter interval; getPointAtT, tangents and arc-length queries support placing or moving other entities along the curve."
-    ]
+    ],
+    "example": "labs/pg-plot-parametriccurve2d"
   },
   "ParametricCurve3D": {
     "description": "Build a three-dimensional Line3D from a parameterized function.",
     "notes": [
       "The overloads support a vector-valued function or separate coordinates, optionally mapped through axes. setFunction, setFunctions and setTRange rebuild the sampled curve rather than merely moving its transform."
-    ]
+    ],
+    "example": "labs/pg-plot-parametriccurve3d"
   },
   "ParametricSurface3D": {
     "description": "Generate a mesh by sampling a function of two parameters.",
     "notes": [
       "uRange and vRange describe the parameter domains; uSegments and vSegments control tessellation. updateFunction regenerates the surface. Keep matching grids and parameter directions when using the surface as a direct morph target."
-    ]
+    ],
+    "example": "labs/pg-plot-parametricsurface3d"
   },
   "RaymarchedPlot3D": {
     "description": "Render a WGSL height-field plot inside the physical bounds of ThreeDAxes.",
@@ -197,25 +222,29 @@
     "description": "Trace animated particles through a time-dependent two-dimensional vector field.",
     "notes": [
       "The field callback receives mathematical coordinates and time. The implementation pools line entities and updates their trails; choose the number of lines and trail settings for both readability and update cost."
-    ]
+    ],
+    "example": "labs/pg-field-streamlines"
   },
   "SurfaceGraph3D": {
     "description": "Generate a sampled height-field mesh from a CPU function and ThreeDAxes.",
     "notes": [
       "The function gives height over a two-coordinate domain. Segment counts control mesh detail, while SurfaceFragment provides view styling. updateFunction changes the surface geometry; transforming the entity moves the existing result."
-    ]
+    ],
+    "example": "labs/pg-plot-surface"
   },
   "VectorField2D": {
     "description": "Display a time-dependent planar vector field as a grid of arrows.",
     "notes": [
       "The callback maps each mathematical location and time to a vector. The entity rebuilds its grid when the axes range changes and updates the field separately from the axes drawing."
-    ]
+    ],
+    "example": "labs/pg-field-vectors-2d"
   },
   "VectorField3D": {
     "description": "Display a spatial vector field using instanced three-dimensional arrows.",
     "notes": [
       "The constructor samples the configured XYZ ranges and creates an Instanced arrow template. Its callback receives a Vec3 position and time; grid spacing controls the number of instances and the density of the visualization."
-    ]
+    ],
+    "example": "labs/pg-field-vectors-3d"
   },
   "Tex": {
     "description": "Turn a LaTeX expression into vector geometry suitable for scene layout and animation.",
@@ -227,7 +256,8 @@
     "description": "Load and use a bitmap/MSDF glyph atlas with its layout metadata.",
     "notes": [
       "The JSON data supplies glyph metrics and kerning while the bitmap supplies distance-field pixels. Font is the atlas representation used by text rendering; FontLoader and the resolver handle other font-loading workflows."
-    ]
+    ],
+    "example": "labs/pg-atlas-and-word"
   },
   "TextureAtlas": {
     "description": "Load one image and describe named subtextures within it.",
@@ -263,19 +293,22 @@
     "description": "Build a pie or donut-style chart from data values and themed slice components.",
     "notes": [
       "The composite groups slices, center content and legend separately. animateIn controls the entrance. Data values determine wedge angles; keep labels and legends readable when adding many small slices."
-    ]
+    ],
+    "example": "labs/pg-chart-pie"
   },
   "AutomatonRunner": {
     "description": "Coordinate animated execution of an Automaton against a Tape.",
     "notes": [
       "The runner owns prebuilt verdict badges and sequences state transitions, tape movement and status changes. It provides the visual execution workflow; the Automaton supplies the transition rules."
-    ]
+    ],
+    "example": "labs/pg-automaton-runner"
   },
   "Tape": {
     "description": "Display symbols as cells with a movable head indicator for automata demonstrations.",
     "notes": [
       "setSymbols creates the displayed sequence. writeSymbol changes a cell and moveHead animates the indicator. Cell size and gap describe presentation geometry rather than the machine's transition rules."
-    ]
+    ],
+    "example": "labs/pg-automaton-runner"
   },
   "GraphEdge": {
     "description": "Draw a directed or undirected connection between two graph nodes.",
@@ -371,25 +404,29 @@
     "description": "Describe a sphere as a signed-distance primitive.",
     "notes": [
       "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
-    ]
+    ],
+    "example": "labs/pg-sdf-sphere"
   },
   "SDFBox": {
     "description": "Describe an axis-aligned box as a signed-distance primitive.",
     "notes": [
       "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
-    ]
+    ],
+    "example": "labs/pg-sdf-box"
   },
   "SDFCylinder": {
     "description": "Describe a capped cylinder as a signed-distance primitive.",
     "notes": [
       "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
-    ]
+    ],
+    "example": "labs/pg-sdf-cylinder"
   },
   "SDFTorus": {
     "description": "Describe a ring surface using major and tube radii.",
     "notes": [
       "This is a field node, not an Entity. Compose it with other SDFNode operations and wrap the result in SDFEntity3D to render it. Inspect the constructor signature for this primitive's size convention."
-    ]
+    ],
+    "example": "labs/pg-sdf-torus"
   },
   "SDFCapsule": {
     "description": "Describe a rounded segment between two endpoints as a distance field.",
@@ -522,81 +559,92 @@
     "description": "Play a sequence of subtextures from an atlas while retaining ordinary Sprite placement and styling.",
     "notes": [
       "playAnimation selects the frame list, frames-per-second rate and looping behavior. Scene time advances frame selection; setting one frame is separate from playing the sequence."
-    ]
+    ],
+    "example": "labs/pg-sprite-animation"
   },
   "Arc": {
     "description": "Draw an elliptical arc using full dimensions and a signed angular span.",
     "notes": [
       "startAngle and sweep use radians. Positive sweep runs counter-clockwise and negative sweep clockwise; changing dimensions or angles rebuilds the path rather than changing its transform."
-    ]
+    ],
+    "example": "labs/pg-primitive-arc"
   },
   "Circle": {
     "description": "Draw a complete circular path, with analytical point sampling, circumference and hit testing.",
     "notes": [
       "radius changes local geometry. Entity.scale changes its displayed transform instead; choose the operation that matches the quantity you want to preserve."
     ],
-    "example": "labs/lab-paint"
+    "example": "labs/pg-primitive-circle"
   },
   "Dot": {
     "description": "Place a small circular marker at a requested position.",
     "notes": [
       "Dot extends Circle, so its radius and paint can be adjusted with the same methods. Use it for sample points, graph annotations and interactive handles."
-    ]
+    ],
+    "example": "labs/pg-primitive-dot"
   },
   "Mesh2D": {
     "description": "Render indexed two-dimensional geometry supplied by CPU arrays or GPU buffers.",
     "notes": [
       "CPU vertices are packed XY coordinates. GPU vertices use vec2f records and indices use u32 entries. The GPU form infers the index count from buffer size unless options specify it."
-    ]
+    ],
+    "example": "labs/pg-mesh-indexed"
   },
   "Path": {
     "description": "Draw and manipulate vector contours from SVG path data, decoded contours or a compatible GPU path buffer.",
     "notes": [
       "Path provides the source geometry for fills, outlines, sampling, modifiers and vector morphs. Transform changes move the evaluated geometry; replacing vertices changes the path itself."
-    ]
+    ],
+    "example": "labs/pg-primitive-path"
   },
   "Poly": {
     "description": "Draw a polyline or polygon from Vec2 points or a compatible GPU buffer.",
     "notes": [
       "The constructor defaults isClosed to false. Enable closure when the last point should connect to the first; fill rules and self-overlap settings affect the interpretation of a closed region."
-    ]
+    ],
+    "example": "labs/pg-primitive-poly"
   },
   "Rect": {
     "description": "Draw a centered rectangle with optional rounded corners.",
     "notes": [
       "Width, height and corner settings rebuild its vector Path. The standard constructor supplies a white fill when none is specified; use Color.NONE explicitly for an outline-only rectangle."
     ],
-    "example": "labs/lab-transforms"
+    "example": "labs/pg-primitive-rect"
   },
   "Triangle": {
     "description": "Render and raycast a triangle from three vertex positions or a compatible GPU buffer.",
     "notes": [
       "The triangle installs its own geometry and fragment components while retaining Entity paint and transform behavior. Keep vertex order consistent when changing its points."
-    ]
+    ],
+    "example": "labs/pg-primitive-triangle"
   },
   "Cone": {
     "description": "Create a conical mesh as a specialized Cylinder with one end radius set to zero.",
     "notes": [
       "Radial and height segment settings determine tessellation. Material styling comes from the Model base rather than vector Paint."
-    ]
+    ],
+    "example": "labs/pg-primitive-cone"
   },
   "Cylinder": {
     "description": "Create a mesh cylinder with independently specified end radii and height.",
     "notes": [
       "Equal radii produce a straight cylinder; unequal radii produce a tapered shape. Segment options affect mesh detail and the cost of rendering or morphing it."
-    ]
+    ],
+    "example": "labs/pg-primitive-cylinder"
   },
   "Sphere": {
     "description": "Create a sampled sphere mesh from a radius and segment options.",
     "notes": [
       "The radius changes generated geometry, while inherited Entity scaling changes the transform. Use sufficient segments for the intended silhouette and camera distance."
-    ]
+    ],
+    "example": "labs/pg-primitive-sphere"
   },
   "Torus": {
     "description": "Create a torus mesh from a ring radius and a tube radius.",
     "notes": [
       "The generated ring lies around the Z axis, with tube displacement extending through Z. radialSegments and tubularSegments sample the tube and ring directions; they are independent detail controls."
-    ]
+    ],
+    "example": "labs/pg-primitive-torus"
   },
   "SDFVolume": {
     "description": "Render a WGSL distance function inside a bounded three-dimensional volume.",
@@ -620,25 +668,29 @@
     "description": "Generate an elevation mesh on the GPU from a heightmap image.",
     "notes": [
       "Await generateFromHeightmap with an initialized Scene. The implementation falls back to procedural data when image loading fails. width and height span X and Z; depthScale controls Y elevation."
-    ]
+    ],
+    "example": "labs/pg-terrain-heightfield"
   },
   "RTImage": {
     "description": "Display an image on a three-dimensional Model quad participating in supported raster and raytrace paths.",
     "notes": [
       "setSource assigns the texture map and updateSize rebuilds the quad. This constructor uses ordinary material settings; the commented emissive setup is not active."
-    ]
+    ],
+    "example": "labs/pg-image"
   },
   "RTVideo": {
     "description": "Display VideoData on a three-dimensional Model quad and update its texture as frames become available.",
     "notes": [
       "load waits for decoded video data before assigning the texture and enabling the emissive screen appearance. Playback control belongs to the video resource; cleanup and scene timing remain separate responsibilities."
-    ]
+    ],
+    "example": "labs/pg-video-timeline"
   },
   "RTHTML": {
     "description": "Combine a three-dimensional quad with HTML content and the selected DOM or texture presentation mode.",
     "notes": [
       "RTHTMLOptions controls the mode and capture resolution. DOM input and content changes can invalidate the representation; inspect the mode-specific source before using it as a rasterized or raytraced surface."
-    ]
+    ],
+    "example": "labs/pg-html-raster"
   },
   "Environment": {
     "description": "Store sky color, ground color and intensity for the engine environment lighting configuration.",
@@ -650,6 +702,7 @@
     "description": "Store the engine light color and position configuration.",
     "notes": [
       "The exported light instance is shared configuration rather than an Entity. Its initial color values are intentionally much larger than normalized display colors, so interpret them as lighting intensity."
-    ]
+    ],
+    "example": "labs/pg-light-direction"
   }
 }

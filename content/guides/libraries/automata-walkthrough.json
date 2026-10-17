@@ -36,6 +36,20 @@
           "text": "A machine for an even number of ones"
         },
         {
+          "type": "tabs",
+          "tabs": [
+            {
+              "label": "Run 1010",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/pg-automaton-runner"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "type": "code",
           "language": "typescript",
           "code": "import { Automaton, AutomatonRunner, Tape } from \"retiam/graphs\";\nconst machine = new Automaton();\nmachine.addState(\"even\", { isStart: true, isAccepting: true, label: \"even\" });\nmachine.addState(\"odd\", { label: \"odd\" });\nmachine.addTransition(\"even\", \"even\", \"0\");\nmachine.addTransition(\"odd\", \"odd\", \"0\");\nmachine.addTransition(\"even\", \"odd\", \"1\");\nmachine.addTransition(\"odd\", \"even\", \"1\");\nmachine.getNode(\"even\")!.move([-2, 0, 0]);\nmachine.getNode(\"odd\")!.move([2, 0, 0]);\nthis.add(machine);\nconst result = machine.trace(\"1010\"); // accepted: true\nconsole.log(result.states, result.steps, result.accepted);\nconst tape = new Tape({ symbols: \"1010\" }).move([0, -2.5, 0]);\nconst runner = new AutomatonRunner(machine, tape);\nthis.add(tape, runner);\nawait runner.run(this, \"1010\", 0.65);"
@@ -53,6 +67,38 @@
           "type": "heading",
           "level": 2,
           "text": "Trace semantics and limits"
+        },
+        {
+          "type": "tabs",
+          "tabs": [
+            {
+              "label": "Reject",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/pg-automaton-reject"
+                }
+              ]
+            },
+            {
+              "label": "Empty",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/pg-automaton-empty"
+                }
+              ]
+            },
+            {
+              "label": "Missing",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/pg-automaton-missing"
+                }
+              ]
+            }
+          ]
         },
         {
           "type": "paragraph",
@@ -75,6 +121,20 @@
           "type": "heading",
           "level": 2,
           "text": "Runner, tape and timing"
+        },
+        {
+          "type": "tabs",
+          "tabs": [
+            {
+              "label": "Automaton Runner",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/pg-automaton-runner"
+                }
+              ]
+            }
+          ]
         },
         {
           "type": "paragraph",

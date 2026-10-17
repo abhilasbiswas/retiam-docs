@@ -1,0 +1,17 @@
+import { Axes, CameraModel, Create, ParametricCurve2D, Scene, hex } from 'retiam';
+
+/** One coordinate map and one function define the entire plot. */
+export default class PlotParametriccurve2dScene extends Scene {
+  async run() {
+    this.clearColor(hex('#080c14'));
+    this.camera.model = CameraModel.ORTHOGRAPHIC;
+    this.camera.position.set([0, 0, 20]);
+    this.camera.orthoScale = Math.max(6.5, 10 / (this.canvas.width / this.canvas.height));
+
+    const axes = new Axes({ xRange: [-3, 3, 1], yRange: [-2, 2, 1], width: 7, height: 4, showLabels: false, axisColor: hex('#64748b') });
+    const graph = new ParametricCurve2D(t => [2 * Math.cos(t), Math.sin(t)], axes, { tRange: [0, Math.PI * 2], samples: 100, primitive: 'path', stroke: hex('#38bdf8'), strokeWidth: 0.06 });
+    this.add(axes, graph);
+    await this.play(new Create(graph), { duration: 1800 });
+    await this.wait(1700);
+  }
+}

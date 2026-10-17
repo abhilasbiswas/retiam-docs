@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import ts from 'typescript';
+import { inspectRuntimeSource } from './runtime/source-transform.js';
 export { ts };
 const site = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const root = site;
@@ -126,7 +127,7 @@ export function discoverExamples() {
     const sourceNotes = [...(run?.body?.getText(source)||'').matchAll(/^\s*\/\/\s*(?:\d+[.)]\s*)(.+)$/gm)].map(m=>m[1].trim()).filter(text=>text.length>12).slice(0,10);
     const requirements=[];
     for(const asset of assets) if(!fs.existsSync(path.join(site,'assets',asset.slice(1)))) requirements.push(`This source references \`${asset}\`, which is not present in the repository's public assets. Provide that asset or change the source before using that part of the example.`);
-    if(imports.some(i=>i.module==='retiam/tts')) {
+    if(inspectRuntimeSource(ts, code, file).tts) {
       requirements.push('Microsoft Edge narration needs the /api/tts/msedge service from the Retiam development server, or a configured msedgeEndpoint. A static documentation preview does not supply that service.');
     }
     if (note.controls?.length && !source.statements.filter(ts.isClassDeclaration).some(node=>node.members.some(member=>member.name?.getText(source)==='setParameter'))) throw new Error(`Example controls need setParameter: ${id}`);

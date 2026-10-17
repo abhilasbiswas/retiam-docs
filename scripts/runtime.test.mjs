@@ -52,6 +52,8 @@ test('service requirements are explicit and do not start local services accident
   assert.deepEqual(runtimeRequirements(edge, { msedgeEndpoint: 'https://speech.example.org/api/tts' }), []);
   const facade = inspectRuntimeSource(ts, `import { TTS } from 'retiam/tts'; TTS.synthesize('Hello');`);
   assert.deepEqual(facade.services, ['msedgeEndpoint']);
+  assert.deepEqual(inspectRuntimeSource(ts, `import { Subtitles as Captions, SUBTITLE_PRESETS, type SubtitlesOptions } from 'retiam/tts';`).services, []);
+  assert.deepEqual(inspectRuntimeSource(ts, `import * as speech from 'retiam/tts';`).services, ['msedgeEndpoint']);
   const local = inspectRuntimeSource(ts, `// fetch('http://localhost:9999/comment')
     const document = 'http://localhost:5173/studio/index.html';`);
   assert.equal(local.localUrls.length, 1);

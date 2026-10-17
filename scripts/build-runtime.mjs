@@ -117,7 +117,10 @@ fs.writeFileSync(path.join(output, 'runtime-config.js'), `export const services 
 for (const name of ['viewer.js', 'viewer.css', 'asset-url.js', 'source-transform.js', 'check-scenes.html', 'check-scenes.js']) {
   fs.copyFileSync(path.join(site, 'scripts/runtime', name), path.join(output, name));
 }
-fs.writeFileSync(path.join(output, 'check-scenes.json'), JSON.stringify(examples.flatMap(example => example.scenes.map(scene => ({ id: example.id, source: example.source, sourceHash: example.sourceHash, export: scene.export, requirements: example.requirements })))));
+const sceneCoverageFile = path.join(site, 'content/scene-coverage.json');
+const curriculumScenes = new Set(fs.existsSync(sceneCoverageFile) ? Object.keys(JSON.parse(fs.readFileSync(sceneCoverageFile, 'utf8')).scenes) : []);
+curriculumScenes.add('labs/pg-welcome');
+fs.writeFileSync(path.join(output, 'check-scenes.json'), JSON.stringify(examples.flatMap(example => example.scenes.map(scene => ({ id: example.id, source: example.source, sourceHash: example.sourceHash, export: scene.export, requirements: example.requirements, curriculum: curriculumScenes.has(example.id) })))));
 const map = JSON.stringify({ imports }).replace(/</g, '\\u003c');
 fs.writeFileSync(path.join(output, 'viewer.html'), `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="./viewer.css"><script type="importmap">${map}</script></head><body><canvas id="scene" aria-label="Interactive Retiam scene"></canvas><p id="status" role="status">Preparing scene…</p><script type="module" src="./viewer.js"></script></body></html>`);
 console.log(`Prepared ${Object.keys(manifest).length} source-based scenes (${Object.values(manifest).filter(entry => entry.error).length} dependency errors), ${assets.copied.length} referenced assets, using ${engineModule}.`);

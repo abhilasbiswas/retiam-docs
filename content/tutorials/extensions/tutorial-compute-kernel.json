@@ -21,6 +21,20 @@
           "text": "What you will build"
         },
         {
+          "type": "tabs",
+          "tabs": [
+            {
+              "label": "Tutorial Compute Kernel",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/tutorial-compute-kernel"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "type": "paragraph",
           "text": "A compute kernel writes one vec4 color per cell. A fragment shader reads those colors from the same buffer. The example uses 4096 cells, making its indexing and resource use easy to inspect. Click the surface to freeze its time parameter."
         }
@@ -33,6 +47,20 @@
           "type": "heading",
           "level": 2,
           "text": "1. Allocate the shared resources"
+        },
+        {
+          "type": "tabs",
+          "tabs": [
+            {
+              "label": "Small allocation",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/pg-compute-tiny-grid"
+                }
+              ]
+            }
+          ]
         },
         {
           "type": "code",
@@ -54,6 +82,20 @@
           "text": "2. Bind names and write compute logic"
         },
         {
+          "type": "tabs",
+          "tabs": [
+            {
+              "label": "One workgroup",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/pg-compute-tiny-grid"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "type": "code",
           "language": "typescript",
           "code": "const kernel = new ComputeKernel({\n  pixels: Res.buffer('array<vec4f>', pixels, 'read_write'),\n  params: Res.uniform('vec4f', params)\n}, `\n  let i = global_id.x;\n  if (i >= u32(params.z)) { return; }\n  pixels[i] = vec4f(f32(i % 64u) / 64.0, 0.5, 0.8, 1.0);\n`, [64, 1, 1]);"
@@ -71,6 +113,20 @@
           "type": "heading",
           "level": 2,
           "text": "3. Queue work and display the result"
+        },
+        {
+          "type": "tabs",
+          "tabs": [
+            {
+              "label": "Compute Tiny Grid",
+              "blocks": [
+                {
+                  "type": "example",
+                  "example": "labs/pg-compute-tiny-grid"
+                }
+              ]
+            }
+          ]
         },
         {
           "type": "code",

@@ -123,6 +123,12 @@ A page is broken down into `sections`. Each section can be linked to directly (v
 
 ## 2. Content Blocks
 
+Use `"presentation": "preview"` on an `example` block for a scene-only introduction.
+It keeps replay, pause and fullscreen controls while omitting the source editor,
+source link, settings and teaching notes. The default `editor` presentation keeps
+the complete editable example. The welcome scene uses the preview presentation;
+instructional scenes should normally use the default.
+
 Content blocks are the building blocks of your documentation. Every block requires a `"type"` property.
 
 ### Paragraph

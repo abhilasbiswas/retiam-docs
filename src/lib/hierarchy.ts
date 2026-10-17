@@ -7,6 +7,7 @@ export interface HierarchyNode {
   abstract: boolean;
   external?: boolean;
   description?: string;
+  example?: string;
   visibility: string;
 }
 export interface HierarchyEdge { from: string; to: string; kind: 'extends' | 'implements' }

@@ -5,6 +5,7 @@ import { loadHierarchy } from '../../data/references';
 import { hierarchyDiagram, hierarchyView, resolveHierarchyRoot } from '../../lib/hierarchy';
 import type { HierarchyIndex } from '../../lib/hierarchy';
 import DiagramBlock from './DiagramBlock';
+import ExampleBlock from './ExampleBlock';
 
 export default function ClassHierarchyBlock({ block }: { block: Block }) {
   const [params] = useSearchParams();
@@ -56,6 +57,10 @@ export default function ClassHierarchyBlock({ block }: { block: Block }) {
         <span>{view.focus.name}{view.focus.abstract ? ' · abstract class' : ` · ${view.focus.kind}`} · {view.descendants} descendant{view.descendants === 1 ? '' : 's'} shown</span>
         {view.focus.url && <Link to={view.focus.url}>Open API reference</Link>}
       </div>
+      {block.browse && view.focus.example && <details className="doc-details" key={view.focus.id}>
+        <summary>{view.focus.abstract ? 'See a concrete implementation' : `See ${view.focus.name} in a scene`}</summary>
+        <ExampleBlock block={{type:'example',example:view.focus.example}} />
+      </details>}
       <DiagramBlock block={{ type: 'code', language: 'mermaid', code: diagram.code }} nodeLinks={diagram.links} label="Class hierarchy" fitMode="width" />
       <p className="hierarchy-legend">Arrows run from base to derived type. Solid: extends · Dashed: implements · Italic: abstract class. Click a type to open its API.</p>
       {!view.descendants && <p className="hierarchy-empty">This type has no documented descendants. Its ancestors are shown when available.</p>}

@@ -36,7 +36,8 @@
     "description": "Render text as vector glyph paths that can be filled, outlined, measured and animated like other VectorEntity geometry. Use this representation when you need character paths or vector shape transformations rather than an atlas-textured label.",
     "notes": [
       "Font selection can resolve asynchronously. Measure bounds and perform layout after the required font is ready; changes to text or font rebuild the glyph geometry. The text and rawText setters both rebuild from the new string."
-    ]
+    ],
+    "example": "labs/pg-text-vector"
   },
   "Text.constructor": {
     "description": "Create vector text from a string and optional TextOptions. The current defaults use a white fill and a font size of 48; a configured font can be a style name or a parsed font.",
@@ -74,7 +75,8 @@
     "description": "Display an enlarged region of the previous rendered frame, with a focus box showing which area is sampled. The display surface, window border and focus border are child entities that move with this composite.",
     "notes": [
       "The scene must provide a feedbackFeature with getPreviousFrameTexture. The current UV conversion uses camera.orthoScale and the canvas aspect ratio; treat it as an orthographic magnifier rather than a general perspective-camera portal."
-    ]
+    ],
+    "example": "labs/pg-zoom-feedbackzoomview"
   },
   "FeedbackZoomView.setFocusPosition": {
     "description": "Move the sampled region’s center and its focus box to the supplied scene coordinate. The next update converts that coordinate to feedback-texture UV offsets."
@@ -98,7 +100,8 @@
     "description": "Reuse parsed vector fonts and generated MSDF fonts instead of rebuilding them for every label. Session maps hold the loaded font objects, an in-flight map shares pending work, and IndexedDB stores atlas metadata and image blobs across sessions.",
     "notes": [
       "clearMemory removes session entries; clearDisk removes the persistent atlas database. Disk reads return null when the cache is unavailable or a record cannot be read, allowing font generation to continue."
-    ]
+    ],
+    "example": "labs/pg-font-cache"
   },
   "FontCache.clearMemory": {
     "description": "Clear the vector, MSDF and pending-work maps for the current session. This does not remove the IndexedDB atlas records."
@@ -143,7 +146,8 @@
     "description": "Turn pointer coordinates into a scene ray and find the closest visible, pickable entity along it. The traversal respects layer masks, transforms the ray into each entity’s local space and dispatches to its raycast method or a bounds fallback.",
     "notes": [
       "cast uses reusable scratch storage and returns a reused hit record; copy values you need to retain across later casts. The synchronous path ignores a promise returned by an entity’s raycast implementation. GPU path intersection is exposed separately as an asynchronous operation."
-    ]
+    ],
+    "example": "labs/pg-picking-3d"
   },
   "Raycaster.cast": {
     "description": "Traverse the supplied entity roots and their children, returning the nearest accepted hit or null. Invisible nodes are skipped; a node outside the culling mask can still have children on a matching layer."

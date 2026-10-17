@@ -366,6 +366,11 @@ export function buildContent() {
     candidates.sort((a,b) => Number(b.id.startsWith('labs/')) - Number(a.id.startsWith('labs/')) || (b.walkthrough?.length || 0) - (a.walkthrough?.length || 0) || a.calls.length - b.calls.length || a.id.localeCompare(b.id));
     if (candidates[0]) entry.example = candidates[0].id;
   }
+  const entriesById = new Map(Object.values(model.api).flat().map(entry => [entry.id, entry]));
+  for (const node of model.hierarchy.nodes) {
+    const example = entriesById.get(node.id)?.example;
+    if (example) node.example = example;
+  }
   for (const file of model.coverage.files) {
     const target = { name:file.path,url:`/${file.pageId}#${file.sectionId}`,source:file.path };
     model.lookup[file.path] ||= [target];

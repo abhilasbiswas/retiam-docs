@@ -116,6 +116,8 @@ export interface ExampleBlock {
   type: 'example';
   example: string;
   title?: string;
+  /** A scene-only presentation, without source code or teaching notes. */
+  presentation?: 'editor' | 'preview';
 }
 
 export interface ApiReferenceBlock {

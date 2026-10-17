@@ -12,6 +12,7 @@ const savePreference=(key:string,value:boolean)=>{try{browserDraftStorage()?.set
 const runtimeBase=`${import.meta.env.BASE_URL}runtime/`;
 interface LogEntry {message:string;level:string}
 export default function ExampleBlock({block}:{block:Block}) {
+  const previewOnly=block.presentation==='preview';
   const instance=useId();
   const [example,setExample]=useState<Example>(),[exampleError,setExampleError]=useState(''),[exampleAttempt,setExampleAttempt]=useState(0);
   const frame=useRef<HTMLIFrameElement>(null),root=useRef<HTMLDivElement>(null),workbench=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null),consoleOutput=useRef<HTMLDivElement>(null);
@@ -22,9 +23,11 @@ export default function ExampleBlock({block}:{block:Block}) {
   const [draftError,setDraftError]=useState('');
   const [isLive,setIsLive]=useState(()=>readPreference('retiam_pg_live')==='true');
   const [preserve,setPreserve]=useState(()=>{const val=readPreference('retiam_pg_preserve');if(val===null){savePreference('retiam_pg_preserve',true);return true;}return val!=='false';});
-  const [showCode,setShowCode]=useState(true),[showCanvas,setShowCanvas]=useState(true),[showConsole,setShowConsole]=useState(false),[settings,setSettings]=useState(false),[fullscreen,setFullscreen]=useState(false);
+  const [showCode,setShowCode]=useState(!previewOnly),[showCanvas,setShowCanvas]=useState(true),[showConsole,setShowConsole]=useState(false),[settings,setSettings]=useState(false),[fullscreen,setFullscreen]=useState(false);
   const [logs,setLogs]=useState<LogEntry[]>([]);
   const [selectedExport,setSelectedExport]=useState('default');
+  const [parameters,setParameters]=useState<Record<string,number|string>>({});
+  const parameterValues=useRef(parameters);parameterValues.current=parameters;
   const pendingCode=useRef<string|undefined>(undefined),pendingRestore=useRef<unknown>(undefined);
   const pendingRun=useRef<{code:string|undefined}|undefined>(undefined),snapshotTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
   const editTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined),inView=useRef(false),activeViewer=useRef(false);
@@ -55,19 +58,19 @@ export default function ExampleBlock({block}:{block:Block}) {
     setExample(undefined);setExampleError('');setSource(undefined);setEdited('');setLoadSource(false);
     setActive(false);setState('idle');activeViewer.current=false;
     void loadExample(block.example).then(value=>{
-      if(!cancelled){setExample(value);setSelectedExport(value.scenes[0]?.export||'default');}
+      if(!cancelled){setExample(value);setSelectedExport(value.scenes[0]?.export||'default');setParameters(Object.fromEntries((value.controls||[]).map(control=>[control.name,control.value])));}
     }).catch(value=>{if(!cancelled)setExampleError(value instanceof Error?value.message:String(value));});
     return()=>{cancelled=true;};
   },[block.example,exampleAttempt]);
   useEffect(()=>{
-    if(!example)return;
+    if(!example||previewOnly)return;
     const target=root.current;
     if(!target||typeof IntersectionObserver==='undefined'){setLoadSource(true);return;}
     const observer=new IntersectionObserver(entries=>{
       if(entries.some(entry=>entry.isIntersecting)){setLoadSource(true);observer.disconnect();}
     },{rootMargin:'800px 0px'});
     observer.observe(target);return()=>observer.disconnect();
-  },[example]);
+  },[example,previewOnly]);
   useEffect(()=>{
     if(!loadSource||!example)return;
     const controller=new AbortController();setSourceError('');
@@ -81,7 +84,7 @@ export default function ExampleBlock({block}:{block:Block}) {
       if(event.source!==frame.current?.contentWindow||event.origin!==location.origin||event.data?.token!==token)return;
       if(event.data.type==='request-code')send('run',{code:pendingCode.current,restore:pendingRestore.current});
       if(event.data.type==='visibility')send(inView.current&&!latest.current.paused?'resume':'pause');
-      if(event.data.type==='ready'){setState('ready');setPaused(!!event.data.paused);setError('');}
+      if(event.data.type==='ready'){setState('ready');setPaused(!!event.data.paused);setError('');for(const [name,value] of Object.entries(parameterValues.current))send('parameter',{name,value});}
       if(event.data.type==='error'){setState('error');setError(event.data.message);}
       if(event.data.type==='log')setLogs(previous=>[...previous.slice(-199),{message:event.data.message,level:event.data.level}]);
       if(event.data.type==='snapshot'&&pendingRun.current)launch(pendingRun.current.code,event.data.snapshot);
@@ -101,15 +104,15 @@ export default function ExampleBlock({block}:{block:Block}) {
       inView.current=visible;
       const current=latest.current;
       if(activeViewer.current)current.send(visible&&!current.paused?'resume':'pause');
-      else if(entering&&current.source!==undefined&&!example?.requirements?.length)current.start(current.edited===current.source?undefined:current.edited);
+      else if(entering&&(previewOnly||current.source!==undefined)&&!example?.requirements?.length)current.start(previewOnly||current.edited===current.source?undefined:current.edited);
     },{threshold:0});
     observer.observe(stage.current);return()=>observer.disconnect();
     // Keep the observer stable across launches to avoid restarting a preview
     // that remains visible while its iframe mounts.
-  },[example?.id,example?.requirements?.length]);
+  },[example?.id,example?.requirements?.length,previewOnly]);
   useEffect(()=>{
-    if(source!==undefined&&inView.current&&!activeViewer.current&&!example?.requirements?.length){const current=latest.current;current.start(current.edited===source?undefined:current.edited);}
-  },[source,selectedExport,example?.requirements?.length]);
+    if((previewOnly||source!==undefined)&&inView.current&&!activeViewer.current&&!example?.requirements?.length){const current=latest.current;current.start(previewOnly||current.edited===source?undefined:current.edited);}
+  },[source,selectedExport,example?.requirements?.length,previewOnly]);
   useEffect(()=>{if(state==='ready'&&(paused||!inView.current))send('pause');},[state,paused,send]);
   useEffect(()=>{
     if(!active||state!=='loading')return;
@@ -122,58 +125,66 @@ export default function ExampleBlock({block}:{block:Block}) {
   if(!example)return <div className="example-source-loading"><p role={exampleError?'alert':'status'}>{exampleError||'Loading example…'}</p>{exampleError&&<button onClick={()=>setExampleAttempt(value=>value+1)}>Retry example</button>}</div>;
   const stop=()=>{clearTimeout(editTimer.current);clearTimeout(snapshotTimer.current);pendingRun.current=undefined;activeViewer.current=false;send('destroy');setActive(false);setState('idle');};
   const reset=()=>{if(source!==undefined){setEdited(source);saveDraft(example.id,example.sourceHash,source,source,browserDraftStorage());setDraftError('');start();}};
-  const run=()=>start(edited,preserve);
+  const run=()=>previewOnly?start():start(edited,preserve);
+  const togglePause=()=>{send(paused?'resume':'pause');setPaused(value=>!value);};
   const toggleLive=()=>{const next=!isLive;setIsLive(next);savePreference('retiam_pg_live',next);if(next&&source!==undefined)run();else clearTimeout(editTimer.current);};
   const url=`${runtimeBase}viewer.html?${new URLSearchParams({example:example.id,export:selectedExport,token,...(pendingCode.current!==undefined?{edited:'1'}:{})})}`;
   const sourcePanel=source===undefined?<div className="example-source-loading"><p role={sourceError?'alert':'status'}>{sourceError||(!loadSource?'Source loads when this example approaches the viewport.':'Loading TypeScript…')}</p>{sourceError&&<button onClick={()=>setSourceAttempt(value=>value+1)}>Retry source</button>}</div>:<LiveCodeEditor value={edited} label={`Edit ${example.title} TypeScript`} onChange={changeCode} onRun={run}/>;
   const responsiveScene=example.id.startsWith('labs/')||example.id.startsWith('highlights/')||(example.id.startsWith('motion/')&&example.id!=='motion/spline_demo');
-  return <div className="live-example" ref={root}>
-    <div className="example-heading"><h3>{block.title||example.title}</h3><span>{example.scenes.length?'Live scene':'Supporting source'}</span></div>
-    {example.description&&<p><InlineText text={example.description}/></p>}
+  return <div className={`live-example${previewOnly?' scene-preview':''}`} ref={root}>
+    {!previewOnly&&<div className="example-heading"><h3>{block.title||example.title}</h3><span>{example.scenes.length?'Live scene':'Supporting source'}</span></div>}
+    {!previewOnly&&example.description&&<p><InlineText text={example.description}/></p>}
     {example.requirements?.length? <div className="example-requirements"><strong>Before you run this scene</strong><ul>{example.requirements.map((r,i)=><li key={i}><InlineText text={r}/></li>)}</ul></div>:null}
     {example.scenes.length>0&&<>
-      <div ref={workbench} className={`playground-card example-workbench${showCode?'':' hide-code'}${showCanvas?'':' hide-canvas'}${showConsole?'':' hide-console'}`}>
+      <div ref={workbench} className={`playground-card example-workbench${!previewOnly&&showCode?'':' hide-code'}${showCanvas?'':' hide-canvas'}${showConsole?'':' hide-console'}`}>
         <div className="playground-toolbar">
-          <div className="toolbar-group">
+          {!previewOnly&&<div className="toolbar-group">
             <span className="material-symbols-outlined">code_blocks</span><span className="toolbar-label">Live Editor</span>
             <button className={`icon-btn${isLive?' active':''}`} onClick={toggleLive} title="Live Auto-Run" aria-label="Live Auto-Run" aria-pressed={isLive}><span className="material-symbols-outlined">bolt</span></button>
             <button className={`icon-btn${preserve?' active':''}`} onClick={()=>{const next=!preserve;setPreserve(next);savePreference('retiam_pg_preserve',next);}} title="Preserve State" aria-label="Preserve State" aria-pressed={preserve}><span className="material-symbols-outlined">save</span></button>
             <button className="icon-btn" onClick={reset} disabled={source===undefined} title="Reset Code" aria-label="Reset Code"><span className="material-symbols-outlined">refresh</span></button>
-          </div>
+          </div>}
+          {previewOnly&&<div className="toolbar-group"><span className="toolbar-label">{block.title||example.title}</span></div>}
           <div className="toolbar-group">
             {example.scenes.length>1&&<select aria-label="Scene" value={selectedExport} onChange={e=>{stop();setSelectedExport(e.target.value);}}>{example.scenes.map(s=><option key={s.export} value={s.export}>{s.name}</option>)}</select>}
-            <button className="icon-btn" onClick={run} disabled={source===undefined} title="Run Scene (Ctrl/⌘+Enter)" aria-label="Run Scene"><span className="material-symbols-outlined">play_arrow</span></button>
+            <button className="icon-btn" onClick={run} disabled={!previewOnly&&source===undefined} title={previewOnly?'Replay animation':'Run Scene (Ctrl/⌘+Enter)'} aria-label={previewOnly?'Replay animation':'Run Scene'}><span className="material-symbols-outlined">{previewOnly?'replay':'play_arrow'}</span></button>
+            {!previewOnly&&<button className="icon-btn" onClick={stop} disabled={!active} title="Stop scene and release the preview" aria-label="Stop scene"><span className="material-symbols-outlined">stop</span></button>}
+            {previewOnly&&<button className="icon-btn" onClick={togglePause} disabled={state!=='ready'} title={paused?'Resume animation':'Pause animation'} aria-label={paused?'Resume animation':'Pause animation'}><span className="material-symbols-outlined">{paused?'play_arrow':'pause'}</span></button>}
             <button className="icon-btn" onClick={()=>{void (fullscreen?document.exitFullscreen():workbench.current?.requestFullscreen())?.catch(e=>setError(e.message));}} title="Toggle Fullscreen" aria-label="Toggle Fullscreen"><span className="material-symbols-outlined">{fullscreen?'fullscreen_exit':'fullscreen'}</span></button>
-            <button className={`icon-btn${settings?' active':''}`} onClick={()=>setSettings(value=>!value)} title="View Settings" aria-label="View Settings" aria-expanded={settings}><span className="material-symbols-outlined">settings</span></button>
-            {settings&&<div className="settings-dropdown">{[
+            {!previewOnly&&<button className={`icon-btn${settings?' active':''}`} onClick={()=>setSettings(value=>!value)} title="View Settings" aria-label="View Settings" aria-expanded={settings}><span className="material-symbols-outlined">settings</span></button>}
+            {!previewOnly&&settings&&<div className="settings-dropdown">{[
               {label:'Show Code',value:showCode,toggle:()=>setShowCode(value=>!value)},
               {label:'Show Result',value:showCanvas,toggle:()=>setShowCanvas(value=>!value)},
               {label:'Show Console',value:showConsole,toggle:()=>setShowConsole(value=>!value)},
             ].map(item=><button key={item.label} className={`dropdown-item${item.value?' active':''}`} onClick={item.toggle} aria-label={item.label} aria-pressed={item.value}><span>{item.label}</span>{item.value&&<span className="material-symbols-outlined" aria-hidden="true">check</span>}</button>)}</div>}
           </div>
         </div>
+        {!previewOnly&&!!example.controls?.length&&<div className="scene-parameter-controls">{example.controls.map(control=><label key={control.name}>{control.label}
+          {control.options?<select value={parameters[control.name]??control.value} disabled={state!=='ready'} onChange={event=>{const value=event.target.value;setParameters(previous=>({...previous,[control.name]:value}));send('parameter',{name:control.name,value});}}>{control.options.map(option=><option key={option}>{option}</option>)}</select>
+            :<><input type="range" min={control.min} max={control.max} step={control.step} value={parameters[control.name]??control.value} disabled={state!=='ready'} onChange={event=>{const value=Number(event.target.value);setParameters(previous=>({...previous,[control.name]:value}));send('parameter',{name:control.name,value});}}/><output>{parameters[control.name]??control.value}</output></>}
+        </label>)}</div>}
         <div className="ide-body">
-          <div className="code-panel">
+          {!previewOnly&&<div className="code-panel">
             <div className="example-panel-heading">{example.source.split('/').pop()}</div>
             {sourcePanel}
             <div className="console-panel"><div className="console-header">Terminal Output</div><div className="console-output" ref={consoleOutput} role="log" aria-label="Scene console">{logs.length?logs.map((log,index)=><div key={index} className={`log-entry ${log.level}`}>&gt; {log.message}</div>):<div className="log-entry">&gt; Ready. Run the scene to see output.</div>}</div></div>
-          </div>
+          </div>}
           <div className="canvas-panel">
-            <div className="example-panel-heading">Preview</div>
+            {!previewOnly&&<div className="example-panel-heading">Preview</div>}
             <div className="example-stage" ref={stage} data-presentation={responsiveScene?'responsive':'landscape'}>
-              {active?<iframe ref={frame} key={token} src={url} title={example.title} allow="fullscreen; autoplay" sandbox="allow-scripts allow-same-origin"/>:<div className="example-poster"><span className="material-symbols-outlined">play_circle</span><p>{example.requirements?.length?'Review the requirements above, then start this scene.':'Edit the code, then run the scene to explore it here.'}</p><button onClick={()=>start(source===undefined?undefined:edited)}>Start scene</button></div>}
+              {active?<iframe ref={frame} key={token} src={url} title={example.title} allow="fullscreen; autoplay" sandbox="allow-scripts allow-same-origin"/>:<div className="example-poster"><span className="material-symbols-outlined">play_circle</span><p>{example.requirements?.length?'Review the requirements above, then start this scene.':previewOnly?'Welcome to Retiam.':'Edit the code, then run the scene to explore it here.'}</p><button onClick={()=>start(previewOnly||source===undefined?undefined:edited)}>{previewOnly?'Play animation':'Start scene'}</button></div>}
             </div>
           </div>
         </div>
       </div>
     </>}
-    {error&&<div className="example-error" role="alert"><p>{error}</p><button onClick={run} disabled={source===undefined}>Run again</button></div>}
+    {error&&<div className="example-error" role="alert"><p>{error}</p><button onClick={run} disabled={!previewOnly&&source===undefined}>Run again</button></div>}
     {draftError&&<p role="status">{draftError}</p>}
-    {example.walkthrough?.length? <div className="example-walkthrough"><h4>What happens in this scene</h4>{example.walkthrough.map((text,i)=><p key={i}><InlineText text={text}/></p>)}</div>:null}
-    {!example.walkthrough?.length&&example.sourceNotes?.length?<details className="example-source-notes"><summary>Follow the source annotations</summary><ol>{example.sourceNotes.map((note,i)=><li key={i}><InlineText text={note}/></li>)}</ol></details>:null}
-    {example.experiments?.length? <div className="example-experiments"><h4>Try it yourself</h4><ul>{example.experiments.map((text,i)=><li key={i}><InlineText text={text}/></li>)}</ul></div>:null}
-    {example.related?.length? <p>APIs and features used: <InlineText text={example.related.map(name=>`\`${name}\``).join(' · ')}/></p>:null}
-    <p className="example-source-link"><a href={`https://github.com/abhilasbiswas/retiam-docs/blob/main/${example.source}`} target="_blank" rel="noopener noreferrer">{example.source}</a></p>
+    {!previewOnly&&example.walkthrough?.length? <div className="example-walkthrough"><h4>What happens in this scene</h4>{example.walkthrough.map((text,i)=><p key={i}><InlineText text={text}/></p>)}</div>:null}
+    {!previewOnly&&!example.walkthrough?.length&&example.sourceNotes?.length?<details className="example-source-notes"><summary>Follow the source annotations</summary><ol>{example.sourceNotes.map((note,i)=><li key={i}><InlineText text={note}/></li>)}</ol></details>:null}
+    {!previewOnly&&example.experiments?.length? <div className="example-experiments"><h4>Try it yourself</h4><ul>{example.experiments.map((text,i)=><li key={i}><InlineText text={text}/></li>)}</ul></div>:null}
+    {!previewOnly&&example.related?.length? <p>APIs and features used: <InlineText text={example.related.map(name=>`\`${name}\``).join(' · ')}/></p>:null}
+    {!previewOnly&&<p className="example-source-link"><a href={`https://github.com/abhilasbiswas/retiam-docs/blob/main/${example.source}`} target="_blank" rel="noopener noreferrer">{example.source}</a></p>}
     {!example.scenes.length&&source!==undefined&&<CodeBlock block={{type:'code',language:'typescript',code:source}}/>}
     {!example.scenes.length&&sourceError&&<p role="alert">{sourceError}</p>}
   </div>;
