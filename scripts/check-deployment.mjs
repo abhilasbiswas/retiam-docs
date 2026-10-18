@@ -8,8 +8,6 @@ import puppeteer from 'puppeteer';
 const site = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(site, 'dist');
 const checkRuntime = process.argv.includes('--runtime');
-const engineOutput = path.dirname(fileURLToPath(import.meta.resolve('retiam')));
-const engineBase = '/__retiam_engine__/';
 const catalog = JSON.parse(fs.readFileSync(path.join(site, 'src/data/generated/page-catalog.json'), 'utf8'));
 const html = fs.readFileSync(path.join(output, 'index.html'), 'utf8');
 const base = html.match(/src="([^"?]*?)assets\/index-[^"]+\.js"/)?.[1];
@@ -21,9 +19,8 @@ const server = http.createServer((request, response) => {
   if (base !== '/' && url.pathname === base.slice(0, -1)) {
     response.writeHead(301, { Location: `${base}${url.search}` }); response.end(); return;
   }
-  const engineRequest = checkRuntime && url.pathname.startsWith(engineBase);
-  const mount = engineRequest ? engineBase : base;
-  const directory = engineRequest ? engineOutput : output;
+  const mount = base;
+  const directory = output;
   if (!url.pathname.startsWith(mount)) { response.writeHead(404); response.end(); return; }
   let relative;
   try { relative = decodeURIComponent(url.pathname.slice(mount.length)); } catch { response.writeHead(400); response.end(); return; }
@@ -35,19 +32,6 @@ const server = http.createServer((request, response) => {
   }
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) { response.writeHead(404); response.end(); return; }
   response.writeHead(200, { 'Content-Type': mime[path.extname(file)] || 'application/octet-stream' });
-  if (checkRuntime && file === path.join(output, 'runtime/viewer.html')) {
-    // Exercise the local release build with the CDN's directory layout. The
-    // actual public package is independently selected by deployment settings.
-    const source = fs.readFileSync(file, 'utf8').replace(/(<script type="importmap">)([\s\S]*?)(<\/script>)/, (_match, start, value, end) => {
-      const map = JSON.parse(value);
-      for (const key of Object.keys(map.imports)) {
-        if (key === 'retiam') map.imports[key] = `${origin}${engineBase}retiam.es.js`;
-        else if (key.startsWith('retiam/')) map.imports[key] = `${origin}${engineBase}libs/${key.slice(7)}/index.js`;
-      }
-      return `${start}${JSON.stringify(map)}${end}`;
-    });
-    response.end(source); return;
-  }
   fs.createReadStream(file).pipe(response);
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -118,14 +102,13 @@ try {
   }, `${base}runtime/typescript.js`);
   assert.ok(compiler.version && compiler.output.includes('const value = 7;'), 'The shared minified compiler must execute.');
   if (checkRuntime) {
-    assert.ok(fs.existsSync(path.join(engineOutput, 'retiam.es.js')), 'Install the documented Retiam package before checking live scenes.');
     const result = await page.evaluate(async runtimeBase => {
       const token = crypto.randomUUID();
       const code = `import { Scene, FontResolver, RTImage, hex } from 'retiam';
         export default class DeploymentProbe extends Scene {
           async run() {
             const font = await FontResolver.resolve('roboto');
-            if (!font.buffer.length) throw new Error('Missing packaged font');
+            if (!font.buffer.length) throw new Error('Missing CDN font');
             this.clearColor(hex('#080c14'));
             this.renderConfig.raytraceEnabled = false;
             this.camera.position.set([0, 0, 15]);
@@ -151,7 +134,7 @@ try {
       try { return await result; } finally { frame.remove(); }
     }, `${base}runtime/`);
     assert.equal(result, 'ready');
-    console.log('Verified a live WebGPU scene from edited TypeScript, a packaged CDN font, and a base-relative demo image.');
+    console.log('Verified a live WebGPU scene from edited TypeScript using the configured CDN, a CDN font, and a base-relative demo image.');
   }
   assert.deepEqual(errors, [], 'The documentation app must not throw browser errors.');
   assert.deepEqual(missing, [], 'The tested pages must not request missing local files.');

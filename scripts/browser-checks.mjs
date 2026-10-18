@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 // Uses the connected browser's documented tab/viewport APIs. No second browser
-// or GPU emulation is needed; run against a built preview and engine server.
+// or GPU emulation is needed; run against a built preview and its configured CDN.
 const notes=Object.assign({},...['projects','comparisons','workshops','tutorials'].map(name=>JSON.parse(fs.readFileSync(new URL(`../content/example-notes/${name}.json`,import.meta.url),'utf8'))));
 const projects=[['project-animated-chart','chart'],['project-draggable-diagram','diagram'],['project-mathematical-explanation','tangent'],['project-interactive-3d','model']];
 const comparisons=[['transforms','anchor-pivot'],['entities','local-world'],['animation','sequence-parallel'],['paint-effects','geometry-paint']];

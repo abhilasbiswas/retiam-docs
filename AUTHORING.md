@@ -37,7 +37,7 @@ Set the Retiam CDN module URL in `content/config.json`:
 }
 ```
 
-Local previews and deployed pages use this published module. Keep the module compatible with the installed `retiam` development dependency. The example viewer's import map
+Local previews and deployed pages use this published module. The example viewer's import map
 also resolves sublibraries such as `retiam/charts` under the engine URL's directory.
 The documentation treats this module as an external dependency and does not compare
 source hashes or require the CDN to come from the same repository checkout.
@@ -232,9 +232,9 @@ inline `code`, never both. Inline code remains convenient for short fragments.
 
 Core playgrounds receive Retiam's runtime exports automatically. Follow the existing
 `pg-firstscene.ts` example: export a default class extending `Scene`; do not add
-imports that duplicate the automatically supplied core names. The content verifier
-checks these files using the engine's exports and types. They are example inputs,
-so they are outside the React application's TypeScript compilation.
+imports that duplicate the automatically supplied core names. These are example
+inputs outside the React application's TypeScript compilation. Check their
+behavior in a WebGPU browser using the configured CDN module.
 
 ### Table
 Creates a structured data table, perfect for API references (Properties, Methods).
@@ -422,10 +422,9 @@ member. Keep these notes distinct from conceptual explanations and executable co
 
 Run `npm run verify:content` from the `retiam-docs` root after editing pages or examples. This checks the
 checked-in schema, page/section/playground IDs, table widths, internal links, coverage
-destinations, and TypeScript for the guide playgrounds and complete class examples.
-It uses the root engine's installed TypeScript compiler and source types, so install
-the root dependencies first. It does not execute the GPU code, validate every
-integration fragment, or certify the historical sketches.
+destinations, and the checked-in API snapshot. Install this project's dependencies
+first. It does not type-check examples against engine declarations, execute GPU
+code, validate every integration fragment, or certify the historical sketches.
 
 `content/coverage.json` records exports, package entry points and file-to-page
 mapping for every TypeScript implementation, WGSL shader, demo module and original
@@ -446,14 +445,13 @@ Run commands from the `retiam-docs` root:
 ```sh
 npm run dev              # Prepare example viewers and watch documentation content, examples and assets
 npm run build:content    # Assemble and validate pages/navigation/links
-npm run verify:content   # Also verify coverage and example TypeScript
+npm run verify:content   # Also verify coverage against the checked-in API snapshot
 npm run test:content     # Check content-loader and search integration cases
-npm run test:scenes      # Lint comparison, project and workshop scenes with Retiam's CLI
-npm run test:consumer    # Type-check the documented npm and React hosts through package exports
+npm run test:deployment  # Check configuration, runtime transforms and standalone reference data
 npm run build            # Verify content, check React types, and build production assets
 ```
 
-`npm run dev` prepares the documentation runtime and starts the viewer on port 4000. Examples load the published engine from jsDelivr. The documentation build uses its installed npm dependency for type checks.
+`npm run dev` prepares the documentation runtime and starts the viewer on port 4000. Examples load the published engine from the URL in `content/config.json`. Installation, tests, and builds require neither the Retiam npm package nor an engine checkout. Runtime preparation transpiles documentation-owned examples without resolving engine declarations; the build checks the React application's types.
 
 To add a page:
 
@@ -662,21 +660,16 @@ Run `npm run verify:content`, `npm run test:content`, `npm run lint` and
 `npm run build` in the `retiam-docs` root. `npm run build:runtime` rebuilds the source-based
 viewer independently. Generated runtime and index files are ignored by Git.
 
-Run `npm run test:scenes` for the comparison, project and workshop authoring
-checks. `npm run test:consumer` extracts the canonical npm/React host code from
-the guides and type-checks it through Retiam's packaged exports, including the
-package-based custom-element embed entry. The installed Retiam dependency supplies the declarations; no source checkout or engine build is required. This check includes TSX snippets that
-the complete-scene validator does not cover. A consumer runtime check must also
-exercise real package assets: use the packaged files inside `node_modules`, since
-a development symlink outside the project can hit Vite's filesystem allow list.
-The installation guide's `optimizeDeps.exclude` preserves the package's relative
-asset URLs. Type checks alone cannot detect an HTML fallback returned as a font.
-Host/configuration `codeFile` snippets remain ordinary code blocks and do not
-enter the runnable lab catalog. Verify them as a consumer project, with the files
-and relative imports described by the guide.
+Run `npm test` for documentation content, configuration, runtime transforms, and
+standalone API snapshot checks. Engine CLI and package consumer checks belong in
+separate consumer projects. When reviewing the npm/React host guides, exercise
+real package assets in a consumer project with the files and relative imports
+described by the guide. The installation guide's `optimizeDeps.exclude` preserves
+the package's relative asset URLs. Host/configuration `codeFile` snippets remain
+ordinary code blocks and do not enter the runnable lab catalog.
 
 `scripts/browser-checks.mjs` provides repeatable checks for a connected Codex
-browser. After building and starting the docs preview and engine CDN, import it
+browser. After building and starting the docs preview with its configured CDN, import it
 in the browser REPL and pass a temporary tab to `checkDocsScenes(tab, baseUrl)`.
 It starts all 16 comparison/project scenes and waits for their ready state.
 `checkWorkshopScenes(tab, baseUrl)` starts the six focused behavior/extension labs.
@@ -729,9 +722,8 @@ links to the relevant concept guides. Host/export tutorials can reference the
 canonical project setup rather than introducing another browser bootstrap.
 
 New tutorial labs live in `content/playgrounds/tutorial-*.ts`; their explanations
-live in `content/example-notes/tutorials.json`. They participate in content type
-checking, scene-authoring tests, and runtime discovery. Verify with
-`npm run test:content`, `npm run test:scenes`, `npm run test:consumer` and
-`npm run build`. Run the new labs in a WebGPU browser, exercise their controls,
-resize the preview and restart it to check cleanup. A successful type check does
-not establish GPU resource or WGSL correctness.
+live in `content/example-notes/tutorials.json`. They participate in content
+validation and runtime discovery. Verify with `npm test` and `npm run build`.
+Run the new labs in a WebGPU browser using the configured CDN, exercise their
+controls, resize the preview and restart it to check cleanup. A successful build
+does not establish GPU resource or WGSL correctness.

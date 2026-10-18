@@ -21,7 +21,7 @@ npm ci
 npm run dev
 ```
 
-Open [localhost:4000](http://localhost:4000/). This project installs and builds without a Retiam source checkout. Live scenes load the published Retiam module configured in [content/config.json](content/config.json). Local previews use the same public CDN as the deployed site.
+Open [localhost:4000](http://localhost:4000/). This project installs, tests, and builds without the Retiam npm package or a Retiam source checkout. Live scenes load the published Retiam module configured in [content/config.json](content/config.json). Local previews use the same public CDN as the deployed site.
 
 ```bash
 npm run lint
@@ -58,21 +58,16 @@ this local copy and needs no engine checkout.
 Generated projects use `"retiam": "latest"`.
 The initial install resolves npm's latest engine release, while the project's
 lockfile records the installed version. This is separate from this documentation
-site's pinned engine dependency and CDN configuration below.
+site's CDN configuration below.
 
 The public site includes documentation examples and API descriptions. It does not copy private engine implementation files or provide implementation-source downloads.
 
 ## Library version
 
-The development dependency supplies Retiam declarations and CLI checks. Live examples use the module URL configured in `content/config.json`.
-
-To update the development dependency to the latest published engine and record its resolved version:
-
-```bash
-npm install --save-dev --save-exact retiam@latest
-```
-
-Update `content/config.json` to the matching public CDN module URL, commit it with `package.json` and `package-lock.json`, and redeploy.
+Live examples use the module URL configured in `content/config.json`. To change
+their engine version, update that URL, verify the examples in a WebGPU browser,
+and redeploy. The documentation has no installed engine dependency, engine CLI
+checks, or comparisons against examples in the engine repository.
 
 Publish the required engine release before pointing the documentation runtime
 or a `create-retiam` starter at that release. Guides describe the current workflow;
@@ -84,7 +79,7 @@ API metadata is checked in so routine builds need no engine source. After an eng
 npm run reference:import -- /path/to/Retiam
 ```
 
-This optional command reads the private checkout to update reference data; it copies no implementation files. Commit the refreshed snapshot alongside the matching package version and documentation changes. Updating a library dependency alone does not regenerate the API reference.
+This optional maintainer command reads the private checkout to update reference data; it copies no implementation files and is never run by installation, tests, builds, or deployment checks. Commit the refreshed snapshot alongside the relevant documentation changes. Changing the CDN URL does not regenerate the API reference.
 
 ## GitHub Pages
 

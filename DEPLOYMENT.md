@@ -5,7 +5,7 @@ This is a standalone Vite/React application. Publish only `dist/`. Its editable 
 ## GitHub Pages
 
 1. Create a public repository named `retiam-docs` and push this project to it.
-2. Set `cdnUrl` in `content/config.json` to the published Retiam module URL, such as `https://cdn.jsdelivr.net/npm/retiam@latest/dist/retiam.es.min.js`, and keep it consistent with the installed engine. jsDelivr serves its sublibraries, chunks, and assets at their original relative paths.
+2. Set `cdnUrl` in `content/config.json` to the published Retiam module URL, such as `https://cdn.jsdelivr.net/npm/retiam@latest/dist/retiam.es.min.js`. jsDelivr serves its sublibraries, chunks, and assets at their original relative paths. No installed engine package or engine checkout is required.
 3. Open **Settings → Pages → Build and deployment** and set **Source → GitHub Actions**.
 4. Push to `main` or run **Actions → Documentation Pages → Run workflow**.
 5. Wait for the `build` and `deploy` jobs. The expected site is `https://abhilasbiswas.github.io/retiam-docs/`.
@@ -32,7 +32,7 @@ npm run check:deployment -- --runtime
 npm run check:cdn
 ```
 
-The deployment checker uses a temporary ordinary static server with no SPA fallback. It checks physical routes, reloads, anchors, search, and the compiler. `--runtime` also exercises an edited WebGPU scene, the installed library package, an emitted font, and a documentation image; it does not require a source checkout or a running local CDN.
+The deployment checker uses a temporary ordinary static server with no SPA fallback. It checks physical routes, reloads, anchors, search, and the compiler. `--runtime` also exercises an edited WebGPU scene using the CDN configured in `content/config.json`, a CDN font, and a documentation image. This optional runtime check needs network access to that CDN and a WebGPU-capable browser; neither check installs or serves a local engine package.
 
 On macOS, use installed Chrome if Puppeteer's cached browser is incompatible:
 
